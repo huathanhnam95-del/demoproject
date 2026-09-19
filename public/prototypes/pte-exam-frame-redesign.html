@@ -1,0 +1,931 @@
+<title>PTE Exam Frame Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+/* Two design languages on purpose:
+   - Test area (instructions, question content, blue audio/recorder boxes, status lines, timer) keeps the PTE reference look: Arial, flat blue boxes.
+   - Everything around it follows the BEL app tokens (design-tokens.css): Outfit, slate neutrals, blue-600 interaction, pill navigation, soft elevation.
+   Single light theme, matching the learner app; every color is painted explicitly. */
+:root{
+  /* BEL tokens */
+  --bg:#f8f9fa; --surface:#ffffff; --surface-2:#f8fafc; --tint:#f1f5f9;
+  --ink:#1e293b; --ink-2:#475569; --muted:#5d6b7f; --line:#e2e8f0; --line-2:#cbd5e1;
+  --blue:#2563eb; --blue-700:#1d4ed8; --blue-800:#1e40af; --blue-50:#eff6ff; --blue-100:#dbeafe; --blue-200:#bfdbfe;
+  --green:#1b8a4f; --green-700:#156d3e; --green-50:#f0fdf4; --green-100:#dcfce7;
+  --gold:#b8860b; --gold-800:#92400e; --gold-50:#fff8e7; --gold-100:#fef3c7;
+  --red:#dc2626; --red-700:#b91c1c; --red-50:#fef2f2; --red-100:#fee2e2;
+  --sk-speaking:#2563eb; --sk-listening:#1b8a4f; --sk-writing:#b8860b;
+  --shadow-sm:0 1px 2px 0 rgba(15,23,42,.06); --shadow-md:0 4px 12px -2px rgba(15,23,42,.10); --shadow-lg:0 10px 30px -4px rgba(15,23,42,.12);
+  --ease:color .2s ease-out,background-color .2s ease-out,border-color .2s ease-out,box-shadow .2s ease-out,transform .2s ease-out,opacity .2s ease-out;
+  --font:"Outfit",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"Roboto Mono",ui-monospace,monospace;
+  /* PTE reference tokens (test area only) */
+  --box-a:#36699f; --box-b:#28598f; --box-edge:#1c4675; --box-track:#a4bddb; --hl:#fff200;
+  --ann:#dc2626; --ann-soft:#fee2e2;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--font)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.page{max-width:1200px;margin:0 auto;padding-inline:20px;padding-block:32px 72px;display:flex;flex-direction:column;gap:24px}
+
+/* ---------- mockup chrome ---------- */
+.mk-head{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px 48px;align-items:end}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.mk-head h1{font-size:clamp(28px,3.6vw,40px);line-height:1.08;margin:0;font-weight:600;letter-spacing:-.02em;text-wrap:balance}
+.mk-head p{margin:12px 0 0;color:var(--ink-2);max-width:60ch}
+.rules{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:14.5px;color:var(--ink-2)}
+.rules li{display:grid;grid-template-columns:24px 1fr;gap:10px}
+.rules b{color:var(--ink);font-weight:600}
+.rules .dot{width:20px;height:20px;border-radius:10px;background:var(--ann);color:#fff;font:600 11px/20px var(--font);text-align:center;margin-top:1px}
+.rules .dot.ref{background:#28598f}
+
+.mk-nav{display:flex;flex-direction:column;gap:14px}
+.sec-tabs{display:inline-flex;gap:4px;padding:4px;background:var(--tint);border:1px solid var(--line);border-radius:999px;align-self:flex-start;flex-wrap:wrap}
+.sec-tabs button{border:0;background:none;padding:7px 16px;font-weight:600;font-size:15px;color:var(--ink-2);border-radius:999px;cursor:pointer;transition:var(--ease);display:inline-flex;align-items:center;gap:8px}
+.sec-tabs button::before{content:"";width:8px;height:8px;border-radius:4px;background:var(--c)}
+.sec-tabs button span{font:500 12px var(--mono);color:var(--muted)}
+.sec-tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm)}
+.task-chips{display:flex;gap:8px;flex-wrap:wrap}
+.tchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:14px;cursor:pointer;display:inline-flex;gap:8px;align-items:baseline;transition:var(--ease);color:var(--ink-2)}
+.tchip:hover{border-color:var(--line-2);color:var(--ink)}
+.tchip b{font:500 11.5px var(--mono);color:var(--muted)}
+.tchip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.tchip[aria-pressed="true"] b{color:#b6c2d1}
+.mk-ctrl{display:flex;justify-content:space-between;align-items:center;gap:12px 20px;flex-wrap:wrap}
+.states{display:inline-flex;align-items:center;gap:2px;padding:4px;background:var(--tint);border:1px solid var(--line);border-radius:12px;flex-wrap:wrap}
+.states button{border:0;background:none;padding:6px 14px;font-size:14px;font-weight:500;cursor:pointer;border-radius:9px;color:var(--ink-2);transition:var(--ease)}
+.states button[aria-pressed="true"]{background:var(--surface);color:var(--blue-700);box-shadow:var(--shadow-sm)}
+.states .lbl{padding:0 8px 0 6px;font:500 11px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.switches{display:flex;gap:18px;flex-wrap:wrap;font-size:14px;align-items:center;color:var(--ink-2)}
+.sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.sw input,.exsw input{appearance:none;width:34px;height:20px;border-radius:10px;background:var(--line-2);position:relative;cursor:pointer;margin:0;transition:var(--ease);flex:none}
+.sw input::after,.exsw input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:8px;background:#fff;box-shadow:var(--shadow-sm);transition:left .2s ease-out}
+.sw input:checked,.exsw input:checked{background:var(--blue)}
+.sw input:checked::after,.exsw input:checked::after{left:16px}
+.sw.red input:checked{background:var(--ann)}
+.sample-tag{font:500 12px var(--mono);color:var(--muted)}
+.frame-wrap{min-width:0}
+
+/* ---------- practice card (BEL) ---------- */
+.pte{position:relative;display:flex;flex-direction:column;min-height:640px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-lg);font:15px/1.55 var(--font)}
+.fx-top{display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--line)}
+.fx-id{display:flex;align-items:center;gap:12px;min-width:0}
+.fx-ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 12%,#fff);color:var(--c);font:600 12px var(--mono);flex:none}
+.fx-id small{display:block;font-size:12px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--c)}
+.fx-id b{display:block;font-size:18px;font-weight:600;line-height:1.2}
+.pte-count{font-size:14px;color:var(--muted)}
+.qnav{display:inline-flex;align-items:center;gap:2px;background:var(--tint);border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:var(--shadow-sm);min-width:0;max-width:100%}
+.qnav button{border:0;background:none;cursor:pointer;transition:var(--ease);color:var(--ink-2)}
+.qnav .qn-b{width:34px;height:34px;border-radius:999px;font-size:18px;line-height:1;flex:none}
+.qnav .qn-b:hover{background:var(--surface);box-shadow:var(--shadow-sm);color:var(--ink)}
+.qnav .qn-pill{height:34px;padding:0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px;font-weight:600;font-size:14.5px;color:var(--ink)}
+.qnav .qn-pill:hover{color:var(--blue-700)}
+.qn-pill small{font-weight:400;color:var(--muted);font-size:13.5px;overflow:hidden;text-overflow:ellipsis}
+.qn-pill .car{color:var(--muted);font-size:10px}
+
+.strip{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap;padding:10px 20px;background:var(--surface-2);border-bottom:1px solid var(--line);min-height:52px}
+.st-l,.st-r{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.st-tag{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-right:6px}
+.pte.ann .st-tag{margin-right:18px}
+.st-div{width:1px;height:22px;background:var(--line-2);margin:0 4px}
+.exsw{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:500;color:var(--ink-2);cursor:pointer;margin-left:8px;padding-left:12px;border-left:1px solid var(--line-2)}
+
+.pte-body{flex:1;padding:22px 28px 32px;display:flex;flex-direction:column;gap:20px;min-width:0}
+
+.fx-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px;border-top:1px solid var(--line);background:var(--surface);border-radius:0 0 20px 20px}
+.pf-l,.pf-r,.fgrp{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fb{font:600 14.5px/1.2 var(--font);padding:10px 18px;border:1px solid var(--line-2);background:var(--surface);border-radius:12px;color:var(--ink);cursor:pointer;transition:var(--ease)}
+.fb:hover{background:var(--tint)}
+.fb:active{transform:translateY(1px)}
+.fb.pri{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 1px 2px rgba(37,99,235,.25),0 4px 12px -4px rgba(37,99,235,.45)}
+.fb.pri:hover{background:var(--blue-700);border-color:var(--blue-700)}
+.fb.next{min-width:96px}
+
+/* BEL small controls */
+.b,.chip{font:500 13.5px/1.2 var(--font);padding:7px 12px;border:1px solid var(--line-2);background:var(--surface);border-radius:999px;color:var(--ink-2);cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;transition:var(--ease)}
+.b:hover,.chip:hover{border-color:#94a3b8;color:var(--ink)}
+.chip .car{font-size:9px;color:var(--muted)}
+.chip.on{background:var(--blue-50);border-color:var(--blue-200);color:var(--blue-700)}
+.chip.on .car{color:var(--blue)}
+.b[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.b.solid{background:var(--blue);border-color:var(--blue);color:#fff;border-radius:12px;padding:9px 16px;font-weight:600}
+.b.solid:hover{background:var(--blue-700)}
+.b.stop{border-color:var(--red-100);background:var(--red-50);color:var(--red-700)}
+.b.stop::before{content:"";width:8px;height:8px;border-radius:2px;background:currentColor}
+.coin{font-style:normal;background:var(--gold-100);color:var(--gold-800);border-radius:999px;padding:1px 7px;font-size:11.5px;font-weight:600}
+.imp{font-style:normal;color:var(--muted);font-size:12px;font-weight:400}
+.b[aria-pressed="true"] .imp{color:#dbe6ff}
+.b[aria-pressed="true"] .coin{background:rgba(255,255,255,.2);color:#fff}
+.seg{display:inline-flex;align-items:center;gap:2px;padding:3px;background:var(--tint);border:1px solid var(--line);border-radius:999px;font-size:13px}
+.seg .seg-l{padding:0 8px 0 8px;color:var(--muted);font-weight:500}
+.seg button{border:0;background:none;padding:5px 11px;cursor:pointer;color:var(--ink-2);font-size:13px;font-weight:500;border-radius:999px;transition:var(--ease)}
+.seg button.on{background:var(--surface);color:var(--blue-700);box-shadow:var(--shadow-sm)}
+.belsel{font:500 13.5px var(--font);padding:7px 30px 7px 12px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235d6b7f' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;appearance:none;color:var(--ink-2);cursor:pointer}
+.belrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13.5px;color:var(--ink-2)}
+.belrow .note{font-size:13px;color:var(--muted)}
+
+/* ===== TEST AREA — PTE reference styling ===== */
+.q-timer{align-self:flex-end;font:13px Arial,Helvetica,sans-serif;color:#333;margin-bottom:-8px}
+.q-timer b{font-weight:bold;font-variant-numeric:tabular-nums}
+.pte-instr{margin:0;font:15px/1.6 Arial,Helvetica,sans-serif;color:#333}
+.passage{margin:0;line-height:1.85;font:15px/1.85 Arial,Helvetica,sans-serif;color:#222;max-width:95ch}
+.prompt-strong{font:bold 15px/1.6 Arial,Helvetica,sans-serif;max-width:95ch;margin:0;color:#222}
+.q{font:bold 15px/1.5 Arial,Helvetica,sans-serif;margin:0 0 6px;color:#222}
+.row{display:flex;gap:18px 28px;flex-wrap:wrap;align-items:flex-start}
+.row.center{justify-content:center}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.grow{flex:1 1 320px}
+.pbox{width:300px;max-width:100%;background:linear-gradient(var(--box-a),var(--box-b));border:1px solid var(--box-edge);color:#fff;padding:12px 18px 14px;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.25);font:13.5px/1.5 Arial,Helvetica,sans-serif}
+.pbox-h{display:flex;justify-content:space-between;align-items:center;font-weight:bold;font-size:14.5px;margin-bottom:6px}
+.pbox-s{margin-top:2px}
+.pbox-s b,.pbox div>b{font-weight:bold}
+.bar{height:10px;background:var(--box-track);border:1px solid var(--box-edge);margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;background:#fff}
+.bar i.anim{animation:fill var(--dur,10s) linear forwards}
+@keyframes fill{from{width:0}to{width:100%}}
+.vol{display:flex;align-items:center;gap:8px;margin-top:10px}
+.vol input{width:120px;accent-color:#fff;height:14px}
+.recdot{width:9px;height:9px;border-radius:5px;background:#ff5a4f;display:inline-block;margin-right:6px;animation:blink 1s steps(2) infinite;vertical-align:0}
+@keyframes blink{50%{opacity:.2}}
+.mic{width:16px;height:16px;fill:#fff;opacity:.9}
+.arrow{align-self:center;color:#8aa3bd;font-size:22px}
+.opts{display:flex;flex-direction:column;gap:2px;max-width:78ch;font:15px/1.5 Arial,Helvetica,sans-serif;color:#222}
+.opts label{display:flex;gap:10px;align-items:flex-start;padding:7px 8px;cursor:pointer}
+.opts input{margin-top:3px}
+.opts label.sel{background:var(--hl)}
+.opts label.ok{background:var(--green-100)}
+.opts label.bad{background:var(--red-100)}
+.opts label.missed{box-shadow:inset 0 0 0 1.5px var(--green)}
+.opts .tag{margin-left:auto;font:600 12.5px var(--font);white-space:nowrap;padding-left:10px}
+.opts .tag.ok{color:var(--green-700)} .opts .tag.bad{color:var(--red-700)}
+.gap{width:110px;max-width:100%;border:1px solid #7b8a99;padding:2px 5px;font:15px Arial,Helvetica,sans-serif}
+.gap.ok{border-color:var(--green);background:var(--green-50)}
+.gap.bad{border-color:var(--red);background:var(--red-50)}
+.fix{font:600 13px var(--font);color:var(--green-700);margin-left:4px}
+.hw{cursor:pointer;padding:0 1px}
+.hw:hover{background:#fffab0}
+.hw.hl{background:var(--hl)}
+.hw.hit{background:var(--green-100);box-shadow:inset 0 -2px 0 var(--green)}
+.hw.miss{box-shadow:inset 0 0 0 1.5px var(--red)}
+.hw.false{background:var(--red-100);text-decoration:line-through}
+.said{font:600 11.5px var(--font);color:var(--green-700);vertical-align:super}
+.fig{margin:0;background:#fff;border:1px solid #d6d6d6;padding:10px;width:380px;max-width:100%}
+.fig figcaption{font:bold 13px Arial,Helvetica,sans-serif;text-align:center;margin-bottom:4px}
+.fig svg{display:block;width:100%;height:auto}
+.fig.zoomed{position:absolute;inset:80px 24px 80px;width:auto;z-index:30;box-shadow:var(--shadow-lg);border-radius:14px;display:flex;flex-direction:column;cursor:zoom-out}
+.fig.zoomed svg{flex:1;min-height:0}
+.iconfig{width:200px;max-width:100%;display:flex;justify-content:center;padding:6px 0}
+.iconfig svg{width:150px;height:auto}
+
+/* Read Aloud overlays drawn onto the test passage, using the Speech Coach hues */
+.ra-text .ck{display:none;color:var(--blue);font-weight:bold}
+.ra-text .lk{font-size:0;color:var(--blue);font-weight:bold}
+.ra-text .lk::after{content:" ";font-size:15px}
+.cs-chunk .ra-text .ck{display:inline;margin:0 3px}
+.cs-link .ra-text .lk{font-size:inherit;margin:0 -1px}
+.cs-link .ra-text .lk::after{content:none}
+.cs-red .ra-text .rw{color:#92400e;font-style:italic}
+.cs-red .ra-text .rw::after{content:attr(data-ipa);font:12px var(--font);color:#d97706;vertical-align:super;margin-left:1px;font-style:normal}
+.cs-snd .ra-text .sc{box-shadow:inset 0 -2px 0 #b45309}
+.cs-snd .ra-text .sc::after{content:attr(data-sc);font:12px var(--font);color:#b45309;vertical-align:super;margin-left:1px}
+.graded .g1{background:var(--gold-100);box-shadow:inset 0 -2px 0 #d97706;border-radius:2px}
+.graded .g2{background:var(--red-100);text-decoration:line-through;text-decoration-color:var(--red);border-radius:2px}
+.graded .gp::after{content:" ‖";color:var(--red);font-weight:bold}
+.passage mark.ev{background:none;color:inherit}
+.passage.evid mark.ev{background:var(--hl)}
+
+/* ===== BEL surfaces inside the card ===== */
+.coach{font-size:14.5px;color:#1e3a8a;background:var(--blue-50);border-radius:12px;padding:10px 14px;max-width:95ch;margin:0}
+.coach b{color:var(--blue-800);font-weight:600}
+.coach.mono{font-family:var(--mono);font-size:13.5px;letter-spacing:.03em}
+.coach.mono b{font-family:var(--font)}
+
+.wbox{border:1px solid var(--line-2);border-radius:14px;background:var(--surface);overflow:hidden;transition:var(--ease)}
+.wbox:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
+.wbar{display:flex;gap:6px;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--surface-2);font-size:13px;color:var(--muted);flex-wrap:wrap}
+.wbar:first-child{border-bottom:1px solid var(--line)}
+.wbar:last-child{border-top:1px solid var(--line)}
+.wbar .wb-l{display:flex;gap:4px}
+.wbar button{font:500 13px var(--font);background:none;border:0;padding:4px 10px;border-radius:8px;cursor:pointer;color:var(--ink-2);transition:var(--ease)}
+.wbar button:hover{background:var(--tint);color:var(--ink)}
+.wbar [data-wc]{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.wta{display:block;width:100%;border:0;resize:vertical;min-height:130px;padding:12px 14px;font:16px/1.65 var(--font);color:var(--ink);background:var(--surface)}
+.wta:focus{outline:none}
+.wtarget{font-size:12.5px;font-weight:500;background:var(--gold-50);color:var(--gold-800);padding:2px 10px;border-radius:999px}
+.wtarget.ok{background:var(--green-100);color:var(--green-700)}
+
+.notepad{display:flex;flex-direction:column;gap:8px;min-width:0}
+.notepad-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:13.5px;color:var(--muted)}
+.notepad-h b{color:var(--ink);font-weight:600}
+.notepad textarea{width:100%;min-height:112px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2);padding:12px 14px;font:14.5px/1.65 var(--font);color:var(--ink);resize:vertical;transition:var(--ease)}
+.notepad textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100);background:#fff}
+.tabs{display:inline-flex;gap:2px;padding:3px;background:var(--tint);border:1px solid var(--line);border-radius:999px}
+.tabs button{border:0;background:none;padding:5px 12px;font-size:13px;font-weight:500;cursor:pointer;border-radius:999px;color:var(--ink-2);transition:var(--ease)}
+.tabs button.on{background:var(--surface);color:var(--blue-700);box-shadow:var(--shadow-sm)}
+
+.rv{border-top:1px solid var(--line);padding-top:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.rv-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px}
+.rv-h h3{margin:0;font-size:12.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.big{font-size:32px;font-weight:600;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.big small{font-size:16px;color:var(--muted);font-weight:500;margin-left:2px}
+.subs{display:flex;flex-wrap:wrap;gap:6px}
+.subs span{background:var(--tint);border-radius:999px;padding:4px 11px;font-size:13.5px;color:var(--ink-2)}
+.subs b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.ex{font:500 11.5px var(--mono);color:var(--muted);margin-left:auto}
+.diff{line-height:2.1;font-size:16px;max-width:95ch;margin:0}
+.diff span{padding:2px 4px;border-radius:6px}
+.diff .ok{color:var(--green-700);background:var(--green-50)}
+.diff .miss{color:var(--red-700);background:var(--red-50);text-decoration:line-through}
+.diff .wrong{color:var(--red-700);background:var(--red-50);box-shadow:inset 0 -2px 0 var(--red);cursor:help}
+.legend{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:13px;color:var(--muted);align-items:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.kp{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:15px;max-width:90ch}
+.kp li{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start}
+.kp li>span:first-child{width:22px;height:22px;border-radius:11px;display:grid;place-items:center;font-size:12px;font-weight:700}
+.kp .y{background:var(--green-100);color:var(--green-700)} .kp .n{background:var(--red-100);color:var(--red-700)} .kp .p{background:var(--gold-100);color:var(--gold-800)}
+details.expl{font-size:15px;max-width:95ch;border-top:1px solid var(--line);padding-top:12px}
+details.expl summary{cursor:pointer;color:var(--blue-700);font-weight:600;font-size:14.5px;list-style:none;display:inline-flex;align-items:center;gap:6px}
+details.expl summary::-webkit-details-marker{display:none}
+details.expl summary::before{content:"›";display:inline-block;transition:transform .2s ease-out;font-size:18px;line-height:1}
+details.expl[open] summary::before{transform:rotate(90deg)}
+details.expl p{margin:8px 0 0;line-height:1.65;color:var(--ink-2)}
+.mini-player{display:inline-flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2);background:var(--tint);border-radius:999px;padding:5px 14px 5px 6px}
+.mini-player .mp-play{width:26px;height:26px;border-radius:13px;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:10px}
+.mini-player .mp-bar{width:140px;height:5px;background:var(--line-2);border-radius:3px;overflow:hidden}
+.mini-player .mp-bar i{display:block;height:100%;width:35%;background:var(--blue)}
+.mini-player .mp-t{font-variant-numeric:tabular-nums;color:var(--muted)}
+.sample{font-size:15px;line-height:1.7;max-width:95ch;margin:0;color:var(--ink-2)}
+.sample b{color:var(--ink);font-weight:600}
+.twocol{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px 32px}
+.twocol h4{margin:0 0 8px;font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+
+.essay-split{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px}
+.rail{border-left:1px solid var(--line);padding-left:24px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.rail-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.rail h4{margin:0;font-size:16px;font-weight:600}
+.layouts{display:flex;gap:6px;flex-wrap:wrap}
+.mm{font-size:14.5px;line-height:1.6;margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:8px;color:var(--ink-2)}
+.mm b{color:var(--ink);font-weight:600}
+.mm ul{margin:4px 0 0;padding-left:18px}
+.matrix{border-collapse:separate;border-spacing:0;font-size:13.5px;width:100%;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.matrix th,.matrix td{padding:7px 10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+.matrix tr:last-child td{border-bottom:0}
+.matrix th{background:var(--surface-2);color:var(--ink);font-weight:600}
+.tbl-wrap{overflow-x:auto}
+
+.pte-modal{position:absolute;inset:0;background:rgba(15,23,42,.38);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;z-index:40;padding:16px;border-radius:20px}
+.pte-modal .mb{background:var(--surface);width:360px;max-width:100%;border-radius:18px;box-shadow:var(--shadow-lg);padding:22px}
+.pte-modal .mb-h{font-weight:600;font-size:18px}
+.pte-modal p{margin:6px 0 18px;font-size:15px;color:var(--ink-2)}
+.pte-modal .mb-f{display:flex;justify-content:flex-end;gap:10px}
+.qsheet{position:absolute;top:64px;right:16px;width:360px;max-width:calc(100% - 32px);background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-lg);z-index:35;font-size:14.5px;padding:8px}
+.qsheet-h{display:flex;justify-content:space-between;align-items:center;padding:8px 10px 4px;font-weight:600}
+.qsheet-h button{border:0;background:var(--tint);width:28px;height:28px;border-radius:14px;font-size:16px;cursor:pointer;line-height:1}
+.qsheet input{margin:8px 6px;width:calc(100% - 12px);padding:9px 12px;border:1px solid var(--line-2);border-radius:12px;font:14.5px var(--font)}
+.qsheet input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
+.qsheet ul{list-style:none;margin:0;padding:0;max-height:280px;overflow:auto}
+.qsheet li button{width:100%;text-align:left;border:0;background:none;padding:9px 10px;display:grid;grid-template-columns:56px 1fr auto;gap:8px;cursor:pointer;font-size:14.5px;border-radius:10px;transition:var(--ease)}
+.qsheet li button:hover{background:var(--tint)}
+.qsheet li button.cur{background:var(--blue-50);color:var(--blue-800);font-weight:600}
+.qs-st{font-size:12px;color:var(--muted);align-self:center}
+.qs-st.done{color:var(--green-700)} .qs-st.flag{color:var(--gold-800)}
+
+/* annotations (mockup layer) */
+.pte.ann [data-ann]{position:relative;outline:1.5px dashed var(--ann);outline-offset:4px}
+.pte.ann [data-ann]::after{content:attr(data-ann);position:absolute;top:-13px;right:-13px;min-width:20px;height:20px;border-radius:10px;background:var(--ann);color:#fff;font:600 11px/20px var(--font);text-align:center;padding:0 5px;z-index:20;pointer-events:none;box-shadow:0 0 0 2px #fff;font-style:normal;text-decoration:none;letter-spacing:0;text-transform:none}
+.pte.ann [data-ann].pulse{outline-width:3px;outline-style:solid;background-color:var(--ann-soft)}
+.pte.exam [data-bel]{display:none!important}
+.pte:not(.exam) [data-exam-only]{display:none!important}
+
+/* notes under the card */
+.mk-notes{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:28px 48px}
+.mk-notes h2{font-size:20px;font-weight:600;margin:0 0 12px;letter-spacing:-.01em}
+.notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.notes li{display:grid;grid-template-columns:32px 1fr;gap:10px;padding:12px 10px 12px 6px;border-top:1px solid var(--line);border-radius:10px;transition:var(--ease)}
+.notes li:hover{background:var(--surface)}
+.notes li.off{opacity:.55}
+.notes li.off b::after{content:" — appears in another state";font-weight:400;color:var(--muted);font-size:13.5px}
+.nk{width:22px;height:22px;border-radius:11px;background:var(--ann);color:#fff;font:600 11.5px/22px var(--font);text-align:center;margin-top:2px}
+.nk.shared{background:#fff;color:var(--ann);box-shadow:inset 0 0 0 1.5px var(--ann)}
+.notes b{font-weight:600}
+.notes p{margin:2px 0 6px;color:var(--ink-2);font-size:15px;max-width:68ch}
+.notes code{font:12.5px/1.7 var(--mono);color:#1e40af;background:var(--blue-50);padding:2px 7px;border-radius:6px;word-break:break-word}
+.flow{list-style:none;margin:0;padding:0;counter-reset:f;display:flex;flex-direction:column}
+.flow li{counter-increment:f;display:grid;grid-template-columns:32px 1fr;gap:10px;padding:12px 10px 12px 6px;border-top:1px solid var(--line);border-radius:10px}
+.flow li::before{content:counter(f);font:600 12px/22px var(--mono);color:var(--blue);text-align:center;background:var(--blue-50);border-radius:11px;width:22px;height:22px}
+.flow b{font-weight:600}
+.flow p{margin:2px 0 0;color:var(--ink-2);font-size:15px}
+.flow li.now{background:var(--surface);box-shadow:var(--shadow-sm)}
+.flow li.now::before{background:var(--blue);color:#fff}
+.inv{margin-top:26px}
+.inv p{color:var(--ink-2);font-size:15px;margin:0}
+
+@media (max-width:860px){
+  .mk-head,.mk-notes{grid-template-columns:1fr}
+  .essay-split,.twocol{grid-template-columns:1fr}
+  .rail{border-left:0;border-top:1px solid var(--line);padding-left:0;padding-top:16px}
+}
+@media (max-width:560px){
+  .page{padding-inline:16px}
+  .pte-body{padding:16px 16px 24px}
+  .fx-top,.strip,.fx-foot{padding-inline:14px}
+  .qnav .qn-pill{max-width:200px}
+  .pte{min-height:0}
+  .fig.zoomed{inset:60px 8px}
+}
+</style>
+
+<div class="page">
+  <header class="mk-head">
+    <div>
+      <p class="eyebrow">BEL · Practice modes · Redesign mockup v2</p>
+      <h1>Test layout inside, BEL around it</h1>
+      <p>Only the question area follows the PTE captures: the instruction line, the question content, the blue audio and recorder boxes with their status lines, and the timer position. The card, navigation, practice tools, writing box, results and actions use the BEL app's own design tokens. Red numbers match the notes below the card.</p>
+    </div>
+    <ul class="rules" aria-label="Placement rules">
+      <li><span class="dot ref">T</span><span><b>Test area</b> keeps the reference look: Arial text, flat blue boxes, “Time Remaining” top right.</span></li>
+      <li><span class="dot">A</span><span><b>Question picker</b> in the card header, the same pill as the current v7 picker.</span></li>
+      <li><span class="dot">B</span><span><b>One practice-tools row</b> for filters and helpers. <b>Exam mode</b> hides it.</span></li>
+      <li><span class="dot">D</span><span><b>Results open under the answer</b>, on the same card.</span></li>
+    </ul>
+  </header>
+
+  <nav class="mk-nav" aria-label="Mockup navigation">
+    <div class="sec-tabs" role="tablist" id="sec-tabs"></div>
+    <div class="task-chips" id="task-chips"></div>
+    <div class="mk-ctrl">
+      <div class="states" id="states" role="group" aria-label="Screen state"></div>
+      <div class="switches">
+        <label class="sw red"><input type="checkbox" id="sw-ann" checked> Show annotations</label>
+        <label class="sw"><input type="checkbox" id="sw-exam"> Exam mode</label>
+        <label class="sw"><input type="checkbox" id="sw-auto" checked> Auto-advance timers</label>
+        <span class="sample-tag">Scores and answers are sample data</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="frame-wrap" id="frame"></div>
+
+  <section class="mk-notes">
+    <div>
+      <h2 id="notes-title">What BEL adds on this screen</h2>
+      <ol class="notes" id="notes"></ol>
+    </div>
+    <div>
+      <h2>Flow</h2>
+      <ol class="flow" id="flow"></ol>
+      <div class="inv">
+        <h2>Unchanged from the test</h2>
+        <p>Instruction wording and position, question text and option layout, blue audio and recorder boxes with their status lines and progress bars, the timer position, and yellow selection highlight. Everything else is BEL.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- state ---------- */
+const SECS={speaking:'Speaking',writing:'Writing',listening:'Listening'};
+const cur={sec:'speaking',task:'ra',state:'prepare',ann:true,exam:false,auto:true};
+const flags={}; // per-task Set of toggled helpers
+const qnums={};
+const has=f=>!!(flags[cur.task]&&flags[cur.task].has(f));
+
+/* ---------- small builders ---------- */
+const A=k=>k?` data-ann="${k}"`:'';
+function b(label,o={}){
+  const pressed=o.flag?` data-flag="${o.flag}" aria-pressed="${has(o.flag)}"`:'';
+  return `<button type="button" class="${o.cls||'b'}"${A(o.ann)}${o.bel===false?'':' data-bel'}${o.go?` data-go="${o.go}"`:''}${o.act?` data-act="${o.act}"`:''}${pressed}${o.title?` title="${o.title}"`:''}>${label}${o.cost?` <em class="coin">${o.cost}</em>`:''}${o.imp?` <em class="imp">${o.imp}</em>`:''}</button>`;
+}
+const chip=(label,o={})=>`<button type="button" class="chip${o.on?' on':''}"${A(o.ann)} data-bel${o.title?` title="${o.title}"`:''}>${label}${o.caret?' <span class="car">▾</span>':''}</button>`;
+function seg(opts,active,o={}){
+  return `<span class="seg"${A(o.ann)} data-bel role="group"${o.label?` aria-label="${o.label}"`:''}>${o.label?`<span class="seg-l">${o.label}</span>`:''}${opts.map((x,i)=>`<button type="button" class="${i===active?'on':''}" aria-pressed="${i===active}"${o.data?` data-${o.data}="${i}"`:''}>${x}</button>`).join('')}</span>`;
+}
+const sel=(opts,o={})=>`<span${A(o.ann)} data-bel style="display:inline-flex"><select class="belsel" aria-label="${o.label||''}">${opts.map(x=>`<option>${x}</option>`).join('')}</select></span>`;
+const belrow=(items,ann)=>`<div class="belrow"${A(ann)} data-bel>${items.join('')}</div>`;
+const div=()=>'<span class="st-div" data-bel></span>';
+const count=n=>`<span data-count>${n}</span>`;
+
+const MIC='<svg class="mic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2z"/></svg>';
+const SPK='<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="#fff"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>';
+
+function recorder(s,o={}){
+  const dur=o.dur||40;
+  let status,bar;
+  if(s==='respond'){status='<span class="recdot"></span>Recording...';bar=`<i class="anim" style="--dur:${dur}s"></i>`;}
+  else if(s==='review'){status='Completed';bar='<i style="width:100%"></i>';}
+  else {status=o.wait||`Beginning in ${count(o.prep||35)} seconds`;bar='<i style="width:0"></i>';}
+  return `<div class="pbox"${A(o.ann)}><div class="pbox-h">Recorded Answer ${MIC}</div><div class="pbox-s">Current Status:</div><div><b>${status}</b></div><div class="bar">${bar}</div></div>`;
+}
+function player(mode,o={}){
+  let status,bar;
+  if(mode==='wait'){status=`Beginning in ${count(o.prep||3)} seconds`;bar='<i style="width:0"></i>';}
+  else if(mode==='play'){status='Playing';bar=`<i class="anim" style="--dur:${o.dur||20}s"></i>`;}
+  else {status='Completed';bar='<i style="width:100%"></i>';}
+  return `<div class="pbox"${A(o.ann)}><div class="pbox-s" style="margin-top:0">Status: <b>${status}</b></div><div class="bar">${bar}</div><div class="vol">${SPK}<input type="range" min="0" max="100" value="80" aria-label="Volume"></div></div>`;
+}
+function writer(o={}){
+  const wc=o.value?o.value.trim().split(/\s+/).length:0;
+  return `<div class="wbox"${A(o.ann)}><div class="wbar"><span class="wb-l"><button type="button" data-cmd="cut">Cut</button><button type="button" data-cmd="copy">Copy</button><button type="button" data-cmd="paste">Paste</button></span></div>
+  <textarea class="wta" rows="${o.rows||6}" spellcheck="false" aria-label="Your response" ${o.ro?'readonly':''} data-min="${o.min||0}" data-max="${o.max||9999}">${o.value||''}</textarea>
+  <div class="wbar"><span>Total Word Count: <b data-wc>${wc}</b></span>${o.target?`<span class="wtarget" data-bel${A(o.tann)} data-target>${o.target}</span>`:''}</div></div>`;
+}
+function diff(words){return `<p class="diff">${words.map(([w,c,x])=>`<span class="${c}"${x?` title="${x}"`:''}>${w}</span>`).join(' ')}</p>`;}
+function review(head,subs,body,o={}){
+  return `<section class="rv" data-bel data-ann="D"><div class="rv-h"><h3>${o.title||'Your result'}</h3><span class="big">${head}</span><span class="subs">${subs.map(([k,v])=>`<span>${k} <b>${v}</b></span>`).join('')}</span><span class="ex">sample data</span></div>${body}</section>`;
+}
+const miniPlayer=label=>`<span class="mini-player"><span class="mp-play">▶</span>${label?label+' ':''}<span class="mp-bar"><i></i></span><span class="mp-t">0:14 / 0:38</span></span>`;
+
+/* footers */
+function std(p){ // p: {prep, resp, retry, rv:[]}
+  return s=>{
+    const L=[],R=[];
+    if(s==='prepare'&&p.prep) R.push(b(p.prep,{cls:'fb pri',go:'respond'}));
+    if(s==='respond'&&p.resp) R.push(b(p.resp,{cls:'fb pri',go:'review'}));
+    if(s==='review'){L.push(b(p.retry||'Try again',{cls:'fb',go:'prepare'}));(p.rv||[]).forEach(x=>R.push(x));}
+    return {L,R};
+  };
+}
+
+/* ---------- content ---------- */
+const RA_TEXT=`<p class="passage ra-text">Urban heat islands form <span class="ck">/</span> when cities replace natural land<span class="lk">‿</span>cover <span class="ck">/</span> with dense concentrations<span class="lk">‿</span><span class="rw" data-ipa="/əv/">of</span> pavement, <span class="ck">/</span> buildings<span class="lk">‿</span><span class="rw" data-ipa="/ən/">and</span> other surfaces <span class="ck">/</span> that absorb<span class="lk">‿</span><span class="rw" data-ipa="/ən/">and</span> retain heat. <span class="ck">/</span> As<span class="lk">‿</span>a result, <span class="ck">/</span> city centres <span class="rw g1" data-ipa="/kən/">can</span> be several degrees warmer <span class="ck">/</span> <span class="rw" data-ipa="/ðən/">than</span> the surrounding countryside, <span class="ck">/</span> especially <span class="sc gp" data-sc="t→ʔ">at</span> night, <span class="ck">/</span> and this difference has <span class="g1">measurable</span> effects <span class="ck">/</span> on energy use<span class="lk">‿</span><span class="rw g2" data-ipa="/ən/">and</span> public health.</p>`;
+
+const WFD_TARGET='Students are required to submit their assignments before the end of the semester.';
+const CHART=`<svg viewBox="0 0 380 240" role="img" aria-label="Grouped bar chart of household energy share by source, 2010 and 2025">
+<g font-family="Arial" font-size="10" fill="#444">
+${[0,10,20,30,40,50].map(v=>{const y=200-v*3.4;return `<line x1="44" x2="370" y1="${y}" y2="${y}" stroke="#e3e3e3" stroke-width="1"/><text x="38" y="${y+3.5}" text-anchor="end">${v}</text>`}).join('')}
+<text x="12" y="118" transform="rotate(-90 12 118)" text-anchor="middle">Share of household energy (%)</text>
+${[['Gas',48,31],['Electricity',30,41],['Oil',20,13],['Solar',2,15]].map(([n,a,c],i)=>{const gx=62+i*78;return `<rect x="${gx}" y="${200-a*3.4}" width="26" height="${a*3.4}" fill="#9aa9b8"/><rect x="${gx+30}" y="${200-c*3.4}" width="26" height="${c*3.4}" fill="#2c5d96"/><text x="${gx+13}" y="${196-a*3.4}" text-anchor="middle" font-size="9">${a}</text><text x="${gx+43}" y="${196-c*3.4}" text-anchor="middle" font-size="9">${c}</text><text x="${gx+28}" y="215" text-anchor="middle" font-size="11">${n}</text>`}).join('')}
+<line x1="44" x2="370" y1="200" y2="200" stroke="#888" stroke-width="1"/>
+<rect x="250" y="222" width="10" height="10" fill="#9aa9b8"/><text x="264" y="231">2010</text>
+<rect x="300" y="222" width="10" height="10" fill="#2c5d96"/><text x="314" y="231">2025</text>
+</g></svg>`;
+const PEOPLE=`<svg viewBox="0 0 120 100" aria-hidden="true" fill="#222"><circle cx="30" cy="30" r="11"/><path d="M12 72c0-12 8-20 18-20s18 8 18 20z"/><circle cx="90" cy="30" r="11"/><path d="M72 72c0-12 8-20 18-20s18 8 18 20z"/><circle cx="60" cy="48" r="12"/><path d="M40 96c0-13 9-22 20-22s20 9 20 22z"/><path d="M40 6h26a6 6 0 0 1 6 6v10a6 6 0 0 1-6 6H52l-8 7v-7h-4a6 6 0 0 1-6-6V12a6 6 0 0 1 6-6z" fill="#444"/><circle cx="46" cy="17" r="2" fill="#fff"/><circle cx="53" cy="17" r="2" fill="#fff"/><circle cx="60" cy="17" r="2" fill="#fff"/></svg>`;
+const LECTURER=`<svg viewBox="0 0 160 110" aria-hidden="true"><rect x="4" y="6" width="100" height="66" fill="#e6edf4" stroke="#9fb0c2"/><text x="54" y="30" text-anchor="middle" font-family="Arial" font-size="9" fill="#1d3f63">Sleep &amp; Memory</text><rect x="16" y="40" width="10" height="22" fill="#9aa9b8"/><rect x="32" y="48" width="10" height="14" fill="#9aa9b8"/><rect x="48" y="36" width="10" height="26" fill="#2c5d96"/><rect x="64" y="44" width="10" height="18" fill="#9aa9b8"/><rect x="80" y="52" width="10" height="10" fill="#9aa9b8"/><circle cx="130" cy="40" r="11" fill="#333"/><path d="M112 104c0-22 8-40 18-40s18 18 18 40z" fill="#333"/><path d="M118 72l-16-10" stroke="#333" stroke-width="5" stroke-linecap="round"/></svg>`;
+
+const T=[];
+function task(o){T.push(o);qnums[o.id]=o.qn;}
+
+/* ===== SPEAKING ===== */
+task({id:'ra',sec:'speaking',code:'RA',name:'Read Aloud',qn:142,total:486,qt:'Urban heat islands',
+ clock:{prepare:'00:35',respond:'00:40'},
+ instr:'Look at the text below. In 35 seconds, you must read this text aloud as naturally and clearly as possible. You have 40 seconds to read aloud.',
+ strip:()=>({l:[chip('Audio: Available',{caret:1,ann:'1'}),chip('Any connected speech',{caret:1}),chip('Practice target',{caret:1})],
+   r:[b('Chunking',{flag:'cs-chunk',ann:'2'}),b('Linking',{flag:'cs-link'}),b('Reduced words',{flag:'cs-red'}),b('Sound changes',{flag:'cs-snd'}),div(),b('Speech Coach',{flag:'coach',ann:'3'})]}),
+ body:s=>`<div class="row center">${recorder(s,{prep:35})}</div>
+  ${s==='respond'?`<div class="row center">${belrow([b('Stop recording',{cls:'b stop',go:'review'})])}</div>`:''}
+  <div class="${s==='review'?'graded':''}">${RA_TEXT}</div>
+  ${has('coach')?`<p class="coach" data-bel><b>Speech Coach:</b> pause at each <b>/</b>, stress <b>HEAT</b> · <b>CIT</b>ies · de<b>GREES</b>, and say “and” as /ən/. Only the overlays you switch on are reviewed.</p>`:''}
+  ${s==='review'?review('13<small>/15</small>',[['Content','5/5'],['Oral fluency','4/5'],['Pronunciation','4/5']],
+   `<div class="belrow" data-ann="4">${seg(['Your recording','Sample'],0,{label:'Listen'})}${miniPlayer('')}</div>
+    <div class="belrow" data-ann="5">${seg(['♂ Male','♀ Female'],1,{label:'Sample voice'})}${seg(['Normal','Slow'],0)}${b('Pick a voice ▾')}</div>
+    <div class="legend"><span><i style="background:#fef3c7;box-shadow:inset 0 -2px 0 #d97706"></i>unclear sound</span><span><i style="background:#fee2e2"></i>skipped</span><span><b style="color:#dc2626">‖</b> long pause</span></div>
+    <div>${b('Show advanced analysis',{ann:'6'})}</div>`):''}`,
+ foot:std({prep:'Start recording',resp:'Check',retry:'Retry'}),
+ notes:[
+  {k:'1',t:'Prompt filters',d:'Audio availability, connected-speech feature and practice target move from the picker page into the strip.',ids:'#ra-filter-all · #ra-filter-available · #ra-filter-any-connected · #ra-practice-target-toggle'},
+  {k:'2',t:'Connected-speech overlays',d:'Toggles draw on the passage itself: chunk slashes, linking ties, reduced-word IPA and sound changes. Try them — the text updates.',ids:'#ra-toggle-chunking-btn · #ra-toggle-linking-btn · #ra-toggle-reduced-words-btn · #ra-toggle-sound-changes-btn'},
+  {k:'3',t:'Speech Coach',d:'Short coaching line under the passage instead of a side panel.',ids:'#ra-speech-coach-toggle'},
+  {k:'4',t:'Your recording vs sample',d:'Recording/sample tabs and one player sit in the review area.',ids:'#ra-source-tab-yours · #ra-source-tab-sample · #ra-custom-play-btn'},
+  {k:'5',t:'Sample voice',d:'Male/female, Normal/Slow and voice picker, shown only after checking so the sample does not coach the first attempt.',ids:'#ra-voice-male · #ra-voice-female · #ra-speed-100 · #ra-speed-80 · #ra-voice-picker-btn'},
+  {k:'6',t:'Advanced analysis',d:'Opens the existing pitch / intensity charts below the review.',ids:'#ra-show-advanced-btn'}],
+ flow:[['Before answering','35 s preparation countdown in the recorder, as in the test. Overlays can be switched on.'],['Answering','Recorder fills over 40 s. Stop ends early; Check submits.'],['Review','Words coloured in place, scores, recording vs sample, and a Retry button.']]
+});
+
+task({id:'rs',sec:'speaking',code:'RS',name:'Repeat Sentence',qn:57,total:640,qt:'Library opening hours',
+ clock:{prepare:'00:03',respond:'00:15'},
+ instr:'You will hear a sentence. Please repeat the sentence exactly as you hear it. You will hear the sentence only once.',
+ strip:()=>({l:[chip('Recommended',{on:1,ann:'1'}),seg(['Adaptive','Manual'],0),chip('Status: All',{caret:1}),chip('Length: Short',{caret:1}),chip('Difficulty: B1',{caret:1}),b('↺ Reset',{title:'Reset progress'})],
+   r:[b('Shadow mode',{flag:'shadow',cost:'5c',ann:'2'})]}),
+ body:s=>`<div class="row center">
+   <div class="col">${player(s==='prepare'?'play':'done',{dur:6})}${belrow([`<span class="note">Replays left: <b>${s==='prepare'?1:0}</b> · seeking off</span>`],'3')}</div>
+   <span class="arrow" aria-hidden="true">→</span>
+   <div class="col">${recorder(s,{dur:15,wait:'Starts after the audio'})}${s==='respond'?belrow([b('Stop recording',{cls:'b stop',go:'review'})]):''}</div></div>
+  ${has('shadow')&&s!=='review'?`<p class="coach" data-bel><b>Shadow mode:</b> the sentence plays again quietly while you speak.</p>`:''}
+  ${s==='review'?review('10<small>/13 words</small>',[['Content','10/13'],['Oral fluency','4/5'],['Pronunciation','3/5']],
+   `${diff([['The','ok'],['library','ok'],['will','ok'],['extend','ok'],['its','miss'],['opening','ok'],['hours','ok'],['during','ok'],['the','ok'],['examination','wrong','you said: exam'],['period.','ok']])}
+    <div class="legend"><span><i style="background:#dcfce7"></i>matched</span><span><i style="background:#fee2e2"></i>missed or different</span></div>
+    <div class="belrow">${b('▶ Your recording')}${b('▶ Original sentence')}</div>`):''}`,
+ foot:std({resp:'Check',retry:'Retry'}),
+ notes:[
+  {k:'1',t:'Queue and filters',d:'Recommended, Adaptive/Manual, status, length, difficulty and Reset in one row.',ids:'#recommended-btn-speak · #adaptive-speak · #manual-speak · #status-filter-btn-speak · #length-filter-btn-speak · #difficulty-filter-btn-speak · #reset-progress-speak-btn'},
+  {k:'2',t:'Shadow mode (5 coins)',d:'A paid helper, so it shows its coin cost on the button.',ids:'#shadow-mode-btn'},
+  {k:'3',t:'Replay limit',d:'Replays left are shown under the player. Seeking stays off, which is how the current player works.',ids:'#play-btn-speak · #speak-seek'}],
+ flow:[['Before answering','The audio plays by itself. The recorder waits.'],['Answering','Recorder runs for 15 s. Check submits.'],['Review','Word-by-word comparison with the sentence, plus scores and both recordings.']]
+});
+
+task({id:'di',sec:'speaking',code:'DI',name:'Describe Image',qn:23,total:210,qt:'Household energy by source',
+ clock:{prepare:'00:25',respond:'00:40'},
+ instr:'Look at the graph below. In 25 seconds, please speak into the microphone and describe in detail what the graph is showing. You will have 40 seconds to give your response.',
+ strip:()=>({l:[chip('Difficulty: All',{caret:1,ann:'1'})],r:[]}),
+ body:s=>`<div class="row">
+   <div class="col"><figure class="fig" id="di-fig"><figcaption>Household energy use by source, 2010 vs 2025</figcaption>${CHART}</figure>${belrow([b('Zoom',{act:'zoom'})],'2')}</div>
+   <div class="col" style="margin-left:auto">${recorder(s,{prep:25})}${s==='respond'?belrow([b('Stop recording',{cls:'b stop',go:'review'})]):''}${s==='review'?belrow([miniPlayer('Your recording')]):''}</div></div>
+  ${s==='review'?review('11<small>/16</small>',[['Content','4/6'],['Oral fluency','4/5'],['Pronunciation','3/5']],
+   `<div class="twocol"><div><h4>Key points covered</h4><ul class="kp"><li><span class="y">✓</span>Gas was the largest source in 2010 (48%)</li><li><span class="y">✓</span>Electricity overtook gas by 2025 (41% vs 31%)</li><li><span class="p">~</span>Solar rose sharply, from 2% to 15% (mentioned, no figures)</li><li><span class="n">✗</span>Oil fell from 20% to 13%</li><li><span class="n">✗</span>Overall shift away from fossil fuels (conclusion)</li></ul></div>
+    <div><h4>Sample answer</h4><p class="sample">The chart compares household energy sources in 2010 and 2025. In 2010, gas was dominant at 48%, but by 2025 it had dropped to 31%, while electricity rose to 41%. Solar grew most rapidly, from 2% to 15%, and oil declined to 13%. Overall, homes are moving away from fossil fuels.</p></div></div>
+    <div data-ann="3">${b('AI content assessment',{cls:'b solid'})}</div>`):''}`,
+ foot:std({prep:'Start practice',resp:'See results',retry:'Try again',rv:[b('Next question',{cls:'fb',act:'nextq'})]}),
+ notes:[
+  {k:'1',t:'Difficulty filter',d:'Moves from the picker header into the strip.',ids:'#difficulty-filter-btn-di'},
+  {k:'2',t:'Zoom',d:'Opens the chart larger on top of the item. Click Zoom, then click the chart to close.',ids:'#di-zoom-btn · #di-zoom-close'},
+  {k:'3',t:'AI content assessment',d:'Shown after the key points and sample answer, so the learner reads the checklist first.',ids:'#di-ai-btn'}],
+ flow:[['Before answering','Chart on the left, recorder counting down 25 s on the right, as in the test.'],['Answering','40 s recording. See results submits.'],['Review','Key-point checklist, sample answer, your recording, AI assessment.']]
+});
+
+task({id:'rl',sec:'speaking',code:'RL',name:'Retell Lecture',qn:31,total:188,qt:'Sleep and memory',
+ clock:{prepare:'01:12',respond:'00:40'},
+ instr:'You will hear a lecture. After listening to the lecture, in 10 seconds, please speak into the microphone and retell what you have just heard from the lecture in your own words. You will have 40 seconds to give your response.',
+ strip:()=>({l:[chip('Recommended',{on:1}),chip('Status: New',{caret:1}),chip('Difficulty: B2',{caret:1})],r:[b('Guiding video',{flag:'video',ann:'1'})]}),
+ body:s=>`<div class="row">
+   <div class="iconfig" style="width:220px">${LECTURER}</div>
+   <div class="col">${player(s==='prepare'?'play':'done',{dur:72})}</div>
+   <div class="col" style="margin-left:auto">${recorder(s,{wait:'Starts 10 s after the lecture'})}${s==='respond'?belrow([b('Stop recording',{cls:'b stop',go:'review'})]):''}</div></div>
+  <div class="notepad" data-bel data-ann="2"><div class="notepad-h"><span><b>Noteboard</b> — type notes while you listen (stands in for the test's erasable noteboard)</span><span>${s==='prepare'?'Writing…':'Locked while speaking'}</span></div>
+   <textarea ${s==='prepare'?'':'readonly'} aria-label="Lecture notes">sleep → memory consolidation
+deep sleep = replay of day's learning (hippocampus → cortex)
+all-nighter: recall ↓ ~40%
+tip: review before bed</textarea></div>
+  ${s==='review'?review('3<small>/4 key points</small>',[['Content','4/6'],['Oral fluency','4/5'],['Pronunciation','4/5']],
+   `<ul class="kp"><li><span class="y">✓</span>Sleep consolidates new memories</li><li><span class="y">✓</span>Deep sleep replays daytime learning</li><li><span class="y">✓</span>Missing a night cuts recall by about 40%</li><li><span class="n">✗</span>Implication: spread study over several nights</li></ul>
+    <div class="belrow">${b('Show transcript')}${b('▶ Your recording')}</div>`):''}`,
+ foot:std({resp:'Submit',retry:'Try again'}),
+ notes:[
+  {k:'1',t:'Guiding video',d:'Optional video before the lecture becomes a toggle instead of a required step.',ids:'#notes-skip-video-btn · Take Notes guiding video step'},
+  {k:'2',t:'Noteboard',d:'Take Notes textarea placed under the audio. It locks while you speak, so notes can be compared with key points afterwards.',ids:'#notes-user-input · #notes-submit-btn'}],
+ flow:[['Listening','Lecture plays while you type notes.'],['Answering','Recorder starts 10 s after the lecture and runs 40 s.'],['Review','Key points compared with your notes and speech, plus the transcript.']]
+});
+
+task({id:'asq',sec:'speaking',code:'ASQ',name:'Answer Short Question',qn:204,total:900,qt:'Measuring temperature',
+ clock:{prepare:'00:03',respond:'00:10'},
+ instr:'You will hear a question. Please give a simple and short answer. Often just one or a few words is enough.',
+ strip:()=>({l:[chip('Question set: All',{caret:1})],r:[]}),
+ body:s=>`<div class="row center">
+   <div class="col">${player(s==='prepare'?'play':'done',{dur:4})}${belrow([b('▶ Play prompt',{})],'1')}</div>
+   <div class="col">${recorder(s,{dur:10,wait:'Starts after the question'})}${belrow(s==='respond'?[b('Stop',{cls:'b stop',go:'review'})]:[b('Redo',{go:'prepare'})],'2')}</div></div>
+  ${s==='review'?review('1<small>/1</small>',[['Heard','“thermometer”'],['Accepted','a thermometer · thermometer']],
+   `<p class="sample"><b>Question:</b> What instrument is used to measure temperature?</p>`):''}`,
+ foot:std({resp:'Check',retry:'Redo'}),
+ notes:[
+  {k:'1',t:'Play prompt',d:'Replays the question audio. In the test it plays only once.',ids:'#asq-play-prompt-btn'},
+  {k:'2',t:'Record / Stop / Redo',d:'Placed under the recorder they control.',ids:'#asq-record-btn · #asq-stop-btn · #asq-redo-btn'}],
+ flow:[['Listening','Question plays.'],['Answering','10 s recorder.'],['Review','What you said vs the accepted answers.']]
+});
+
+task({id:'sgd',sec:'speaking',code:'SGD',name:'Summarize Group Discussion',qn:12,total:96,qt:'A four-day teaching week',
+ clock:{prepare:'02:30',respond:'02:00'},
+ instr:'You will hear three people having a discussion. When you hear the beep, summarize the whole discussion. You will have 10 seconds to prepare and 2 minutes to give your response.',
+ strip:()=>({l:[chip('Recommended',{on:1}),chip('Difficulty: C1',{caret:1})],r:[]}),
+ body:s=>`<div class="row">
+   <div class="iconfig">${PEOPLE}</div>
+   <div class="col" style="margin-left:auto">${player(s==='prepare'?'play':'done',{dur:150})}</div>
+   <div class="col">${recorder(s,{dur:120,wait:'Starts after the beep'})}${s==='respond'?belrow([b('Stop',{cls:'b stop'}),b('← Back to notes',{go:'prepare'})]):''}</div></div>
+  <div class="notepad" data-bel data-ann="1"><div class="notepad-h"><span class="tabs" role="tablist"><button type="button" class="on" data-spk="0">A · Maya</button><button type="button" data-spk="1">B · Dr Chen</button><button type="button" data-spk="2">C · Tom</button></span>${s==='prepare'?b('Go to speaking →',{go:'respond'}):''}</div>
+   <textarea ${s==='prepare'?'':'readonly'} id="sgd-notes" aria-label="Notes for the selected speaker">pro: saves commute cost/time
+students with jobs → more flexible
+"survey: 68% support"</textarea></div>
+  ${s==='review'?review('7<small>/9 ideas</small>',[['Maya','3/3'],['Dr Chen','2/3'],['Tom','2/3']],
+   `<ul class="kp"><li><span class="y">✓</span>Maya supports it: lower commuting costs, easier for working students</li><li><span class="p">~</span>Dr Chen worries lectures get compressed (you did not mention lab time)</li><li><span class="y">✓</span>Tom proposes a one-faculty pilot first</li><li><span class="n">✗</span>Nobody agreed on a start date</li></ul>`,{title:'Who said what'}):''}`,
+ foot:std({prep:'Go to speaking',resp:'Submit & review notes',retry:'Try again'}),
+ notes:[
+  {k:'1',t:'Notes by speaker',d:'One notes tab per speaker, below the audio. Review then checks who said what.',ids:'#sgd-next-step-btn · #sgd-back-to-notes-btn · speaker notes tabs'}],
+ flow:[['Listening','Discussion plays; notes are sorted by speaker.'],['Answering','2 min recorder. Back to notes stays available.'],['Review','Speaker-by-speaker coverage.']]
+});
+
+task({id:'rts',sec:'speaking',code:'RTS',name:'Respond to a Situation',qn:18,total:120,qt:'Fundraiser clash',
+ clock:{prepare:'00:10',respond:'00:40'},
+ instr:'Listen to and read a description of a situation. You will have 10 seconds to think about your answer. Then you will hear a beep. You will have 40 seconds to answer the question. Please answer as completely as you can.',
+ strip:()=>({l:[chip('Topic: Campus life',{caret:1})],r:[]}),
+ body:s=>`<div class="row">
+   <p class="passage grow" style="max-width:70ch">You are a member of a student club. The club president has asked you to organise this month's fundraising event, but you have two exams in the same week. Speak to the president: explain the situation and suggest what you can and cannot do.</p>
+   <div class="col">${player(s==='prepare'?'play':'done',{dur:14})}${recorder(s,{prep:10})}${s==='respond'?belrow([b('Stop recording',{cls:'b stop',go:'review'})]):''}</div></div>
+  ${s==='review'?review('Pending',[['Transcript','ready'],['AI score','not requested']],
+   `<p class="sample"><b>Your transcript:</b> Hi, thanks for thinking of me for the fundraiser. Unfortunately I have two exams that week, so I can't lead it, but I could design the posters this weekend and…</p>
+    <div class="belrow" data-ann="1">${b('Submit to AI scoring',{cls:'b solid'})}</div>
+    <div class="belrow" data-ann="2">${seg(['Full sample','Simplified'],0,{data:'rtss'})}</div>
+    <p class="sample" id="rts-sample">Hi Sam, thanks for trusting me with the fundraiser. I'd really like to help, but I have two exams that week, so I can't coordinate the whole event. What I can do is design the posters and set up the online ticket page before the weekend. Could someone else handle the day itself?</p>`,{title:'Your response'}):''}`,
+ foot:std({resp:'Stop & review',retry:'Try again',rv:[b('Next question →',{cls:'fb',act:'nextq'})]}),
+ notes:[
+  {k:'1',t:'AI scoring',d:'Requested from the review, because it costs a call. Signed-out users see Log in here.',ids:'#rts-ai-score-btn · #rts-ai-score-login-btn'},
+  {k:'2',t:'Sample tabs',d:'Full and simplified samples in one place.',ids:'data-tab="full" · data-tab="simplified"'}],
+ flow:[['Before answering','Read and listen, then a 10 s countdown.'],['Answering','40 s recorder.'],['Review','Transcript, AI scoring on request, samples.']]
+});
+
+/* ===== WRITING ===== */
+const SWT_PASSAGE='Microplastics — fragments smaller than five millimetres — have now been detected in tap water on every inhabited continent. Most originate from the breakdown of larger plastic waste, synthetic clothing fibres released during washing, and tyre wear washed into drains. Conventional treatment plants remove a large share of the bigger particles, yet the smallest fragments pass through filtration largely unaffected. <mark class="ev">Although the health effects of long-term exposure are still uncertain, laboratory studies suggest the particles can carry toxic chemicals and cross into human tissue.</mark> <mark class="ev">Researchers therefore argue that reducing plastic waste at its source is likely to be far more effective than relying on improvements to water treatment alone.</mark>';
+task({id:'swt',sec:'writing',code:'SWT',name:'Summarize Written Text',qn:66,total:250,qt:'Microplastics in tap water',
+ clock:{prepare:'10:00',respond:'07:42'},
+ instr:'Read the passage below and summarize it using one sentence. Type your response in the box at the bottom of the screen. You have 10 minutes to finish this task. Your response will be judged on the quality of your writing and on how well your response presents the key points in the passage.',
+ strip:()=>({l:[b('Random: Off',{flag:'rand',ann:'1'})],r:[]}),
+ body:s=>`<p class="passage${s==='review'?' evid':''}">${SWT_PASSAGE}</p>
+  ${writer({value:s==='prepare'?'':'Microplastics, which come mainly from plastic waste, clothing fibres and tyres, now appear in tap water worldwide and are only partly removed by treatment, so although their health effects remain uncertain, researchers argue that cutting plastic waste at source is more effective than better filtration.',rows:4,min:5,max:75,target:'One sentence · 5–75 words',tann:'2',ro:s==='review'})}
+  ${s==='review'?review('7<small>/9</small>',[['Content','3/4'],['Form','1/1'],['Grammar','2/2'],['Vocabulary','1/2']],
+   `<p class="sample">Highlighted sentences in the passage are the ones your summary used. It misses that particles <b>may carry toxic chemicals</b>.</p><div class="belrow" data-ann="3">${b('Submit to AI scoring',{cls:'b solid'})}</div>`):''}`,
+ foot:std({prep:'Start writing',resp:'Submit summary',retry:'Try again'}),
+ notes:[
+  {k:'1',t:'Random question mode',d:'Next picks a random unseen prompt.',ids:'#swt-random-toggle-btn'},
+  {k:'2',t:'Word target',d:'Target pill in the word-count bar turns green inside 5–75 words. The test only shows the count.',ids:'#swt-input'},
+  {k:'3',t:'AI scoring and evidence',d:'After submitting, the passage highlights the sentences your summary used, so the answer and the evidence are side by side.',ids:'#swt-ai-score-btn · #swt-results-container'}],
+ flow:[['Before writing','Read the passage. Start writing starts the 10:00 clock.'],['Writing','Word count, target and Cut / Copy / Paste as in the test.'],['Review','Rubric score, evidence highlights, AI scoring.']]
+});
+
+const GUIDE={
+ mm:`<ul class="mm"><li><b>Question →</b> Remote work: good for both sides <i>or</i> harms teamwork?<ul><li><b>View A — Benefits:</b> flexible hours · no commute · wider talent pool</li><li><b>View B — Drawbacks:</b> fewer spontaneous chats · weaker onboarding · blurred culture</li><li><b>Your position:</b> hybrid 3+2 keeps both</li></ul></li></ul>`,
+ pipe:`<ol class="mm" style="list-style:decimal;padding-left:18px"><li><b>Phân tích đề</b> — 2 views + your opinion</li><li><b>Chọn quan điểm</b> — hybrid</li><li><b>Thân bài 1 (PEEL)</b> — View A + example</li><li><b>Thân bài 2 (PEEL)</b> — View B + example</li><li><b>Kết luận</b> — restate + recommendation</li></ol>`,
+ mx:`<div class="tbl-wrap"><table class="matrix"><thead><tr><th>Tiêu chí</th><th>View A (benefits)</th><th>View B (drawbacks)</th></tr></thead><tbody><tr><td>Productivity</td><td>fewer interruptions</td><td>slower feedback</td></tr><tr><td>Collaboration</td><td>async tools</td><td>no hallway talk</td></tr><tr><td>Cost</td><td>less office space</td><td>home-office stipends</td></tr><tr><td>Wellbeing</td><td>no commute</td><td>isolation</td></tr><tr><td>Culture</td><td>trust-based</td><td>weaker identity</td></tr></tbody></table></div>`,
+ ls:`<p class="sample" style="font-size:13px">Đề “discuss both views” yêu cầu trình bày cân bằng hai quan điểm trước khi nêu ý kiến. Mở bài: paraphrase đề + thesis (hybrid). Mỗi thân bài theo PEEL: Point – Explain – Example – Link. Tránh đưa ý kiến cá nhân vào thân bài 1.</p>`
+};
+task({id:'essay',sec:'writing',code:'WE',name:'Write Essay',qn:88,total:320,qt:'Remote work and teamwork',
+ clock:{prepare:'20:00',respond:'14:26'},labels:['Guided plan','Writing','Review'],
+ instr:'You will have 20 minutes to plan, write and revise an essay about the topic below. Your response will be judged on how well you develop a position, organize your ideas, present supporting details, and control the elements of standard written English. You should write 200-300 words.',
+ strip:()=>({l:[b('Random: Off',{flag:'rand'}),chip('Type: Discuss both views',{caret:1,ann:'1'}),chip('Topic: Work & technology',{caret:1}),b('Clear',{})],
+   r:[b('Guided help',{flag:'guide',ann:'2'}),seg(['VI','EN'],0,{label:'Support'}),b('A−',{title:'Smaller text'}),b('A+',{title:'Larger text'}),b('⛶ Full screen',{ann:'3'})]}),
+ body:s=>{
+  const g=flags.essay||new Set(); const lay=cur.layout||'mm';
+  const showRail=s==='prepare'||g.has('guide');
+  const rail=showRail?`<aside class="rail" data-bel data-ann="4"><div class="rail-h"><h4>Guided walkthrough</h4>${sel(['Level: Scaffolded','Level: Hints only'],{label:'Guided level'})}</div>
+    <div class="layouts" role="group" aria-label="Guide layout">${[['mm','Sơ đồ ý tưởng'],['pipe','Dây chuyền'],['mx','Ma trận'],['ls','Giáo trình']].map(([k,l])=>`<button type="button" class="b" data-layout="${k}" aria-pressed="${lay===k}">${l}</button>`).join('')}</div>
+    ${GUIDE[lay]}${s==='prepare'?`<div>${b("I'm ready — start writing",{cls:'b solid',go:'respond'})}</div>`:''}</aside>`:'';
+  const essay='In recent years, remote work has shifted from a rare perk to a mainstream arrangement. While some argue that it benefits both staff and employers, others believe it erodes teamwork and company culture. This essay will examine both perspectives before arguing that a hybrid model offers the best balance.\n\nOn the one hand, remote work gives employees flexibility and removes long commutes, which can raise productivity…';
+  return `<div class="${showRail?'essay-split':''}"><div class="col" style="gap:14px"><p class="prompt-strong">Some people believe that remote work benefits both employees and employers, while others argue that it weakens teamwork and company culture. Discuss both views and give your own opinion.</p>
+   ${s==='prepare'?'':writer({value:essay,rows:9,min:200,max:300,target:'Target 200–300 words',ro:s==='review'})}</div>${rail}</div>
+   ${s==='review'?review('19<small>/26</small>',[['Content','5/6'],['Form','2/2'],['Development','4/6'],['Grammar','2/2'],['Linguistic range','4/6'],['Spelling','1/2'],['Vocabulary','1/2']],
+    `<p class="sample">Body paragraph 2 lacks a concrete example; linking between paragraphs relies on “On the other hand” twice.</p><div class="belrow" data-ann="5">${b('Score with Gemini',{cls:'b solid'})}${b('Queue local AI scoring')}</div>`):''}`;},
+ foot:std({prep:'Start writing',resp:'Submit essay',retry:'Try again'}),
+ notes:[
+  {k:'1',t:'Prompt filters',d:'Task type and topic filters, plus Random and Clear, in the strip.',ids:'#essay-filter-type · #essay-filter-topic · #essay-filter-reset · #essay-random-toggle-btn'},
+  {k:'2',t:'Guided help, language, text size',d:'Guided help reopens the walkthrough beside the essay while writing. VI/EN and A−/A+ affect the guide only.',ids:'#essay-request-guided-btn · #essay-guided-language-toggle · #essay-guided-scale-down · #essay-guided-scale-up'},
+  {k:'3',t:'Full screen',d:'Hides the page chrome. The test frame stays.',ids:'#essay-fullscreen-btn'},
+  {k:'4',t:'Guided walkthrough',d:'The four layouts (mind map, pipeline, matrix, lesson) switch in place. The rail sits beside the prompt, like the test\'s planning space.',ids:'#essay-guided-level · layout buttons · #essay-fs-ready-btn'},
+  {k:'5',t:'AI scoring',d:'Gemini and local scoring are offered after the 7-criterion rubric.',ids:'#essay-ai-score-btn · #essay-local-ai-score-btn'}],
+ flow:[['Guided plan','Prompt with the walkthrough rail. The writing box is hidden until you are ready.'],['Writing','20:00 clock, writing box, optional guide rail.'],['Review','Rubric by criterion, comments, AI scoring.']]
+});
+
+/* ===== LISTENING ===== */
+function voiceSpeed(speeds,active,ann){return belrow([sel(['Voice: US female (Jenny)','Voice: UK male (Ryan)','Voice: AU female (Natasha)'],{label:'Voice'}),seg(speeds,active,{label:'Speed'})],ann);}
+const lPlayer=(s,d)=>player(s==='prepare'?'wait':(s==='respond'?'play':'done'),{dur:d});
+
+task({id:'sst',sec:'listening',code:'SST',name:'Summarize Spoken Text',qn:40,total:160,qt:'Coral bleaching',
+ clock:{prepare:'10:00',respond:'08:51'},
+ instr:'You will hear a short lecture. Write a summary for a fellow student who was not at the lecture. You should write 50-70 words. You have 10 minutes to finish this task. Your response will be judged on the quality of your writing and on how well your response presents the key points presented in the lecture.',
+ strip:()=>({l:[chip('Recommended',{on:1}),chip('Topic: Science',{caret:1})],r:[]}),
+ body:s=>`<div class="row center"><div class="col">${lPlayer(s,80)}${belrow([`<span class="note">${s==='review'?'Seeking unlocked':'Plays once · seeking unlocks after submitting'}</span>`],'1')}</div></div>
+  ${writer({value:s==='prepare'?'':'The lecture explained that coral bleaching happens when warmer water makes corals expel the algae that feed them. Short events can be survived, but repeated heatwaves leave too little recovery time, so reefs die. The speaker concluded that local action like reducing pollution helps, but only cutting emissions can stop bleaching at scale.',rows:5,min:50,max:70,target:'Target 50–70 words',tann:'2',ro:s==='review'})}
+  ${s==='review'?review('9<small>/12</small>',[['Content','3/4'],['Form','2/2'],['Grammar','2/2'],['Vocabulary','1/2'],['Spelling','1/2']],
+   `<div class="belrow" data-ann="3">${b('Get AI practice feedback',{cls:'b solid'})}${b('Show transcript')}</div>`):''}`,
+ foot:std({prep:'Play lecture',resp:'Submit',retry:'Try again'}),
+ notes:[
+  {k:'1',t:'Play once, seek after',d:'Same rule as now: one play, then the timeline unlocks after submitting.',ids:'#sst-play-btn · #sst-seek'},
+  {k:'2',t:'Word target',d:'Target pill for 50–70 words.',ids:'#sst-response'},
+  {k:'3',t:'AI feedback',d:'Shown in the review area.',ids:'#sst-ai-score-btn · #sst-retry-btn'}],
+ flow:[['Before answering','Audio countdown.'],['Answering','Lecture plays, then you write.'],['Review','Rubric, AI feedback, transcript.']]
+});
+
+const LMCMA_OPTS=[['A','It uses far less water than field farming.',1],['B','It no longer needs any electricity.',0],['C','Crops can be harvested all year round.',1],['D','Produce travels shorter distances to shoppers.',1],['E','It removes the need for farm workers.',0]];
+function mcq(opts,s,type,picked,name){
+  return `<div class="opts" role="${type==='radio'?'radiogroup':'group'}">${opts.map(([k,t,c],i)=>{
+    const p=picked.includes(i);let cls=p?'sel':'',tag='';
+    if(s==='review'){cls=c&&p?'ok':(!c&&p?'bad':(c?'missed':''));tag=c&&p?'<span class="tag ok">+1</span>':(!c&&p?'<span class="tag bad">−1</span>':(c?'<span class="tag ok">missed</span>':''));}
+    return `<label class="${cls}"><input type="${type}" name="${name}" ${p?'checked':''} ${s==='review'?'disabled':''}> <span><b>${k}</b>&nbsp; ${t}</span>${tag}</label>`;}).join('')}</div>`;
+}
+task({id:'lmcma',sec:'listening',code:'MCM',name:'Multiple Choice, Multiple Answers',qn:73,total:280,qt:'Vertical farming',
+ instr:'Listen to the recording and answer the question by selecting all the correct responses. You will need to select more than one response.',
+ strip:()=>({l:[chip('Recommended',{on:1})],r:[b('A−',{ann:'2',title:'Smaller text'}),b('A+',{title:'Larger text'})]}),
+ body:s=>`<div class="row"><div class="col grow"><p class="q">According to the speaker, which of the following are advantages of vertical farming?</p>${mcq(LMCMA_OPTS,s,'checkbox',s==='prepare'?[]:[0,1,2],'mcm')}</div>
+  <div class="col">${lPlayer(s,45)}${voiceSpeed(['0.8x','1.0x','1.2x'],1,'1')}</div></div>
+  ${s==='review'?review('1<small>/3</small>',[['Correct','+2'],['Wrong','−1'],['Missed','1']],
+   `<details class="expl" data-ann="3"><summary>Explanation</summary><p>The speaker says towers use “about ninety percent less water” (A), that lighting makes harvests “independent of the seasons” (C), and that farms sit “inside the cities they feed” (D). Electricity is described as the main cost, so B is wrong.</p></details>`):''}`,
+ foot:std({resp:'Submit',retry:'Retry'}),
+ notes:[
+  {k:'1',t:'Voice and speed',d:'The voice list and 0.8 / 1.0 / 1.2× speed sit under the player.',ids:'#lmcma-voice-select · speed buttons · #lmcma-play-btn · #lmcma-seek'},
+  {k:'2',t:'Text size',d:'A− / A+ for the options.',ids:'#lmcma-font-decrease · #lmcma-font-increase'},
+  {k:'3',t:'Scored review',d:'+1 / −1 per option, the same scoring as the test. Missed answers are outlined; the explanation opens below.',ids:'#lmcma-submit-btn · #lmcma-retry-btn · explanation accordion'}],
+ flow:[['Before answering','Audio countdown; options are visible.'],['Answering','Select options; yellow marks selections as in the test.'],['Review','Marked options with scores and an explanation.']]
+});
+
+const FIB_BLANKS=[['layers','layers'],['nutrients','nutrition'],['higher','higher'],['costs','cost']];
+task({id:'fibl',sec:'listening',code:'FIB',name:'Fill in the Blanks',qn:112,total:300,qt:'Vertical farms',
+ instr:'You will hear a recording. Type the missing words in each blank.',
+ strip:()=>({l:[chip('Recommended',{on:1}),chip('Difficulty: B2',{caret:1}),seg(['Single words','Phrases'],0,{label:'Blanks',ann:'1'})],
+   r:[b('Skip reading time',{}),b('Show hints',{flag:'hints',ann:'2'}),b('Try new blanks',{})]}),
+ body:s=>{const h=has('hints');const gap=(i)=>{const [ans,typed]=FIB_BLANKS[i];if(s==='prepare')return `<input class="gap" aria-label="Blank ${i+1}" placeholder="${h?ans[0]+'…':''}">`;if(s==='respond')return `<input class="gap" aria-label="Blank ${i+1}" value="${typed}">`;const ok=ans===typed;return `<input class="gap ${ok?'ok':'bad'}" aria-label="Blank ${i+1}" value="${typed}" disabled>${ok?'':`<span class="fix">${ans}</span>`}`;};
+  return `<div class="row center"><div class="col">${lPlayer(s,40)}${belrow([`<span style="display:inline-flex" data-bel><select class="belsel" aria-label="Speed"><option>0.8x</option><option selected>1.0x</option><option>1.2x</option></select></span>`],'3')}</div></div>
+  <p class="passage">Vertical farms grow crops in stacked ${gap(0)} inside controlled environments. Because light, water and ${gap(1)} are carefully managed, yields can be much ${gap(2)} than on conventional farms, although energy ${gap(3)} remain a major concern.</p>
+  ${s==='review'?review('2<small>/4</small>',[['Correct','layers · higher'],['Spelling / form','nutrition → nutrients · cost → costs']],'<div class="belrow">'+b('Replay with transcript')+'</div>'):''}`;},
+ foot:std({resp:'Check',retry:'Retry'}),
+ notes:[
+  {k:'1',t:'Single words / phrases',d:'The two current practice cards become a switch in the strip.',ids:'Fill single words · Fill phrases · #check-phrases-btn'},
+  {k:'2',t:'Hints, skip, new blanks',d:'Show hints puts first-letter placeholders in the blanks. Try it.',ids:'#support-mode-btn · #skip-reading-btn · #randomize-blanks-btn'},
+  {k:'3',t:'Speed',d:'Speed menu under the player.',ids:'#speed-select-extended · #play-pause-extended-btn'}],
+ flow:[['Before answering','Reading time, then the audio plays.'],['Answering','Type into the blanks.'],['Review','Each blank marked, with the correct word next to wrong ones.']]
+});
+
+const HCS_OPTS=[['A','Honeybee numbers are falling mainly because of harsh winters, and beekeepers can do little about it.',0],['B','Several pressures combine to harm bees — pesticides, habitat loss and parasites — and tackling only one of them is unlikely to reverse the decline.',1],['C','The loss of honeybees has been exaggerated, since wild pollinators can easily replace them.',0],['D','Parasitic mites are now fully controlled, so research is shifting towards pesticides.',0]];
+task({id:'hcs',sec:'listening',code:'HCS',name:'Highlight Correct Summary',qn:29,total:140,qt:'Honeybee decline',
+ instr:'You will hear a recording. Click on the paragraph that best relates to the recording.',
+ strip:()=>({l:[chip('Recommended',{on:1})],r:[]}),
+ body:s=>`<div class="row"><div class="col grow">${mcq(HCS_OPTS,s,'radio',s==='prepare'?[]:[1],'hcs').replace('class="opts"','class="opts hcs"')}</div>
+  <div class="col">${lPlayer(s,70)}${belrow([sel(['Accent: US','Accent: UK','Accent: AU'],{label:'Accent'}),seg(['0.75x','1.0x','1.25x','1.5x'],1,{label:'Speed'})],'1')}</div></div>
+  ${s==='review'?review('1<small>/1</small>',[['Why B','names all three pressures and the “no single fix” conclusion']],''):''}`,
+ foot:std({resp:'Submit',retry:'Try again'}),
+ notes:[{k:'1',t:'Accent and speed',d:'Four speeds (0.75–1.5×) and an accent menu under the player.',ids:'#hcs-voice-select · speed buttons · #hcs-play-btn'}],
+ flow:[['Before answering','Countdown.'],['Answering','Pick one paragraph.'],['Review','Result with the reason.']]
+});
+
+const LMCSA_OPTS=[['A','To compare the cost of two transport projects.',0],['B','To explain why a city abandoned its tram network and later rebuilt it.',1],['C','To argue that buses are more reliable than trams.',0],['D','To describe how trams are manufactured.',0]];
+task({id:'lmcsa',sec:'listening',code:'MCS',name:'Multiple Choice, Single Answer',qn:51,total:260,qt:'The return of the tram',
+ instr:'Listen to the recording and answer the single-choice question by selecting the correct response. Only one response is correct.',
+ strip:()=>({l:[chip('Recommended',{on:1})],r:[b('A−',{title:'Smaller text'}),b('A+',{title:'Larger text'})]}),
+ body:s=>`<div class="row"><div class="col grow"><p class="q">What is the main purpose of the talk?</p>${mcq(LMCSA_OPTS,s,'radio',s==='prepare'?[]:[1],'mcs')}</div>
+  <div class="col">${lPlayer(s,50)}${voiceSpeed(['0.8x','1.0x','1.2x'],1,'1')}</div></div>
+  ${s==='review'?review('1<small>/1</small>',[],`<details class="expl"><summary>Explanation</summary><p>The whole talk follows the tram network from its closure in 1957 to its rebuilding in 2011; the costs are only a detail.</p></details>`):''}`,
+ foot:std({resp:'Submit',retry:'Retry'}),
+ notes:[{k:'1',t:'Voice and speed',d:'Same controls as MCM.',ids:'#lmcsa-voice-select · speed buttons · #lmcsa-font-decrease · #lmcsa-font-increase'}],
+ flow:[['Before answering','Countdown.'],['Answering','Choose one.'],['Review','Result and explanation.']]
+});
+
+const SMW_OPTS=[['A','the price of petrol will fall.',0],['B','polluters pay for the damage they cause.',1],['C','factories will close overnight.',0],['D','taxes on income can be abolished.',0],['E','consumers stop buying cars.',0]];
+task({id:'smw',sec:'listening',code:'SMW',name:'Select Missing Word',qn:19,total:150,qt:'Carbon pricing',
+ instr:'You will hear a recording about carbon pricing. At the end of the recording the last word or group of words has been replaced by a beep. Select the correct option to complete the recording.',
+ strip:()=>({l:[chip('Recommended',{on:1})],r:[]}),
+ body:s=>`<div class="row"><div class="col grow">${mcq(SMW_OPTS,s,'radio',s==='prepare'?[]:[1],'smw')}</div>
+  <div class="col">${lPlayer(s,35)}${voiceSpeed(['0.8x','1.0x','1.2x'],1,'1')}</div></div>
+  ${s==='review'?review('1<small>/1</small>',[],`<p class="sample"><b>Ending:</b> “…the principle is simple: a carbon price makes sure that <u>polluters pay for the damage they cause</u>.”</p>`):''}`,
+ foot:std({resp:'Submit',retry:'Retry'}),
+ notes:[{k:'1',t:'Voice and speed',d:'Under the player.',ids:'#smw-voice-select · speed buttons · #smw-play-btn'}],
+ flow:[['Before answering','Countdown.'],['Answering','Choose the ending.'],['Review','The full ending, underlined.']]
+});
+
+const HIW_WORDS='Researchers have found that people who walk regularly tend to sleep more deeply and report fewer feelings of anxiety . The study followed nearly two thousand adults over a period of five years and measured their daily steps using wearable devices .'.split(' ');
+const HIW_DIFF={17:'soundly',21:'stress',27:'three',35:'tracked'};
+task({id:'hiw',sec:'listening',code:'HIW',name:'Highlight Incorrect Words',qn:84,total:210,qt:'Walking and sleep',
+ instr:'You will hear a recording. Below is a transcription of the recording. Some words in the transcription differ from what the speaker(s) said. Please click on the words that are different.',
+ strip:()=>({l:[chip('Recommended',{on:1})],r:[]}),
+ body:s=>{const picked=s==='prepare'?[]:[17,27,30];
+  const words=HIW_WORDS.map((w,i)=>{if(w==='.')return '.';let c='hw';if(s==='review'){const d=i in HIW_DIFF,p=picked.includes(i);c+=d&&p?' hit':(d?' miss':(p?' false':''));}else if(picked.includes(i))c+=' hl';
+   return `<span class="${c}" data-w="${i}">${w}</span>${s==='review'&&i in HIW_DIFF?`<span class="said">${HIW_DIFF[i]}</span>`:''}`;}).join(' ').replace(/ \./g,'.');
+  return `<div class="row center"><div class="col">${lPlayer(s,30)}${voiceSpeed(['0.8x','1.0x','1.2x'],1,'1')}</div></div>
+  <p class="passage">${words}</p>
+  ${s==='review'?review('1<small>/4</small>',[['Found','deeply'],['Missed','anxiety · two · measured'],['Wrong clicks','over']],
+   `<div class="legend"><span><span class="hw hit">word</span> found</span><span><span class="hw miss">word</span> missed</span><span><span class="hw false">word</span> wrong click (−1)</span><span><span class="said">word</span> what the speaker said</span></div>
+    <details class="expl" data-ann="2"><summary>Show explanation</summary><p>Listen for synonyms swapped into the transcript: “deeply” for <i>soundly</i>, “anxiety” for <i>stress</i>, “measured” for <i>tracked</i>. Numbers are often changed too (“two” for <i>three</i>).</p></details>`):''}`;},
+ foot:std({resp:'Submit',retry:'Retry'}),
+ notes:[
+  {k:'1',t:'Voice and speed',d:'Under the player. Clicking a word highlights it yellow, as in the test.',ids:'#hiw-voice-select · speed buttons · #hiw-play-btn'},
+  {k:'2',t:'Explanation',d:'Review shows what the speaker actually said above each changed word.',ids:'#hiw-explanation-toggle'}],
+ flow:[['Before answering','Countdown; transcript visible.'],['Answering','Click words while listening.'],['Review','Found / missed / wrong words with what was actually said.']]
+});
+
+task({id:'wfd',sec:'listening',code:'WFD',name:'Write from Dictation',qn:318,total:1200,qt:'Assignment deadline',
+ instr:'You will hear a sentence. Type the sentence in the box below exactly as you hear it. Write as much of the sentence as you can. You will hear the sentence only once.',
+ strip:()=>({l:[chip('Recommended',{on:1,ann:'1'}),seg(['Adaptive','Manual'],0),chip('Status: All',{caret:1}),chip('Length: Medium',{caret:1}),chip('Difficulty: B1',{caret:1}),b('↺ Reset',{title:'Reset progress'})],
+   r:[b('Word Ghost',{flag:'ghost',imp:'−0.15×',ann:'3'}),b('First-Letter Peek',{flag:'first',imp:'−0.35×'}),b('Reveal word',{flag:'reveal',imp:'−0.25×'}),b('Transcript Glimpse',{flag:'glimpse',imp:'−0.60×'})]}),
+ body:s=>{const ws=WFD_TARGET.replace('.','').split(' ');
+  let hint='';if(has('glimpse'))hint=WFD_TARGET;else if(has('first'))hint=ws.map(w=>w[0]+'_'.repeat(w.length-1)).join(' ');else if(has('ghost'))hint=ws.map(w=>'_'.repeat(w.length)).join(' ');
+  if(has('reveal')&&!has('glimpse'))hint=(hint||ws.map(w=>'_'.repeat(w.length)).join(' ')).split(' ').map((x,i)=>i===5?ws[5]:x).join(' ');
+  return `<div class="row center"><div class="col">${lPlayer(s,6)}${belrow([b('Speed 1.0×',{title:'Playback speed'}),b('Loop',{flag:'loop'}),b('Chunking',{flag:'chunk',cost:'4c'})],'2')}</div></div>
+  ${hint&&s!=='review'?`<p class="coach mono" data-bel><b>Hint</b>&nbsp; ${hint}</p>`:''}
+  ${writer({value:s==='prepare'?'':'Students are required to submit the assignment before end of the semester.',rows:3,ro:s==='review'})}
+  ${s==='review'?review('10<small>/13 words</small>',[['Accuracy','77%'],['Hint calibration','×1.00']],
+   `${diff([['Students','ok'],['are','ok'],['required','ok'],['to','ok'],['submit','ok'],['their','wrong','you wrote: the'],['assignments','wrong','you wrote: assignment'],['before','ok'],['the','miss'],['end','ok'],['of','ok'],['the','ok'],['semester.','ok']])}
+    <div class="legend"><span><i style="background:#dcfce7"></i>correct</span><span><i style="background:#fee2e2"></i>wrong or missing</span><span>Hover a red word to see what you typed</span></div>`):''}`;},
+ foot:std({resp:'Check',retry:'Retry'}),
+ notes:[
+  {k:'1',t:'Queue and filters',d:'Same strip as Repeat Sentence: Recommended, Adaptive/Manual, status, length, difficulty, Reset.',ids:'#recommended-btn-type · #adaptive-type · #manual-type · #status-filter-btn-type · #length-filter-btn-type · #difficulty-filter-btn-type · #reset-progress-type-btn'},
+  {k:'2',t:'Audio helpers',d:'Speed, Loop and Chunking (4 coins) under the player.',ids:'#speed-toggle-btn · #loop-btn · #chunking-btn · #wfd-play-btn'},
+  {k:'3',t:'Hint skills with calibration cost',d:'The four skills show their score impact on the button, and the hint line appears above the box. Try switching them on.',ids:'#skill-word-ghost · #skill-first-letter · #skill-hint-reveal · #skill-transcript-glimpse · #hint-btn'}],
+ flow:[['Before answering','Short countdown; the sentence plays once.'],['Answering','Type into the test writing box.'],['Review','Word-by-word check against the sentence.']]
+});
+
+/* ---------- shared notes ---------- */
+const SHARED=[
+ {k:'A',t:'Question picker in the card header',d:'The existing v7 pill: previous, question, next. The pill opens a searchable list — click it. Exam mode swaps it for a plain "Question 142 of 486".',ids:'#{mode}-v7-prev-btn · #{mode}-v7-question-pill · #{mode}-v7-next-btn · #{mode}-v7-jump-search'},
+ {k:'B',t:'Practice tools row',d:'Filters as pills on the left, helpers as toggles on the right, the same controls in every mode. Exam mode leaves only its own switch.',ids:''},
+ {k:'C',t:'Step action beside Next',d:'The step action (Start, Check, Submit) is the blue button until you check; after that Next turns blue. Retry moves bottom left. Skipping asks for confirmation.',ids:''},
+ {k:'D',t:'Review in place',d:'Score, sub-scores and feedback appear under the answer on the same card, with no second panel or page.',ids:''}];
+
+/* ---------- render ---------- */
+const byId=id=>T.find(t=>t.id===id);
+const frameEl=document.getElementById('frame');
+let ticker=null;
+
+function renderNav(){
+  document.getElementById('sec-tabs').innerHTML=Object.entries(SECS).map(([k,v])=>`<button type="button" role="tab" aria-selected="${cur.sec===k}" data-sec="${k}" style="--c:var(--sk-${k})">${v}<span>${T.filter(t=>t.sec===k).length}</span></button>`).join('');
+  document.getElementById('task-chips').innerHTML=T.filter(t=>t.sec===cur.sec).map(t=>`<button type="button" class="tchip" aria-pressed="${cur.task===t.id}" data-task="${t.id}"><b>${t.code}</b>${t.name}</button>`).join('');
+  const t=byId(cur.task);const labels=t.labels||['Before answering','Answering','Review'];
+  document.getElementById('states').innerHTML=`<span class="lbl">State</span>`+['prepare','respond','review'].map((k,i)=>`<button type="button" aria-pressed="${cur.state===k}" data-go="${k}">${labels[i]}</button>`).join('');
+}
+function renderNotes(){
+  const t=byId(cur.task);
+  document.getElementById('notes-title').textContent=`What BEL adds: ${t.name}`;
+  const li=(n,shared)=>`<li data-k="${n.k}"><span class="nk${shared?' shared':''}">${n.k}</span><div><b>${n.t}</b><p>${n.d}</p>${n.ids?`<code>${n.ids.replace(/\{mode\}/g,t.id)}</code>`:''}</div></li>`;
+  document.getElementById('notes').innerHTML=t.notes.map(n=>li(n)).join('')+SHARED.map(n=>li(n,true)).join('');
+  const idx={prepare:0,respond:1,review:2}[cur.state];
+  document.getElementById('flow').innerHTML=t.flow.map(([h,p],i)=>`<li class="${i===idx?'now':''}"><div><b>${h}</b><p>${p}</p></div></li>`).join('');
+}
+function renderFrame(){
+  const t=byId(cur.task),s=cur.state,st=t.strip(s),f=t.foot(s),qn=qnums[t.id];
+  const fl=[...(flags[t.id]||[])].filter(x=>x.startsWith('cs-')).join(' ');
+  const clock=t.clock&&t.clock[s]?`<div class="q-timer">Time Remaining <b data-clock>${t.clock[s]}</b></div>`:'';
+  frameEl.innerHTML=`<div class="pte${cur.ann?' ann':''}${cur.exam?' exam':''}" id="pte" style="--c:var(--sk-${t.sec})">
+   <header class="fx-top"><div class="fx-id"><span class="fx-ic">${t.code}</span><div><small>${SECS[t.sec]}</small><b>${t.name}</b></div></div>
+     <span class="pte-count" data-exam-only>Question ${qn} of ${t.total}</span>
+     <div class="qnav" data-bel data-ann="A"><button type="button" class="qn-b" data-q="-1" aria-label="Previous question">‹</button><button type="button" class="qn-pill" data-act="sheet" aria-haspopup="listbox">#${qn}<small>${t.qt}</small><span class="car">▼</span></button><button type="button" class="qn-b" data-q="1" aria-label="Next question">›</button></div></header>
+   <div class="strip"><div class="st-l"><span class="st-tag" data-bel data-ann="B">Practice tools</span>${st.l.join('')}</div><div class="st-r">${st.r.join('')}<label class="exsw"><input type="checkbox" data-act="exam" ${cur.exam?'checked':''}> Exam mode</label></div></div>
+   <main class="pte-body ${fl}">${clock}
+    <p class="pte-instr">${t.instr}</p>${t.body(s)}</main>
+   <footer class="fx-foot"><div class="pf-l">${f.L.join('')}</div><div class="pf-r">${f.R.length?`<span class="fgrp" data-bel data-ann="C">${f.R.join('')}</span>`:''}<button type="button" class="fb next${s==='review'?' pri':''}" data-act="next">Next →</button></div></footer>
+   <div class="pte-modal" hidden><div class="mb" role="dialog" aria-modal="true" aria-labelledby="mb-h"><div class="mb-h" id="mb-h">${s==='review'?'Go to the next question?':'Skip without checking?'}</div><p>${s==='review'?'Your result for this question is saved.':'You have not checked this answer yet. It will be marked as skipped.'}</p><div class="mb-f"><button type="button" class="fb" data-act="no">Stay here</button><button type="button" class="fb pri" data-act="yes">Next question</button></div></div></div>
+   <div class="qsheet" hidden><div class="qsheet-h">Jump to a question<button type="button" data-act="sheet" aria-label="Close">×</button></div><input type="search" placeholder="Search by number or title" aria-label="Search questions"><ul>${sheetItems(t)}</ul></div>
+  </div>`;
+  bindFrame();startTicker();if(document.getElementById('notes').children.length)markNotes();
+}
+function sheetItems(t){
+  const titles=['Coastal erosion','Ancient trade routes','Remote learning','Sleep and memory','Recycling myths','City cycling'];
+  const qn=qnums[t.id];const out=[];
+  for(let i=-2;i<=3;i++){const n=qn+i;if(n<1)continue;const title=i===0?t.qt:titles[(n+i+6)%titles.length];const st=i<0?['done','Done'] : i===0?['','Current']:(i===2?['flag','Flagged']:['','New']);
+    out.push(`<li><button type="button" class="${i===0?'cur':''}" data-jump="${n}"><span>#${n}</span><span>${title}</span><span class="qs-st ${st[0]}">${st[1]}</span></button></li>`);}
+  return out.join('');
+}
+function markNotes(){const on=new Set([...document.querySelectorAll('#pte [data-ann]')].map(e=>e.dataset.ann));document.querySelectorAll('#notes li[data-k]').forEach(li=>li.classList.toggle('off',!on.has(li.dataset.k)&&!cur.exam));}
+function render(){renderNav();renderFrame();renderNotes();markNotes();}
+
+/* ---------- interactions ---------- */
+function go(state){cur.state=state;render();}
+function nextQ(d){qnums[cur.task]=Math.max(1,qnums[cur.task]+d);cur.state='prepare';render();}
+function bindFrame(){
+  const root=document.getElementById('pte');
+  root.addEventListener('click',e=>{
+    const el=e.target.closest('button,[data-w],.fig.zoomed');if(!el||!root.contains(el))return;
+    if(el.matches('.fig.zoomed')){el.classList.remove('zoomed');return;}
+    if(el.dataset.w!==undefined){if(cur.state!=='review')el.classList.toggle('hl');return;}
+    if(el.dataset.go){go(el.dataset.go);return;}
+    if(el.dataset.q){nextQ(+el.dataset.q);return;}
+    if(el.dataset.jump){qnums[cur.task]=+el.dataset.jump;cur.state='prepare';render();return;}
+    if(el.dataset.flag){const s=flags[cur.task]||(flags[cur.task]=new Set());const f=el.dataset.flag;s.has(f)?s.delete(f):s.add(f);renderFrame();return;}
+    if(el.dataset.layout){cur.layout=el.dataset.layout;renderFrame();return;}
+    if(el.dataset.spk!==undefined){const notes=['pro: saves commute cost/time\nstudents with jobs → more flexible\n"survey: 68% support"','con: same content in 4 days → lectures compressed\nlab sessions? staff workload','compromise: pilot in one faculty for 1 semester\nreview results before rollout'];
+      el.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===el));const ta=document.getElementById('sgd-notes');if(ta)ta.value=notes[+el.dataset.spk];return;}
+    if(el.dataset.cmd){cmd(el);return;}
+    const seg=el.closest('.seg');if(seg){seg.querySelectorAll('button').forEach(x=>{x.classList.toggle('on',x===el);x.setAttribute('aria-pressed',x===el)});
+      if(el.dataset.rtss!==undefined){const p=document.getElementById('rts-sample');if(p)p.textContent=el.dataset.rtss==='1'?"Hi Sam. I can't run the fundraiser because I have two exams that week. But I can make the posters and the ticket page this weekend. Can someone else do the event day?":"Hi Sam, thanks for trusting me with the fundraiser. I'd really like to help, but I have two exams that week, so I can't coordinate the whole event. What I can do is design the posters and set up the online ticket page before the weekend. Could someone else handle the day itself?";}
+      return;}
+    const a=el.dataset.act;
+    if(a==='next'){root.querySelector('.pte-modal').hidden=false;root.querySelector('[data-act="yes"]').focus();}
+    else if(a==='no'){root.querySelector('.pte-modal').hidden=true;}
+    else if(a==='yes'||a==='nextq'){nextQ(1);}
+    else if(a==='sheet'){const q=root.querySelector('.qsheet');q.hidden=!q.hidden;if(!q.hidden)q.querySelector('input').focus();}
+    else if(a==='zoom'){const fig=document.getElementById('di-fig');if(fig)fig.classList.add('zoomed');}
+  });
+  root.addEventListener('change',e=>{
+    if(e.target.dataset.act==='exam'){setExam(e.target.checked);return;}
+    const inp=e.target;if(inp.closest('.opts')&&inp.type==='checkbox'){inp.closest('label').classList.toggle('sel',inp.checked);}
+    if(inp.closest('.opts')&&inp.type==='radio'){inp.closest('.opts').querySelectorAll('label').forEach(l=>l.classList.toggle('sel',l.contains(inp)));}
+  });
+  root.addEventListener('input',e=>{
+    if(e.target.matches('.wta'))wc(e.target);
+    if(e.target.matches('.qsheet input')){const v=e.target.value.toLowerCase();root.querySelectorAll('.qsheet li').forEach(li=>li.hidden=!li.textContent.toLowerCase().includes(v));}
+  });
+  root.addEventListener('animationend',e=>{if(e.target.matches('.bar i.anim')&&cur.state==='prepare'&&cur.auto)go('respond');});
+  root.addEventListener('keydown',e=>{if(e.key==='Escape'){root.querySelectorAll('.pte-modal,.qsheet').forEach(x=>x.hidden=true);root.querySelector('.fig.zoomed')?.classList.remove('zoomed');}});
+  root.querySelectorAll('.wta').forEach(wc);
+}
+let clip='';
+function cmd(btn){const ta=btn.closest('.wbox').querySelector('.wta');if(ta.readOnly)return;const a=ta.selectionStart,z=ta.selectionEnd,c=btn.dataset.cmd;
+  if(c==='copy'||c==='cut')clip=ta.value.slice(a,z);
+  if(c==='cut')ta.value=ta.value.slice(0,a)+ta.value.slice(z);
+  if(c==='paste'){ta.value=ta.value.slice(0,a)+clip+ta.value.slice(z);ta.selectionStart=ta.selectionEnd=a+clip.length;}
+  ta.focus();wc(ta);}
+function wc(ta){const n=ta.value.trim()?ta.value.trim().split(/\s+/).length:0;const box=ta.closest('.wbox');box.querySelector('[data-wc]').textContent=n;
+  const tg=box.querySelector('[data-target]');if(tg)tg.classList.toggle('ok',n>=+ta.dataset.min&&n<=+ta.dataset.max);}
+function setExam(on){cur.exam=on;document.getElementById('sw-exam').checked=on;document.getElementById('pte').classList.toggle('exam',on);}
+
+function startTicker(){
+  clearInterval(ticker);
+  ticker=setInterval(()=>{
+    document.querySelectorAll('#pte [data-count]').forEach(el=>{const n=+el.textContent;if(n>0)el.textContent=n-1;if(n===1&&cur.state==='prepare'&&cur.auto)setTimeout(()=>{if(cur.state==='prepare')go('respond');},500);});
+    document.querySelectorAll('#pte [data-clock]').forEach(el=>{const [m,s]=el.textContent.split(':').map(Number);let t=m*60+s;if(t>0)t--;el.textContent=String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');});
+  },1000);
+}
+
+/* chrome */
+document.getElementById('sec-tabs').addEventListener('click',e=>{const x=e.target.closest('[data-sec]');if(!x)return;cur.sec=x.dataset.sec;cur.task=T.find(t=>t.sec===cur.sec).id;cur.state='prepare';render();});
+document.getElementById('task-chips').addEventListener('click',e=>{const x=e.target.closest('[data-task]');if(!x)return;cur.task=x.dataset.task;cur.state='prepare';render();});
+document.getElementById('states').addEventListener('click',e=>{const x=e.target.closest('[data-go]');if(x)go(x.dataset.go);});
+document.getElementById('sw-ann').addEventListener('change',e=>{cur.ann=e.target.checked;document.getElementById('pte').classList.toggle('ann',cur.ann);});
+document.getElementById('sw-exam').addEventListener('change',e=>setExam(e.target.checked));
+document.getElementById('sw-auto').addEventListener('change',e=>{cur.auto=e.target.checked;});
+const notesEl=document.getElementById('notes');
+notesEl.addEventListener('mouseover',e=>{const li=e.target.closest('li[data-k]');document.querySelectorAll('#pte .pulse').forEach(x=>x.classList.remove('pulse'));if(li)document.querySelectorAll(`#pte [data-ann="${li.dataset.k}"]`).forEach(x=>x.classList.add('pulse'));});
+notesEl.addEventListener('mouseleave',()=>document.querySelectorAll('#pte .pulse').forEach(x=>x.classList.remove('pulse')));
+
+render();
+})();
+</script>

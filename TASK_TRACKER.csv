@@ -2201,4 +2201,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1206,2026-09-18,Execute PR 4d tracked media pruning of 19393 assets and merge into integration branch,Done,2026-09-18
 1207,2026-09-18,Execute Stage 5 deployment speed measurement and read-only media gc planning,Done,2026-09-18
 1208,2026-09-19,Plan and execute Stage 6 maintenance release V2.0.12 with cache proof preview verification and production promotion,Done,2026-09-19
-1209,2026-09-19,Develop BEL brand identity exploration (4 logo directions with SVGs and UI examples) and a sourced Bat Tu palette reading from the branding brief,In Progress,
+1209,2026-09-19,Develop BEL brand identity exploration (4 logo directions with SVGs and UI examples) and a sourced Bat Tu palette reading from the branding brief,Done,2026-09-19
+1210,2026-09-19,Create bilingual essay ideas argument table docx for questions 5 9 17 24 30 35 39 43 46,Done,2026-09-19
+1211,2026-09-19,Create PTE exam-style UI redesign mockups for speaking writing and listening modes with BEL controls,Done,2026-09-19
+1212,2026-09-19,Restyle PTE mockups so only the question area follows the reference and the rest uses BEL design tokens,Done,2026-09-19

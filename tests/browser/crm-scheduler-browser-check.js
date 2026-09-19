@@ -1300,6 +1300,9 @@ function startHarnessServer() {
     // The teacher scheduler defaults to the current week; switch to the seeded range.
     await page.locator('#teacher-scheduler-from-date').fill(conflictDate);
     await page.locator('#teacher-scheduler-to-date').fill(weekEnd);
+    // Custom ranges intentionally enter Schedule view. Return to Week before
+    // exercising grid placement and drag interactions.
+    await page.click('#btn-ts-view-grid');
     await page.click('#btn-teacher-scheduler-refresh');
     await page.waitForSelector(`#teacher-scheduler-calendar .teacher-scheduler-slot[data-date="${conflictDate}"][data-time]`);
 

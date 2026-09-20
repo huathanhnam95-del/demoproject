@@ -1764,7 +1764,8 @@
       if (state.phase === 'prep') { await openV3Dialog('noskip', state); return; }
       if (state.phase === 'recording') {
         if (typeof state.config.v3.next?.onConfirmFromRecording !== 'function') throw new Error('Recording must be saved before moving on.');
-        await state.config.v3.next.onConfirmFromRecording();
+        // An explicit cancellation ends this Next action; legacy callbacks may return undefined.
+        if (await state.config.v3.next.onConfirmFromRecording() === false) return;
       }
       if (activeControllers.get(state.modeId) === state) await state.config.v3.next?.goNext?.();
     } catch (error) {

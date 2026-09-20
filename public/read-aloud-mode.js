@@ -4176,6 +4176,7 @@ class ReadAloudMode {
   }
 
   async advancePtePrompt() {
+    if (!this.pendingPteNextOwnership && !this.pendingSession) return false;
     const ownership = this.pendingPteNextOwnership || this.createPteNextOwnership(this.pendingSession);
     this.pendingPteNextOwnership = null;
     if (!this.shouldApplyPteNextOwnership(ownership)) return false;
@@ -4200,7 +4201,7 @@ class ReadAloudMode {
       || ownership.referenceText !== this.currentPromptPlainText) {
       return false;
     }
-    if (!ownership.session) return true;
+    if (!ownership.session) return false;
     return this.shouldApplyAssessment(ownership.session)
       && (this.pendingSession === ownership.session || this.currentRecordingSession === ownership.session);
   }

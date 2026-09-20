@@ -907,10 +907,95 @@ async function run() {
         check(`${width}: confirmed recording-to-Next Retry blocks forced advance`, retryNextRace, {
           state: 'PREP',
           loadCalls: 0,
-          advanceCalled: true,
+          advanceCalled: false,
           oldSessionDisposition: 'discard',
           requestIdAdvanced: true
         });
+
+        for (const cancelCapture of [true, false]) {
+          await page.evaluate(() => {
+            const mode = window.ReadAloudMode;
+            mode.retryCurrentPrompt();
+            mode.stopTimer();
+            let release;
+            const gate = new Promise(resolve => { release = resolve; });
+            const originals = {
+              prepareWavBlob: mode.prepareWavBlob,
+              finishPteRecordingForNext: mode.finishPteRecordingForNext,
+              advancePtePrompt: mode.advancePtePrompt,
+              loadNextPrompt: mode.loadNextPrompt
+            };
+            const race = window.__pteCancelNextRace = {
+              originals, release, preparing: false, goNextCalls: 0, loadCalls: 0,
+              promptId: mode.currentQuestionId, promptToken: mode.promptLifecycleToken
+            };
+            mode.prepareWavBlob = async function (...args) {
+              race.preparing = true;
+              await gate;
+              return originals.prepareWavBlob.apply(this, args);
+            };
+            mode.finishPteRecordingForNext = async function (...args) {
+              race.session = this.currentRecordingSession;
+              const result = await originals.finishPteRecordingForNext.apply(this, args);
+              race.finishResult = result;
+              race.finished = true;
+              return result;
+            };
+            mode.advancePtePrompt = function (...args) {
+              race.goNextCalls += 1;
+              return originals.advancePtePrompt.apply(this, args);
+            };
+            mode.loadNextPrompt = function (...args) {
+              race.loadCalls += 1;
+              return originals.loadNextPrompt.apply(this, args);
+            };
+          });
+          await page.locator('#ra-record-btn').click();
+          await page.waitForFunction(() => window.ReadAloudMode.state === 'RECORDING');
+          await page.locator('#pte-next-read-aloud').click();
+          await page.getByRole('alertdialog').getByRole('button', { name: 'Next question', exact: true }).click();
+          await page.waitForFunction(() => window.__pteCancelNextRace.preparing
+            && window.ReadAloudMode.state === 'STOPPING_RECORDING');
+          if (cancelCapture) {
+            await page.locator('#ra-pte-cancel-btn').click();
+            await page.waitForFunction(() => window.ReadAloudMode.state === 'PREP');
+            await page.evaluate(() => window.ReadAloudMode.stopTimer());
+          }
+          await page.evaluate(() => window.__pteCancelNextRace.release());
+          // nextPending is cleared in the controller's finally, after any goNext call settles.
+          await page.waitForFunction(() => window.__pteCancelNextRace.finished
+            && !document.getElementById('pte-next-read-aloud').disabled);
+          const captureNext = await page.evaluate(async (cancelled) => {
+            const mode = window.ReadAloudMode;
+            const race = window.__pteCancelNextRace;
+            const observed = {
+              finishResult: race.finishResult,
+              goNextCalls: race.goNextCalls,
+              loadCalls: race.loadCalls,
+              state: mode.state,
+              promptUnchanged: mode.currentQuestionId === race.promptId
+                && mode.promptLifecycleToken === race.promptToken,
+              sessionlessLoads: 0
+            };
+            if (cancelled) {
+              // Defense at the mode boundary: an obsolete caller must not acquire a fresh token.
+              const before = race.loadCalls;
+              await race.originals.advancePtePrompt.call(mode);
+              observed.sessionlessLoads = race.loadCalls - before;
+            }
+            Object.assign(mode, race.originals);
+            delete window.__pteCancelNextRace;
+            return observed;
+          }, cancelCapture);
+          check(`${width}: pending capture ${cancelCapture ? 'Cancel stops' : 'valid Next completes'} navigation`, captureNext, {
+            finishResult: !cancelCapture,
+            goNextCalls: cancelCapture ? 0 : 1,
+            loadCalls: cancelCapture ? 0 : 1,
+            state: 'PREP',
+            promptUnchanged: cancelCapture,
+            sessionlessLoads: 0
+          });
+        }
       }
       await page.close();
     }

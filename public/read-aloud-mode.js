@@ -4175,18 +4175,28 @@ class ReadAloudMode {
     await session.capturePromise;
     if (!this.shouldApplyPteNextOwnership(ownership)) return false;
     if (!session.wavBlob) throw new Error('The recording could not be captured. Please try again.');
-    await this.savePteCapture(session);
-    return this.shouldApplyPteNextOwnership(ownership);
+    return this.savePteNextCapture(ownership);
   }
 
   async advancePtePrompt() {
     if (!this.pendingPteNextOwnership && !this.pendingSession) return false;
     const ownership = this.pendingPteNextOwnership || this.createPteNextOwnership(this.pendingSession);
+    if (!this.shouldApplyPteNextOwnership(ownership)) return false;
+    // Keep the same validated token retryable if saving fails. Invalidation clears it.
+    this.pendingPteNextOwnership = ownership;
+    if (!await this.savePteNextCapture(ownership)) return false;
     this.pendingPteNextOwnership = null;
-    if (!this.shouldApplyPteNextOwnership(ownership)) return false;
-    if (ownership.session) await this.savePteCapture(ownership.session);
-    if (!this.shouldApplyPteNextOwnership(ownership)) return false;
     return this.loadNextPrompt({ force: true });
+  }
+
+  async savePteNextCapture(ownership) {
+    try {
+      await this.savePteCapture(ownership.session);
+    } catch (error) {
+      if (!this.shouldApplyPteNextOwnership(ownership)) return false;
+      throw error;
+    }
+    return this.shouldApplyPteNextOwnership(ownership);
   }
 
   createPteNextOwnership(session = null) {

@@ -78,8 +78,70 @@ async function restoreWordPopover(page) {
   });
 }
 
-async function exerciseAssessedNext(page, width, check, retryDuringNext = false) {
-  const referenceText = await page.evaluate(() => {
+async function exerciseFailedSaveNext(page, width, check, action) {
+  await page.evaluate(invalidation => {
+    const mode = window.ReadAloudMode, flow = window.__pteAssessedNext;
+    flow.completedOwnership = mode.pendingPteNextOwnership;
+    if (invalidation) flow.failureGate = new Promise(resolve => { flow.releaseFailure = resolve; });
+  }, action !== 'recover');
+  check(`${width}: ${action} fixture exercises capture and assessment save failures`, await page.evaluate(() => window.__pteAssessedNext.saveCalls), 2);
+  await page.locator('#pte-next-read-aloud').click();
+  if (action !== 'recover') {
+    await page.waitForFunction(() => window.__pteAssessedNext.saveCalls === 3);
+    if (action === 'retry') {
+      await page.locator('#ra-retry-btn').click();
+    } else {
+      await page.evaluate(async () => {
+        const mode = window.ReadAloudMode;
+        const index = mode.database.findIndex(row => String(row.ID) !== mode.currentQuestionId);
+        await mode.loadSpecificPrompt(index);
+      });
+    }
+    await page.waitForFunction(() => window.ReadAloudMode.state === 'PREP');
+    await page.evaluate(() => window.__pteAssessedNext.releaseFailure());
+  }
+  await page.waitForFunction(() => window.__pteAssessedNext.finishedCount === 1
+    && !document.getElementById('pte-next-read-aloud').disabled);
+  if (action === 'recover') {
+    check(`${width}: failed Next retains the same completed ownership`, await page.evaluate(() => ({
+      sameOwnership: window.ReadAloudMode.pendingPteNextOwnership === window.__pteAssessedNext.completedOwnership,
+      pendingSession: window.ReadAloudMode.pendingSession, state: window.ReadAloudMode.state,
+      loadCalls: window.__pteAssessedNext.loadCalls
+    })), { sameOwnership: true, pendingSession: null, state: 'RESULTS', loadCalls: 0 });
+    await page.evaluate(() => window.ReadAloudMode.syncPteShell());
+    check(`${width}: save error survives feedback refresh`, await page.locator('.pte-dock__status').textContent(), 'Simulated archive outage');
+    await page.locator('#pte-next-read-aloud').click();
+    await page.waitForFunction(() => window.__pteAssessedNext.finishedCount === 2
+      && !document.getElementById('pte-next-read-aloud').disabled);
+    check(`${width}: another failed Next retries saving and keeps the real error`, {
+      calls: await page.evaluate(() => window.__pteAssessedNext.saveCalls),
+      status: await page.locator('.pte-dock__status').textContent()
+    }, { calls: 4, status: 'Simulated archive outage' });
+    await page.evaluate(() => { window.__pteAssessedNext.failSaving = false; });
+    await page.locator('#pte-next-read-aloud').click();
+    await page.waitForFunction(() => window.__pteAssessedNext.finishedCount === 3
+      && !document.getElementById('pte-next-read-aloud').disabled);
+    check(`${width}: recovered Next saves the same attempt and advances exactly once`, await page.evaluate(() => ({
+      saves: window.__pteAssessedNext.saveCalls, distinctAttempts: new Set(window.__pteAssessedNext.attemptIds).size,
+      loads: window.__pteAssessedNext.loadCalls, state: window.ReadAloudMode.state,
+      ownership: window.ReadAloudMode.pendingPteNextOwnership,
+      promptChanged: window.ReadAloudMode.promptLifecycleToken !== window.__pteAssessedNext.promptToken,
+      errorVisible: document.querySelector('.pte-dock__status').textContent.includes('Simulated archive outage')
+    })), { saves: 5, distinctAttempts: 1, loads: 1, state: 'PREP', ownership: null, promptChanged: true, errorVisible: false });
+  } else {
+    check(`${width}: ${action} invalidation prevents failed-save ownership recovery`, await page.evaluate(async () => {
+      const mode = window.ReadAloudMode, flow = window.__pteAssessedNext;
+      flow.failSaving = false;
+      const result = await flow.originals.advancePtePrompt.call(mode);
+      return { result, saves: flow.saveCalls, loads: flow.loadCalls, state: mode.state,
+        ownership: mode.pendingPteNextOwnership,
+        errorVisible: document.querySelector('.pte-dock__status').textContent.includes('Simulated archive outage') };
+    }), { result: false, saves: 3, loads: 0, state: 'PREP', ownership: null, errorVisible: false });
+  }
+}
+
+async function exerciseAssessedNext(page, width, check, retryDuringNext = false, saveFailureAction = null) {
+  const referenceText = await page.evaluate(failSaving => {
     const mode = window.ReadAloudMode;
     mode.retryCurrentPrompt();
     mode.stopTimer();
@@ -88,18 +150,30 @@ async function exerciseAssessedNext(page, width, check, retryDuringNext = false)
       savePteCapture: mode.savePteCapture
     };
     const flow = window.__pteAssessedNext = {
-      originals, loadCalls: 0, finished: false, promptToken: mode.promptLifecycleToken
+      originals, loadCalls: 0, finished: false, finishedCount: 0, promptToken: mode.promptLifecycleToken
     };
+    if (failSaving) {
+      flow.archiveSaveAttempt = window.PTEAttemptArchive.saveAttempt;
+      flow.failSaving = true; flow.saveCalls = 0; flow.attemptIds = [];
+      window.PTEAttemptArchive.saveAttempt = async function (input) {
+        flow.saveCalls += 1; flow.attemptIds.push(input.attemptId);
+        if (flow.failSaving) {
+          if (flow.failureGate) await flow.failureGate;
+          throw new Error('Simulated archive outage');
+        }
+        return flow.archiveSaveAttempt.call(this, input);
+      };
+    }
     mode.advancePtePrompt = async function (...args) {
       try { return await originals.advancePtePrompt.apply(this, args); }
-      finally { flow.finished = true; }
+      finally { flow.finished = true; flow.finishedCount += 1; }
     };
     mode.loadNextPrompt = function (...args) {
       flow.loadCalls += 1;
       return originals.loadNextPrompt.apply(this, args);
     };
     return mode.currentPromptPlainText;
-  });
+  }, !!saveFailureAction);
   const assessmentRequests = [];
   const fixture = {
     success: true, accuracyScore: 84, fluencyScore: 78, completenessScore: 96, pronScore: 82,
@@ -127,6 +201,10 @@ async function exerciseAssessedNext(page, width, check, retryDuringNext = false)
       { method: 'POST', referencePresent: true }
     ]);
     check(`${width}: actual assessed scores`, await page.locator('.pte-stats strong').allTextContents(), ['84%', '78%', '96%', '82%']);
+    if (saveFailureAction) {
+      await exerciseFailedSaveNext(page, width, check, saveFailureAction);
+      return;
+    }
     const assessedAttempt = await page.evaluate(() => ({
       id: window.ReadAloudMode.lastAssessmentSession.localAttemptId,
       audioUrl: window.ReadAloudMode.lastAssessmentSession.historyAudioUrl
@@ -178,6 +256,9 @@ async function exerciseAssessedNext(page, width, check, retryDuringNext = false)
     await page.unroute('**/api/read-aloud/assess', respond);
     await page.evaluate(() => {
       const mode = window.ReadAloudMode;
+      if (window.__pteAssessedNext.archiveSaveAttempt) {
+        window.PTEAttemptArchive.saveAttempt = window.__pteAssessedNext.archiveSaveAttempt;
+      }
       Object.assign(mode, window.__pteAssessedNext.originals);
       delete window.__pteAssessedNext;
       mode.stopTimer();
@@ -934,90 +1015,92 @@ async function run() {
           requestIdAdvanced: true
         });
 
-        await page.evaluate(() => {
-          const mode = window.ReadAloudMode;
-          mode.retryCurrentPrompt();
-          let releaseSave;
-          const saveGate = new Promise(resolve => { releaseSave = resolve; });
-          const originals = {
-            finishPteRecordingForNext: mode.finishPteRecordingForNext,
-            advancePtePrompt: mode.advancePtePrompt,
-            savePteCapture: mode.savePteCapture,
-            loadNextPrompt: mode.loadNextPrompt
-          };
-          window.__pteRetryNextRace = {
-            advanceCalled: false,
-            finishSettled: false,
-            loadCalls: 0,
-            originals,
-            releaseSave,
-            saveStarted: false,
-            session: null
-          };
-          mode.savePteCapture = (session) => {
+        for (const failLateSave of [false, true]) {
+          await page.evaluate(failLateSave => {
+            const mode = window.ReadAloudMode;
+            mode.retryCurrentPrompt();
+            let releaseSave;
+            const saveGate = new Promise(resolve => { releaseSave = resolve; });
+            const originals = {
+              finishPteRecordingForNext: mode.finishPteRecordingForNext,
+              advancePtePrompt: mode.advancePtePrompt,
+              savePteCapture: mode.savePteCapture,
+              loadNextPrompt: mode.loadNextPrompt
+            };
+            window.__pteRetryNextRace = {
+              advanceCalled: false,
+              finishSettled: false,
+              loadCalls: 0,
+              originals,
+              releaseSave,
+              saveStarted: false,
+              session: null
+            };
+            mode.savePteCapture = (session) => {
+              const race = window.__pteRetryNextRace;
+              race.session = session;
+              if (!session.__pteRetryNextSavePromise) {
+                session.__pteRetryNextSavePromise = (async () => {
+                  race.saveStarted = true;
+                  await saveGate;
+                  if (failLateSave) throw new Error('Simulated late recording save outage');
+                })();
+              }
+              return session.__pteRetryNextSavePromise;
+            };
+            mode.loadNextPrompt = async () => {
+              window.__pteRetryNextRace.loadCalls += 1;
+              return true;
+            };
+            mode.finishPteRecordingForNext = async function (...args) {
+              try { return await originals.finishPteRecordingForNext.apply(this, args); }
+              finally { window.__pteRetryNextRace.finishSettled = true; }
+            };
+            mode.advancePtePrompt = function (...args) {
+              window.__pteRetryNextRace.advanceCalled = true;
+              return originals.advancePtePrompt.apply(this, args);
+            };
+          }, failLateSave);
+
+          await page.locator('#ra-record-btn').click();
+          await page.waitForFunction(() => window.ReadAloudMode.state === 'RECORDING');
+          await page.locator('#pte-next-read-aloud').click();
+          await page.locator('.pte-dialog').getByRole('button', { name: 'Next question', exact: true }).click();
+          await page.waitForFunction(() => window.__pteRetryNextRace?.saveStarted
+            && window.ReadAloudMode.state === 'RECORDED');
+          await page.locator('#ra-retry-btn').click();
+          await page.waitForFunction(() => window.ReadAloudMode.state === 'PREP');
+          await page.evaluate(() => window.__pteRetryNextRace.releaseSave());
+          await page.waitForFunction(() => window.__pteRetryNextRace?.finishSettled
+            && !document.getElementById('pte-next-read-aloud').disabled);
+
+          const retryNextRace = await page.evaluate(() => {
+            const mode = window.ReadAloudMode;
             const race = window.__pteRetryNextRace;
-            race.session = session;
-            if (!session.__pteRetryNextSavePromise) {
-              session.__pteRetryNextSavePromise = (async () => {
-                race.saveStarted = true;
-                await saveGate;
-              })();
-            }
-            return session.__pteRetryNextSavePromise;
-          };
-          mode.loadNextPrompt = async () => {
-            window.__pteRetryNextRace.loadCalls += 1;
-            return true;
-          };
-          mode.finishPteRecordingForNext = function (...args) {
-            const completion = originals.finishPteRecordingForNext.apply(this, args);
-            Promise.resolve(completion).finally(() => {
-              window.__pteRetryNextRace.finishSettled = true;
-            });
-            return completion;
-          };
-          mode.advancePtePrompt = function (...args) {
-            window.__pteRetryNextRace.advanceCalled = true;
-            return originals.advancePtePrompt.apply(this, args);
-          };
-        });
-
-        await page.locator('#ra-record-btn').click();
-        await page.waitForFunction(() => window.ReadAloudMode.state === 'RECORDING');
-        await page.locator('#pte-next-read-aloud').click();
-        await page.locator('.pte-dialog').getByRole('button', { name: 'Next question', exact: true }).click();
-        await page.waitForFunction(() => window.__pteRetryNextRace?.saveStarted
-          && window.ReadAloudMode.state === 'RECORDED');
-        await page.locator('#ra-retry-btn').click();
-        await page.waitForFunction(() => window.ReadAloudMode.state === 'PREP');
-        await page.evaluate(() => window.__pteRetryNextRace.releaseSave());
-        await page.waitForFunction(() => window.__pteRetryNextRace?.finishSettled);
-        await page.waitForTimeout(50);
-
-        const retryNextRace = await page.evaluate(() => {
-          const mode = window.ReadAloudMode;
-          const race = window.__pteRetryNextRace;
-          const observed = {
-            state: mode.state,
-            loadCalls: race.loadCalls,
-            advanceCalled: race.advanceCalled,
-            oldSessionDisposition: race.session?.disposition,
-            requestIdAdvanced: mode.recordingRequestId > race.session.id
-          };
-          mode.finishPteRecordingForNext = race.originals.finishPteRecordingForNext;
-          mode.advancePtePrompt = race.originals.advancePtePrompt;
-          mode.savePteCapture = race.originals.savePteCapture;
-          mode.loadNextPrompt = race.originals.loadNextPrompt;
-          delete window.__pteRetryNextRace;
-          return observed;
-        });
-        check(`${width}: confirmed recording-to-Next Retry blocks forced advance`, retryNextRace, {
-          state: 'PREP',
-          loadCalls: 0,
-          advanceCalled: false,
-          oldSessionDisposition: 'discard',
-          requestIdAdvanced: true
-        });
+            const observed = {
+              state: mode.state,
+              loadCalls: race.loadCalls,
+              advanceCalled: race.advanceCalled,
+              staleErrorVisible: document.querySelector('.pte-dock__status').textContent.includes('Simulated late recording save outage'),
+              oldSessionDisposition: race.session?.disposition,
+              requestIdAdvanced: mode.recordingRequestId > race.session.id
+            };
+            mode.finishPteRecordingForNext = race.originals.finishPteRecordingForNext;
+            mode.advancePtePrompt = race.originals.advancePtePrompt;
+            mode.savePteCapture = race.originals.savePteCapture;
+            mode.loadNextPrompt = race.originals.loadNextPrompt;
+            delete window.__pteRetryNextRace;
+            return observed;
+          });
+          check(`${width}: confirmed recording-to-Next Retry blocks forced advance (${failLateSave ? 'rejected' : 'resolved'} save)`, retryNextRace, {
+            state: 'PREP',
+            loadCalls: 0,
+            advanceCalled: false,
+            staleErrorVisible: false,
+            oldSessionDisposition: 'discard',
+            requestIdAdvanced: true
+          });
+        }
 
         for (const cancelCapture of [true, false]) {
           await page.evaluate(() => {
@@ -1106,6 +1189,9 @@ async function run() {
       }
       await exerciseAssessedNext(page, width, check);
       if (retrySessionVariant) await exerciseAssessedNext(page, width, check, true);
+      if (retrySessionVariant) {
+        for (const action of ['recover', 'retry', 'prompt']) await exerciseAssessedNext(page, width, check, false, action);
+      }
       await page.close();
     }
     for (const flag of ['legacy', '']) {

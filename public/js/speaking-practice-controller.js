@@ -1693,6 +1693,7 @@
     if (!state?.isV3) return;
     const valid = ['loading', 'listen', 'prep', 'recording', 'complete', 'feedback'];
     if (!valid.includes(phase)) return;
+    if (state.phase !== phase) state.nextError = '';
     state.phase = phase;
     const { card, progress, actions, status, next } = state.v3DOM;
     card.dataset.ptePhase = phase; card.classList.toggle('pte-card--wide', phase === 'feedback');
@@ -1711,7 +1712,7 @@
       }
     });
     const defaults = { listen: 'Listen carefully. The recorder appears when the audio ends.', prep: 'Recording starts automatically when the countdown ends.', complete: 'Recording saved. Listen back or get feedback.', feedback: 'Saved to Previous attempts below.' };
-    status.textContent = state.config.v3.statusText?.[phase] ?? defaults[phase] ?? '';
+    status.textContent = state.nextError || (state.config.v3.statusText?.[phase] ?? defaults[phase] ?? '');
     next.textContent = phase === 'feedback' ? 'Next question →' : 'Next →';
     next.classList.toggle('pte-btn--primary', phase === 'feedback'); next.classList.toggle('pte-btn--ghost', phase !== 'feedback');
     next.disabled = phase === 'loading' || !!state.nextPending;
@@ -1767,12 +1768,15 @@
         // An explicit cancellation ends this Next action; legacy callbacks may return undefined.
         if (await state.config.v3.next.onConfirmFromRecording() === false) return;
       }
-      if (activeControllers.get(state.modeId) === state) await state.config.v3.next?.goNext?.();
+      if (activeControllers.get(state.modeId) === state) {
+        const result = await state.config.v3.next?.goNext?.();
+        if (result !== false) state.nextError = '';
+      }
     } catch (error) {
-      state.v3DOM.status.textContent = error.message || 'Could not move to the next question.';
+      state.nextError = error.message || 'Could not move to the next question.';
     } finally {
       state.nextPending = false;
-      state.v3DOM.next.disabled = state.phase === 'loading';
+      if (activeControllers.get(state.modeId) === state) setPhase(state.modeId, state.phase);
     }
   }
 

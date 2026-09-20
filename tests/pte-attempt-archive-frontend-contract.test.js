@@ -148,7 +148,70 @@ async function verifyAssessedSnapshotPatchContract() {
   assert.ok(!Object.prototype.hasOwnProperty.call(body, 'arbitraryField'), 'arbitrary fields must never be forwarded');
 }
 
-verifyAssessedSnapshotPatchContract()
+async function verifyPublicationOwnershipContract() {
+  const pending = new Map(), events = [], requests = [];
+  const sandboxWindow = {
+    location: { pathname: '/' },
+    PracticeScopeManager: { getScope: () => 'pte', subscribe: () => () => {} },
+    auth: { currentUser: { getIdToken: async () => 'local-contract-token' } },
+    addEventListener: () => {}, dispatchEvent: event => events.push(event),
+    cacheInvalidations: 0
+  };
+  const sandbox = {
+    window: sandboxWindow, PracticeScopeManager: sandboxWindow.PracticeScopeManager,
+    document: { readyState: 'loading', addEventListener: () => {} },
+    console, URLSearchParams, Blob, setTimeout, clearTimeout,
+    CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options.detail; } },
+    fetch: async (_url, options) => {
+      const body = JSON.parse(options.body); requests.push(body);
+      return new Promise(resolve => pending.set(body.attemptId, ok => resolve({
+        ok, status: ok ? 200 : 503,
+        json: async () => ok ? { data: { attemptId: body.attemptId } } : { success: false, message: 'Save failed' }
+      })));
+    }
+  };
+  // Observe the private cache boundary without replacing it or the save client.
+  const observedHelper = helper.replace('function invalidateHistoryCache() {',
+    'function invalidateHistoryCache() { window.cacheInvalidations++;');
+  assert.notStrictEqual(observedHelper, helper, 'cache observation must attach to the real boundary');
+  vm.runInNewContext(observedHelper, sandbox, { filename: helperPath });
+  const archive = sandboxWindow.PTEAttemptArchive;
+  async function waitForRequest(id) {
+    for (let i = 0; !pending.has(id) && i < 20; i++) await Promise.resolve();
+    assert.ok(pending.has(id), 'save must reach the deferred HTTP boundary');
+  }
+  async function settle(id, ok) {
+    await waitForRequest(id);
+    pending.get(id)(ok); pending.delete(id);
+  }
+  let owned = true;
+  const stale = archive.saveAttempt({ practiceMode: 'speak', attemptId: 'departed', promptSnapshot: { promptId: '1' } },
+    { shouldPublish: () => owned });
+  await waitForRequest('departed');
+  owned = false;
+  const unrelated = archive.saveAttempt({ practiceMode: 'read-aloud', attemptId: 'unrelated' });
+  await settle('departed', true);
+  assert.strictEqual((await stale).attemptId, 'departed', 'persisted identity remains available to its caller');
+  assert.strictEqual(events.length, 0, 'departed save must not publish a native saved event');
+  assert.strictEqual(sandboxWindow.cacheInvalidations, 0, 'departed save must not invalidate shared history');
+  await settle('unrelated', true); await unrelated;
+  assert.strictEqual(events.length, 1, 'concurrent default callers retain native publication');
+  assert.strictEqual(events[0].detail.practiceMode, 'read-aloud');
+  assert.strictEqual(sandboxWindow.cacheInvalidations, 1);
+  const failed = archive.saveAttempt({ practiceMode: 'speak', attemptId: 'recoverable' }, { shouldPublish: () => true });
+  const rejection = assert.rejects(failed, /Save failed/);
+  await settle('recoverable', false); await rejection;
+  assert.strictEqual(events.length, 1, 'failed save must not publish');
+  assert.strictEqual(sandboxWindow.cacheInvalidations, 1, 'failed save must not invalidate');
+  const recovery = archive.saveAttempt({ practiceMode: 'speak', attemptId: 'recoverable' }, { shouldPublish: () => true });
+  await settle('recoverable', true); await recovery;
+  assert.strictEqual(events.length, 2, 'owned recovery publishes once');
+  assert.strictEqual(events[1].detail.attemptId, 'recoverable');
+  assert.strictEqual(sandboxWindow.cacheInvalidations, 2, 'owned recovery invalidates once');
+  assert.ok(requests.every(body => !('shouldPublish' in body)), 'publication ownership is client-local');
+}
+
+verifyAssessedSnapshotPatchContract().then(verifyPublicationOwnershipContract)
   .then(() => console.log('PTE attempt archive frontend contract test passed.'))
   .catch((error) => {
     console.error(error);

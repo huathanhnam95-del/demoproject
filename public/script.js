@@ -10306,7 +10306,8 @@
       let saved;
       try { saved = attempt.archiveId && resultSnapshot
         ? await window.PTEAttemptArchive.patchAttempt(attempt.archiveId, input)
-        : attempt.saved && attempt.guest ? { skipped: true, reason: 'guest' } : await window.PTEAttemptArchive.saveAttempt(input); }
+        : attempt.saved && attempt.guest ? { skipped: true, reason: 'guest' }
+          : await window.PTEAttemptArchive.saveAttempt(input, { shouldPublish: () => this.ownsAttempt(owner) }); }
       catch (error) {
         if (!this.ownsAttempt(owner)) return false;
         window.SpeakingPracticeController?.setSaveError('speak', 'This attempt could not be saved. Try Next again to retry.'); throw error;

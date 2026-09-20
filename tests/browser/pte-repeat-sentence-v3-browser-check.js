@@ -255,8 +255,12 @@ async function exerciseShadow(page, width, outcome) {
 async function exerciseArchiveOwnership(page, width, scenario) {
   const [stage, transition, outcome] = scenario.split('-');
   await page.evaluate(stage => {
-    window.__persistedFixture = stage === 'assessed';
-    window.__archiveTrace = { calls: [], local: [], events: [], errors: [], invalidations: 0 };
+    // Keep the real archive client, its publication boundary and history listener.
+    // Only authentication, Storage and HTTP are local deterministic fixtures.
+    Object.assign(window.PTEAttemptArchive, window.__nativeArchive);
+    window.auth = { currentUser: { uid: 'native-archive-fixture', getIdToken: async () => 'local-fixture-token' } };
+    window.firebase.storage = () => ({ ref: () => ({ put: async () => {} }) });
+    window.__archiveTrace = { calls: [], local: [], events: [], errors: [], invalidations: 0, historyReads: 0 };
     const stamp = () => ({ generation: RepeatSentenceV3.generation, id: RepeatSentenceV3.attempt?.id,
       question: document.getElementById('current-question-id-speak').textContent });
     const recordLocal = window.PteAttemptHistory.recordLocal;
@@ -264,25 +268,42 @@ async function exerciseArchiveOwnership(page, width, scenario) {
       window.__archiveTrace.local.push({ ...stamp(), savedId: input.attemptId }); return recordLocal(input);
     };
     window.addEventListener('pte-attempt-archive:saved', event => window.__archiveTrace.events.push({ ...stamp(), savedId: event.detail.attemptId }));
-    window.PTEAttemptArchive.invalidateHistoryCache = () => { window.__archiveTrace.invalidations++; };
+    const invalidate = window.PTEAttemptArchive.invalidateHistoryCache;
+    window.PTEAttemptArchive.invalidateHistoryCache = () => { window.__archiveTrace.invalidations++; invalidate(); };
     const setSaveError = window.SpeakingPracticeController.setSaveError;
     window.SpeakingPracticeController.setSaveError = (mode, message) => {
       window.__archiveTrace.errors.push({ ...stamp(), message }); return setSaveError(mode, message);
     };
-    const method = stage === 'raw' ? 'saveAttempt' : 'patchAttempt';
-    const original = window.PTEAttemptArchive[method];
+    const originalFetch = window.fetch;
+    const persisted = new Map();
     let first = true;
-    window.PTEAttemptArchive[method] = async (...args) => {
-      const input = stage === 'raw' ? args[0] : args[1];
-      window.__archiveTrace.calls.push({ ...stamp(), attemptId: input.attemptId });
-      if (first) {
-        first = false; window.__heldAttempt = RepeatSentenceV3.attempt;
-        await new Promise((resolve, reject) => {
-          window.__resolveArchive = resolve;
-          window.__rejectArchive = () => reject(new Error('Deferred archive save failed'));
-        });
+    window.fetch = async (url, options = {}) => {
+      const path = new URL(url, location.href).pathname;
+      if (!path.startsWith('/api/practice-attempts')) return originalFetch(url, options);
+      const respond = (data, ok = true) => new Response(JSON.stringify(ok ? { success: true, data }
+        : { success: false, message: 'Deferred archive save failed' }), { status: ok ? 200 : 503, headers: { 'Content-Type': 'application/json' } });
+      if (!options.method || options.method === 'GET') {
+        window.__archiveTrace.historyReads++;
+        return respond({ attempts: [...persisted.values()] });
       }
-      return original(...args);
+      const input = JSON.parse(options.body);
+      if (path.endsWith('/prepare')) return respond({ attemptId: input.attemptId,
+        mediaSlots: input.mediaSlots.map(slot => ({ ...slot, storagePath: `fixture/${input.attemptId}/${slot.slotFile}` })) });
+      const patch = options.method === 'PATCH';
+      const attemptId = input.attemptId || decodeURIComponent(path.split('/').at(-2));
+      if (patch === (stage === 'assessed')) {
+        window.__archiveTrace.calls.push({ ...stamp(), attemptId });
+        if (first) {
+          first = false; window.__heldAttempt = RepeatSentenceV3.attempt;
+          const rejected = await new Promise(resolve => {
+            window.__resolveArchive = () => resolve(false);
+            window.__rejectArchive = () => resolve(true);
+          });
+          if (rejected) return respond(null, false);
+        }
+      }
+      persisted.set(attemptId, { ...persisted.get(attemptId), ...input, attemptId });
+      return respond({ attemptId });
     };
   }, stage);
   await page.locator('#record-btn').click();
@@ -293,6 +314,9 @@ async function exerciseArchiveOwnership(page, width, scenario) {
   await page.locator('#speak-pte-stop').click();
   if (stage === 'assessed') {
     await page.waitForFunction(() => RepeatSentenceV3.phase === 'complete' && !RepeatSentenceV3.busy);
+    await page.waitForFunction(() => document.querySelectorAll('#mode-speak .pte-attempts__row').length === 1);
+    // The owned raw-save event is legitimate; isolate subsequent assessed publication.
+    await page.evaluate(() => { window.__archiveTrace.events.length = 0; });
     await page.locator('#check-btn-speak').click();
   }
   await page.waitForFunction(() => !!window.__resolveArchive);
@@ -307,8 +331,10 @@ async function exerciseArchiveOwnership(page, width, scenario) {
   else if (transition === 'retry') await page.locator('#retry-btn-speak').click();
   else if (transition === 'navigation') await next();
   assert.equal(await page.locator('#current-question-id-speak').textContent(), originalQuestion, 'pending save cannot navigate early');
+  const historyReads = await page.evaluate(() => window.__archiveTrace.historyReads);
   await page.evaluate(reject => reject ? window.__rejectArchive() : window.__resolveArchive(), outcome === 'reject');
   await page.waitForFunction(() => !RepeatSentenceV3.busy && !RepeatSentenceV3.retryOperation && !RepeatSentenceV3.departureCleanup);
+  await page.waitForTimeout(100); // Let the real event listener finish any history refresh.
   if (transition === 'leave' || transition === 'retry') {
     await page.waitForFunction(() => RepeatSentenceV3.phase === 'prep');
     const state = await page.evaluate(() => ({ phase: RepeatSentenceV3.phase, attempt: RepeatSentenceV3.attempt,
@@ -322,6 +348,7 @@ async function exerciseArchiveOwnership(page, width, scenario) {
       assert.equal(state.heldSaved, false, 'stale success must not mark the abandoned attempt saved');
       assert.equal(state.trace.local.length, 0); assert.equal(state.trace.events.length, 0);
       assert.equal(state.trace.invalidations, 0); assert.equal(state.rows, held.rows);
+      assert.equal(state.trace.historyReads, historyReads, 'departed settlement must not refresh the new lifecycle history');
     } else {
       assert.equal(state.trace.calls.length, 2, 'Retry revalidates saving under its new lifecycle');
       assert.equal(state.trace.calls[1].generation, state.generation);
@@ -366,7 +393,7 @@ async function run() {
   const selectedScenario = process.argv.find(arg => arg.startsWith('--scenario='))?.slice(11);
   const archiveScenarios = ['raw', 'assessed'].flatMap(stage =>
     ['leave', 'navigation', 'retry'].flatMap(transition => ['reject', 'success'].map(outcome => `archive-${stage}-${transition}-${outcome}`))
-      .concat(`archive-${stage}-recovery-reject`));
+      .concat(`archive-${stage}-recovery-reject`, `archive-${stage}-recovery-success`));
   const scenarios = selectedScenario ? [selectedScenario] : process.argv.includes('--save-only') ? archiveScenarios
     : process.argv.includes('--ownership-only') ? ownershipScenarios
     : process.argv.includes('--departure-only') ? ownershipScenarios.filter(s => s.startsWith('departure'))
@@ -400,6 +427,8 @@ async function run() {
       await dismissOverlays(page);
       await page.evaluate(bytes => {
         window.__saves = []; window.__patches = []; window.__dsp = 0;
+        window.__nativeArchive = { saveAttempt: window.PTEAttemptArchive.saveAttempt,
+          patchAttempt: window.PTEAttemptArchive.patchAttempt, fetchUserAttemptsCached: window.PTEAttemptArchive.fetchUserAttemptsCached };
         window.AudioDspPipeline = { enhance: async () => { window.__dsp++; return { wavBlob: new Blob([Uint8Array.from(bytes)], { type: 'audio/wav' }) }; } };
         window.PTEAttemptArchive.saveAttempt = async input => { window.__saves.push({ ...input, media: input.media.map(m => ({ slot: m.slot, size: m.blob.size })) }); return window.__persistedFixture ? { attemptId: input.attemptId } : { skipped: true, reason: 'guest' }; };
         window.PTEAttemptArchive.patchAttempt = async (id, input) => {

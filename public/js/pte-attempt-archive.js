@@ -207,7 +207,7 @@
     return uploaded;
   }
 
-  async function saveAttempt(input = {}) {
+  async function saveAttempt(input = {}, options = {}) {
     if (!isPteScope()) return { skipped: true, reason: 'non-pte-scope' };
     const media = await hydrateMediaDurations(normalizeMediaInput(input.media || input.mediaBlobs || input.blob));
     let attemptId = cleanString(input.attemptId, 128);
@@ -261,6 +261,9 @@
       method: 'POST',
       body: JSON.stringify(body)
     });
+    // Persistence can complete after a caller leaves its attempt. Check its
+    // optional owner immediately before publishing shared cache/history effects.
+    if (options.shouldPublish && !options.shouldPublish()) return savedAttempt;
     invalidateHistoryCache();
     if (!savedAttempt?.skipped) {
       window.dispatchEvent(new CustomEvent('pte-attempt-archive:saved', {

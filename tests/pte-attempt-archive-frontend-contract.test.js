@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 /* eslint-disable no-console */
 
 console.log('Starting PTE attempt archive frontend contract test...');
@@ -73,4 +74,83 @@ asyncPatchModes.forEach(({ filePath, src }) => {
   );
 });
 
-console.log('PTE attempt archive frontend contract test passed.');
+async function verifyAssessedSnapshotPatchContract() {
+  const fetchCalls = [];
+  const sandboxWindow = {
+    location: { pathname: '/practice/speaking/read-aloud/1025' },
+    PracticeScopeManager: {
+      getScope: () => 'pte',
+      subscribe: () => () => {}
+    },
+    __FIREBASE_INTERNAL__: {
+      auth: {
+        currentUser: {
+          getIdToken: async () => 'archive-contract-token'
+        }
+      }
+    },
+    addEventListener: () => {},
+    dispatchEvent: () => {}
+  };
+  const sandbox = {
+    window: sandboxWindow,
+    PracticeScopeManager: sandboxWindow.PracticeScopeManager,
+    document: {
+      readyState: 'loading',
+      addEventListener: () => {}
+    },
+    console,
+    URLSearchParams,
+    Blob,
+    setTimeout,
+    clearTimeout,
+    fetch: async (url, options) => {
+      fetchCalls.push({ url, options });
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ success: true, data: { attemptId: 'attempt-read-aloud-1', patched: true } })
+      };
+    }
+  };
+  sandboxWindow.window = sandboxWindow;
+  vm.runInNewContext(helper, sandbox, { filename: helperPath });
+
+  const answerSnapshot = {
+    referenceText: 'Rates of change matter.',
+    words: [{ word: 'rates', accuracyScore: 48, startMs: 320, endMs: 740, syllables: [{ text: 'rates', score: 48 }] }]
+  };
+  await sandboxWindow.PTEAttemptArchive.patchAttempt('attempt-read-aloud-1', {
+    answerSnapshot,
+    resultSnapshot: { accuracyScore: 84 },
+    scoringSnapshot: { source: 'azure', success: true },
+    ownerUid: 'attacker-controlled-owner',
+    practiceScope: 'english',
+    arbitraryField: { unsafe: true }
+  });
+
+  assert.strictEqual(fetchCalls.length, 1, 'assessed snapshot patch should make one API request');
+  assert.strictEqual(fetchCalls[0].url, '/api/practice-attempts/attempt-read-aloud-1/result');
+  const body = JSON.parse(fetchCalls[0].options.body);
+  assert.ok(body.answerSnapshot, 'patchAttempt should include the assessed answer snapshot');
+  assert.deepStrictEqual(
+    JSON.parse(JSON.stringify(body.answerSnapshot)),
+    answerSnapshot,
+    'patchAttempt should forward the complete assessed answer snapshot including per-word data'
+  );
+  assert.deepStrictEqual(
+    Object.keys(body).sort(),
+    ['answerSnapshot', 'resultSnapshot', 'scoringSnapshot'],
+    'patchAttempt should forward only explicitly supported snapshot fields'
+  );
+  assert.ok(!Object.prototype.hasOwnProperty.call(body, 'ownerUid'), 'ownerUid must never be client-patchable');
+  assert.ok(!Object.prototype.hasOwnProperty.call(body, 'practiceScope'), 'practiceScope must never be client-patchable');
+  assert.ok(!Object.prototype.hasOwnProperty.call(body, 'arbitraryField'), 'arbitrary fields must never be forwarded');
+}
+
+verifyAssessedSnapshotPatchContract()
+  .then(() => console.log('PTE attempt archive frontend contract test passed.'))
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });

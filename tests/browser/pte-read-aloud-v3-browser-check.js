@@ -398,6 +398,68 @@ async function run() {
       check(`${width}: guest attempt`, await page.locator('.pte-attempts__row').count() > 0);
       check(`${width}: no horizontal overflow`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
       await page.screenshot({ path: path.join(evidence, `ra-${width}-feedback.png`), fullPage: true });
+
+      await page.locator('#ra-retry-btn').click();
+      await page.waitForFunction(() => window.ReadAloudMode.state === 'PREP');
+      check(`${width}: retry clears assessed payload ownership`, await page.evaluate(() => ({
+        payload: window.ReadAloudMode.lastAssessmentPayload ?? null,
+        session: window.ReadAloudMode.lastAssessmentSession ?? null,
+        renderedPayload: window.ReadAloudMode.pteView?.payload ?? null
+      })), { payload: null, session: null, renderedPayload: null });
+      await page.evaluate(() => {
+        const mode = window.ReadAloudMode;
+        mode.__pteOriginalPrepareWavBlob = mode.prepareWavBlob;
+        mode.prepareWavBlob = async () => { throw new Error('intentional browser capture preparation failure'); };
+      });
+      await page.locator('#ra-record-btn').click();
+      await page.waitForFunction(() => window.ReadAloudMode.state === 'RECORDING');
+      await page.locator('#ra-stop-btn').click();
+      await page.waitForFunction(() => window.ReadAloudMode.state === 'RESULTS');
+      check(`${width}: capture failure message`, await page.locator('#ra-status-message').textContent(), 'We couldn’t prepare that recording. Please try again.');
+      check(`${width}: capture failure clears score metrics`, await page.locator('.pte-stats strong').allTextContents(), ['—', '—', '—', '—']);
+      check(`${width}: capture failure has no stale successful scores`, await page.locator('.pte-stats').textContent().then(text => !['84%', '78%', '96%', '82%'].some(score => text.includes(score))));
+      check(`${width}: capture failure renders explicit failure copy`, await page.locator('.pte-fixes').textContent().then(text => text.includes('We couldn’t prepare that recording.')));
+      await page.evaluate(() => {
+        const mode = window.ReadAloudMode;
+        mode.prepareWavBlob = mode.__pteOriginalPrepareWavBlob;
+        delete mode.__pteOriginalPrepareWavBlob;
+      });
+
+      const staleCompletion = await page.evaluate(async () => {
+        const mode = window.ReadAloudMode;
+        mode.retryCurrentPrompt();
+        const row = mode.currentPromptRow;
+        const session = {
+          id: mode.recordingRequestId,
+          disposition: 'submit',
+          promptToken: mode.promptLifecycleToken,
+          referenceText: mode.currentPromptPlainText,
+          questionId: mode.currentQuestionId
+        };
+        mode.pendingSession = session;
+        mode.pendingBlob = new Blob(['stale-assessment'], { type: 'audio/webm' });
+        mode.state = 'RECORDED';
+        mode.updateUIForState();
+        const originalSubmit = mode.submitToAzure;
+        let settle;
+        mode.submitToAzure = () => new Promise(resolve => { settle = resolve; });
+        const checkPromise = mode.handleCheckResult();
+        await Promise.resolve();
+        const promptLoadToken = mode.beginPromptLoad();
+        settle(true);
+        await checkPromise;
+        const observed = {
+          state: mode.state,
+          payload: mode.lastAssessmentPayload ?? null,
+          session: mode.lastAssessmentSession ?? null
+        };
+        mode.submitToAzure = originalSubmit;
+        mode.applyPromptRow(row, promptLoadToken, { rememberPrompt: false });
+        return observed;
+      });
+      check(`${width}: late assessment completion cannot restore stale results after navigation`, staleCompletion, {
+        state: 'PREP', payload: null, session: null
+      });
       await page.close();
     }
     for (const flag of ['legacy', '']) {

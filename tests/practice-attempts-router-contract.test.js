@@ -1,6 +1,13 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
+const createPracticeAttemptsRouter = require('../functions/src/routes/practice-attempts');
+const {
+  buildRes,
+  createFakeDb,
+  getRouteHandlers,
+  invokeHandlers
+} = require('./crm/route-test-helpers');
 /* eslint-disable no-console */
 
 console.log('Starting practice attempts router contract test...');
@@ -103,4 +110,135 @@ assert.ok(
   'feedback delete endpoint should exist'
 );
 
-console.log('Practice attempts router contract test passed.');
+function createRouteHarness() {
+  const baseDb = createFakeDb({
+    'speakingAttempts/owned-read-aloud': {
+      ownerUid: 'owner-1',
+      practiceScope: 'pte',
+      practiceMode: 'read-aloud',
+      answerSnapshot: null,
+      resultSnapshot: null,
+      responseSnapshot: { referenceText: 'Rates of change matter.' },
+      scoringSnapshot: { source: 'none', success: false, status: 'unassessed' }
+    },
+    'speakingAttempts/other-owner': {
+      ownerUid: 'owner-2',
+      practiceScope: 'pte',
+      practiceMode: 'read-aloud',
+      answerSnapshot: null
+    },
+    'speakingAttempts/non-pte': {
+      ownerUid: 'owner-1',
+      practiceScope: 'english',
+      practiceMode: 'read-aloud',
+      answerSnapshot: null
+    }
+  });
+  const db = {
+    ...baseDb,
+    collection(name) {
+      if (name === 'speakingAttemptEvents') {
+        return { add: async () => ({ id: 'event-1' }) };
+      }
+      return baseDb.collection(name);
+    }
+  };
+  const router = createPracticeAttemptsRouter({
+    db,
+    getStorageBucket: async () => { throw new Error('storage should not be used by snapshot patch tests'); },
+    serverTimestamp: () => 'server-timestamp',
+    sendSuccess(res, data, message) {
+      return res.status(200).json({ success: true, data, message });
+    },
+    sendError(res, status, code, message, details) {
+      return res.status(status).json({ success: false, error: code, message, details });
+    }
+  });
+  return { baseDb, handlers: getRouteHandlers(router, '/:attemptId/result', 'patch') };
+}
+
+async function callPatch(handlers, { uid, attemptId, body }) {
+  const req = { user: uid ? { uid } : null, params: { attemptId }, body };
+  const res = buildRes();
+  await invokeHandlers(handlers, req, res);
+  return res;
+}
+
+async function verifyAssessedSnapshotRouteContract() {
+  const { baseDb, handlers } = createRouteHarness();
+  const answerSnapshot = {
+    referenceText: 'Rates of change matter.',
+    words: [{
+      word: 'rates',
+      accuracyScore: 48,
+      startMs: 320,
+      endMs: 740,
+      syllables: [{ text: 'rates', score: 48, startMs: 320, endMs: 740 }]
+    }]
+  };
+
+  const allowed = await callPatch(handlers, {
+    uid: 'owner-1',
+    attemptId: 'owned-read-aloud',
+    body: {
+      answerSnapshot,
+      resultSnapshot: { accuracyScore: 84, fluencyScore: 78, completenessScore: 96, pronScore: 82 },
+      scoringSnapshot: { source: 'azure', success: true },
+      ownerUid: 'attacker-controlled-owner',
+      practiceScope: 'english',
+      arbitraryField: { unsafe: true }
+    }
+  });
+  assert.strictEqual(allowed._status, 200, 'owner should be allowed to patch assessed snapshots');
+  const stored = baseDb.docs.get('speakingAttempts/owned-read-aloud');
+  assert.deepStrictEqual(stored.answerSnapshot, answerSnapshot, 'route should persist and reload complete per-word assessment data');
+  assert.strictEqual(stored.ownerUid, 'owner-1', 'unsupported ownerUid must be ignored');
+  assert.strictEqual(stored.practiceScope, 'pte', 'unsupported practiceScope must be ignored');
+  assert.ok(!Object.prototype.hasOwnProperty.call(stored, 'arbitraryField'), 'arbitrary fields must not be persisted');
+
+  const unsupportedOnly = await callPatch(handlers, {
+    uid: 'owner-1',
+    attemptId: 'owned-read-aloud',
+    body: { ownerUid: 'attacker-controlled-owner', arbitraryField: true }
+  });
+  assert.strictEqual(unsupportedOnly._status, 400, 'a patch with no supported fields should be rejected');
+  assert.strictEqual(unsupportedOnly._json.error, 'VALIDATION_ERROR');
+
+  const forbidden = await callPatch(handlers, {
+    uid: 'owner-1',
+    attemptId: 'other-owner',
+    body: { answerSnapshot }
+  });
+  assert.strictEqual(forbidden._status, 403, 'a signed-in non-owner must not patch another learner attempt');
+  assert.strictEqual(baseDb.docs.get('speakingAttempts/other-owner').answerSnapshot, null);
+
+  const unauthenticated = await callPatch(handlers, {
+    uid: null,
+    attemptId: 'owned-read-aloud',
+    body: { answerSnapshot }
+  });
+  assert.strictEqual(unauthenticated._status, 401, 'missing identity should be rejected');
+
+  const wrongScope = await callPatch(handlers, {
+    uid: 'owner-1',
+    attemptId: 'non-pte',
+    body: { answerSnapshot }
+  });
+  assert.strictEqual(wrongScope._status, 400, 'non-PTE attempts must remain outside this patch contract');
+  assert.strictEqual(wrongScope._json.error, 'INVALID_PRACTICE_SCOPE');
+
+  const backwardCompatible = await callPatch(handlers, {
+    uid: 'owner-1',
+    attemptId: 'owned-read-aloud',
+    body: { result: { accuracyScore: 91 } }
+  });
+  assert.strictEqual(backwardCompatible._status, 200, 'legacy result alias should remain supported');
+  assert.deepStrictEqual(baseDb.docs.get('speakingAttempts/owned-read-aloud').resultSnapshot, { accuracyScore: 91 });
+}
+
+verifyAssessedSnapshotRouteContract()
+  .then(() => console.log('Practice attempts router contract test passed.'))
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });

@@ -132,6 +132,8 @@ class ReadAloudMode {
     this.promptLifecycleToken = 0;
     this.recordingRequestId = 0;
     this.hasAssessmentResult = false;
+    this.lastAssessmentPayload = null;
+    this.lastAssessmentSession = null;
     // Status line the results panel was rendered with. Kept so a later
     // updateUIForState() cannot replace a scoring error with 'Analysis complete.'
     this.assessmentStatusMessage = '';
@@ -2773,6 +2775,13 @@ class ReadAloudMode {
   resetAssessmentDisplay() {
     this.hasAssessmentResult = false;
     this.assessmentStatusMessage = '';
+    this.lastAssessmentPayload = null;
+    this.lastAssessmentSession = null;
+    if (this.pteView) {
+      delete this.pteView.payload;
+      this.pteView.stats?.replaceChildren();
+      this.pteView.fixes?.replaceChildren();
+    }
     const resultBox = document.getElementById('ra-result-box');
     const accuracyElement = document.getElementById('ra-accuracy-value');
     const feedbackElement = document.getElementById('ra-transcript-feedback');
@@ -2832,7 +2841,9 @@ class ReadAloudMode {
       retryBtn.disabled = true;
     }
     try {
-      const success = await this.submitToAzure(this.pendingBlob, this.pendingSession);
+      const recordingSession = this.pendingSession;
+      const success = await this.submitToAzure(this.pendingBlob, recordingSession);
+      if (!this.shouldApplyAssessment(recordingSession)) return;
       if (success) {
         this.pendingBlob = null;
         this.pendingSession = null;
@@ -3489,10 +3500,22 @@ class ReadAloudMode {
 
   applyRecordingCaptureFailure(recordingSession, message) {
     if (!this.shouldApplyAssessment(recordingSession)) return;
-    const accuracyElement = document.getElementById('ra-accuracy-value');
-    this.showAssessmentDisplay();
+    this.renderAssessmentFailure(message, 'We could not prepare this recording for scoring.');
+  }
+
+  renderAssessmentFailure(message, detail = 'We could not score this attempt.') {
+    this.lastAssessmentPayload = null;
+    this.lastAssessmentSession = null;
+    if (this.pteView) delete this.pteView.payload;
     this.setAssessmentStatusMessage(message);
+    const accuracyElement = document.getElementById('ra-accuracy-value');
+    const feedbackElement = document.getElementById('ra-transcript-feedback');
     if (accuracyElement) accuracyElement.textContent = '--';
+    if (feedbackElement) {
+      feedbackElement.innerHTML = `<p style="line-height: 1.6; font-size: 1rem; padding: 10px; border: 1px solid #f3d1d1; border-radius: 8px; background: #fff7f7; color: #b42318;">${detail}</p>`;
+    }
+    this.clearConnectedSpeechResults();
+    this.showAssessmentDisplay();
   }
 
   isPteShellEnabled() {
@@ -4216,14 +4239,10 @@ class ReadAloudMode {
         throw error;
       }
 
-      await this.processAzureResults(payload, recordingSession);
-      return true;
+      return await this.processAzureResults(payload, recordingSession);
     } catch (err) {
       console.error('Azure assessment error:', err);
       if (!this.shouldApplyAssessment(recordingSession)) return false;
-      const accuracyElement = document.getElementById('ra-accuracy-value');
-      const feedbackElement = document.getElementById('ra-transcript-feedback');
-      this.showAssessmentDisplay();
       let failureStatus;
       if (err?.code === 'INVALID_AUDIO' && err?.reason === 'too_long') {
         failureStatus = 'That recording was too long to score. Keep it under 40 seconds and try again.';
@@ -4240,23 +4259,18 @@ class ReadAloudMode {
       } else {
         failureStatus = 'Assessment failed. Please try again.';
       }
-      this.setAssessmentStatusMessage(failureStatus);
-      if (accuracyElement) accuracyElement.textContent = '--';
-      if (feedbackElement) {
-        const fallbackText = err?.code === 'INVALID_AUDIO' && err?.reason === 'too_long'
-          ? 'That recording was too long for the current scorer. Try keeping it under 40 seconds.'
-          : err?.code === 'INVALID_AUDIO' && err?.reason === 'no_speech'
-            ? 'We did not detect any speech in your recording. Please ensure your microphone is working.'
-            : err?.code === 'INVALID_AUDIO' && err?.reason === 'too_short'
-              ? 'Your recording was too short. Please try to speak clearly and fully.'
-              : err?.code === 'INVALID_AUDIO' && err?.reason === 'clipped'
-                ? 'Your audio signal was clipped or too loud. Try adjusting your input volume.'
-                : err?.code === 'AZURE_ASSESSMENT_FAILED' && err?.reason === 'scores_unavailable'
-                  ? 'Your speech was transcribed, but pronunciation scores were not returned for this attempt.'
-                  : 'We could not score this attempt.';
-        feedbackElement.innerHTML = `<p style="line-height: 1.6; font-size: 1rem; padding: 10px; border: 1px solid #f3d1d1; border-radius: 8px; background: #fff7f7; color: #b42318;">${fallbackText}</p>`;
-      }
-      this.clearConnectedSpeechResults();
+      const fallbackText = err?.code === 'INVALID_AUDIO' && err?.reason === 'too_long'
+        ? 'That recording was too long for the current scorer. Try keeping it under 40 seconds.'
+        : err?.code === 'INVALID_AUDIO' && err?.reason === 'no_speech'
+          ? 'We did not detect any speech in your recording. Please ensure your microphone is working.'
+          : err?.code === 'INVALID_AUDIO' && err?.reason === 'too_short'
+            ? 'Your recording was too short. Please try to speak clearly and fully.'
+            : err?.code === 'INVALID_AUDIO' && err?.reason === 'clipped'
+              ? 'Your audio signal was clipped or too loud. Try adjusting your input volume.'
+              : err?.code === 'AZURE_ASSESSMENT_FAILED' && err?.reason === 'scores_unavailable'
+                ? 'Your speech was transcribed, but pronunciation scores were not returned for this attempt.'
+                : 'We could not score this attempt.';
+      this.renderAssessmentFailure(failureStatus, fallbackText);
       return false;
     } finally {
       this.isSubmitInFlight = false;
@@ -4577,7 +4591,7 @@ class ReadAloudMode {
   }
 
   async processAzureResults(payload, recordingSession) {
-    if (!this.shouldApplyAssessment(recordingSession)) return;
+    if (!this.shouldApplyAssessment(recordingSession)) return false;
     const accuracyElement = document.getElementById('ra-accuracy-value');
     const feedbackElement = document.getElementById('ra-transcript-feedback');
     const assessmentModes = this.getAssessmentConnectedSpeechModes({}, recordingSession);
@@ -4631,6 +4645,7 @@ class ReadAloudMode {
         sessionConnectedSpeechLevel: sessionLevel
       });
     }
+    if (!this.shouldApplyAssessment(recordingSession)) return false;
 
     const attemptInput = {
       practiceMode: 'read-aloud',
@@ -4686,6 +4701,7 @@ class ReadAloudMode {
     } else {
       window.PTEAttemptArchive?.saveAttempt?.(attemptInput).catch((error) => console.warn('[PTE Archive] Read Aloud save failed:', error));
     }
+    return true;
   }
 
   clearConnectedSpeechResults() {

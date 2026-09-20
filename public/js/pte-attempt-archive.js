@@ -284,6 +284,9 @@
     if ('responseSnapshot' in patch || 'response' in patch) {
       body.responseSnapshot = patch.responseSnapshot || patch.response || null;
     }
+    if ('answerSnapshot' in patch || 'answer' in patch) {
+      body.answerSnapshot = patch.answerSnapshot || patch.answer || null;
+    }
     if ('scoringSnapshot' in patch || 'scoring' in patch) {
       body.scoringSnapshot = patch.scoringSnapshot || patch.scoring || null;
     }

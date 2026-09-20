@@ -591,6 +591,149 @@ async function run() {
           requestIdAdvanced: retryRace.requestIdAdvanced
         }, { disposition: 'discard', requestIdAdvanced: true });
         check(`${width}: actual Retry blocks prior assessment archive writes`, retryRace.archiveWrites, 0);
+
+        await page.evaluate(() => {
+          const mode = window.ReadAloudMode;
+          const session = {
+            id: mode.recordingRequestId,
+            disposition: 'submit',
+            promptToken: mode.promptLifecycleToken,
+            referenceText: mode.currentPromptPlainText,
+            questionId: mode.currentQuestionId,
+            wavBlob: new Blob(['delayed-capture-save'], { type: 'audio/wav' }),
+            archiveAttemptId: 'retry-archive-old-attempt',
+            sessionViewMode: mode.getEffectiveViewMode(),
+            sessionConnectedSpeechModes: Object.freeze(mode.getActiveConnectedSpeechModes()),
+            sessionConnectedSpeechLevel: mode.connectedSpeechLevel || 'off'
+          };
+          const payload = {
+            success: true,
+            accuracyScore: 21,
+            fluencyScore: 22,
+            completenessScore: 23,
+            pronScore: 24,
+            recognizedText: mode.currentPromptPlainText,
+            words: [{ word: 'obsolete', accuracyScore: 21, startMs: 0, endMs: 180 }],
+            connectedSpeech: { status: 'not_applicable', events: [], summary: { total: 0, detected: 0 } }
+          };
+
+          mode.pendingSession = session;
+          mode.pendingBlob = new Blob(['delayed-capture-save'], { type: 'audio/webm' });
+          mode.state = 'RECORDED';
+          mode.updateUIForState();
+
+          let releaseCaptureSave;
+          const captureSaveGate = new Promise(resolve => { releaseCaptureSave = resolve; });
+          const originals = {
+            handleCheckResult: mode.handleCheckResult,
+            submitToAzure: mode.submitToAzure,
+            savePteCapture: mode.savePteCapture,
+            patchAttempt: window.PTEAttemptArchive?.patchAttempt,
+            invalidateHistoryCache: window.PTEAttemptArchive?.invalidateHistoryCache,
+            recordLocal: window.PteAttemptHistory?.recordLocal
+          };
+          const onArchiveSaved = (event) => {
+            if (event.detail?.attemptId === session.archiveAttemptId) {
+              window.__pteRetryArchiveRace.savedEvents += 1;
+            }
+          };
+          window.__pteRetryArchiveRace = {
+            archivePatchStarts: 0,
+            captureSaveStarted: false,
+            historyInvalidations: 0,
+            localHistoryWrites: 0,
+            savedEvents: 0,
+            releaseCaptureSave,
+            session,
+            originals,
+            onArchiveSaved
+          };
+          window.addEventListener('pte-attempt-archive:saved', onArchiveSaved);
+          mode.savePteCapture = async () => {
+            window.__pteRetryArchiveRace.captureSaveStarted = true;
+            await captureSaveGate;
+          };
+          if (window.PTEAttemptArchive) {
+            window.PTEAttemptArchive.patchAttempt = async () => {
+              window.__pteRetryArchiveRace.archivePatchStarts += 1;
+            };
+            window.PTEAttemptArchive.invalidateHistoryCache = () => {
+              window.__pteRetryArchiveRace.historyInvalidations += 1;
+            };
+          }
+          if (window.PteAttemptHistory) {
+            window.PteAttemptHistory.recordLocal = () => {
+              window.__pteRetryArchiveRace.localHistoryWrites += 1;
+            };
+          }
+          mode.submitToAzure = (_blob, recordingSession) => mode.processAzureResults(payload, recordingSession);
+          mode.handleCheckResult = function (...args) {
+            const completion = originals.handleCheckResult.apply(this, args);
+            window.__pteRetryArchiveRace.completion = completion;
+            return completion;
+          };
+        });
+
+        await page.locator('#ra-check-btn').click();
+        await page.waitForFunction(() => window.ReadAloudMode.state === 'RESULTS'
+          && window.__pteRetryArchiveRace?.captureSaveStarted
+          && !!window.__pteRetryArchiveRace?.completion);
+        await page.locator('#ra-retry-btn').click();
+        await page.waitForFunction(() => window.ReadAloudMode.state === 'PREP');
+        await page.evaluate(() => window.__pteRetryArchiveRace.releaseCaptureSave());
+        await page.evaluate(() => window.__pteRetryArchiveRace.completion);
+
+        const retryArchiveRace = await page.evaluate(() => {
+          const mode = window.ReadAloudMode;
+          const race = window.__pteRetryArchiveRace;
+          const observed = {
+            state: mode.state,
+            payload: mode.lastAssessmentPayload ?? null,
+            session: mode.lastAssessmentSession ?? null,
+            renderedPayload: mode.pteView?.payload ?? null,
+            staleMetricsVisible: [...document.querySelectorAll('.pte-stats strong')]
+              .some(node => ['21', '22', '23', '24'].includes(node.textContent.trim())),
+            archivePatchStarts: race.archivePatchStarts,
+            historyInvalidations: race.historyInvalidations,
+            localHistoryWrites: race.localHistoryWrites,
+            savedEvents: race.savedEvents,
+            oldSessionDisposition: race.session.disposition,
+            requestIdAdvanced: mode.recordingRequestId > race.session.id
+          };
+          mode.handleCheckResult = race.originals.handleCheckResult;
+          mode.submitToAzure = race.originals.submitToAzure;
+          mode.savePteCapture = race.originals.savePteCapture;
+          if (window.PTEAttemptArchive) {
+            if (race.originals.patchAttempt) window.PTEAttemptArchive.patchAttempt = race.originals.patchAttempt;
+            else delete window.PTEAttemptArchive.patchAttempt;
+            if (race.originals.invalidateHistoryCache) window.PTEAttemptArchive.invalidateHistoryCache = race.originals.invalidateHistoryCache;
+            else delete window.PTEAttemptArchive.invalidateHistoryCache;
+          }
+          if (window.PteAttemptHistory) {
+            if (race.originals.recordLocal) window.PteAttemptHistory.recordLocal = race.originals.recordLocal;
+            else delete window.PteAttemptHistory.recordLocal;
+          }
+          window.removeEventListener('pte-attempt-archive:saved', race.onArchiveSaved);
+          delete window.__pteRetryArchiveRace;
+          return observed;
+        });
+        check(`${width}: delayed capture-save Retry keeps phase in PREP`, retryArchiveRace.state, 'PREP');
+        check(`${width}: delayed capture-save Retry keeps assessment ownership cleared`, {
+          payload: retryArchiveRace.payload,
+          session: retryArchiveRace.session,
+          renderedPayload: retryArchiveRace.renderedPayload
+        }, { payload: null, session: null, renderedPayload: null });
+        check(`${width}: delayed capture-save Retry keeps prior metrics cleared`, retryArchiveRace.staleMetricsVisible, false);
+        check(`${width}: delayed capture-save Retry blocks assessed archive patch`, retryArchiveRace.archivePatchStarts, 0);
+        check(`${width}: delayed capture-save Retry blocks history and saved-event mutations`, {
+          invalidations: retryArchiveRace.historyInvalidations,
+          localWrites: retryArchiveRace.localHistoryWrites,
+          savedEvents: retryArchiveRace.savedEvents
+        }, { invalidations: 0, localWrites: 0, savedEvents: 0 });
+        check(`${width}: delayed capture-save Retry discards prior session identity`, {
+          disposition: retryArchiveRace.oldSessionDisposition,
+          requestIdAdvanced: retryArchiveRace.requestIdAdvanced
+        }, { disposition: 'discard', requestIdAdvanced: true });
       }
       await page.close();
     }

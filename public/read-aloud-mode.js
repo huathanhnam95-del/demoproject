@@ -4707,15 +4707,24 @@ class ReadAloudMode {
     if (this.isPteShellEnabled() && recordingSession.wavBlob) {
       try {
         await this.savePteCapture(recordingSession);
+        if (!this.shouldApplyAssessment(recordingSession)) return false;
         if (recordingSession.archiveAttemptId) {
+          if (!this.shouldApplyAssessment(recordingSession)) return false;
           await window.PTEAttemptArchive.patchAttempt(recordingSession.archiveAttemptId, attemptInput);
+          if (!this.shouldApplyAssessment(recordingSession)) return false;
           window.PTEAttemptArchive.invalidateHistoryCache();
           window.dispatchEvent(new CustomEvent('pte-attempt-archive:saved', { detail: { attemptId: recordingSession.archiveAttemptId, practiceMode: 'read-aloud', promptId: recordingSession.questionId } }));
         } else {
+          if (!this.shouldApplyAssessment(recordingSession)) return false;
           window.PteAttemptHistory?.recordLocal({ ...attemptInput, media: undefined, attemptId: recordingSession.localAttemptId, promptId: recordingSession.questionId,
             audio: { studentUrl: recordingSession.historyAudioUrl, durationMs: recordingSession.durationMs } });
         }
-      } catch (error) { console.warn('[PTE Archive] Read Aloud save failed:', error); }
+      } catch (error) {
+        if (this.shouldApplyAssessment(recordingSession)) {
+          console.warn('[PTE Archive] Read Aloud save failed:', error);
+        }
+      }
+      if (!this.shouldApplyAssessment(recordingSession)) return false;
       this.syncPteShell();
     } else {
       window.PTEAttemptArchive?.saveAttempt?.(attemptInput).catch((error) => console.warn('[PTE Archive] Read Aloud save failed:', error));

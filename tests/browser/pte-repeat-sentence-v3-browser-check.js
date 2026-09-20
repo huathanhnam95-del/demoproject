@@ -16,11 +16,104 @@ function wave() {
   b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34); b.write('data', 36); b.writeUInt32LE(samples * 2, 40);
   return b;
 }
+
+async function exerciseCancelledCapture(page, width) {
+  await page.locator('#record-btn').click();
+  await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'recording' && !window.RepeatSentenceV3.busy);
+  const cancelledId = await page.evaluate(() => window.RepeatSentenceV3.attempt.id);
+  await page.evaluate(() => {
+    const enhance = window.AudioDspPipeline.enhance;
+    window.__oldDspPending = false;
+    window.AudioDspPipeline = { enhance: async blob => {
+      window.__oldDspPending = true;
+      await new Promise(resolve => { window.__releaseOldDsp = resolve; });
+      window.__oldDspPending = false;
+      window.AudioDspPipeline = { enhance };
+      return enhance(blob);
+    } };
+  });
+  await page.locator('#speak-pte-cancel').click();
+  await page.waitForFunction(() => window.__oldDspPending);
+  await page.locator('#speak-pte-cancel').click();
+  // Queue the real Start control while Cancel is still draining DSP. A fixed
+  // implementation makes it available only after the cancelled capture settles.
+  const startClick = page.locator('#record-btn').click();
+  await page.waitForFunction(id => window.RepeatSentenceV3.phase === 'recording'
+    && window.RepeatSentenceV3.attempt?.id !== id, cancelledId, { timeout: 1500 }).catch(() => {});
+  const beforeRelease = await page.evaluate(() => ({ phase: RepeatSentenceV3.phase, id: RepeatSentenceV3.attempt?.id }));
+  await page.evaluate(() => window.__releaseOldDsp());
+  await startClick;
+  await page.waitForTimeout(200); // Drain the obsolete continuation, without advancing the next prep countdown.
+  const afterRelease = await page.evaluate(() => ({ phase: RepeatSentenceV3.phase, id: RepeatSentenceV3.attempt?.id }));
+  fs.writeFileSync(path.join(evidence, `${width}-cancel-race.json`), JSON.stringify({ cancelledId, beforeRelease, afterRelease }, null, 2));
+  assert.equal(beforeRelease.id, cancelledId, 'pending Cancel must retain ownership until DSP settles');
+  assert.equal(afterRelease.phase, 'recording', 'obsolete Cancel must not switch the fresh recording to PREP');
+  assert.ok(afterRelease.id && afterRelease.id !== cancelledId, 'Start creates exactly one fresh attempt');
+  await page.locator('#speak-pte-stop').click();
+  await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'complete' && !window.RepeatSentenceV3.busy);
+  assert.deepEqual(await page.evaluate(() => window.__saves.map(item => item.attemptId)), [afterRelease.id], 'only the fresh capture is saved');
+  assert.equal(await page.evaluate(() => window.__dsp), 2, 'both captures finish through DSP');
+}
+
+async function finishAndAssess(page) {
+  await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'recording' && !window.RepeatSentenceV3.busy
+    && document.getElementById('transcription-text').textContent.includes('library'));
+  await page.locator('#speak-pte-stop').click();
+  await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'complete' && !window.RepeatSentenceV3.busy);
+  await page.locator('#check-btn-speak').click();
+  await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'feedback' && !window.RepeatSentenceV3.busy);
+  if (await page.locator('#vocab-skip-btn').isVisible()) await page.locator('#vocab-skip-btn').click();
+}
+
+async function exerciseListenBackRetry(page, width) {
+  await page.locator('#record-btn').click();
+  await finishAndAssess(page);
+  await page.locator('#speak-pte-original').click();
+  const original = await page.evaluate(() => {
+    const audio = document.getElementById('speak-pte-playback');
+    window.__playedSources = [];
+    audio.addEventListener('play', () => window.__playedSources.push(audio.currentSrc));
+    return { src: audio.src, label: audio.getAttribute('aria-label'),
+      selected: document.getElementById('speak-pte-original').getAttribute('aria-pressed'),
+      yours: document.getElementById('speak-pte-yours').getAttribute('aria-pressed') };
+  });
+  assert.equal(original.selected, 'true');
+  assert.equal(original.yours, 'false');
+  assert.equal(original.label, 'Original sentence');
+  assert.match(original.src, /\/database\/speak\/audio\//);
+  await page.locator('#speak-pte-playback').click({ position: { x: 20, y: 20 } });
+  await page.waitForFunction(() => window.__playedSources.length > 0);
+  assert.deepEqual(await page.evaluate(() => window.__playedSources), [original.src]);
+  await page.locator('#retry-btn-speak').click();
+  await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'prep');
+  await page.locator('#record-btn').click();
+  await finishAndAssess(page);
+  const state = await page.evaluate(() => {
+    const audio = document.getElementById('speak-pte-playback');
+    window.__playedSources = [];
+    return { yours: document.getElementById('speak-pte-yours').getAttribute('aria-pressed'),
+      original: document.getElementById('speak-pte-original').getAttribute('aria-pressed'),
+      label: audio.getAttribute('aria-label'), src: audio.src, recordingUrl: window.RepeatSentenceV3.attempt.url };
+  });
+  fs.writeFileSync(path.join(evidence, `${width}-listen-back-retry.json`), JSON.stringify({ original, state }, null, 2));
+  assert.equal(state.yours, 'true', 'new capture selects Your recording');
+  assert.equal(state.original, 'false', 'Original sentence selection is cleared with the source change');
+  assert.equal(state.src, state.recordingUrl);
+  assert.equal(state.label, 'Your recording');
+  // Use the Chrome native audio play control, not a direct player method.
+  await page.locator('#speak-pte-playback').click({ position: { x: 20, y: 20 } });
+  await page.waitForFunction(() => window.__playedSources.length > 0);
+  assert.deepEqual(await page.evaluate(() => window.__playedSources), [state.recordingUrl]);
+}
+
 async function run() {
   fs.mkdirSync(evidence, { recursive: true });
-  const harness = await createHarness(); const report = [];
+  const harness = await createHarness(); const report = [], failures = [];
+  const scenarios = process.argv.includes('--cancel-race-only') ? ['cancel']
+    : process.argv.includes('--listen-back-only') ? ['listen']
+      : process.argv.includes('--replay-start-only') ? ['full'] : ['full', 'cancel', 'listen'];
   try {
-    for (const width of [1440, 390]) {
+    for (const scenario of scenarios) for (const width of [1440, 390]) {
       const page = await harness.browser.newPage({ viewport: { width, height: width === 390 ? 844 : 900 } });
       const errors = []; page.on('pageerror', e => errors.push(e.stack));
       await page.addInitScript(initScript);
@@ -63,6 +156,16 @@ async function run() {
       await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'prep').catch(async error => { console.log(await page.evaluate(() => ({ phase: RepeatSentenceV3.phase, status: document.querySelector('#mode-speak .pte-dock__status')?.textContent, audio: [...document.querySelectorAll('audio')].map(a => ({id:a.id,src:a.currentSrc,paused:a.paused,error:a.error?.message})), errors: [] }))); console.log(errors); throw error; });
       assert.equal(await page.evaluate(() => window.speakReplayCount || 0), 0, 'automatic first play does not spend replay');
       assert.equal(await page.locator('#transcription-display').isVisible(), false);
+      if (scenario !== 'full') {
+        try {
+          if (scenario === 'cancel') await exerciseCancelledCapture(page, width);
+          else await exerciseListenBackRetry(page, width);
+          assert.deepEqual(errors, [], 'review regressions produce no JavaScript errors');
+          report.push({ scenario, width, passed: true });
+        } catch (error) { failures.push(`${scenario} ${width}: ${error.message}`); report.push({ scenario, width, passed: false, error: error.message }); }
+        await page.close();
+        continue;
+      }
       await page.evaluate(() => window.scrollTo(0, 0));
       await page.screenshot({ path: path.join(evidence, `${width}-prep.png`), fullPage: true });
       if (process.argv.includes('--replay-start-only')) {
@@ -171,7 +274,7 @@ async function run() {
       assert.deepEqual(errors, [], 'no new JavaScript errors');
       report.push({ width, errors }); await page.close();
     }
-    for (const flag of ['legacy', '']) {
+    for (const flag of scenarios.includes('full') ? ['legacy', ''] : []) {
       const page = await harness.open({ flag });
       await page.evaluate(async () => { await window.switchToMode('speak'); });
       assert.equal(await page.locator('#mode-speak .pte-card').count(), 0, 'flag off stays legacy');
@@ -181,6 +284,7 @@ async function run() {
     }
     fs.writeFileSync(path.join(evidence, 'report.json'), JSON.stringify(report, null, 2));
     console.log(JSON.stringify(report));
+    assert.deepEqual(failures, [], 'review regressions must pass at both widths');
   } finally { await harness.close(); }
 }
 run().catch(error => { console.error(error); process.exitCode = 1; });

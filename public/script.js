@@ -10047,7 +10047,7 @@
 
   // Repeat Sentence owns v3 timing and presentation; the shared widgets own no mode state.
   const repeatSentenceV3 = {
-    active: false, phase: 'loading', generation: 0, timer: null, busy: null, origins: [],
+    active: false, phase: 'loading', generation: 0, timer: null, busy: null, retryOperation: null, origins: [],
     replaysLeft() {
       const limit = window.DifficultyManager?.getCurrentSettings('speak')?.maxReplays ?? 5;
       return Math.max(0, limit - (window.speakReplayCount || 0));
@@ -10089,14 +10089,11 @@
       this.buttonLabels = [[replayBtn, 'Replay animation'], [breakdownBeginningBtn, 'From the beginning'], [breakdownEndBtn, 'From the end']]
         .map(([node, label]) => { const previous = node.textContent; node.textContent = label; return { node, previous }; });
       document.getElementById('speak-pte-stop').onclick = () => this.stop().catch(error => this.fail(error));
-      document.getElementById('speak-pte-cancel').onclick = () => this.retry(true);
+      document.getElementById('speak-pte-cancel').onclick = () => this.retry(true).catch(error => this.fail(error));
       document.getElementById('speak-pte-play').onclick = () => this.playback.play().catch(error => this.fail(error));
       this.playback = document.getElementById('speak-pte-playback');
-      ['yours', 'original'].forEach(kind => document.getElementById(`speak-pte-${kind}`).onclick = () => {
-        this.playback.pause();
-        this.playback.src = kind === 'yours' ? this.recordingUrl || '' : audio.currentSrc || audio.querySelector('source')?.src || '';
-        ['yours', 'original'].forEach(item => document.getElementById(`speak-pte-${item}`).setAttribute('aria-pressed', String(item === kind)));
-      });
+      ['yours', 'original'].forEach(kind => document.getElementById(`speak-pte-${kind}`).onclick = () => this.selectPlayback(kind));
+      this.selectPlayback('yours');
       const selectTab = kind => ['results', 'practice'].forEach(item => {
         const selected = item === kind, button = document.getElementById(`speak-pte-${item}-tab`);
         button.setAttribute('aria-selected', String(selected)); button.tabIndex = selected ? 0 : -1;
@@ -10114,7 +10111,8 @@
       // The shell adopts dock controls after onMount returns.
       const mountGeneration = this.generation;
       queueMicrotask(async () => {
-        if (this.busy) await this.busy.catch(() => {});
+        const pending = this.retryOperation?.promise || this.busy;
+        if (pending) await pending.catch(() => {});
         if (this.active && mountGeneration === this.generation) this.begin();
       });
     },
@@ -10126,6 +10124,12 @@
         anchor.replaceWith(node); if (style === null) node.removeAttribute('style'); else node.setAttribute('style', style); node.hidden = hidden;
       });
       this.origins = []; this.view?.remove(); modeSpeak.classList.remove('speak-pte-v3'); delete modeSpeak.dataset.ptePhase;
+    },
+    selectPlayback(kind) {
+      this.playback.pause();
+      this.playback.src = kind === 'yours' ? this.recordingUrl || '' : audio.currentSrc || audio.querySelector('source')?.src || '';
+      this.playback.setAttribute('aria-label', kind === 'yours' ? 'Your recording' : 'Original sentence');
+      ['yours', 'original'].forEach(item => document.getElementById(`speak-pte-${item}`).setAttribute('aria-pressed', String(item === kind)));
     },
     setPhase(phase) {
       if (!this.active) return;
@@ -10142,7 +10146,7 @@
       document.getElementById('speak-pte-audio').hidden = this.phase === 'feedback';
       document.getElementById('speak-pte-recorder').hidden = ['listen', 'loading', 'feedback'].includes(this.phase);
       document.getElementById('speak-pte-feedback').hidden = this.phase !== 'feedback';
-      checkBtnSpeak.disabled = !!this.busy;
+      checkBtnSpeak.disabled = !!this.busy || !!this.retryOperation;
     },
     fail(error) {
       if (!this.active || error?.name === 'AbortError') return;
@@ -10187,7 +10191,7 @@
       }
     },
     async start() {
-      if (!this.active || this.phase !== 'prep' || this.busy) return;
+      if (!this.active || this.phase !== 'prep' || this.busy || this.retryOperation) return;
       // Invalidate replay completion before cancelling its audio promise. It must
       // not restart a prep timer after this recording has taken ownership.
       const token = ++this.generation;
@@ -10235,6 +10239,7 @@
       window.SpeakingPracticeController?.setSaveError('speak', '');
     },
     async stop() {
+      if (this.retryOperation) { await this.retryOperation.promise; return false; }
       if (this.busy) return this.busy;
       if (this.phase !== 'recording') return;
       clearInterval(this.timer); const token = this.generation;
@@ -10245,20 +10250,42 @@
         attempt.transcript = transcription; attempt.blob = window.repeatSentenceWavBlob;
         attempt.durationMs = Date.now() - attempt.started;
         if (attempt.blob) attempt.url = URL.createObjectURL(attempt.blob);
-        this.recordingUrl = attempt.url; this.playback.src = attempt.url || '';
+        this.recordingUrl = attempt.url; this.selectPlayback('yours');
         this.recorder.showComplete(); this.setPhase('complete');
         await this.save();
       })();
       try { return await this.busy; } finally { this.busy = null; this.sync(); }
     },
-    async retry(discard = false) {
-      this.generation++; clearInterval(this.timer); this.audioBox.reset();
-      if (this.busy) await this.busy.catch(() => {});
-      if (isRecording) await stopRepeatSentenceRecording();
-      if (!discard && this.attempt && !this.attempt.saved) await this.save();
-      if (!this.active) return;
-      this.attempt = null; resetScaffolding(); transcription = ''; window.repeatSentenceWavBlob = null; window.lastRepeatSentenceAssessment = null;
-      startAttemptContext('speak', currentSpeakQuestionId); this.prepare();
+    retry(discard = false) {
+      if (this.retryOperation) return this.retryOperation.promise;
+      if (!this.active) return Promise.resolve(false);
+      // Cancel owns the old capture until its DSP/save work drains. Repeated
+      // clicks join that operation instead of exposing a new prep countdown.
+      const operation = { generation: ++this.generation, attempt: this.attempt, pending: this.busy };
+      this.retryOperation = operation;
+      const isCurrent = () => this.active && this.retryOperation === operation
+        && this.generation === operation.generation && this.attempt === operation.attempt;
+      clearInterval(this.timer); this.audioBox.reset(); this.playback.pause();
+      operation.promise = (async () => {
+        if (operation.pending) await operation.pending.catch(() => {});
+        if (!isCurrent()) return false;
+        if (isRecording) {
+          await stopRepeatSentenceRecording();
+          if (!isCurrent()) return false;
+        }
+        if (!discard && operation.attempt && !operation.attempt.saved) {
+          await this.save();
+          if (!isCurrent()) return false;
+        }
+        this.attempt = null; resetScaffolding(); transcription = ''; window.repeatSentenceWavBlob = null; window.lastRepeatSentenceAssessment = null;
+        startAttemptContext('speak', currentSpeakQuestionId); this.prepare();
+        return true;
+      })().finally(() => {
+        if (this.retryOperation !== operation) return;
+        this.retryOperation = null; this.sync();
+      });
+      this.sync();
+      return operation.promise;
     },
     async feedback(scores, missedWords) {
       const assessment = window.lastRepeatSentenceAssessment;
@@ -10297,6 +10324,7 @@
         fluencyScore: assessment?.fluencyScore, completenessScore: assessment?.completenessScore, words: assessment?.words });
     },
     async beforeNavigate(approved = false) {
+      if (this.retryOperation) { await this.retryOperation.promise; return false; }
       if (this.busy) await this.busy;
       if (!this.active) return false;
       if (!approved && this.phase === 'prep') {

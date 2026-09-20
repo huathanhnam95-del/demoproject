@@ -2677,6 +2677,7 @@ class ReadAloudMode {
   }
 
   invalidateRecordingSession() {
+    this.pendingPteNextOwnership = null;
     const invalidatedSessions = new Set([
       this.currentRecordingSession,
       this.pendingSession
@@ -2702,7 +2703,6 @@ class ReadAloudMode {
   }
 
   cleanup() {
-    this.pendingPteNextOwnership = null;
     this.invalidateSpeechCoachResultRender();
     this.cancelPendingHydration();
     this.stopTimer();
@@ -2854,6 +2854,10 @@ class ReadAloudMode {
       const success = await this.submitToAzure(this.pendingBlob, recordingSession);
       if (!this.shouldApplyAssessment(recordingSession)) return;
       if (success) {
+        // Retain this validated session for Next after releasing the assessment input.
+        if (this.isPteShellEnabled()) {
+          this.pendingPteNextOwnership = this.createPteNextOwnership(recordingSession);
+        }
         this.pendingBlob = null;
         this.pendingSession = null;
         this.state = 'RESULTS';
@@ -4203,7 +4207,8 @@ class ReadAloudMode {
     }
     if (!ownership.session) return false;
     return this.shouldApplyAssessment(ownership.session)
-      && (this.pendingSession === ownership.session || this.currentRecordingSession === ownership.session);
+      && (this.pendingSession === ownership.session || this.currentRecordingSession === ownership.session
+        || (this.state === 'RESULTS' && this.lastAssessmentSession === ownership.session));
   }
 
   savePteCapture(session) {

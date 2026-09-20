@@ -78,6 +78,113 @@ async function restoreWordPopover(page) {
   });
 }
 
+async function exerciseAssessedNext(page, width, check, retryDuringNext = false) {
+  const referenceText = await page.evaluate(() => {
+    const mode = window.ReadAloudMode;
+    mode.retryCurrentPrompt();
+    mode.stopTimer();
+    const originals = {
+      advancePtePrompt: mode.advancePtePrompt, loadNextPrompt: mode.loadNextPrompt,
+      savePteCapture: mode.savePteCapture
+    };
+    const flow = window.__pteAssessedNext = {
+      originals, loadCalls: 0, finished: false, promptToken: mode.promptLifecycleToken
+    };
+    mode.advancePtePrompt = async function (...args) {
+      try { return await originals.advancePtePrompt.apply(this, args); }
+      finally { flow.finished = true; }
+    };
+    mode.loadNextPrompt = function (...args) {
+      flow.loadCalls += 1;
+      return originals.loadNextPrompt.apply(this, args);
+    };
+    return mode.currentPromptPlainText;
+  });
+  const assessmentRequests = [];
+  const fixture = {
+    success: true, accuracyScore: 84, fluencyScore: 78, completenessScore: 96, pronScore: 82,
+    recognizedText: referenceText,
+    words: [{ word: referenceText.split(/\s+/)[0], accuracyScore: 84, startMs: 0, endMs: 350 }],
+    connectedSpeech: { status: 'available', events: [], summary: { total: 0, detected: 0 } }
+  };
+  const respond = async route => {
+    assessmentRequests.push({
+      method: route.request().method(),
+      referencePresent: route.request().postData()?.includes(referenceText) === true
+    });
+    await route.fulfill({ json: fixture });
+  };
+  await page.route('**/api/read-aloud/assess', respond);
+  try {
+    await page.locator('#ra-record-btn').click();
+    await page.waitForFunction(() => window.ReadAloudMode.state === 'RECORDING');
+    await page.locator('#ra-stop-btn').click();
+    await page.waitForFunction(() => window.ReadAloudMode.state === 'RECORDED');
+    await page.getByRole('button', { name: 'Get feedback', exact: true }).click();
+    await page.waitForFunction(() => window.ReadAloudMode.state === 'RESULTS'
+      && window.ReadAloudMode.pendingSession === null && !window.ReadAloudMode.isSubmitInFlight);
+    check(`${width}: actual Get feedback sends recording for assessment`, assessmentRequests, [
+      { method: 'POST', referencePresent: true }
+    ]);
+    check(`${width}: actual assessed scores`, await page.locator('.pte-stats strong').allTextContents(), ['84%', '78%', '96%', '82%']);
+    const assessedAttempt = await page.evaluate(() => ({
+      id: window.ReadAloudMode.lastAssessmentSession.localAttemptId,
+      audioUrl: window.ReadAloudMode.lastAssessmentSession.historyAudioUrl
+    }));
+    check(`${width}: actual assessment retained in guest history`, !!assessedAttempt.id && !!assessedAttempt.audioUrl
+      && await page.locator('.pte-attempts__row').count() > 0);
+    const savedScores = await page.locator('.pte-attempts__row').first().locator('.pte-attempts__score').allTextContents();
+    if (retryDuringNext) {
+      await page.evaluate(() => {
+        const mode = window.ReadAloudMode;
+        const flow = window.__pteAssessedNext;
+        const gate = new Promise(resolve => { flow.release = resolve; });
+        mode.savePteCapture = async function (...args) {
+          flow.saving = true;
+          await gate;
+          return flow.originals.savePteCapture.apply(this, args);
+        };
+      });
+    }
+    await page.locator('#pte-next-read-aloud').click();
+    if (retryDuringNext) {
+      await page.waitForFunction(() => window.__pteAssessedNext.saving);
+      await page.locator('#ra-retry-btn').click();
+      await page.waitForFunction(() => window.ReadAloudMode.state === 'PREP');
+      await page.evaluate(() => window.__pteAssessedNext.release());
+    }
+    await page.waitForFunction(() => window.__pteAssessedNext.finished
+      && !document.getElementById('pte-next-read-aloud').disabled);
+    check(`${width}: actual Get feedback then ${retryDuringNext ? 'Retry cancels delayed Next' : 'Next advances completed assessment'}`, await page.evaluate(() => ({
+      loadCalls: window.__pteAssessedNext.loadCalls,
+      state: window.ReadAloudMode.state,
+      promptChanged: window.ReadAloudMode.promptLifecycleToken !== window.__pteAssessedNext.promptToken,
+      pendingSession: window.ReadAloudMode.pendingSession ?? null
+    })), { loadCalls: retryDuringNext ? 0 : 1, state: 'PREP', promptChanged: !retryDuringNext, pendingSession: null });
+    if (retryDuringNext) {
+      check(`${width}: completed assessment Retry leaves no reusable Next ownership`, await page.evaluate(async () => {
+        const mode = window.ReadAloudMode;
+        const result = await window.__pteAssessedNext.originals.advancePtePrompt.call(mode);
+        return { result, ownership: mode.pendingPteNextOwnership, loadCalls: window.__pteAssessedNext.loadCalls };
+      }), { result: false, ownership: null, loadCalls: 0 });
+    }
+    // After Next, This question correctly excludes the preceding prompt's attempt.
+    await page.locator('.pte-attempts__scope').getByRole('button', { name: /^All / }).click();
+    const savedRow = page.locator('.pte-attempts__row').first();
+    await savedRow.getByRole('button', { name: '▶ Play', exact: true }).click();
+    check(`${width}: completed assessment navigation retains history scores`, await savedRow.locator('.pte-attempts__score').allTextContents(), savedScores);
+    check(`${width}: completed assessment navigation retains the same recording`, await page.evaluate(() => window.__pteMediaPlayCalls.at(-1)?.src), assessedAttempt.audioUrl);
+  } finally {
+    await page.unroute('**/api/read-aloud/assess', respond);
+    await page.evaluate(() => {
+      const mode = window.ReadAloudMode;
+      Object.assign(mode, window.__pteAssessedNext.originals);
+      delete window.__pteAssessedNext;
+      mode.stopTimer();
+    });
+  }
+}
+
 async function run() {
   fs.mkdirSync(evidence, { recursive: true });
   const harness = await createHarness();
@@ -997,6 +1104,8 @@ async function run() {
           });
         }
       }
+      await exerciseAssessedNext(page, width, check);
+      if (retrySessionVariant) await exerciseAssessedNext(page, width, check, true);
       await page.close();
     }
     for (const flag of ['legacy', '']) {

@@ -734,6 +734,183 @@ async function run() {
           disposition: retryArchiveRace.oldSessionDisposition,
           requestIdAdvanced: retryArchiveRace.requestIdAdvanced
         }, { disposition: 'discard', requestIdAdvanced: true });
+
+        await page.evaluate(() => {
+          const mode = window.ReadAloudMode;
+          mode.retryCurrentPrompt();
+          const session = {
+            id: mode.recordingRequestId,
+            disposition: 'submit',
+            promptToken: mode.promptLifecycleToken,
+            referenceText: mode.currentPromptPlainText,
+            questionId: mode.currentQuestionId
+          };
+          mode.pendingSession = session;
+          mode.pendingBlob = new Blob(['delayed-dsp-old-recording'], { type: 'audio/webm' });
+          mode.isSubmitInFlight = false;
+          mode.state = 'RECORDED';
+          mode.updateUIForState();
+
+          let releaseDsp;
+          const dspGate = new Promise(resolve => { releaseDsp = resolve; });
+          const originalPipelineDescriptor = Object.getOwnPropertyDescriptor(window, 'AudioDspPipeline');
+          const staleBuffer = { marker: 'stale-dsp-buffer', duration: 1.25 };
+          const freshBuffer = { marker: 'fresh-retry-buffer', duration: 2.5 };
+          const originals = {
+            pipelineDescriptor: originalPipelineDescriptor,
+            validateAudioBufferQuality: mode.validateAudioBufferQuality
+          };
+          Object.defineProperty(window, 'AudioDspPipeline', {
+            configurable: true,
+            writable: true,
+            value: {
+              ...(window.AudioDspPipeline || {}),
+              enhance: async () => {
+                window.__pteRetryDspRace.dspStarted = true;
+                await dspGate;
+                return {
+                  wavBlob: new Blob(['stale-dsp-wav'], { type: 'audio/wav' }),
+                  audioBuffer: staleBuffer
+                };
+              }
+            }
+          });
+          mode.validateAudioBufferQuality = () => ({ passed: true });
+          window.__pteRetryDspRace = {
+            completion: null,
+            dspStarted: false,
+            freshBuffer,
+            originals,
+            releaseDsp,
+            session
+          };
+          window.__pteRetryDspRace.completion = mode.submitToAzure(mode.pendingBlob, session);
+        });
+
+        await page.waitForFunction(() => window.__pteRetryDspRace?.dspStarted);
+        await page.locator('#ra-retry-btn').click();
+        await page.waitForFunction(() => window.ReadAloudMode.state === 'PREP');
+        await page.evaluate(() => {
+          const mode = window.ReadAloudMode;
+          const race = window.__pteRetryDspRace;
+          mode.assessmentAudioBuffer = race.freshBuffer;
+          mode.setRecordedAudio(new Blob(['fresh-retry-wav'], { type: 'audio/wav' }), { preserveAssessmentBuffer: true });
+          race.freshPlaybackUrl = mode.userRecordingUrl;
+          race.releaseDsp();
+        });
+        await page.evaluate(() => window.__pteRetryDspRace.completion);
+
+        const retryDspRace = await page.evaluate(() => {
+          const mode = window.ReadAloudMode;
+          const race = window.__pteRetryDspRace;
+          const observed = {
+            state: mode.state,
+            playbackUrlPreserved: mode.userRecordingUrl === race.freshPlaybackUrl,
+            assessmentBufferPreserved: mode.assessmentAudioBuffer === race.freshBuffer,
+            oldSessionDisposition: race.session.disposition,
+            requestIdAdvanced: mode.recordingRequestId > race.session.id
+          };
+          mode.validateAudioBufferQuality = race.originals.validateAudioBufferQuality;
+          if (race.originals.pipelineDescriptor) {
+            Object.defineProperty(window, 'AudioDspPipeline', race.originals.pipelineDescriptor);
+          } else {
+            delete window.AudioDspPipeline;
+          }
+          delete window.__pteRetryDspRace;
+          return observed;
+        });
+        check(`${width}: delayed DSP Retry preserves fresh shared audio`, retryDspRace, {
+          state: 'PREP',
+          playbackUrlPreserved: true,
+          assessmentBufferPreserved: true,
+          oldSessionDisposition: 'discard',
+          requestIdAdvanced: true
+        });
+
+        await page.evaluate(() => {
+          const mode = window.ReadAloudMode;
+          mode.retryCurrentPrompt();
+          let releaseSave;
+          const saveGate = new Promise(resolve => { releaseSave = resolve; });
+          const originals = {
+            finishPteRecordingForNext: mode.finishPteRecordingForNext,
+            advancePtePrompt: mode.advancePtePrompt,
+            savePteCapture: mode.savePteCapture,
+            loadNextPrompt: mode.loadNextPrompt
+          };
+          window.__pteRetryNextRace = {
+            advanceCalled: false,
+            finishSettled: false,
+            loadCalls: 0,
+            originals,
+            releaseSave,
+            saveStarted: false,
+            session: null
+          };
+          mode.savePteCapture = (session) => {
+            const race = window.__pteRetryNextRace;
+            race.session = session;
+            if (!session.__pteRetryNextSavePromise) {
+              session.__pteRetryNextSavePromise = (async () => {
+                race.saveStarted = true;
+                await saveGate;
+              })();
+            }
+            return session.__pteRetryNextSavePromise;
+          };
+          mode.loadNextPrompt = async () => {
+            window.__pteRetryNextRace.loadCalls += 1;
+            return true;
+          };
+          mode.finishPteRecordingForNext = function (...args) {
+            const completion = originals.finishPteRecordingForNext.apply(this, args);
+            Promise.resolve(completion).finally(() => {
+              window.__pteRetryNextRace.finishSettled = true;
+            });
+            return completion;
+          };
+          mode.advancePtePrompt = function (...args) {
+            window.__pteRetryNextRace.advanceCalled = true;
+            return originals.advancePtePrompt.apply(this, args);
+          };
+        });
+
+        await page.locator('#ra-record-btn').click();
+        await page.waitForFunction(() => window.ReadAloudMode.state === 'RECORDING');
+        await page.locator('#pte-next-read-aloud').click();
+        await page.locator('.pte-dialog').getByRole('button', { name: 'Next question', exact: true }).click();
+        await page.waitForFunction(() => window.__pteRetryNextRace?.saveStarted
+          && window.ReadAloudMode.state === 'RECORDED');
+        await page.locator('#ra-retry-btn').click();
+        await page.waitForFunction(() => window.ReadAloudMode.state === 'PREP');
+        await page.evaluate(() => window.__pteRetryNextRace.releaseSave());
+        await page.waitForFunction(() => window.__pteRetryNextRace?.finishSettled);
+        await page.waitForTimeout(50);
+
+        const retryNextRace = await page.evaluate(() => {
+          const mode = window.ReadAloudMode;
+          const race = window.__pteRetryNextRace;
+          const observed = {
+            state: mode.state,
+            loadCalls: race.loadCalls,
+            advanceCalled: race.advanceCalled,
+            oldSessionDisposition: race.session?.disposition,
+            requestIdAdvanced: mode.recordingRequestId > race.session.id
+          };
+          mode.finishPteRecordingForNext = race.originals.finishPteRecordingForNext;
+          mode.advancePtePrompt = race.originals.advancePtePrompt;
+          mode.savePteCapture = race.originals.savePteCapture;
+          mode.loadNextPrompt = race.originals.loadNextPrompt;
+          delete window.__pteRetryNextRace;
+          return observed;
+        });
+        check(`${width}: confirmed recording-to-Next Retry blocks forced advance`, retryNextRace, {
+          state: 'PREP',
+          loadCalls: 0,
+          advanceCalled: true,
+          oldSessionDisposition: 'discard',
+          requestIdAdvanced: true
+        });
       }
       await page.close();
     }

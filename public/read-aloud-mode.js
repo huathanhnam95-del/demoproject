@@ -37,6 +37,7 @@ class ReadAloudMode {
     this.prepTutorialHold = null; // pause/resume listeners while a tutorial overlay is open
     this.pendingBlob = null;
     this.pendingSession = null;
+    this.pendingPteNextOwnership = null;
     this.database = [];
     this.currentTranscript = '';
     this.hasLoadedDatabase = false;
@@ -2701,6 +2702,7 @@ class ReadAloudMode {
   }
 
   cleanup() {
+    this.pendingPteNextOwnership = null;
     this.invalidateSpeechCoachResultRender();
     this.cancelPendingHydration();
     this.stopTimer();
@@ -4013,11 +4015,15 @@ class ReadAloudMode {
         let playbackBlob = rawBlob;
         if (this.isPteShellEnabled()) {
           try {
-            playbackBlob = await this.prepareWavBlob(rawBlob);
+            let preparedAudioBuffer = null;
+            playbackBlob = await this.prepareWavBlob(rawBlob, (audioBuffer) => {
+              preparedAudioBuffer = audioBuffer;
+            });
             if (recordingSession.id !== this.recordingRequestId || !this.shouldApplyAssessment(recordingSession)) { resolveCapture(); return; }
             recordingSession.wavBlob = playbackBlob;
-            recordingSession.assessmentAudioBuffer = this.assessmentAudioBuffer;
-            recordingSession.durationMs = Math.round((this.assessmentAudioBuffer?.duration || 0) * 1000);
+            recordingSession.assessmentAudioBuffer = preparedAudioBuffer;
+            recordingSession.durationMs = Math.round((preparedAudioBuffer?.duration || 0) * 1000);
+            this.assessmentAudioBuffer = preparedAudioBuffer;
           } catch (error) {
             if (recordingSession.id !== this.recordingRequestId) { resolveCapture(); return; }
             this.applyRecordingCaptureFailure(recordingSession, 'We couldn’t prepare that recording. Please try again.');
@@ -4159,15 +4165,44 @@ class ReadAloudMode {
     if (this.state === 'REQUESTING_MIC') throw new Error('Wait for microphone access or cancel the recording.');
     const session = this.currentRecordingSession || this.pendingSession;
     if (!session) throw new Error('There is no recording to save yet.');
+    const ownership = this.createPteNextOwnership(session);
+    this.pendingPteNextOwnership = ownership;
     this.stopRecordingManually();
     await session.capturePromise;
+    if (!this.shouldApplyPteNextOwnership(ownership)) return false;
     if (!session.wavBlob) throw new Error('The recording could not be captured. Please try again.');
     await this.savePteCapture(session);
+    return this.shouldApplyPteNextOwnership(ownership);
   }
 
   async advancePtePrompt() {
-    if (this.pendingSession) await this.savePteCapture(this.pendingSession);
+    const ownership = this.pendingPteNextOwnership || this.createPteNextOwnership(this.pendingSession);
+    this.pendingPteNextOwnership = null;
+    if (!this.shouldApplyPteNextOwnership(ownership)) return false;
+    if (ownership.session) await this.savePteCapture(ownership.session);
+    if (!this.shouldApplyPteNextOwnership(ownership)) return false;
     return this.loadNextPrompt({ force: true });
+  }
+
+  createPteNextOwnership(session = null) {
+    return {
+      session,
+      promptToken: this.promptLifecycleToken,
+      questionId: this.currentQuestionId,
+      referenceText: this.currentPromptPlainText
+    };
+  }
+
+  shouldApplyPteNextOwnership(ownership) {
+    if (!ownership || !this.isActive
+      || ownership.promptToken !== this.promptLifecycleToken
+      || ownership.questionId !== this.currentQuestionId
+      || ownership.referenceText !== this.currentPromptPlainText) {
+      return false;
+    }
+    if (!ownership.session) return true;
+    return this.shouldApplyAssessment(ownership.session)
+      && (this.pendingSession === ownership.session || this.currentRecordingSession === ownership.session);
   }
 
   savePteCapture(session) {
@@ -4208,13 +4243,17 @@ class ReadAloudMode {
     const statusMsg = document.getElementById('ra-status-message');
     try {
       if (statusMsg) statusMsg.textContent = 'Formatting audio...';
-      const wavBlob = await this.prepareWavBlob(rawBlob);
+      let preparedAudioBuffer = null;
+      const wavBlob = await this.prepareWavBlob(rawBlob, (audioBuffer) => {
+        preparedAudioBuffer = audioBuffer;
+      });
+      if (!this.shouldApplyAssessment(recordingSession)) return false;
       recordingSession.wavBlob = wavBlob;
-      recordingSession.assessmentAudioBuffer = this.assessmentAudioBuffer;
-      if (this.assessmentAudioBuffer) {
+      recordingSession.assessmentAudioBuffer = preparedAudioBuffer;
+      this.assessmentAudioBuffer = preparedAudioBuffer;
+      if (preparedAudioBuffer) {
         this.setRecordedAudio(wavBlob, { preserveAssessmentBuffer: true });
       }
-      if (!this.shouldApplyAssessment(recordingSession)) return false;
 
       if (statusMsg) statusMsg.textContent = 'Analyzing pronunciation...';
       const formData = new FormData();
@@ -4295,11 +4334,7 @@ class ReadAloudMode {
     }
   }
 
-  async prepareWavBlob(blob) {
-    // A new assessment must never reuse a buffer from a prior recording if
-    // decoding or quality validation fails.
-    this.assessmentAudioBuffer = null;
-
+  async prepareWavBlob(blob, captureAudioBuffer = null) {
     if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
       const result = await window.AudioDspPipeline.enhance(blob, {
         targetSampleRate: 16000,
@@ -4322,7 +4357,7 @@ class ReadAloudMode {
         throw error;
       }
 
-      this.assessmentAudioBuffer = result.audioBuffer;
+      if (typeof captureAudioBuffer === 'function') captureAudioBuffer(result.audioBuffer);
       return result.wavBlob;
     }
 
@@ -4405,7 +4440,7 @@ class ReadAloudMode {
       throw error;
     }
 
-    this.assessmentAudioBuffer = trimmed;
+    if (typeof captureAudioBuffer === 'function') captureAudioBuffer(trimmed);
     return this.audioBufferToWav(trimmed);
   }
 

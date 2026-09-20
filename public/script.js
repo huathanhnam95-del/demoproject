@@ -10098,7 +10098,10 @@
       this.move(document.getElementById('same-vocab-speak'), document.getElementById('speak-pte-practice'));
       this.buttonLabels = [[replayBtn, 'Replay animation'], [breakdownBeginningBtn, 'From the beginning'], [breakdownEndBtn, 'From the end']]
         .map(([node, label]) => { const previous = node.textContent; node.textContent = label; return { node, previous }; });
-      document.getElementById('speak-pte-stop').onclick = () => this.stop().catch(error => this.fail(error));
+      document.getElementById('speak-pte-stop').onclick = () => {
+        const owner = this.captureAttemptOwner();
+        this.stop().catch(error => this.fail(error, owner));
+      };
       document.getElementById('speak-pte-cancel').onclick = () => this.retry(true).catch(error => this.fail(error));
       document.getElementById('speak-pte-play').onclick = () => this.playback.play().catch(error => this.fail(error));
       this.playback = document.getElementById('speak-pte-playback');
@@ -10204,8 +10207,19 @@
       document.getElementById('speak-pte-feedback').hidden = this.phase !== 'feedback';
       checkBtnSpeak.disabled = !!this.busy || !!this.retryOperation;
     },
-    fail(error) {
-      if (!this.active || error?.name === 'AbortError') return;
+    captureAttemptOwner() {
+      return { generation: this.generation, attempt: this.attempt, questionId: currentSpeakQuestionId };
+    },
+    ownsAttempt(owner) {
+      return this.active && this.generation === owner.generation && this.attempt === owner.attempt
+        && currentSpeakQuestionId === owner.questionId;
+    },
+    clearAttemptErrors() {
+      window.SpeakingPracticeController?.setSaveError('speak', '');
+      window.SpeakingPracticeController?.setNextError('speak', '');
+    },
+    fail(error, owner = null) {
+      if (!this.active || (owner && !this.ownsAttempt(owner)) || error?.name === 'AbortError') return;
       if (this.attempt?.blob && !this.attempt.saved) {
         window.SpeakingPracticeController?.setSaveError('speak', 'This attempt could not be saved. Try Next again to retry.');
         return;
@@ -10218,6 +10232,7 @@
       const token = ++this.generation; clearInterval(this.timer); this.audioBox.reset(); this.replaying = false;
       if (this.departureCleanup) await this.departureCleanup;
       if (!this.active || token !== this.generation) return;
+      this.clearAttemptErrors();
       this.attempt = null; this.setPhase('listen');
       try {
         await this.audioBox.countdown(3);
@@ -10262,10 +10277,11 @@
           if (!this.active || token !== this.generation) { await stopRepeatSentenceRecording(); return; }
           if (!isRecording || !repeatSentenceMediaStream) throw new Error('Microphone recording could not start. Allow microphone access and try again.');
           this.attempt = { id: `rs-${Date.now()}-${Math.random().toString(36).slice(2)}`, promptId: currentSpeakQuestionId, text: correctSentenceSpeak, started: Date.now() };
+          const owner = this.captureAttemptOwner();
           this.recorder.showRecording(15); this.recorder.attachStream(repeatSentenceMediaStream); this.setPhase('recording');
           this.timer = setInterval(() => {
             const elapsed = (Date.now() - this.attempt.started) / 1000; this.recorder.setElapsed(elapsed);
-            if (elapsed >= 15) this.stop().catch(error => this.fail(error));
+            if (elapsed >= 15) this.stop().catch(error => this.fail(error, owner));
           }, 100);
         } catch (error) {
           await stopRepeatSentenceRecording();
@@ -10276,8 +10292,8 @@
       return operation;
     },
     async save(resultSnapshot = null) {
-      const attempt = this.attempt;
-      if (!attempt) return;
+      const owner = this.captureAttemptOwner(), attempt = owner.attempt;
+      if (!attempt || !this.ownsAttempt(owner)) return false;
       if (resultSnapshot) attempt.resultSnapshot = resultSnapshot;
       resultSnapshot = attempt.resultSnapshot || null;
       const input = { practiceMode: 'speak', attemptId: attempt.id,
@@ -10291,35 +10307,47 @@
       try { saved = attempt.archiveId && resultSnapshot
         ? await window.PTEAttemptArchive.patchAttempt(attempt.archiveId, input)
         : attempt.saved && attempt.guest ? { skipped: true, reason: 'guest' } : await window.PTEAttemptArchive.saveAttempt(input); }
-      catch (error) { window.SpeakingPracticeController?.setSaveError('speak', 'This attempt could not be saved. Try Next again to retry.'); throw error; }
+      catch (error) {
+        if (!this.ownsAttempt(owner)) return false;
+        window.SpeakingPracticeController?.setSaveError('speak', 'This attempt could not be saved. Try Next again to retry.'); throw error;
+      }
+      // Persistence may finish after departure or Retry. It may retain its
+      // server-side record, but cannot publish into another attempt's UI/history.
+      if (!this.ownsAttempt(owner)) return false;
       if (saved?.skipped && saved.reason !== 'guest') throw new Error('This attempt could not be saved. Please try again.');
-      if (saved?.skipped) window.PteAttemptHistory?.recordLocal({ ...input, promptId: attempt.promptId,
-        audio: { studentUrl: attempt.url, durationMs: attempt.durationMs } });
       attempt.saved = true; attempt.guest = !!saved?.skipped;
       if (!attempt.guest) attempt.archiveId = saved?.attemptId || attempt.id;
+      window.SpeakingPracticeController?.setSaveError('speak', '');
+      if (saved?.skipped) window.PteAttemptHistory?.recordLocal({ ...input, promptId: attempt.promptId,
+        audio: { studentUrl: attempt.url, durationMs: attempt.durationMs } });
       if (attempt.archiveId && resultSnapshot) {
         window.PTEAttemptArchive.invalidateHistoryCache?.();
         window.dispatchEvent(new CustomEvent('pte-attempt-archive:saved', { detail: { attemptId: attempt.archiveId, practiceMode: 'speak', promptId: attempt.promptId } }));
       }
-      window.SpeakingPracticeController?.setSaveError('speak', '');
+      return true;
     },
     async stop() {
       if (this.retryOperation) { await this.retryOperation.promise; return false; }
       if (this.busy) return this.busy;
       if (this.phase !== 'recording') return;
-      clearInterval(this.timer); const token = this.generation;
-      this.busy = (async () => {
+      clearInterval(this.timer); const owner = this.captureAttemptOwner();
+      const operation = (async () => {
         await stopRepeatSentenceRecording();
-        if (!this.active || token !== this.generation) return false;
-        const attempt = this.attempt;
+        if (!this.ownsAttempt(owner)) return false;
+        const attempt = owner.attempt;
         attempt.transcript = transcription; attempt.blob = window.repeatSentenceWavBlob;
         attempt.durationMs = Date.now() - attempt.started;
         if (attempt.blob) attempt.url = URL.createObjectURL(attempt.blob);
         this.recordingUrl = attempt.url; this.selectPlayback('yours');
         this.recorder.showComplete(); this.setPhase('complete');
-        await this.save();
+        return this.save();
       })();
-      try { return await this.busy; } finally { this.busy = null; this.sync(); }
+      this.busy = operation;
+      try { return await operation; }
+      catch (error) { if (this.ownsAttempt(owner)) throw error; return false; }
+      finally {
+        if (this.busy === operation) { this.busy = null; if (this.ownsAttempt(owner)) this.sync(); }
+      }
     },
     retry(discard = false) {
       if (this.retryOperation) return this.retryOperation.promise;
@@ -10327,10 +10355,10 @@
       this.stopShadow();
       // Cancel owns the old capture until its DSP/save work drains. Repeated
       // clicks join that operation instead of exposing a new prep countdown.
-      const operation = { generation: ++this.generation, attempt: this.attempt, pending: this.busy };
+      const operation = { generation: ++this.generation, attempt: this.attempt, questionId: currentSpeakQuestionId, pending: this.busy };
       this.retryOperation = operation;
       const isCurrent = () => this.active && this.retryOperation === operation
-        && this.generation === operation.generation && this.attempt === operation.attempt;
+        && this.ownsAttempt(operation);
       clearInterval(this.timer); this.audioBox.reset(); this.playback.pause();
       operation.promise = (async () => {
         if (operation.pending) await operation.pending.catch(() => {});
@@ -10343,12 +10371,17 @@
           await this.save();
           if (!isCurrent()) return false;
         }
+        this.clearAttemptErrors();
         this.attempt = null; resetScaffolding(); transcription = ''; window.repeatSentenceWavBlob = null; window.lastRepeatSentenceAssessment = null;
         startAttemptContext('speak', currentSpeakQuestionId); this.prepare();
         return true;
-      })().finally(() => {
+      })().catch(error => {
+        if (isCurrent()) this.fail(error, operation);
+        return false;
+      }).finally(() => {
         if (this.retryOperation !== operation) return;
-        this.retryOperation = null; this.sync();
+        this.retryOperation = null;
+        if (this.active && this.generation === operation.generation && currentSpeakQuestionId === operation.questionId) this.sync();
       });
       this.sync();
       return operation.promise;
@@ -10677,9 +10710,16 @@
     if (repeatSentenceV3.active) {
       if (repeatSentenceV3.phase !== 'complete' || repeatSentenceV3.busy) return;
       if (!transcription.trim()) { repeatSentenceV3.fail(new Error('No speech was detected. Record again before getting feedback.')); return; }
-      repeatSentenceV3.busy = performCheckSpeak(transcription.trim(), scoreSpeak);
+      const owner = repeatSentenceV3.captureAttemptOwner();
+      const operation = performCheckSpeak(transcription.trim(), scoreSpeak);
+      repeatSentenceV3.busy = operation;
       repeatSentenceV3.sync();
-      repeatSentenceV3.busy.catch(error => repeatSentenceV3.fail(error)).finally(() => { repeatSentenceV3.busy = null; repeatSentenceV3.sync(); });
+      operation.catch(error => repeatSentenceV3.fail(error, owner)).finally(() => {
+        if (repeatSentenceV3.busy === operation) {
+          repeatSentenceV3.busy = null;
+          if (repeatSentenceV3.ownsAttempt(owner)) repeatSentenceV3.sync();
+        }
+      });
       return;
     }
     if (isRecording && recognition) {

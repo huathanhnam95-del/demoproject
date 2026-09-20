@@ -252,6 +252,111 @@ async function exerciseShadow(page, width, outcome) {
   assert.notEqual(stale.title, 'Shadowing... speak along!');
 }
 
+async function exerciseArchiveOwnership(page, width, scenario) {
+  const [stage, transition, outcome] = scenario.split('-');
+  await page.evaluate(stage => {
+    window.__persistedFixture = stage === 'assessed';
+    window.__archiveTrace = { calls: [], local: [], events: [], errors: [], invalidations: 0 };
+    const stamp = () => ({ generation: RepeatSentenceV3.generation, id: RepeatSentenceV3.attempt?.id,
+      question: document.getElementById('current-question-id-speak').textContent });
+    const recordLocal = window.PteAttemptHistory.recordLocal;
+    window.PteAttemptHistory.recordLocal = input => {
+      window.__archiveTrace.local.push({ ...stamp(), savedId: input.attemptId }); return recordLocal(input);
+    };
+    window.addEventListener('pte-attempt-archive:saved', event => window.__archiveTrace.events.push({ ...stamp(), savedId: event.detail.attemptId }));
+    window.PTEAttemptArchive.invalidateHistoryCache = () => { window.__archiveTrace.invalidations++; };
+    const setSaveError = window.SpeakingPracticeController.setSaveError;
+    window.SpeakingPracticeController.setSaveError = (mode, message) => {
+      window.__archiveTrace.errors.push({ ...stamp(), message }); return setSaveError(mode, message);
+    };
+    const method = stage === 'raw' ? 'saveAttempt' : 'patchAttempt';
+    const original = window.PTEAttemptArchive[method];
+    let first = true;
+    window.PTEAttemptArchive[method] = async (...args) => {
+      const input = stage === 'raw' ? args[0] : args[1];
+      window.__archiveTrace.calls.push({ ...stamp(), attemptId: input.attemptId });
+      if (first) {
+        first = false; window.__heldAttempt = RepeatSentenceV3.attempt;
+        await new Promise((resolve, reject) => {
+          window.__resolveArchive = resolve;
+          window.__rejectArchive = () => reject(new Error('Deferred archive save failed'));
+        });
+      }
+      return original(...args);
+    };
+  }, stage);
+  await page.locator('#record-btn').click();
+  await page.waitForFunction(() => RepeatSentenceV3.phase === 'recording' && !RepeatSentenceV3.busy
+    && document.getElementById('transcription-text').textContent.includes('library'));
+  const originalId = await page.evaluate(() => RepeatSentenceV3.attempt.id);
+  const originalQuestion = await page.locator('#current-question-id-speak').textContent();
+  await page.locator('#speak-pte-stop').click();
+  if (stage === 'assessed') {
+    await page.waitForFunction(() => RepeatSentenceV3.phase === 'complete' && !RepeatSentenceV3.busy);
+    await page.locator('#check-btn-speak').click();
+  }
+  await page.waitForFunction(() => !!window.__resolveArchive);
+  if (await page.locator('#vocab-skip-btn').isVisible()) await page.locator('#vocab-skip-btn').click();
+  const held = await page.evaluate(() => ({ generation: RepeatSentenceV3.generation, phase: RepeatSentenceV3.phase,
+    rows: document.querySelectorAll('#mode-speak .pte-attempts__row').length }));
+  async function next() {
+    await page.locator('#pte-next-speak').click();
+    if (await page.locator('.pte-dialog').isVisible()) await page.locator('.pte-dialog button').last().click();
+  }
+  if (transition === 'leave') await leaveAndReturn(page);
+  else if (transition === 'retry') await page.locator('#retry-btn-speak').click();
+  else if (transition === 'navigation') await next();
+  assert.equal(await page.locator('#current-question-id-speak').textContent(), originalQuestion, 'pending save cannot navigate early');
+  await page.evaluate(reject => reject ? window.__rejectArchive() : window.__resolveArchive(), outcome === 'reject');
+  await page.waitForFunction(() => !RepeatSentenceV3.busy && !RepeatSentenceV3.retryOperation && !RepeatSentenceV3.departureCleanup);
+  if (transition === 'leave' || transition === 'retry') {
+    await page.waitForFunction(() => RepeatSentenceV3.phase === 'prep');
+    const state = await page.evaluate(() => ({ phase: RepeatSentenceV3.phase, attempt: RepeatSentenceV3.attempt,
+      generation: RepeatSentenceV3.generation, status: document.querySelector('#mode-speak .pte-dock__status').textContent,
+      heldSaved: !!window.__heldAttempt.saved, trace: window.__archiveTrace,
+      rows: document.querySelectorAll('#mode-speak .pte-attempts__row').length }));
+    fs.writeFileSync(path.join(evidence, `${width}-archive-${scenario}.json`), JSON.stringify(state, null, 2));
+    assert.equal(state.attempt, null); assert.doesNotMatch(state.status, /could not be saved|Deferred archive/);
+    assert.ok(state.trace.errors.filter(item => item.message).every(item => item.generation === held.generation), 'no stale save error can be written into the new lifecycle');
+    if (transition === 'leave') {
+      assert.equal(state.heldSaved, false, 'stale success must not mark the abandoned attempt saved');
+      assert.equal(state.trace.local.length, 0); assert.equal(state.trace.events.length, 0);
+      assert.equal(state.trace.invalidations, 0); assert.equal(state.rows, held.rows);
+    } else {
+      assert.equal(state.trace.calls.length, 2, 'Retry revalidates saving under its new lifecycle');
+      assert.equal(state.trace.calls[1].generation, state.generation);
+      assert.ok(state.trace.calls.every(call => call.attemptId === originalId), 'Retry retains the idempotent archive identity');
+      const publications = [...state.trace.local, ...state.trace.events];
+      assert.equal(publications.length, 1, 'Retry publishes only its owned recovery save');
+      assert.equal(publications[0].generation, state.generation);
+      assert.equal(publications[0].savedId, originalId);
+    }
+    await page.locator('#record-btn').click();
+    await page.waitForFunction(() => RepeatSentenceV3.phase === 'recording' && !RepeatSentenceV3.busy);
+    assert.notEqual(await page.evaluate(() => RepeatSentenceV3.attempt.id), originalId);
+    return;
+  }
+  if (outcome === 'reject') {
+    assert.equal(await page.locator('#current-question-id-speak').textContent(), originalQuestion);
+    assert.match(await page.locator('#mode-speak .pte-dock__status').innerText(), /could not be saved|Deferred archive/);
+    assert.equal(await page.evaluate(() => RepeatSentenceV3.attempt.id), originalId, 'current failure retains the recoverable attempt');
+    await next();
+  } else if (transition === 'recovery') await next();
+  await page.waitForFunction(question => document.getElementById('current-question-id-speak').textContent !== question, originalQuestion);
+  await page.waitForFunction(() => RepeatSentenceV3.phase === 'prep');
+  const state = await page.evaluate(() => ({ phase: RepeatSentenceV3.phase, attempt: RepeatSentenceV3.attempt,
+    question: document.getElementById('current-question-id-speak').textContent,
+    status: document.querySelector('#mode-speak .pte-dock__status').textContent, trace: window.__archiveTrace,
+    rows: document.querySelectorAll('#mode-speak .pte-attempts__row').length }));
+  fs.writeFileSync(path.join(evidence, `${width}-archive-${scenario}.json`), JSON.stringify(state, null, 2));
+  assert.equal(state.question, '2', 'exactly one intended question navigation completes');
+  assert.equal(state.attempt, null); assert.doesNotMatch(state.status, /could not be saved|Deferred archive/);
+  assert.equal(state.rows, 0, 'old prompt history must not appear under the new question');
+  assert.ok(state.trace.calls.every(call => call.attemptId === originalId), 'recovery preserves archive identity');
+  assert.equal(state.trace.calls.length, outcome === 'reject' ? 2 : 1, 'only the intended save and explicit recovery run');
+  assert.equal([...state.trace.local, ...state.trace.events].length, 1, 'save/recovery publishes once');
+}
+
 async function run() {
   fs.mkdirSync(evidence, { recursive: true });
   const harness = await createHarness(); const report = [], failures = [];
@@ -259,12 +364,16 @@ async function run() {
     'shadow-resolve', 'shadow-reject', 'shadow-retry', 'shadow-navigation', 'shadow-unmount', 'shadow-unmount-reject',
     'shadow-active-start', 'shadow-active-unmount', 'shadow-active-navigation'];
   const selectedScenario = process.argv.find(arg => arg.startsWith('--scenario='))?.slice(11);
-  const scenarios = selectedScenario ? [selectedScenario] : process.argv.includes('--ownership-only') ? ownershipScenarios
+  const archiveScenarios = ['raw', 'assessed'].flatMap(stage =>
+    ['leave', 'navigation', 'retry'].flatMap(transition => ['reject', 'success'].map(outcome => `archive-${stage}-${transition}-${outcome}`))
+      .concat(`archive-${stage}-recovery-reject`));
+  const scenarios = selectedScenario ? [selectedScenario] : process.argv.includes('--save-only') ? archiveScenarios
+    : process.argv.includes('--ownership-only') ? ownershipScenarios
     : process.argv.includes('--departure-only') ? ownershipScenarios.filter(s => s.startsWith('departure'))
     : process.argv.includes('--shadow-only') ? ownershipScenarios.filter(s => s.startsWith('shadow'))
     : process.argv.includes('--cancel-race-only') ? ['cancel']
     : process.argv.includes('--listen-back-only') ? ['listen']
-      : process.argv.includes('--replay-start-only') ? ['full'] : ['full', 'cancel', 'listen', ...ownershipScenarios];
+      : process.argv.includes('--replay-start-only') ? ['full'] : ['full', 'cancel', 'listen', ...ownershipScenarios, ...archiveScenarios];
   try {
     for (const scenario of scenarios) for (const width of [1440, 390]) {
       const page = await harness.browser.newPage({ viewport: { width, height: width === 390 ? 844 : 900 } });
@@ -314,6 +423,7 @@ async function run() {
           if (scenario === 'cancel') await exerciseCancelledCapture(page, width);
           else if (scenario.startsWith('departure-')) await exerciseDeparture(page, width, scenario.slice(10));
           else if (scenario.startsWith('shadow-')) await exerciseShadow(page, width, scenario.slice(7));
+          else if (scenario.startsWith('archive-')) await exerciseArchiveOwnership(page, width, scenario.slice(8));
           else await exerciseListenBackRetry(page, width);
           assert.deepEqual(errors, [], 'review regressions produce no JavaScript errors');
           report.push({ scenario, width, passed: true });

@@ -784,6 +784,8 @@
     elements.btnTeacherSchedulerCancelSession = document.getElementById('btn-teacher-scheduler-cancel-session');
     elements.btnTeacherSchedulerDuplicateSession = document.getElementById('btn-teacher-scheduler-duplicate-session');
     elements.btnTeacherSchedulerCloseBubble = document.getElementById('btn-teacher-scheduler-close-bubble');
+    elements.btnTeacherSchedulerMoreMenu = document.getElementById('btn-teacher-scheduler-more-menu');
+    elements.teacherSchedulerBubbleMoreDropdown = document.getElementById('teacher-scheduler-bubble-more-dropdown');
     elements.teacherSchedulerInlineReschedule = document.getElementById('teacher-scheduler-inline-reschedule');
     elements.inputTeacherSchedulerRescheduleDate = document.getElementById('teacher-scheduler-reschedule-date');
     elements.inputTeacherSchedulerRescheduleTime = document.getElementById('teacher-scheduler-reschedule-time');
@@ -1880,6 +1882,7 @@
     window.projectsAssistantController = null;
     projectsBoardController = window.CrmProjectsBoard && typeof window.CrmProjectsBoard.createController === 'function'
       ? window.CrmProjectsBoard.createController({
+        presentationV2: window.__CRM_PRESENTATION_CONFIG__?.projectsV2 === true,
         elements,
         apiFetchJson,
         escapeHtml,
@@ -1887,6 +1890,8 @@
         adminMode: state.accessMode === 'admin',
         getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
         onContextChanged: (snapshot) => { projectsWorkspaceController?.setContext?.(snapshot); window.projectsAutomationsController?.setContext?.(snapshot); syncProjectsAssistantContext(snapshot); },
+        onFieldSaveEvent: event => projectsWorkspaceController?.onFieldSaveEvent?.(event),
+        onFieldSaveScopeChanged: scope => projectsWorkspaceController?.setFieldSaveScope?.(scope),
         onTaskSelection: (task) => { window.projectsViewsController?.setTask?.(task); window.projectsViewsController?.syncBoard?.(); },
         onProjectAccessDenied: (projectId) => {
           window.projectsNotificationsController?.deny?.(projectId);
@@ -1905,7 +1910,8 @@
         const next = isCompact ? 'comfortable' : 'compact';
         elements.projectsBoardDensity.setAttribute('aria-pressed', (!isCompact).toString());
         elements.projectsBoardDensity.textContent = isCompact ? 'Density' : 'Compact';
-        projectsBoardController?.setDensity?.(next);
+        if (window.__CRM_PRESENTATION_CONFIG__?.projectsV2 === true) projectsWorkspaceController?.preferences?.setDensity(next);
+        else projectsBoardController?.setDensity?.(next);
       });
     }
     if (elements.projectsBoardTheme) {
@@ -1917,7 +1923,8 @@
         elements.projectsBoardTheme.textContent = isDark ? 'Theme' : 'Dark';
       });
     }
-    window.projectsUiScaleController = window.CrmProjectsUiScale?.init?.({
+    window.projectsUiScaleController?.dispose?.();
+    window.projectsUiScaleController = window.__CRM_PRESENTATION_CONFIG__?.projectsV2 === true ? null : window.CrmProjectsUiScale?.init?.({
       elements,
       panel: document.querySelector('[data-panel="projects"]')
     });
@@ -1940,10 +1947,7 @@
       apply: async change => {
         if (await projectsBoardController?.applyRemote?.(change) === false) return false;
         if (!change.isCurrent() || await window.projectsDiscussionController?.applyRemote?.(change) === false) return false;
-        const viewState = window.projectsViewsController?.getState?.();
-        if ((change.changes.length || change.authorityChanged) && viewState?.view && viewState.view !== 'board') {
-          await window.projectsViewsController.refresh();
-        }
+        if (await window.projectsViewsController?.reconcileRemote?.(change) === false) return false;
         return change.isCurrent();
       }
     });
@@ -1959,7 +1963,8 @@
       });
       window.projectsRecoveryController.init();
     }
-    window.projectsViewsController = window.CrmProjectsViews?.createController({ apiFetchJson, board: projectsBoardController, openStudentLink: async (recordId, isCurrent) => {
+    window.projectsViewsController?.dispose?.();
+    window.projectsViewsController = window.CrmProjectsViews?.createController({ apiFetchJson, board: projectsBoardController, selectProject: id => projectsAccessController?.selectProject?.(id), openStudentLink: async (recordId, isCurrent) => {
       const linkedUserUid = window.firebase?.auth?.().currentUser?.uid || user.uid;
       if (state.accessMode !== 'admin' || !isCurrent()) return;
       const result = await apiFetchJson(`/api/admin/students/${encodeURIComponent(recordId)}`);
@@ -2102,6 +2107,7 @@
           projectsWorkspaceController?.setSelection?.(contentSelection);
           window.projectsAutomationsController?.setContext?.(projectsBoardController?.getState?.() || {});
           window.projectsViewsController?.setProject?.(contentSelection.selectedProjectId || '');
+          if (contentSelection.projects.length) queueMicrotask(() => window.projectsViewsController?.startNavigation?.());
         }
       })
       : null;
@@ -2109,12 +2115,22 @@
       projectsAccessController.init();
     }
     projectsWorkspaceController?.dispose?.();
-    projectsWorkspaceController = window.CrmProjectsWorkspace?.createController({
+    projectsWorkspaceController = window.CrmProjectsPresentationV2.createController({
+      config: window.__CRM_PRESENTATION_CONFIG__,
+      panel: document.querySelector('[data-panel="projects"]'),
       getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
-      selectProject: projectId => projectsAccessController?.selectProject?.(projectId),
-      onManageAccess: () => { window.location.hash = '#staff'; }
+      onDensity: (mode, fontScale) => projectsBoardController?.setDensity?.(mode, fontScale),
+      onDisposePresentation: () => projectsBoardController?.disposePresentation?.(),
+      openAutomations: () => window.projectsAutomationsController?.show?.(),
+      createWorkspace: options => window.CrmProjectsWorkspace?.createController({
+        ...options,
+        getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
+        selectProject: projectId => projectsAccessController?.selectProject?.(projectId),
+        onManageAccess: () => { window.location.hash = '#staff'; }
+      })
     });
     projectsWorkspaceController?.init?.();
+    projectsWorkspaceController?.setFieldSaveScope?.(projectsBoardController?.getFieldSaveScope?.());
     projectsWorkspaceController?.setSelection?.(projectsAccessController?.getSelection?.());
     projectsWorkspaceController?.setContext?.(projectsBoardController?.getState?.());
     // Controller scopes are document-local. Re-enter the existing access gate
@@ -2123,6 +2139,7 @@
       if (projectsAccountInvalidated || String(nextUser?.uid || '') === projectsDocumentUid) return;
       projectsAccountInvalidated = true;
       clearCrmAuthSession();
+      window.projectsUiScaleController?.dispose?.();
       projectsWorkspaceController?.dispose?.();
       clearInterval(projectsAssistantTimer);
       window.projectsAssistantController?.dispose?.();
@@ -2130,6 +2147,7 @@
       window.projectsAutomationsController?.setAccount('');
       window.projectsNotificationsController?.setAccount('');
       window.projectsViewsController?.setProject?.('');
+      window.projectsViewsController?.dispose?.();
       projectsBoardController?.setProjects?.({ projects: [], selectedProjectId: '' });
       window.projectsDiscussionController?.setSelection?.(null);
       window.projectsRecoveryController?.setSelection?.(null);

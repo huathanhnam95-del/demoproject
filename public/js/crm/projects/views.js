@@ -14,6 +14,7 @@
     const operationId = () => `crm-view-${globalScope.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`}`;
     function createController(deps) {
         const board = deps.board;
+        const presentationV2 = () => document.querySelector?.('[data-panel="projects"]')?.dataset?.projectsUi === 'v2';
         const api = deps.apiFetchJson;
         const el = (id) => document.getElementById(id);
         let projectId = '', actorUid = '', generation = 0, readSequence = 0, taskGeneration = 0, lookupSequence = 0;
@@ -25,16 +26,209 @@
         let projectLinkLayoutKey = '';
         let taskKey = '', datesVersion = 0, calendarMonth = new Date().toISOString().slice(0, 7), ganttZoom = 'weeks';
         const calendarCache = new Map();
-        let viewStale = false;
+        let viewStale = false, listStale = false, listRefresh = null, listProjectPending = false, projectSnapshotPending = false;
+        let viewRequest = null, calendarRequest = null, applyingSnapshot = false;
+        let calendarAuthority = '', calendarAuthorityInvalidated = false, calendarRemoteKey = '';
+        const listRevisionFloor = new Map();
+        let disposed = false, initialized = false, unsubscribe = null, refreshTimer = null;
+        let boardSignature = '', navigationGeneration = 0, restoring = false, navigationReady = false, routeProject = '';
+        let dragScope = null, queryGeneration = 0, restorationSequence = 0, selectingRouteTask = false;
+        const removers = [];
+        function listen(node, type, handler) {
+            node?.addEventListener?.(type, handler);
+            removers.push(() => node?.removeEventListener?.(type, handler));
+        }
+        const filterNames = ['title', 'sectionId', 'status', 'ownerUid', 'assigneeUid', 'fromDate', 'toDate'];
+        const viewNames = ['board', 'kanban', 'gantt', 'timeline', 'calendar', 'charts'];
+        const cleanFilters = value => Object.fromEntries(filterNames.filter(name => typeof value?.[name] === 'string' && value[name]).map(name => [name, value[name].slice(0, 200)]));
         const uid = () => String(deps.getCurrentUser?.()?.uid || '');
         const scope = () => ({ uid: uid(), projectId, generation });
-        const current = (s) => s.uid === uid() && s.uid === actorUid && s.projectId === projectId && s.generation === generation;
+        const current = (s) => !disposed && s.uid === uid() && s.uid === actorUid && s.projectId === projectId && s.generation === generation;
         const taskScope = () => ({ ...scope(), taskId: task?.id, taskGeneration });
         const taskCurrent = (s) => current(s) && s.taskId === task?.id && s.taskGeneration === taskGeneration;
         const base = () => `/api/projects/${encodeURIComponent(projectId)}`;
-        const canWrite = () => !!response && !!projectId && !!actorUid && uid() === actorUid && ['Owner', 'Editor'].includes(response?.membership?.role || board?.getState()?.membership?.role) && (response?.project?.lifecycle || 'active') === 'active';
+        const canWrite = () => !disposed && !!response && !!projectId && !!actorUid && uid() === actorUid && board?.getState()?.authorizationReady !== false && ['Owner', 'Editor'].includes(board?.getState()?.membership?.role || response?.membership?.role) && (!response?.membership?.role || ['Owner', 'Editor'].includes(response.membership.role)) && (response?.project?.lifecycle || 'active') === 'active';
         const status = (message) => { if (el('projects-view-status')) el('projects-view-status').textContent = message; };
         const taskStatus = (message) => { if (el('projects-task-status')) el('projects-task-status').textContent = message; };
+        function writeNavigation(push = false) {
+            if (!navigationReady || restoring || disposed || !globalScope.history || !globalScope.location || uid() !== actorUid) return;
+            const url = new URL(globalScope.location.href);
+            const values = { pjProject: projectId, pjView: view, pjTask: task?.id || '', pjFilters: Object.keys(filters).length ? JSON.stringify(filters) : '',
+                pjTab: task ? document.querySelector('#projects-board-detail [data-detail-tab][aria-selected="true"]')?.dataset.detailTab || 'details' : '', pjMonth: calendarMonth, pjZoom: ganttZoom };
+            Object.entries(values).forEach(([name, value]) => value ? url.searchParams.set(name, value) : url.searchParams.delete(name));
+            if (url.href !== globalScope.location.href) globalScope.history[push ? 'pushState' : 'replaceState'](globalScope.history.state, '', url.href);
+        }
+        function invalidateViews() {
+            viewStale = true; readSequence++; loading = false;
+            if (refreshTimer !== null) globalScope.clearTimeout(refreshTimer);
+            refreshTimer = null;
+            if (view === 'board' && !projectSnapshotPending && (!listStale || listRefresh) || !projectId || disposed) return;
+            refreshTimer = globalScope.setTimeout(() => {
+                refreshTimer = null;
+                if (!projectId || disposed || board?.getState()?.mutationPending || board?.getState()?.authorizationReady === false) return;
+                if (view === 'board' && !projectSnapshotPending) refreshList();
+                else refresh(null, [], 0, { tasksOnly: !projectSnapshotPending });
+            }, 40);
+        }
+        const sameListProject = snapshot => snapshot?.project?.id === projectId
+            && (snapshot.actorUid === undefined || snapshot.actorUid === actorUid) && uid() === actorUid;
+        function settleListProject(snapshot) {
+            if (!listProjectPending || !sameListProject(snapshot) || snapshot.authorizationReady === false) return false;
+            listProjectPending = false;
+            return true;
+        }
+        function onBoardContext(snapshot) {
+            if (disposed || snapshot.actorUid !== actorUid || snapshot.project?.id !== projectId) return;
+            const authority = JSON.stringify([snapshot.membership, snapshot.project?.membershipRevision, snapshot.project?.lifecycle, snapshot.authorityRevision, snapshot.authorizationReady]);
+            if (authority !== calendarAuthority) {
+                calendarAuthority = authority;
+                calendarAuthorityInvalidated ||= Boolean(calendarRequest || calendarCache.size || view === 'calendar');
+                invalidateCalendar();
+            }
+            if (snapshot.unavailableTaskIds?.length && response) {
+                // Counts and aggregates belong to this snapshot too. Discard the
+                // projection so none of its stale controls or totals survive; only
+                // the active non-list view will refetch through invalidation below.
+                response = null; viewStale = true;
+                render();
+            }
+            const signature = JSON.stringify([snapshot.project, snapshot.membership, snapshot.authorityRevision, snapshot.authorizationReady, snapshot.sections, snapshot.columns,
+                Array.from(snapshot.tasks || []).map(([id, entry]) => [id, entry.revision, entry.status, entry.title, entry.startDate, entry.dueDate, entry.ownerUid, entry.assigneeUids, entry.parentTaskId, entry.sectionId, entry.rank, entry.values]), snapshot.mutationPending]);
+            if (snapshot.mutationPending && Object.keys(filters).length) listStale = true;
+            if (signature !== boardSignature) {
+                const changed = !!boardSignature; boardSignature = signature;
+                if (response) response.tasks = array(response.tasks).map(entry => {
+                    const canonical = snapshot.tasks?.get?.(entry.id);
+                    // A returned project's view can precede its first canonical
+                    // publication. Compare again now that the project matches.
+                    if (canonical && Number(entry.revision) > Number(canonical.revision)) {
+                        listStale = true;
+                        listRevisionFloor.set(entry.id, Math.max(listRevisionFloor.get(entry.id) || 0, Number(entry.revision)));
+                    }
+                    return canonical && Number(canonical.revision) >= Number(entry.revision) ? { ...entry, ...canonical } : entry;
+                });
+                if (changed && !applyingSnapshot) { invalidateViews(); if (snapshot.mutationPending) render(); }
+            }
+            if (snapshot.projectionChanged && !applyingSnapshot) invalidateViews();
+            if (settleListProject(snapshot)) {
+                if (!response && !loading) refresh();
+                // The first publication of a returned project can already be settled.
+                // It must release its selection fence even without an older signature.
+                if (listStale && !listRefresh) invalidateViews();
+                render();
+            }
+            syncTaskPermissions(); fillFilters();
+        }
+        async function applyFilters(next, { history = true } = {}) {
+            listStale = false; listRefresh = null; listRevisionFloor.clear();
+            const version = ++queryGeneration;
+            filters = cleanFilters(next); filterDrafts = { ...filters };
+            if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) filters.toDate = filters.fromDate;
+            const form = el('projects-view-filters');
+            filterNames.forEach(name => { const control = form?.elements?.namedItem(name); if (control) control.value = filters[name] || ''; });
+            readSequence++; loading = false; status(''); response = null; cursor = null; previous = []; pageIndex = 0; viewStale = true;
+            syncFilterBadge(); render(); if (history) writeNavigation();
+            const s = scope();
+            await board?.setFilters(filters, { refresh: view === 'board' });
+            if ((!presentationV2() || view !== 'board') && current(s) && version === queryGeneration) await refresh();
+        }
+        async function refreshList() {
+            if (listRefresh || !listStale || !projectId) return;
+            const token = {}, s = scope(), query = queryGeneration;
+            listRefresh = token;
+            status('Loading current Table…'); render();
+            try {
+                // The canonical loader drains admitted writes and preserves draft
+                // bases, filters and loaded expansion. Never ingest view-only rows.
+                const ok = await board?.refresh();
+                if (!current(s) || query !== queryGeneration) return;
+                const state = board?.getState();
+                const behind = [...listRevisionFloor].some(([id, revision]) => state?.tasks?.has(id) && Number(state.tasks.get(id).revision) < revision);
+                listStale = !ok || !sameListProject(state) || state?.authorizationReady === false || behind;
+                if (!listStale) listRevisionFloor.clear();
+                if (view === 'board') status(listStale ? 'Table could not load the current revision. Select Table again to retry.' : '');
+            } finally {
+                if (listRefresh === token) { listRefresh = null; if (current(s) && query === queryGeneration) render(); }
+            }
+        }
+        function setView(next, { history = true } = {}) {
+            if (!viewNames.includes(next) || disposed) return;
+            if (presentationV2() && next === view && loading) return;
+            const changedQuery = (view === 'calendar') !== (next === 'calendar');
+            view = next;
+            if (history) writeNavigation();
+            if (next === 'board' && listStale) refreshList();
+            if (next !== 'board' && (changedQuery || viewStale || !response)) resetViewPage();
+            else { if (changedQuery) viewStale = true; render(); }
+        }
+        async function openTask(id, { tab = 'details', history = true } = {}) {
+            if (history) { restorationSequence++; restoring = false; routeProject = ''; }
+            const token = ++navigationGeneration, s = scope();
+            const valid = () => token === navigationGeneration && current(s);
+            try {
+                if (!board?.resolveTask) throw new Error('Canonical task navigation is unavailable.');
+                const resolved = await board.resolveTask(id, { projectId, actorUid, isCurrent: valid });
+                if (!valid()) return false;
+                const savedRestoring = restoring; if (!history) restoring = true;
+                selectingRouteTask = true;
+                try { board.selectTask(resolved); board.activateDetailTab?.(['details', 'updates'].includes(tab) ? tab : 'details'); }
+                finally { selectingRouteTask = false; }
+                restoring = savedRestoring; if (history) writeNavigation();
+                return true;
+            } catch (error) {
+                if (valid()) {
+                    if (board?.getState()?.selectedTaskId === String(id)) board?.closeTask?.();
+                    status('Task is unavailable. Select another task.'); writeNavigation();
+                }
+                else if (current(s) && !task) writeNavigation();
+                return false;
+            }
+        }
+        async function restoreNavigation() {
+            if (!navigationReady || disposed) return;
+            const url = new URL(globalScope.location.href), requestedProject = url.searchParams.get('pjProject') || projectId;
+            const requestedTask = url.searchParams.get('pjTask') || '';
+            const restoreId = ++restorationSequence;
+            const token = ++navigationGeneration, requestedActor = uid();
+            const valid = () => !disposed && token === navigationGeneration && requestedActor === uid();
+            restoring = true; routeProject = requestedProject;
+            try {
+                if (task?.id !== requestedTask) {
+                    selectingRouteTask = true;
+                    try { board?.closeTask?.(); } finally { selectingRouteTask = false; }
+                }
+                if (requestedProject !== projectId && await deps.selectProject?.(requestedProject) !== true) throw new Error('Project unavailable');
+                // Access selection starts the board loader; wait for its current authority.
+                const deadline = Date.now() + 10000;
+                while (valid() && (!board?.getState()?.authorizationReady || board.getState().project?.id !== requestedProject)) {
+                    if (Date.now() >= deadline) throw new Error('Project unavailable');
+                    await new Promise(resolve => globalScope.setTimeout(resolve, 25));
+                }
+                if (!valid()) return;
+                let parsed = {}; try { parsed = JSON.parse(url.searchParams.get('pjFilters') || '{}'); } catch (_) { /* invalid route filters reset */ }
+                const requestedView = viewNames.includes(url.searchParams.get('pjView')) ? url.searchParams.get('pjView') : 'board';
+                const oldMonth = calendarMonth;
+                if (/^[1-9]\d{3}-(0[1-9]|1[0-2])$/.test(url.searchParams.get('pjMonth') || '')) calendarMonth = url.searchParams.get('pjMonth');
+                if (['days', 'weeks', 'months'].includes(url.searchParams.get('pjZoom'))) ganttZoom = url.searchParams.get('pjZoom');
+                if (oldMonth !== calendarMonth) viewStale = true;
+                if (JSON.stringify(cleanFilters(parsed)) !== JSON.stringify(filters)) { view = requestedView; await applyFilters(parsed, { history: false }); }
+                else setView(requestedView, { history: false });
+                if (!valid()) return;
+                if (requestedTask) await openTask(requestedTask, { tab: url.searchParams.get('pjTab') || 'details', history: false });
+            } catch (_) {
+                if (valid()) { board?.closeTask?.(); status('Project or task access is unavailable. Select an authorized project.'); }
+            } finally {
+                // openTask advances the navigation generation itself. Actor/project
+                // changes always cancel restoration and own subsequent URL updates.
+                if (restoreId === restorationSequence && requestedActor === uid()) { restoring = false; routeProject = ''; writeNavigation(); }
+            }
+        }
+        function startNavigation() {
+            if (navigationReady || disposed || !deps.selectProject || !globalScope.location) return;
+            navigationReady = true;
+            if (new URL(globalScope.location.href).searchParams.has('pjProject')) restoreNavigation();
+            else writeNavigation();
+        }
         function syncFilterBadge() {
             const badge = el('projects-filter-count');
             if (!badge) return;
@@ -165,7 +359,7 @@
             const statMarkup = total > 0 ? `<span class="crm-detail-progress-stat ${done === total ? 'is-complete' : ''}"><b>${escape(done)}/${escape(total)}</b> complete (${pct}%)</span>` : '';
             return `<div class="crm-projects-derived crm-detail-progress-card"><div class="crm-detail-progress-head"><span class="crm-detail-progress-label"><span class="crm-progress-icon">${PJ_ICON.subtask}</span> Subtasks rollup</span>${statMarkup}</div>${total > 0 ? trackMarkup : ''}<div class="crm-detail-progress-foot"><span class="crm-detail-span-badge"><span class="crm-chip-icon">${PJ_ICON.calendar}</span> Descendant span: ${spanText}</span></div></div>`;
         }
-        function taskButton(t) { return `<button type="button" class="crm-projects-task-open" data-task-open="${escape(t.id)}" data-status="${escape(t.status || 'not_started')}">${escape(t.title || 'Untitled task')}</button>`; }
+        function taskButton(t) { return `<button type="button" class="crm-projects-task-open" data-task-open="${escape(t.id)}" data-task-revision="${escape(t.revision)}" data-status="${escape(t.status || 'not_started')}">${escape(t.title || 'Untitled task')}</button>`; }
         function taskRow(t, statusEditor = false) {
             return `<article class="crm-projects-view-row" data-view-task="${escape(t.id)}">${taskButton(t)}<span>${escape(array(t.ancestorTitles).join(' → '))}</span>${statusEditor ? `<label>Status <select data-task-status="${escape(t.id)}" class="crm-input"${canWrite() && !mutation ? '' : ' disabled'}>${Object.entries(STATUSES).map(([key, label]) => `<option value="${key}"${t.status === key ? ' selected' : ''}>${escape(response?.project?.statusLabels?.[key] || label)}</option>`).join('')}</select></label>` : `<span>${escape(STATUSES[t.status] || t.status)}</span>`}<span>Stored dates: ${escape(t.startDate || 'undated')} → ${escape(t.dueDate || 'undated')}</span>${derived(t)}${warningList(t.dependencyWarnings)}${warningList(t.calendarWarnings)}</article>`;
         }
@@ -205,19 +399,27 @@
         }
         function kanbanCard(t) {
             const ancestors = array(t.ancestorTitles);
-            const sec = ancestors.length ? ancestors.join(' → ') : '';
+            const v2 = presentationV2();
+            const sec = array(response?.sections).find(section => String(section.id) === String(t.effectiveSectionId || t.sectionId))?.title || (v2 ? '' : ancestors.join(' → '));
+            // Every authorized priority field keeps its own identity. Multiple fields
+            // are labelled rather than arbitrarily choosing one as "the" priority.
+            const priorityColumns = array(response?.columns).filter(column => column.type === 'priority' && (column.lifecycle || 'active') === 'active');
+            const priorities = priorityColumns.map(column => {
+                const pill = kanbanPriorityPill(t.values?.[column.id]);
+                return pill ? `<span data-priority-column="${escape(column.id)}">${priorityColumns.length > 1 ? `${escape(column.label || column.id)}: ` : ''}${pill}</span>` : '';
+            }).join('') || (!v2 && !priorityColumns.length ? kanbanPriorityPill(t.values?.priority) : '');
             const der = t.derived;
             const hasProgress = der && Number(der.activeLeafCount) > 0;
             const pct = hasProgress ? Math.max(0, Math.min(100, Math.round(Number(der.completionPercent ?? (der.completedLeafCount / der.activeLeafCount * 100)) || 0))) : 0;
-            const priority = t.values?.priority || 'none';
-            const statusEditor = `<label class="sr-only">Status <select data-task-status="${escape(t.id)}" class="crm-input"${canWrite() && !mutation ? '' : ' disabled'}>${Object.entries(STATUSES).map(([key, label]) => `<option value="${key}"${t.status === key ? ' selected' : ''}>${escape(response?.project?.statusLabels?.[key] || label)}</option>`).join('')}</select></label>`;
+            const statusEditor = `<label>Move to status… <select data-task-status="${escape(t.id)}" class="crm-input"${canWrite() && !mutation ? '' : ' disabled'}>${Object.entries(STATUSES).map(([key, label]) => `<option value="${key}"${t.status === key ? ' selected' : ''}>${escape(response?.project?.statusLabels?.[key] || label)}</option>`).join('')}</select></label>`;
             return `<article class="crm-projects-kanban-card" draggable="${canWrite() && !mutation ? 'true' : 'false'}" data-kanban-task="${escape(t.id)}" data-card="${escape(t.id)}">
                 ${sec ? `<span class="crm-projects-kanban-sec">${escape(sec)}</span>` : ''}
+                ${v2 && ancestors.length ? `<span class="crm-projects-kanban-ancestors" aria-label="Parent tasks">${escape(ancestors.join(' → '))}</span>` : ''}
                 <div class="crm-projects-kanban-title">${taskButton(t)}</div>
                 ${hasProgress ? `<div class="crm-projects-kanban-progress"><span class="track"><i style="width:${pct}%"></i></span><b>${escape(der.completedLeafCount)}/${escape(der.activeLeafCount)}</b></div>` : ''}
                 <div class="crm-projects-kanban-foot">
                     ${kanbanAvatarStack(t.ownerUid, t.assigneeUids)}
-                    ${kanbanPriorityPill(priority)}
+                    ${priorities}
                     ${kanbanDateChip(t)}
                     ${statusEditor}
                 </div>
@@ -226,61 +428,24 @@
         function kanbanColumn(key, label, tasks) {
             const colTasks = tasks.filter((t) => t.status === key);
             return `<section class="crm-projects-kanban-col" data-status-column="${key}" data-col="${key}" aria-label="${escape(label)}">
-                <header><span class="crm-projects-status-pill s-${key}">${escape(label)}</span><b class="crm-projects-kanban-count">${colTasks.length}</b></header>
+                <header><span class="crm-projects-status-pill s-${key}">${escape(label)}</span><b class="crm-projects-kanban-count" title="Tasks on this loaded page">${colTasks.length} loaded</b></header>
                 <div class="crm-projects-kanban-cards">
                     ${colTasks.map(kanbanCard).join('') || '<p class="crm-muted crm-projects-kanban-empty">No tasks on this page.</p>'}
                 </div>
             </section>`;
         }
         async function applyStatus(id, nextStatus) {
-            const found = array(response?.tasks).find((t) => t.id === id);
-            if (!found || found.status === nextStatus || !canWrite() || mutation) return;
-            const prevStatus = found.status;
-            const s = scope();
-            mutation = true;
-            syncTaskPermissions();
-            found.status = nextStatus;
-            render();
-            const body = JSON.stringify({ operationId: operationId(), expectedRevision: found.revision, status: nextStatus });
+            const found = array(response?.tasks).find(t => t.id === id);
+            if (!found || found.status === nextStatus || !Object.prototype.hasOwnProperty.call(STATUSES, nextStatus) || !canWrite() || mutation || loading) return;
+            const s = scope(), revision = found.revision, queryVersion = queryGeneration;
+            if (!board?.setTaskField) { status('Canonical task commands are unavailable.'); return; }
+            mutation = true; syncTaskPermissions();
             try {
-                const request = () => api(`${base()}/tasks/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
-                let result;
-                try {
-                    result = await request();
-                } catch (error) {
-                    if (error.status || !current(s)) throw error;
-                    result = await request();
-                }
-                if (!current(s)) return;
-                const minimal = result.task || result.result?.task || result.result || result;
-                if (minimal?.revision !== undefined) {
-                    found.revision = minimal.revision;
-                }
-                if (task && task.id === id) {
-                    task = { ...task, status: nextStatus, ...(minimal?.revision !== undefined ? { revision: minimal.revision } : {}) };
-                }
-                if (board?.updateTask) {
-                    board.updateTask({ ...found, status: nextStatus, ...(minimal?.revision !== undefined ? { revision: minimal.revision } : {}) });
-                } else {
-                    await board?.refresh();
-                }
-                if (current(s)) await refresh();
-            } catch (err) {
-                if (current(s)) {
-                    found.status = prevStatus;
-                    const msg = err?.message || 'Could not update task status';
-                    status(msg);
-                    taskStatus(msg);
-                    render();
-                    refresh();
-                }
-            } finally {
-                if (current(s)) {
-                    mutation = false;
-                    syncTaskPermissions();
-                    render();
-                }
-            }
+                await board.setTaskField({ taskId: id, field: 'status', value: nextStatus, revision, projectId, actorUid, isCurrent: () => current(s) && queryVersion === queryGeneration });
+                if (current(s)) { status('Task saved.'); invalidateViews(); }
+            } catch (error) {
+                if (current(s)) { status(error.message || 'Task could not be saved.'); invalidateViews(); }
+            } finally { if (current(s)) { mutation = false; syncTaskPermissions(); render(); } }
         }
         // Switching views used to be a hard cut. Fade the outgoing surface out and
         // the incoming one in on the shared motion curve; reduced-motion zeroes it.
@@ -297,6 +462,17 @@
             else settle();
         }
         function render() {
+            const host = el('projects-view-content'), active = document.activeElement;
+            const identity = host?.contains?.(active) ? { id: active.dataset?.taskStatus || active.dataset?.taskOpen, status: !!active.dataset?.taskStatus } : null;
+            const scroll = [host?.scrollTop || 0, host?.scrollLeft || 0];
+            renderContent();
+            if (host) { host.scrollTop = scroll[0]; host.scrollLeft = scroll[1]; }
+            if (identity?.id && !active.isConnected) {
+                const candidate = Array.from(host?.querySelectorAll?.(identity.status ? '[data-task-status]' : '[data-task-open]') || []).find(node => (node.dataset.taskStatus || node.dataset.taskOpen) === identity.id);
+                candidate?.focus?.({ preventScroll: true });
+            }
+        }
+        function renderContent() {
             if (!el('projects-view-content')) return;
             animateViewSwap();
             fillFilters();
@@ -305,8 +481,15 @@
                 const bView = button.dataset.view;
                 const active = isGantt(view) ? isGantt(bView) : bView === view;
                 button.setAttribute('aria-pressed', String(active));
+                button.tabIndex = active ? 0 : -1;
             });
-            el('projects-board-table-wrap').hidden = view !== 'board';
+            const tableHidden = view !== 'board' || listProjectPending || listStale || !!listRefresh;
+            if (presentationV2()) {
+                document.querySelector('[data-panel="projects"]').dataset.projectsView = view;
+                if (view !== 'board' && el('projects-v2-columns')) el('projects-v2-columns').open = false;
+            }
+            if (board?.setTableVisibility) board.setTableVisibility(tableHidden, { preserveFocus: view === 'board' });
+            else el('projects-board-table-wrap').hidden = tableHidden;
             el('projects-view-content').hidden = view === 'board';
             el('projects-view-paging').hidden = view === 'board' || view === 'charts';
             el('projects-view-previous').disabled = loading || !previous.length;
@@ -498,7 +681,24 @@
                 avail.innerHTML = `<details style="margin-top:6px;"><summary style="cursor:pointer;font-size:12px;">Availability and reason provenance for this month</summary>${array(c?.days).map((day) => `<p style="margin:4px 0;"><strong>${escape(day.date)}</strong>: organization ${day.organization?.working ? 'working' : 'nonworking'}${array(day.organization?.reasons).length ? ` — ${escape(day.organization.reasons.map(warningText).join('; '))}` : ''}${day.workingSwap ? ' · explicitly adopted working swap' : ''}${array(day.members).filter((m) => m.reasons?.some((r) => r.code === 'personal_leave')).map((m) => `<br>${escape(memberName(m.uid))}: personal leave`).join('')}</p>`).join('')}</details>`;
             }
         }
-        async function loadCalendar(fromDate, toDate) {
+        function loadCalendar(fromDate, toDate) {
+            if (!presentationV2()) return readCalendar(fromDate, toDate);
+            const key = JSON.stringify([generation, actorUid, uid(), projectId, fromDate, toDate, response?.calendar?.revision ?? 0]);
+            if (calendarRequest?.key === key && calendarRequest.sequence === calendarSequence) return calendarRequest.promise;
+            const token = { key };
+            token.promise = readCalendar(fromDate, toDate).finally(() => { if (calendarRequest === token) calendarRequest = null; });
+            token.sequence = calendarSequence; calendarRequest = token;
+            return token.promise;
+        }
+        function invalidateCalendar() {
+            calendarSequence++; calendarRequest = null; calendarCache.clear();
+        }
+        function explicitRefresh(...args) {
+            invalidateCalendar();
+            return refresh(...args);
+        }
+        async function readCalendar(fromDate, toDate) {
+            if (disposed || !projectId || uid() !== actorUid || board?.getState()?.authorizationReady === false) return;
             const s = scope(), sequence = ++calendarSequence;
             const rev = response?.calendar?.revision ?? 0;
             const cacheKey = `${actorUid}:${projectId}:${calendarMonth}:${rev}`;
@@ -510,7 +710,7 @@
                 const result = await api(`${base()}/calendar?${new URLSearchParams({ fromDate, toDate })}`);
                 if (!current(s) || sequence !== calendarSequence || view !== 'calendar') return;
                 const c = result.calendar;
-                if (c) calendarCache.set(cacheKey, c);
+                if (c) { calendarCache.set(cacheKey, c); if (calendarCache.size > 6) calendarCache.delete(calendarCache.keys().next().value); }
                 applyCalendarData(c);
             } catch (error) { if (current(s) && sequence === calendarSequence) status(error.message || 'Calendar could not be loaded.'); }
         }
@@ -528,8 +728,37 @@
             cursor = null; previous = []; pageIndex = 0; response = null;
             loading = true; syncTaskPermissions(); render(); refresh();
         }
-        async function refresh(nextCursor = null, nextPrevious = [], nextIndex = 0) {
-            if (!projectId || !uid() || uid() !== actorUid) return;
+        function refresh(nextCursor = null, nextPrevious = [], nextIndex = 0, options = {}) {
+            if (!presentationV2()) return readView(nextCursor, nextPrevious, nextIndex, options);
+            const key = JSON.stringify([generation, actorUid, uid(), projectId, view === 'calendar' ? calendarQuery() : filters, nextCursor, nextIndex]);
+            if (viewRequest?.key === key && viewRequest.sequence === readSequence) return viewRequest.promise;
+            const token = { key };
+            token.promise = readView(nextCursor, nextPrevious, nextIndex, options).finally(() => { if (viewRequest === token) viewRequest = null; });
+            token.sequence = readSequence; viewRequest = token;
+            return token.promise;
+        }
+        async function reconcileRemote(change) {
+            if (!change.isCurrent() || disposed) return false;
+            // Board subscription owns task/authority invalidation. The observer
+            // awaits that same read before acknowledging, including failed retries.
+            const changes = array(change.changes);
+            if (change.authorityChanged || change.refresh) {
+                // The board may already have fenced this authority transition
+                // before awaiting its canonical reload. Do not discard that new
+                // generation's read when the observer reaches this controller.
+                const key = JSON.stringify([generation, change.cursor, change.authority?.signature, change.authority, change.refresh]);
+                if ((change.cursor === undefined || key !== calendarRemoteKey) && !calendarAuthorityInvalidated) { invalidateCalendar(); viewStale = true; }
+                calendarRemoteKey = key;
+            }
+            calendarAuthorityInvalidated = false;
+            if (projectId && (change.authorityChanged || changes.some(entry => entry.command === 'updateProjectLinks'))) await loadProjectLinks();
+            if (task && (change.authorityChanged || changes.some(entry => entry.command === 'updateTaskLinks' && array(entry.taskIds).includes(task.id)))) await loadLinks();
+            if (view !== 'board' && viewStale) await refresh(null, [], 0, { tasksOnly: true });
+            return change.isCurrent() && (view === 'board' || !viewStale);
+        }
+        async function readView(nextCursor, nextPrevious, nextIndex, options) {
+            if (disposed || !projectId || !uid() || uid() !== actorUid) return;
+            if (refreshTimer !== null) globalScope.clearTimeout(refreshTimer); refreshTimer = null;
             const s = scope(), sequence = ++readSequence;
             loading = true; status('Loading project snapshot…');
             const query = view === 'calendar' ? calendarQuery() : { filters, empty: false };
@@ -539,28 +768,69 @@
                 let result = await api(`${base()}/views?${params}`);
                 if (query.empty) result = { ...result, tasks: [], matchingTaskCount: 0, hasMore: false, nextCursor: null, aggregates: { activeLeafTaskCount: 0, completedLeafTaskCount: 0, completionPercent: 0, byStatus: {}, byOwnerUid: {} } };
                 if (!current(s) || sequence !== readSequence) return;
-                response = result; syncPredecessorPicker(); renderProjectLinks();
+                if (result.project?.id && result.project.id !== projectId) throw new Error('Project snapshot identity mismatch.');
+                if (board?.subscribeContext && (result.membership?.role !== board.getState()?.membership?.role || result.project?.lifecycle !== board.getState()?.project?.lifecycle)) {
+                    await board.refresh();
+                    if (!current(s) || sequence !== readSequence) return;
+                }
+                response = result; viewStale = false; projectSnapshotPending = false;
+                const boardState = board?.getState();
+                // Task IDs are only unique within their project. During an observer
+                // handshake Board can still expose the previous project's cache.
+                const canonicalTasks = sameListProject(boardState) ? boardState.tasks : null;
+                settleListProject(boardState);
+                response.tasks = array(result.tasks).map(entry => {
+                    const canonical = canonicalTasks?.get?.(entry.id);
+                    if (canonical && Number(entry.revision) > Number(canonical.revision)) {
+                        listStale = true;
+                        listRevisionFloor.set(entry.id, Math.max(listRevisionFloor.get(entry.id) || 0, Number(entry.revision)));
+                    }
+                    return canonical && Number(canonical.revision) > Number(entry.revision) ? { ...entry, ...canonical } : entry;
+                });
+                syncPredecessorPicker(); renderProjectLinks();
                 if (result.linkAccess?.canManage === false) { links = []; projectLinks = []; canManageLinks = false; projectLinkAccess = false; renderLinks(); renderProjectLinks(); }
-                loadProjectLinks();
+                if (!options.tasksOnly) loadProjectLinks();
                 cursor = nextCursor; previous = nextPrevious; pageIndex = nextIndex;
                 status('');
                 if (task) {
                     const updated = array(result.tasks).find((t) => t.id === task.id);
-                    if (updated) { task = updated; board?.selectTask(updated); }
-                    loadLinks();
+                    if (updated && Number(updated.revision) >= Number(task.revision)) {
+                        if (!board?.getState()?.mutationPending) { applyingSnapshot = true; try { board?.updateTask?.(updated); } finally { applyingSnapshot = false; } }
+                        const canonical = board?.getState()?.tasks?.get?.(task.id);
+                        setTask(canonical && (board?.getState()?.mutationPending || Number(canonical.revision) >= Number(updated.revision)) ? canonical : updated);
+                    }
+                    if (!updated && board?.resolveTask) {
+                        const selected = taskScope();
+                        try {
+                            const resolved = await board.resolveTask(task.id, { projectId, actorUid, isCurrent: () => taskCurrent(selected) && sequence === readSequence });
+                            if (taskCurrent(selected) && sequence === readSequence) board.updateTask?.(resolved);
+                        } catch (_) { /* canonical resolution handles missing task/access; transient drafts stay */ }
+                    }
+                    if (current(s) && task && !options.tasksOnly) loadLinks();
                 }
             } catch (error) {
                 if (current(s) && sequence === readSequence) {
                     if ([401, 403, 404].includes(Number(error?.status))) { invalidateAccess(s.projectId); return; }
+                    viewStale = true;
                     status(`${error.message || 'View could not be loaded.'} Refresh to retry; filters are retained.`);
                 }
-            } finally { if (current(s) && sequence === readSequence) { loading = false; syncTaskPermissions(); render(); } }
+            } finally {
+                if (current(s) && sequence === readSequence) {
+                    loading = false; syncTaskPermissions(); render();
+                    // A newer projection can arrive after Table activation and after
+                    // Board's last publication. Reconcile without requiring another click.
+                    if (view === 'board' && listStale && !listProjectPending
+                        && sameListProject(board?.getState()) && board?.getState()?.authorizationReady !== false) refreshList();
+                }
+            }
         }
         function invalidateAccess(deniedProjectId, notifyBoard = true) {
             if (String(deniedProjectId || '') !== projectId) return;
             // Invalidate every in-flight view, lookup, preview and mutation before clearing DOM.
+            navigationGeneration++; restoring = false; routeProject = ''; dragScope = null;
             generation++; readSequence++; taskGeneration++; calendarSequence++; lookupSequence++; taskLinkSequence++; projectLinkSequence++; projectLookupSequence++; datesVersion++;
-            projectId = ''; response = null; task = null; taskKey = ''; preview = null; filters = {}; filterDrafts = {};
+            listStale = false; listRefresh = null; listRevisionFloor.clear();
+            projectSnapshotPending = false; projectId = ''; response = null; task = null; taskKey = ''; preview = null; filters = {}; filterDrafts = {};
             links = []; canManageLinks = false; projectLinks = []; projectLinkAccess = false;
             cursor = null; previous = []; pageIndex = 0; loading = false; mutation = false; projectLinkBusy = false;
             calendarCache.clear();
@@ -584,13 +854,18 @@
             status('Project access is no longer available. Select an authorized project.');
             globalScope.CrmProjectsDiscussion?.setSelection?.(null);
             globalScope.CrmProjectsRecovery?.setSelection?.(null);
+            writeNavigation();
         }
         function setProject(id) {
             const next = String(id || ''), nextUid = uid();
-            if (next === projectId && nextUid === actorUid) return;
-            generation++; readSequence++; calendarSequence++; projectId = next; actorUid = nextUid;
+            if (disposed || next === projectId && nextUid === actorUid) return;
+            if (!restoring || routeProject !== next) { navigationGeneration++; restoring = false; routeProject = ''; }
+            boardSignature = ''; calendarAuthority = ''; calendarAuthorityInvalidated = false; calendarRemoteKey = ''; dragScope = null; viewStale = true; listStale = false; listRefresh = null; listRevisionFloor.clear();
+            generation++; queryGeneration++; readSequence++; calendarSequence++; projectId = next; actorUid = nextUid;
+            listProjectPending = !!board?.subscribeContext; projectSnapshotPending = !!next;
             calendarCache.clear();
             filters = {}; filterDrafts = {}; response = null; cursor = null; previous = []; pageIndex = 0; loading = false; mutation = false;
+            const wasRestoring = restoring; restoring = true;
             const form = el('projects-view-filters');
             form?.reset();
             for (const name of ['sectionId', 'ownerUid', 'assigneeUid']) {
@@ -599,7 +874,10 @@
             }
             setTask(null); render();
             projectLinks = []; projectLinkAccess = false; projectLinkSequence++; projectLookupSequence++; projectLinkBusy = false; renderProjectLinks();
-            if (projectId) refresh();
+            // The canonical loader owns initial authority; reading earlier can
+            // trigger a competing refresh that invalidates this first snapshot.
+            if (projectId && (!listProjectPending || settleListProject(board?.getState()) || board?.getState()?.authorizationReady === true)) refresh();
+            restoring = wasRestoring; writeNavigation(true);
         }
         const canEditProjectLinks = () => projectLinkAccess && response?.membership?.role === 'Owner' && response?.project?.lifecycle === 'active';
         function syncProjectLinkControls() {
@@ -672,10 +950,14 @@
         function setTask(next) {
             const nextKey = next ? `${projectId}:${next.id}` : '';
             if (nextKey === taskKey) { task = next; if (task && el('projects-task-derived')) el('projects-task-derived').innerHTML = derived(task, true) + warningList(task.dependencyWarnings) + warningList(task.calendarWarnings); syncPredecessorPicker(); syncTaskPermissions(); return; }
+            if (restoring && !selectingRouteTask && (next || task && routeProject === projectId)) { restorationSequence++; restoring = false; routeProject = ''; }
+            if (!restoring) navigationGeneration++;
             taskGeneration++; lookupSequence++; datesVersion++; taskKey = nextKey; task = next; preview = null; links = []; canManageLinks = false;
             renderTask();
             syncTaskPermissions();
             if (task) loadLinks();
+            if (task) writeNavigation(true);
+            else if (!restoring) globalScope.setTimeout?.(() => writeNavigation(), 0);
         }
         function syncTaskPermissions() {
             const planning = el('projects-task-planning');
@@ -724,7 +1006,7 @@
             const target = el('projects-task-planning');
             if (!target) return;
             if (!task) { target.innerHTML = ''; return; }
-            target.innerHTML = `<div class="crm-detail-section"><div class="crm-detail-section-head"><h5>Schedule &amp; Timeline</h5></div><div id="projects-task-derived">${derived(task, true)}${warningList(task.dependencyWarnings)}${warningList(task.calendarWarnings)}</div><form id="projects-task-schedule" class="crm-detail-schedule-form"><div class="crm-detail-date-grid"><div class="crm-detail-field"><label for="projects-task-start" class="crm-detail-field-label"><span class="crm-field-icon">${PJ_ICON.calendar}</span> Proposed start</label><input id="projects-task-start" type="date" class="crm-input" value="${escape(task.startDate || '')}"${canWrite() ? '' : ' disabled'}></div><div class="crm-detail-field"><label for="projects-task-due" class="crm-detail-field-label"><span class="crm-field-icon">${PJ_ICON.flagDue}</span> Proposed due</label><input id="projects-task-due" type="date" class="crm-input" value="${escape(task.dueDate || '')}"${canWrite() ? '' : ' disabled'}></div></div><div class="crm-detail-form-actions"><button type="submit" class="crm-btn-secondary crm-btn-sm"${canWrite() ? '' : ' disabled'}><span class="crm-btn-icon">${PJ_ICON.bolt}</span> Preview date change</button></div></form><div id="projects-task-preview"></div></div><div class="crm-detail-section"><div class="crm-detail-section-head"><h5>Dependencies</h5><span class="crm-detail-section-subtitle">Finish-to-start predecessors</span></div><form id="projects-task-dependencies" class="crm-detail-dependencies-form"><div class="crm-detail-dep-picker-row"><div class="crm-detail-dep-select-wrap"><select id="projects-task-predecessor-picker" class="crm-input"><option value="">Choose a task</option>${predecessorOptions().map((t) => `<option value="${escape(t.id)}">${escape(t.title || 'Untitled task')}</option>`).join('')}</select></div><button id="projects-task-predecessor-add" type="button" class="crm-btn-secondary crm-btn-sm"${canWrite() ? '' : ' disabled'}>+ Add predecessor</button></div><div class="crm-detail-chips-wrapper"><div class="crm-detail-chips-label">Active Predecessors:</div><div id="projects-task-predecessor-chips" class="crm-detail-chips-list"></div></div><div class="crm-detail-hint"><span class="crm-hint-icon">${PJ_ICON.info}</span><span>Predecessors must finish before this task starts. Saving dependencies will not shift existing dates.</span></div><details class="crm-detail-advanced-dep"><summary class="crm-detail-advanced-summary">Manual task ID entry</summary><div class="crm-detail-advanced-content"><label for="projects-task-predecessors" class="crm-detail-field-label">Predecessor task IDs (one per line):</label><textarea id="projects-task-predecessors" class="crm-input crm-dep-textarea" rows="2"${canWrite() ? '' : ' disabled'}>${escape(array(task.predecessorTaskIds).join('\n'))}</textarea></div></details><div class="crm-detail-form-actions"><button type="submit" class="crm-btn-primary crm-btn-sm"${canWrite() ? '' : ' disabled'}>Save dependencies</button></div></form><p id="projects-task-status" role="status" class="crm-task-status-banner"></p></div><div class="crm-detail-section"><div class="crm-detail-section-head"><h5>CRM Links</h5></div><div id="projects-task-links"></div></div>`;
+            target.innerHTML = `<div class="crm-detail-section"><div class="crm-detail-section-head"><h5>Schedule &amp; Timeline</h5></div><div id="projects-task-derived">${derived(task, true)}${warningList(task.dependencyWarnings)}${warningList(task.calendarWarnings)}</div><form id="projects-task-schedule" class="crm-detail-schedule-form"><div class="crm-detail-date-grid"><div class="crm-detail-field"><label for="projects-task-start" class="crm-detail-field-label"><span class="crm-field-icon">${PJ_ICON.calendar}</span> Proposed start</label><input id="projects-task-start" type="date" class="crm-input" value="${escape(task.startDate || '')}"${canWrite() ? '' : ' disabled'}></div><div class="crm-detail-field"><label for="projects-task-due" class="crm-detail-field-label"><span class="crm-field-icon">${PJ_ICON.flagDue}</span> Proposed due</label><input id="projects-task-due" type="date" class="crm-input" value="${escape(task.dueDate || '')}"${canWrite() ? '' : ' disabled'}></div></div><div class="crm-detail-form-actions"><button type="submit" class="crm-btn-secondary crm-btn-sm"${canWrite() ? '' : ' disabled'}><span class="crm-btn-icon">${PJ_ICON.bolt}</span> Preview date change</button></div></form><div id="projects-task-preview"></div></div><div class="crm-detail-section"><div class="crm-detail-section-head"><h5>Dependencies</h5><span class="crm-detail-section-subtitle">Finish-to-start predecessors</span></div><form id="projects-task-dependencies" class="crm-detail-dependencies-form"><div class="crm-detail-dep-picker-row"><div class="crm-detail-dep-select-wrap"><select id="projects-task-predecessor-picker" aria-label="Choose predecessor task" class="crm-input"><option value="">Choose a task</option>${predecessorOptions().map((t) => `<option value="${escape(t.id)}">${escape(t.title || 'Untitled task')}</option>`).join('')}</select></div><button id="projects-task-predecessor-add" type="button" class="crm-btn-secondary crm-btn-sm"${canWrite() ? '' : ' disabled'}>+ Add predecessor</button></div><div class="crm-detail-chips-wrapper"><div class="crm-detail-chips-label">Active Predecessors:</div><div id="projects-task-predecessor-chips" class="crm-detail-chips-list"></div></div><div class="crm-detail-hint"><span class="crm-hint-icon">${PJ_ICON.info}</span><span>Predecessors must finish before this task starts. Saving dependencies will not shift existing dates.</span></div><details class="crm-detail-advanced-dep"><summary class="crm-detail-advanced-summary">Manual task ID entry</summary><div class="crm-detail-advanced-content"><label for="projects-task-predecessors" class="crm-detail-field-label">Predecessor task IDs (one per line):</label><textarea id="projects-task-predecessors" class="crm-input crm-dep-textarea" rows="2"${canWrite() ? '' : ' disabled'}>${escape(array(task.predecessorTaskIds).join('\n'))}</textarea></div></details><div class="crm-detail-form-actions"><button type="submit" class="crm-btn-primary crm-btn-sm"${canWrite() ? '' : ' disabled'}>Save dependencies</button></div></form><p id="projects-task-status" role="status" class="crm-task-status-banner"></p></div><div class="crm-detail-section"><div class="crm-detail-section-head"><h5>CRM Links</h5></div><div id="projects-task-links"></div></div>`;
             renderPredecessorChips();
         }
         async function loadLinks() {
@@ -791,6 +1073,7 @@
                     if (error.status || !taskCurrent(s)) throw error;
                     result = await api(path, { method, headers: { 'Content-Type': 'application/json' }, body });
                 }
+                if (!taskCurrent(s)) return false;
                 const canonicalTask = result.task || result.result?.task;
                 const minimal = canonicalTask || result.result || result;
                 if (minimal?.revision !== undefined) task = { ...task, revision: minimal.revision };
@@ -798,10 +1081,11 @@
                 if (payload?.predecessorTaskIds) task = { ...task, predecessorTaskIds: payload.predecessorTaskIds };
                 taskStatus('Saved.'); preview = null;
                 if (board?.updateTask && (canonicalTask || minimal?.id)) {
-                    board.updateTask(task);
+                    board.updateTask({ ...task, projectId: task.projectId || projectId });
                 } else {
                     await board?.refresh();
                 }
+                if (!taskCurrent(s)) return false;
                 if (response?.tasks) {
                     response.tasks = response.tasks.map((t) => (t.id === task.id ? { ...t, ...task } : t));
                 }
@@ -837,31 +1121,34 @@
             } catch (error) { if (taskCurrent(s) && version === datesVersion) el('projects-task-preview').textContent = error.message || 'Preview unavailable.'; }
         }
         function init() {
-            el('projects-project-links')?.addEventListener('submit', (event) => { event.preventDefault(); if (event.target.id === 'projects-project-link-lookup') lookupProjectLinks(); });
+            if (initialized || disposed) return;
+            initialized = true;
+            unsubscribe = board?.subscribeContext?.(onBoardContext);
+            globalScope.addEventListener?.('popstate', restoreNavigation);
+            listen(el('projects-board-detail'), 'click', () => { globalScope.setTimeout?.(() => writeNavigation(), 0); });
+            listen(el('projects-board-detail'), 'keydown', () => { globalScope.setTimeout?.(() => writeNavigation(), 0); });
+            listen(el('projects-view-content'), 'keydown', event => { if (event.key === 'Escape') dragScope = null; });
+            listen(el('projects-project-links'), 'submit', (event) => { event.preventDefault(); if (event.target.id === 'projects-project-link-lookup') lookupProjectLinks(); });
             const projectLookupChanged = (event) => { if (['projects-project-link-query', 'projects-project-link-type'].includes(event.target.id)) clearProjectLookup(); };
-            el('projects-project-links')?.addEventListener('input', projectLookupChanged);
-            el('projects-project-links')?.addEventListener('change', projectLookupChanged);
-            el('projects-project-links')?.addEventListener('click', (event) => { if (event.target.dataset?.projectStudentLink !== undefined) openStudentLink(Number(event.target.dataset.projectStudentLink), true); if (event.target.dataset?.projectLinkRemove !== undefined) saveProjectLinks(projectLinks.filter((_, i) => i !== Number(event.target.dataset.projectLinkRemove))); });
-            el('projects-view-tabs')?.addEventListener('click', (event) => {
+            listen(el('projects-project-links'), 'input', projectLookupChanged);
+            listen(el('projects-project-links'), 'change', projectLookupChanged);
+            listen(el('projects-project-links'), 'click', (event) => { if (event.target.dataset?.projectStudentLink !== undefined) openStudentLink(Number(event.target.dataset.projectStudentLink), true); if (event.target.dataset?.projectLinkRemove !== undefined) saveProjectLinks(projectLinks.filter((_, i) => i !== Number(event.target.dataset.projectLinkRemove))); });
+            listen(el('projects-view-tabs'), 'keydown', event => {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                const tabs = Array.from(el('projects-view-tabs').querySelectorAll('[data-view]:not(:disabled)'));
+                const index = tabs.indexOf(event.target);
+                if (index < 0) return;
+                event.preventDefault();
+                const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+                tabs.forEach((tab, i) => { tab.tabIndex = i === next ? 0 : -1; }); tabs[next].focus();
+                // Native Enter/Space click deliberately activates network-backed views.
+            });
+            listen(el('projects-view-tabs'), 'click', event => {
                 const button = event.target.closest('[data-view]');
-                if (button && button.dataset.view !== view) {
-                    const wasGantt = isGantt(view);
-                    const willBeGantt = isGantt(button.dataset.view);
-                    if (wasGantt && willBeGantt) {
-                        view = button.dataset.view;
-                        render();
-                        return;
-                    }
-                    const monthScopeChanged = view === 'calendar' || button.dataset.view === 'calendar';
-                    view = button.dataset.view;
-                    if (monthScopeChanged || viewStale) {
-                        viewStale = false;
-                        resetViewPage();
-                    } else render();
-                }
+                if (button) setView(button.dataset.view);
             });
             const captureFilterDraft = (event) => { const name = event.target.name; if (['title', 'sectionId', 'status', 'ownerUid', 'assigneeUid', 'fromDate', 'toDate'].includes(name)) filterDrafts[name] = event.target.value; };
-            el('projects-view-filters')?.addEventListener('click', (event) => {
+            listen(el('projects-view-filters'), 'click', (event) => {
                 const chip = event.target.closest?.('[data-chip-value]');
                 // A chip toggles, so a second handler on the same click would
                 // quietly undo the first. Stamp the event and act once.
@@ -870,54 +1157,32 @@
                 event.preventDefault();
                 applyChip(chip.dataset.chipField, chip.dataset.chipValue);
             });
-            el('projects-view-filters')?.addEventListener('input', captureFilterDraft);
-            el('projects-view-filters')?.addEventListener('change', captureFilterDraft);
-            el('projects-view-filters')?.addEventListener('submit', (event) => {
+            listen(el('projects-view-filters'), 'input', captureFilterDraft);
+            listen(el('projects-view-filters'), 'change', captureFilterDraft);
+            listen(el('projects-view-filters'), 'submit', (event) => {
                 event.preventDefault();
-                filterDrafts = Object.fromEntries(new FormData(event.target));
-                if (filterDrafts.fromDate && filterDrafts.toDate && filterDrafts.fromDate > filterDrafts.toDate) {
-                    filterDrafts.toDate = filterDrafts.fromDate;
-                    const toInput = event.target.querySelector?.('[name="toDate"]');
-                    if (toInput) toInput.value = filterDrafts.toDate;
-                }
-                filters = Object.fromEntries(Object.entries(filterDrafts).filter(([, value]) => value !== ''));
-                syncFilterBadge();
-                board?.setFilters(filters);
-                refresh();
+                applyFilters(Object.fromEntries(new FormData(event.target)));
             });
-            el('projects-view-filters')?.addEventListener('reset', () => {
-                filters = {}; filterDrafts = {}; syncFilterBadge();
-                if (typeof setTimeout === 'function') setTimeout(renderFilterChips, 0);
-                else renderFilterChips();
-                if (projectId) {
-                    board?.setFilters(filters);
-                    refresh();
-                }
+            listen(el('projects-view-filters'), 'reset', () => {
+                // setProject resets controls while establishing the new scope.
+                if (restoring) return;
+                if (projectId) applyFilters({});
+                else { filters = {}; filterDrafts = {}; syncFilterBadge(); }
             });
-            el('projects-view-more')?.addEventListener('click', () => { if (!loading && response?.hasMore) refresh(response.nextCursor, [...previous, cursor], pageIndex + 1); });
-            el('projects-view-previous')?.addEventListener('click', () => { if (!loading && previous.length) refresh(previous.at(-1), previous.slice(0, -1), pageIndex - 1); });
-            el('projects-view-retry')?.addEventListener('click', () => refresh());
-            el('btn-projects-board-refresh')?.addEventListener('click', () => refresh());
-            el('projects-view-content')?.addEventListener('click', (event) => {
+            listen(el('projects-view-more'), 'click', () => { if (!loading && response?.hasMore) refresh(response.nextCursor, [...previous, cursor], pageIndex + 1); });
+            listen(el('projects-view-previous'), 'click', () => { if (!loading && previous.length) refresh(previous.at(-1), previous.slice(0, -1), pageIndex - 1); });
+            listen(el('projects-view-retry'), 'click', () => explicitRefresh());
+            listen(el('btn-projects-board-refresh'), 'click', () => explicitRefresh());
+            listen(el('projects-view-content'), 'click', (event) => {
                 const zoomBtn = event.target.closest('[data-gantt-zoom]');
                 if (zoomBtn) {
                     ganttZoom = zoomBtn.dataset.ganttZoom;
-                    render();
+                    writeNavigation(); render();
                     return;
                 }
                 const clearFiltersBtn = event.target.closest('[data-gantt-action="clear-filters"]');
                 if (clearFiltersBtn) {
-                    filters = {};
-                    filterDrafts = {};
-                    const form = el('projects-view-filters');
-                    form?.reset();
-                    syncFilterBadge();
-                    if (typeof setTimeout === 'function') setTimeout(renderFilterChips, 0);
-                    else renderFilterChips();
-                    if (projectId) {
-                        board?.setFilters(filters);
-                        refresh();
-                    }
+                    applyFilters({});
                     return;
                 }
                 const calNavBtn = event.target.closest('[data-cal-nav]');
@@ -933,16 +1198,16 @@
                     }
                     if (nextMonth !== calendarMonth) {
                         calendarMonth = nextMonth;
-                        resetViewPage();
+                        writeNavigation(); resetViewPage();
                     }
                     return;
                 }
                 const button = event.target.closest('[data-task-open]');
                 const found = array(response?.tasks).find((t) => t.id === button?.dataset.taskOpen);
-                if (found) board?.selectTask(found);
+                if (found && !loading) openTask(found.id);
             });
             let dragTaskId = null;
-            el('projects-view-content')?.addEventListener('dragstart', (e) => {
+            listen(el('projects-view-content'), 'dragstart', (e) => {
                 const card = e.target?.closest ? e.target.closest('[data-kanban-task], [data-card]') : null;
                 const isInteractive = Boolean(
                     (e.target?.tagName && ['SELECT', 'INPUT', 'TEXTAREA', 'OPTION'].includes(e.target.tagName)) ||
@@ -953,18 +1218,19 @@
                     return;
                 }
                 dragTaskId = card.dataset?.kanbanTask || card.dataset?.card;
+                dragScope = scope();
                 card.classList?.add?.('drag');
                 if (e.dataTransfer) {
                     e.dataTransfer.effectAllowed = 'move';
                     try { e.dataTransfer.setData('text/plain', dragTaskId); } catch (_) { /* legacy browser fallback */ }
                 }
             });
-            el('projects-view-content')?.addEventListener('dragend', () => {
-                dragTaskId = null;
+            listen(el('projects-view-content'), 'dragend', () => {
+                dragScope = null; dragTaskId = null;
                 (el('projects-view-content')?.querySelectorAll?.('[data-card].drag') || []).forEach((c) => c.classList.remove('drag'));
                 (el('projects-view-content')?.querySelectorAll?.('[data-col].over') || []).forEach((c) => c.classList.remove('over'));
             });
-            el('projects-view-content')?.addEventListener('dragover', (e) => {
+            listen(el('projects-view-content'), 'dragover', (e) => {
                 const col = e.target.closest ? e.target.closest('[data-status-column], [data-col]') : null;
                 if (!col || !dragTaskId || !canWrite() || mutation) return;
                 e.preventDefault();
@@ -972,15 +1238,16 @@
                 (el('projects-view-content')?.querySelectorAll?.('[data-col].over') || []).forEach((c) => { if (c !== col) c.classList.remove('over'); });
                 col.classList.add('over');
             });
-            el('projects-view-content')?.addEventListener('dragleave', (e) => {
+            listen(el('projects-view-content'), 'dragleave', (e) => {
                 const col = e.target.closest ? e.target.closest('[data-status-column], [data-col]') : null;
                 if (col && (!e.relatedTarget || !col.contains(e.relatedTarget))) {
                     col.classList.remove('over');
                 }
             });
-            el('projects-view-content')?.addEventListener('drop', async (e) => {
+            listen(el('projects-view-content'), 'drop', async (e) => {
                 const col = e.target.closest ? e.target.closest('[data-status-column], [data-col]') : null;
-                const id = dragTaskId || (e.dataTransfer ? e.dataTransfer.getData('text/plain') : null);
+                const id = dragScope && current(dragScope) ? dragTaskId : null;
+                dragScope = null;
                 dragTaskId = null;
                 (el('projects-view-content')?.querySelectorAll?.('[data-card].drag') || []).forEach((c) => c.classList.remove('drag'));
                 (el('projects-view-content')?.querySelectorAll?.('[data-col].over') || []).forEach((c) => c.classList.remove('over'));
@@ -989,8 +1256,8 @@
                 const nextStatus = col.dataset.statusColumn || col.dataset.col;
                 await applyStatus(id, nextStatus);
             });
-            el('projects-view-content')?.addEventListener('change', async (event) => {
-                if (event.target.id === 'projects-view-month') { const next = event.target.value; if (view === 'calendar' && /^[1-9]\d{3}-(0[1-9]|1[0-2])$/.test(next) && next !== calendarMonth) { calendarMonth = next; resetViewPage(); } return; }
+            listen(el('projects-view-content'), 'change', async (event) => {
+                if (event.target.id === 'projects-view-month') { const next = event.target.value; if (view === 'calendar' && /^[1-9]\d{3}-(0[1-9]|1[0-2])$/.test(next) && next !== calendarMonth) { calendarMonth = next; writeNavigation(); resetViewPage(); } return; }
                 const ganttFilterField = event.target.dataset?.ganttFilter;
                 if (ganttFilterField) {
                     let val = event.target.value;
@@ -1020,13 +1287,7 @@
                         if (typeof Event === 'function') control.dispatchEvent(new Event('change', { bubbles: true }));
                         else if (typeof control.dispatchEvent === 'function') control.dispatchEvent({ type: 'change', bubbles: true });
                     }
-                    filterDrafts[ganttFilterField] = val;
-                    if (val) filters[ganttFilterField] = val;
-                    else delete filters[ganttFilterField];
-                    syncFilterBadge();
-                    renderFilterChips();
-                    board?.setFilters(filters);
-                    refresh();
+                    applyFilters({ ...filters, [ganttFilterField]: val });
                     return;
                 }
                 const id = event.target.dataset.taskStatus;
@@ -1034,21 +1295,16 @@
                     await applyStatus(id, event.target.value);
                 }
             });
-            el('projects-view-content')?.addEventListener('search', (event) => {
+            listen(el('projects-view-content'), 'search', (event) => {
                 if (event.target.dataset?.ganttFilter === 'title') {
                     const val = event.target.value;
                     const form = el('projects-view-filters');
                     const control = form?.elements?.namedItem('title');
                     if (control) control.value = val;
-                    filterDrafts.title = val;
-                    if (val) filters.title = val;
-                    else delete filters.title;
-                    syncFilterBadge();
-                    board?.setFilters(filters);
-                    refresh();
+                    applyFilters({ ...filters, title: val });
                 }
             });
-            el('projects-view-content')?.addEventListener('input', (event) => {
+            listen(el('projects-view-content'), 'input', (event) => {
                 const ganttFilterField = event.target.dataset?.ganttFilter;
                 if (ganttFilterField) {
                     filterDrafts[ganttFilterField] = event.target.value;
@@ -1057,29 +1313,25 @@
                     if (control) control.value = event.target.value;
                 }
             });
-            el('projects-view-content')?.addEventListener('keydown', (event) => {
+            listen(el('projects-view-content'), 'keydown', (event) => {
                 if (event.key === 'Enter' && event.target.dataset?.ganttFilter === 'title') {
                     event.preventDefault();
                     const val = event.target.value;
-                    if (val) filters.title = val;
-                    else delete filters.title;
-                    syncFilterBadge();
-                    board?.setFilters(filters);
-                    refresh();
+                    if (!event.isComposing) applyFilters({ ...filters, title: val });
                 }
             });
-            el('projects-task-planning')?.addEventListener('submit', (event) => {
+            listen(el('projects-task-planning'), 'submit', (event) => {
                 event.preventDefault();
                 if (event.target.id === 'projects-task-schedule') schedulePreview();
                 if (event.target.id === 'projects-link-lookup') lookup();
                 if (event.target.id === 'projects-task-dependencies' && task) mutate(`${base()}/tasks/${encodeURIComponent(task.id)}/dependencies`, { expectedRevision: task.revision, expectedStructureRevision: response?.project?.structureRevision ?? board?.getState()?.project?.structureRevision, predecessorTaskIds: el('projects-task-predecessors').value.split(/[\n,]/).map((id) => id.trim()).filter(Boolean) });
             });
-            el('projects-task-planning')?.addEventListener('input', (event) => {
+            listen(el('projects-task-planning'), 'input', (event) => {
                 if (['projects-task-start', 'projects-task-due'].includes(event.target.id)) { datesVersion++; preview = null; el('projects-task-preview').textContent = 'Dates changed. Generate a new preview.'; }
                 if (['projects-link-type', 'projects-link-query'].includes(event.target.id)) { lookupSequence++; el('projects-link-options').textContent = ''; }
                 if (event.target.id === 'projects-task-predecessors') renderPredecessorChips();
             });
-            el('projects-task-planning')?.addEventListener('click', async (event) => {
+            listen(el('projects-task-planning'), 'click', async (event) => {
                 if (event.target.id === 'projects-task-predecessor-add' && canWrite()) {
                     const picker = el('projects-task-predecessor-picker');
                     const id = picker?.value;
@@ -1102,7 +1354,9 @@
                 if (event.target.dataset?.linkRemove !== undefined && !mutation) saveLinks(links.filter((_, i) => i !== Number(event.target.dataset.linkRemove)));
             });
         }
-        return { init, setProject, setTask, refresh, invalidateAccess, syncBoard: fillFilters, getState: () => ({ projectId, actorUid, filters: { ...filters }, view, response, selectedTaskId: task?.id }) };
+        return { init, setProject, setTask, refresh: explicitRefresh, reconcileRemote, invalidateAccess, applyFilters, setView, openTask, startNavigation, restoreNavigation, invalidateViews,
+            dispose() { disposed = true; calendarCache.clear(); calendarRequest = null; viewRequest = null; response = null; task = null; links = []; projectLinks = []; listRevisionFloor.clear(); navigationGeneration++; generation++; unsubscribe?.(); removers.splice(0).forEach(remove => remove()); if (refreshTimer !== null) globalScope.clearTimeout(refreshTimer); globalScope.removeEventListener?.('popstate', restoreNavigation); },
+            syncBoard: fillFilters, getState: () => ({ projectId, actorUid, filters: { ...filters }, view, response, selectedTaskId: task?.id }) };
     }
     globalScope.CrmProjectsViews = { createController };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -26,7 +26,7 @@ async function runInteractionCases(board) {
     for (const writable of [true, false]) {
         const moves = []; let prevented = 0;
         const row = { dataset: { rowKind: 'task', rowId: 'row-b', taskId: 'b' }, closest: () => row };
-        const sandbox = { selectedTaskId: '', canWrite: () => writable, expanded: new Set(), selectedSiblingMove: (...args) => moves.push(args), toggleTask: () => {}, taskFor: () => null, renderDetail: () => {}, renderBoard: () => {}, createTask: () => {} };
+        const sandbox = { presentationV2: false, selectedTaskId: '', canWrite: () => writable, expanded: new Set(), selectedSiblingMove: (...args) => moves.push(args), toggleTask: () => {}, taskFor: () => null, renderDetail: () => {}, renderBoard: () => {}, createTask: () => {} };
         vm.createContext(sandbox); vm.runInContext(keyBody, sandbox);
         for (const shiftKey of [false, true]) sandbox.onBoardKeydown({ target: row, key: 'Tab', shiftKey, preventDefault: () => prevented++ });
         assert.strictEqual(prevented, 0, 'Tab and ShiftTab never prevent native focus'); assert.deepStrictEqual(moves, []);

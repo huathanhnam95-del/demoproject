@@ -763,7 +763,8 @@ async function runTypedValuesAndProtectionMatrix({ db, server, ownerToken, viewe
         }
     }
     response = await request(server, `/api/projects/${typed.projectId}/sections/${typed.sections[0].id}`, ownerToken, { method: 'PATCH', headers: jsonHeaders(), body: JSON.stringify({ operationId: 'typed-section-missing-structure', expectedRevision: (await sectionDoc.get()).data().revision, title: 'Missing structure' }) });
-    assert.strictEqual(response.status, 400);
+    assert.strictEqual(response.status, 200, 'non-structural section edits do not require or advance the structure revision');
+    assert.strictEqual(response.body.structureRevision, (await projectDoc.get()).data().structureRevision);
     response = await request(server, `/api/projects/${typed.projectId}/columns/notes`, ownerToken, { method: 'PATCH', headers: jsonHeaders(), body: JSON.stringify({ operationId: 'typed-column-missing-schema', expectedRevision: (await notesDoc.get()).data().revision, label: 'Missing schema' }) });
     assert.strictEqual(response.status, 400);
 

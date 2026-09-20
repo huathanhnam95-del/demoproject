@@ -444,7 +444,6 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
                 const parent = taskMap.get(parentTaskId);
                 if (!parent || effectiveLifecycle(taskMap, parentTaskId) !== 'active') throw new DomainError(409, 'INVALID_PARENT_REFERENCE', 'Parent task must be active and in this project.');
                 parentState = resolveTaskState({ tasks: taskMap, taskId: parentTaskId });
-                if (parentState.pathIds.length >= 5) throw new DomainError(400, 'MAX_DEPTH_EXCEEDED', 'Subtask hierarchy cannot exceed 5 levels.');
             }
             const resolvedSectionId = parentTaskId ? effectiveSection(taskMap, parentTaskId) : id(sectionReference, 'section ID');
             if (!sectionMap.has(resolvedSectionId) || (sectionMap.get(resolvedSectionId).data.lifecycle || 'active') !== 'active') throw new DomainError(409, 'INVALID_SECTION_REFERENCE', 'Task section must be active and in this project.');

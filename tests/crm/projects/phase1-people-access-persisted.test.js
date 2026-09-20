@@ -262,7 +262,7 @@ async function main() {
                 monthlyAllowanceCents: { integerValue: '999999' }
             } })
         });
-        assert.strictEqual(forgedProfile.status, 200, 'An own profile may be created with legacy-looking fields for compatibility.');
+        assert.strictEqual(forgedProfile.status, 403, 'Security-hardened rules reject legacy-looking privilege and allowance fields on profile creation.');
         response = await request(server, '/api/projects/phase1-access-demo', forgedProfileToken);
         assert.strictEqual(response.status, 403, 'Profile-created workforce and allowance fields must not grant Projects access.');
 

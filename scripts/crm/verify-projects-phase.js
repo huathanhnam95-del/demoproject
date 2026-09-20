@@ -197,6 +197,7 @@ async function runVerification({ argv = process.argv.slice(2), env = process.env
     const options = parsed.options;
     const reportPath = options.reportPath ? resolveInsideRoot(options.reportPath, 'Report path') : defaultReportPath();
     const manifestPath = resolveInsideRoot(options.manifestPath, 'Manifest path');
+    const presentationVariant = env.CRM_PROJECTS_V2_PRESENTATION === 'true' ? 'v2-authenticated-smoke' : 'default';
     const report = {
         schemaVersion: 1,
         revision: getRevision(),
@@ -205,6 +206,7 @@ async function runVerification({ argv = process.argv.slice(2), env = process.env
         root: ROOT,
         manifestPath,
         selection: options.all ? 'all' : options.phase === null ? null : `phase${options.phase}`,
+        presentationVariant,
         projectId: DEMO_PROJECT_ID,
         reportPath,
         emulator: null,
@@ -229,7 +231,7 @@ async function runVerification({ argv = process.argv.slice(2), env = process.env
             all: options.all,
             noEmulator: options.noEmulator
         });
-        report.customScope = !report.canonicalManifest;
+        report.customScope = !report.canonicalManifest || presentationVariant !== 'default';
         report.certifiesCanonicalPhase = false;
         const validation = validateManifest(manifest, {
             root: ROOT,
@@ -290,7 +292,7 @@ async function runVerification({ argv = process.argv.slice(2), env = process.env
         report.summary.failed = report.commands.filter((command) => command.exitCode !== 0 || command.spawnError).length;
         report.summary.passed = report.summary.total - report.summary.failed;
         report.success = report.errors.length === 0 && report.summary.failed === 0;
-        report.certifiesCanonicalPhase = report.isCanonicalScope && report.success;
+        report.certifiesCanonicalPhase = report.isCanonicalScope && presentationVariant === 'default' && report.success;
     } catch (error) {
         if (!error?.alreadyReported) report.errors.push(error?.message || String(error));
         report.summary.total = report.commands.length;

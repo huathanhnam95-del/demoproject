@@ -7,17 +7,25 @@ const vm = require('node:vm');
 const { JSDOM } = require(process.env.CRM_TEST_JSDOM || 'jsdom');
 const source = fs.readFileSync(process.env.BOARD_SOURCE || path.resolve(__dirname, '../../../public/js/crm/projects/board.js'), 'utf8');
 const observerSource = fs.readFileSync(process.env.OBSERVER_SOURCE || path.resolve(__dirname, '../../../public/js/crm/projects/remote-observer.js'), 'utf8');
+const workspaceSource = fs.readFileSync(path.resolve(__dirname, '../../../public/js/crm/projects/workspace.js'), 'utf8');
 const tick = async () => { for (let i = 0; i < 12; i++) await new Promise(setImmediate); };
 const deferred = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 async function fixture(t) {
-    const dom = new JSDOM('<textarea id="external"></textarea><section id="board"><p id="status"></p><div id="scroll"><div id="table"><div id="header"></div><div id="rows"></div></div></div></section>', { pretendToBeVisual: true });
+    const dom = new JSDOM('<textarea id="external"></textarea><section data-panel="projects"><section id="board"><p id="status"></p><div id="scroll"><div id="table"><div id="header"></div><div id="rows"></div></div></div></section><dialog id="projects-board-detail" data-projects-dialog hidden><button id="btn-projects-board-close-detail">Close</button></dialog></section>', { pretendToBeVisual: true });
     const document = dom.window.document;
     const elements = Object.fromEntries(Object.entries({ projectsBoardSection: 'board', projectsBoardStatus: 'status', projectsBoardScroll: 'scroll', projectsBoardTable: 'table', projectsBoardHeader: 'header', projectsBoardRows: 'rows' }).map(([key, id]) => [key, document.getElementById(id)]));
+    const detail = elements.projectsBoardDetail = document.getElementById('projects-board-detail');
+    let modalOpens = 0;
+    // JSDOM lacks native dialog methods. Keep the real workspace observer and
+    // emulate only the platform's open/close focus behavior at this boundary.
+    detail.showModal = () => { modalOpens++; detail.open = true; detail.querySelector('button').focus(); };
+    detail.close = () => { detail.open = false; detail.dispatchEvent(new dom.window.Event('close')); };
     let tasks = ['a', 'b'].map((id, rank) => ({ id, title: id, sectionId: 's', parentTaskId: null, rank: `${rank}/1`, lifecycle: 'active', revision: 1, activeChildCount: 0 })), structure = 1, role = 'Owner', uid = 'actor', postHold;
     const postHolds = new Map();
     const requests = [], events = [], handshake = deferred();
-    const context = { document, console, URLSearchParams, crypto: { randomUUID: () => String(requests.length) }, CSS: { escape: x => x }, setTimeout, clearTimeout, clearInterval, requestAnimationFrame: fn => fn() };
-    vm.runInNewContext(source, context); vm.runInNewContext(observerSource, context);
+    const context = { document, console, MutationObserver: dom.window.MutationObserver, URLSearchParams, crypto: { randomUUID: () => String(requests.length) }, CSS: { escape: x => x }, setTimeout, clearTimeout, clearInterval, requestAnimationFrame: fn => fn() };
+    vm.runInNewContext(source, context); vm.runInNewContext(observerSource, context); vm.runInNewContext(workspaceSource, context);
+    const workspace = context.CrmProjectsWorkspace.createController({ document, getCurrentUser: () => ({ uid }) }); workspace.init();
     const apiFetchJson = async (url, options) => {
         requests.push({ url, method: options?.method || 'GET', body: options?.body ? JSON.parse(options.body) : null });
         if (url.endsWith('/changes')) { await handshake.promise; return { cursor: 'current', authority: { signature: 'signature' } }; }
@@ -34,12 +42,12 @@ async function fixture(t) {
     };
     const board = context.CrmProjectsBoard.createController({ elements, apiFetchJson, getCurrentUser: () => ({ uid }) });
     board.init(); board.setProjects({ projects: [{ id: 'p', role }], selectedProjectId: 'p' }); await tick();
-    const observer = context.CrmProjectsRemoteObserver.createController({ apiFetchJson, getCurrentUser: () => ({ uid }) }); board.attachRemoteObserver(observer); t.after(() => { observer.dispose(); dom.window.close(); });
+    const observer = context.CrmProjectsRemoteObserver.createController({ apiFetchJson, getCurrentUser: () => ({ uid }) }); board.attachRemoteObserver(observer); t.after(() => { observer.dispose(); workspace.dispose(); dom.window.close(); });
     const row = id => elements.projectsBoardRows.querySelector(`[data-task-id="${id}"]`);
     const order = () => [...board.getSnapshot().tasks.values()].filter(task => !task.parentTaskId).sort((a, b) => parseInt(a.rank) - parseInt(b.rank)).map(task => task.id);
     const busy = () => elements.projectsBoardSection.getAttribute('aria-busy');
     const key = (name, altKey = false) => { const active = document.activeElement; events.push({ key: name, altKey, target: active.dataset.taskId || active.id, busy: busy(), ready: board.getSnapshot().authorizationReady, order: order() }); active.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: name, altKey, bubbles: true, cancelable: true })); };
-    return { board, elements, document, row, key, busy, order, events, requests, handshake, tasks: () => tasks, actor(value) { uid = value; }, holdPost(id) { const held = deferred(); if (id) postHolds.set(id, held); else postHold = held; return held; }, role(value) { role = value; } };
+    return { board, elements, document, detail, modalOpens: () => modalOpens, row, key, busy, order, events, requests, handshake, tasks: () => tasks, actor(value) { uid = value; }, holdPost(id) { const held = deferred(); if (id) postHolds.set(id, held); else postHold = held; return held; }, role(value) { role = value; } };
 }
 test('task move remains busy from POST through held actual observer handshake and authorized publication', async t => {
     const h = await fixture(t); h.row('b').focus(); const post = h.holdPost(); h.key('ArrowUp'); await tick();
@@ -63,6 +71,22 @@ test('held move completion respects external focus and caret takeover', async t 
 test('unchanged focus remains on moved row after reconciliation', async t => {
     const h = await fixture(t); h.row('b').focus(); h.key('ArrowUp'); await tick(); h.handshake.resolve(); await tick();
     assert.equal(h.document.activeElement, h.row('b')); assert.deepEqual(h.order(), ['b', 'a']);
+    assert.equal(h.modalOpens(), 0, 'keyboard reorder must never request the task modal');
+    assert.equal(h.detail.hidden, true);
+    // Continue directly from the focused row: a second command must still work.
+    h.key('ArrowDown'); await tick();
+    assert.equal(h.requests.filter(r => r.url.endsWith('/tasks/b/move')).length, 2);
+    assert.equal(h.document.activeElement, h.row('b')); assert.equal(h.modalOpens(), 0);
+});
+
+test('explicit row click, Enter and API open still open details; close does not arm later keyboard moves', async t => {
+    const h = await fixture(t); h.handshake.resolve();
+    h.row('b').click(); await tick(); assert.equal(h.detail.open, true); assert.equal(h.modalOpens(), 1);
+    h.document.getElementById('btn-projects-board-close-detail').click(); await tick(); assert.equal(h.detail.open, false);
+    h.row('b').focus(); h.key('ArrowUp'); await tick(); assert.equal(h.modalOpens(), 1); assert.equal(h.document.activeElement, h.row('b'));
+    h.key('Enter'); await tick(); assert.equal(h.detail.open, true); assert.equal(h.modalOpens(), 2);
+    h.board.closeTask(); await tick();
+    h.board.selectTask(h.tasks()[0]); await tick(); assert.equal(h.detail.open, true); assert.equal(h.modalOpens(), 3);
 });
 
 test('another loader cannot clear a held task move and keyboard mutations stay blocked until reconciliation', async t => {

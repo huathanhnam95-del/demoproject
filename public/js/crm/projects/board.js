@@ -5,7 +5,6 @@
     const STATUS_LABELS = { not_started: 'Not started', in_progress: 'In progress', blocked: 'Blocked', done: 'Done' };
     const PRIORITY_KEYS = ['none', 'low', 'medium', 'high', 'urgent'];
     const PRIORITY_LABELS = { none: 'None', low: 'Low', medium: 'Medium', high: 'High', urgent: 'Urgent' };
-    let ROW_HEIGHT = 44;
     const OVERSCAN = 8;
     // Five hues, same count and same hash, so every section keeps the colour it
     // already has in production -- only the tone changes.
@@ -57,7 +56,10 @@
     }
 
     function createController(deps = {}) {
+        let ROW_HEIGHT = 44;
         const elements = deps.elements || {};
+        let presentationV2 = deps.presentationV2 === true, tableLayout = null, visibleColumns = [];
+        const columnModel = globalScope.CrmProjectsColumnsV2;
         const controllerActorUid = String(deps.getCurrentUser?.()?.uid || '');
         const apiFetchJson = typeof deps.apiFetchJson === 'function' ? deps.apiFetchJson : null;
         const escape = deps.escapeHtml || escapeHtml;
@@ -68,8 +70,197 @@
         const stateModel = typeof globalScope.CrmProjectsBoardState?.createBoardState === 'function'
             ? globalScope.CrmProjectsBoardState.createBoardState()
             : null;
+        const feedbackStore = presentationV2 ? globalScope.CrmProjectsFieldFeedbackV2?.createStore() : null;
+        let renameSession = null, rowEditor = null;
+        let mobileList = false, mobileLimit = 50, mobileProject = '', layoutObserver = null, mobileMore = null, mobilePrevious = null;
+        const MOBILE_WINDOW = 200;
+        function availableRows() { return mobileList ? logicalRows.slice(0, mobileLimit) : logicalRows; }
+        function focusNavigationRow(id) {
+            const row = availableRows().find(row => row.id === id);
+            if (!row) return;
+            focusedRowId = id;
+            if (!mobileList) elements.projectsBoardScroll.scrollTop = row.index * ROW_HEIGHT;
+            renderVirtualRows({ focusRowId: id });
+            const node = elements.projectsBoardRows.querySelector(`[data-row-id="${cssEscape(id)}"]`);
+            node?.focus({ preventScroll: true });
+            if (mobileList) node?.scrollIntoView?.({ block: 'nearest' });
+        }
+        function rowNavigationStops() {
+            if (!presentationV2) return;
+            const rows = Array.from(elements.projectsBoardRows.querySelectorAll('[data-row-id]'));
+            if (!availableRows().some(row => row.id === focusedRowId)) focusedRowId = availableRows().find(row => row.kind !== 'summary')?.id || '';
+            rows.forEach(node => {
+                const active = node.dataset.rowId === focusedRowId;
+                node.tabIndex = active ? 0 : -1;
+                node.querySelectorAll('button, input, select, a[href]').forEach(control => {
+                    // Hidden canonical controls are never additional tab stops.
+                    const hidden = control.matches('.crm-board-status-select, .crm-board-people-field') || control.matches('select') && control.previousElementSibling?.matches('.crm-people-trigger');
+                    control.tabIndex = (active || node.dataset.rowKind === 'summary') && !hidden ? 0 : -1;
+                });
+            });
+        }
+        function syncListSemantics() {
+            if (!presentationV2) return;
+            const table = elements.projectsBoardTable, rows = elements.projectsBoardRows;
+            table.dataset.presentation = mobileList ? 'list' : 'table';
+            table.setAttribute('role', mobileList ? 'presentation' : 'table');
+            rows.setAttribute('role', mobileList ? 'list' : 'rowgroup');
+            if (mobileList) { rows.setAttribute('aria-label', 'Project tasks and groups'); table.removeAttribute('aria-rowcount'); table.removeAttribute('aria-colcount'); }
+            else { rows.removeAttribute('aria-label'); table.setAttribute('aria-rowcount', String(logicalRows.length + 1)); table.setAttribute('aria-colcount', String(visibleColumns.length)); }
+            elements.projectsBoardHeader.hidden = mobileList;
+            rows.style.height = mobileList ? 'auto' : `${Math.max(logicalRows.length * ROW_HEIGHT, ROW_HEIGHT)}px`;
+            rows.querySelectorAll('[data-row-id]').forEach(node => {
+                const logical = logicalRows.find(row => row.id === node.dataset.rowId);
+                node.setAttribute('role', mobileList ? 'listitem' : 'row');
+                node.removeAttribute('aria-selected');
+                if (mobileList) { node.removeAttribute('aria-rowindex'); node.setAttribute('aria-posinset', String(logical.index + 1)); node.setAttribute('aria-setsize', String(Math.min(logicalRows.length, mobileLimit))); }
+                else { node.setAttribute('aria-rowindex', String(logical.index + 2)); node.removeAttribute('aria-posinset'); node.removeAttribute('aria-setsize'); }
+                if (logical.task) node.setAttribute('aria-label', `${logical.task.title}. Level ${Number(logical.depth || 0) + 1}${selectedTaskIds.includes(String(logical.task.id)) ? '. Selected' : ''}`);
+                Array.from(node.children).forEach((cell, index) => {
+                    cell.setAttribute('role', mobileList ? 'presentation' : 'cell');
+                    if (mobileList) { cell.removeAttribute('aria-colindex'); cell.removeAttribute('aria-colspan'); }
+                    else if (logical.kind === 'section') cell.setAttribute('aria-colspan', String(visibleColumns.length));
+                    else cell.setAttribute('aria-colindex', String(index + 1));
+                });
+                node.querySelector('[data-action="pick-status"]')?.setAttribute('aria-label', `Change status for ${logical.task?.title}: ${project?.statusLabels?.[effectiveField(logical.task?.id, 'status')] || STATUS_LABELS[effectiveField(logical.task?.id, 'status')] || logical.task?.status || ''}`);
+                const expander = node.querySelector('.crm-board-expander');
+                if (expander && mobileList) { const count = Number(logical.task.activeChildCount || logical.task.childCount || 0); expander.hidden = count === 0; expander.dataset.action = 'open-subtasks'; expander.textContent = `${count} subtasks`; expander.removeAttribute('aria-expanded'); expander.setAttribute('aria-label', `Open subtasks for ${logical.task.title}`); }
+            });
+            if (mobilePrevious) mobilePrevious.hidden = !mobileList || mobileLimit <= MOBILE_WINDOW;
+            if (mobileMore) mobileMore.hidden = !mobileList || mobileLimit >= logicalRows.length;
+            rowNavigationStops();
+        }
+        function syncListWidth() {
+            const width = document.querySelector('[data-panel="projects"]')?.getBoundingClientRect().width;
+            if (!width || !presentationV2 || mobileList === (width < 700)) return;
+            mobileList = width < 700;
+            // Retain the current editor and its authorized loaded prefix across a boundary.
+            const active = document.activeElement?.closest('[data-row-id]');
+            const index = logicalRows.findIndex(row => row.id === active?.dataset.rowId);
+            if (index >= mobileLimit) mobileLimit = Math.ceil((index + 1) / 50) * 50;
+            renderHeader(); renderVirtualRows();
+        }
+        const creationIntents = new Map(), composerDrafts = new Map();
+        let quickComposer = null, batchRun = null, sectionIntent = null, quickTaskAfterSection = false;
+        function clearQuickCreation() {
+            quickComposer?.node.remove(); quickComposer = null; sectionCreatePending = false;
+            creationIntents.clear(); composerDrafts.clear(); sectionIntent = null; quickTaskAfterSection = false; batchRun = null;
+            document.querySelector?.('[data-batch-result]')?.remove();
+            document.querySelector?.('[data-creation-recovery]')?.remove();
+        }
+        function creationFeedback(intent, phase, extra = {}) {
+            intent.phase = phase;
+            try { deps.onCreationEvent?.({ intentId: intent.id, scope: fieldSaveScope(intent.scope), phase, ...extra }); } catch (_) { /* observational */ }
+        }
+        function paintLegacyCreationRecovery() {
+            const intent = !presentationV2 && canWrite() && [...creationIntents.values()].find(i => scopeIsCurrent(i.scope) && i.payload && ['uncertain', 'saving'].includes(i.phase));
+            let node = document.querySelector?.('[data-creation-recovery]');
+            if (!intent) { node?.remove(); return; }
+            if (!node) {
+                node = document.createElement('div'); node.dataset.creationRecovery = ''; node.setAttribute('role', 'status');
+                elements.projectsBoardTableWrap?.before(node);
+            }
+            node.textContent = intent.phase === 'saving' ? 'Confirming task creation… ' : 'Task creation is unconfirmed. Retry the same creation before adding another task. ';
+            const retry = document.createElement('button'); retry.type = 'button'; retry.dataset.retryCreation = '';
+            retry.textContent = 'Retry same creation'; retry.disabled = intent.phase === 'saving';
+            retry.addEventListener('click', () => {
+                if (creationIntents.get(intent.id) !== intent || intent.phase !== 'uncertain' || !scopeIsCurrent(intent.scope) || !canWrite()) return;
+                createTask(intent.payload.parentTaskId, intent.payload.sectionId, { initialTitle: intent.payload.title, intentId: intent.id });
+            });
+            node.append(retry);
+        }
+        function settleComposerParent(temporaryIds, created, scope) {
+            for (const [key, draft] of composerDrafts) {
+                const [uid, projectId, , parentId] = JSON.parse(key);
+                if (uid !== scope.uid || projectId !== scope.projectId || !temporaryIds.includes(parentId)) continue;
+                const nextKey = JSON.stringify([uid, projectId, created.effectiveSectionId || '', String(created.id)]);
+                composerDrafts.delete(key); composerDrafts.set(nextKey, draft);
+                if (quickComposer?.key === key) {
+                    quickComposer.key = nextKey; quickComposer.parentId = String(created.id);
+                    quickComposer.node.querySelector('select').value = created.effectiveSectionId || '';
+                    quickComposer.paint();
+                }
+            }
+        }
+        function openQuickComposer(parentId = null, sectionId = null) {
+            if (!presentationV2) return createTask(parentId, sectionId);
+            if (!canWrite() || busy) return;
+            const scope = captureScope();
+            if (parentId) sectionId = resolveEffectiveSectionId(parentId);
+            if (!sectionId && currentGroupBy === 'section') sectionId = resolveEffectiveSectionId(selectedTaskId) || sections[0]?.id;
+            const key = JSON.stringify([scope.uid, scope.projectId, sectionId || '', parentId || '']);
+            if (quickComposer?.key === key) { quickComposer.input.focus(); return; }
+            quickComposer?.node.remove();
+            const draft = composerDrafts.get(key) || { text: '', intentId: operationId('quick') };
+            composerDrafts.set(key, draft);
+            const trigger = document.activeElement;
+            let composing = false;
+            const node = document.createElement('form'); node.dataset.quickCreate = ''; node.className = 'crm-quick-create';
+            node.innerHTML = `<label>${parentId ? 'New subtask' : 'New task'}<input name="title" aria-label="${parentId ? 'Subtask' : 'Task'} title" aria-describedby="projects-quick-result" autocomplete="off"></label><label>Section<select name="section" aria-label="Task section"><option value="">Choose a section…</option>${sections.filter(s => !s.isOptimistic).map(s => `<option value="${escape(s.id)}">${escape(s.title)}</option>`).join('')}</select></label><button type="submit">Add task</button><button type="button" data-cancel-create>Cancel</button><span id="projects-quick-result" role="status"></span>`;
+            const input = node.querySelector('input'), target = node.querySelector('select'), submit = node.querySelector('[type="submit"]'), status = node.querySelector('[role="status"]');
+            input.value = draft.text; target.value = sectionId || ''; target.disabled = !!parentId;
+            const composer = { key, parentId, node, input, scope, draft, status, paint: null }; quickComposer = composer;
+            // Outside the virtual table: one stable composer, no unbounded row pinning.
+            elements.projectsBoardTableWrap?.before(node);
+            const paint = () => {
+                const intent = creationIntents.get(draft.intentId), unresolved = intent?.phase === 'saving' || intent?.phase === 'uncertain';
+                input.readOnly = !!unresolved; target.disabled = !!composer.parentId || !!unresolved;
+                submit.disabled = intent?.phase === 'saving' || !canWrite();
+                submit.textContent = intent?.phase === 'uncertain' ? 'Retry same creation' : 'Add task';
+                node.querySelector('[data-cancel-create]').disabled = !!unresolved;
+            };
+            composer.paint = paint;
+            input.addEventListener('compositionstart', () => { composing = true; });
+            input.addEventListener('compositionend', () => { composing = false; });
+            const cancel = () => { node.remove(); if (quickComposer === composer) quickComposer = null; if (scopeIsCurrent(scope) && trigger?.isConnected) trigger.focus(); };
+            target.addEventListener('change', () => { draft.text = input.value; openQuickComposer(composer.parentId, target.value); });
+            input.addEventListener('input', () => { draft.text = input.value; });
+            node.addEventListener('keydown', e => {
+                if (e.isComposing || e.keyCode === 229) return;
+                if (e.key === 'Enter' && e.target === input) { e.preventDefault(); node.requestSubmit(); }
+                if (e.key === 'Escape' && !creationIntents.has(draft.intentId)) { e.preventDefault(); cancel(); }
+            });
+            node.querySelector('[data-cancel-create]').addEventListener('click', () => {
+                if (creationIntents.has(draft.intentId)) return;
+                cancel();
+            });
+            node.addEventListener('submit', async e => {
+                e.preventDefault();
+                if (!presentationV2 || quickComposer !== composer || composing || !scopeIsCurrent(scope) || !canWrite() || creationIntents.get(draft.intentId)?.phase === 'saving') return;
+                draft.text = input.value;
+                if (!target.value) { status.textContent = 'Choose a real section.'; target.focus(); return; }
+                const title = input.value.trim();
+                if (!title || title.length > 200) { status.textContent = 'Enter a title (up to 200 characters).'; return; }
+                let moved = false;
+                const track = event => { if (event.target !== document.body && !node.contains(event.target)) moved = true; };
+                document.addEventListener('focusin', track); document.addEventListener('pointerdown', track);
+                const promise = createTask(composer.parentId, target.value, { initialTitle: title, intentId: draft.intentId, keepComposerFocus: true });
+                paint(); status.textContent = 'Saving…';
+                const created = await promise;
+                document.removeEventListener('focusin', track); document.removeEventListener('pointerdown', track);
+                if (!scopeIsCurrent(scope)) return;
+                if (created) { draft.text = ''; draft.intentId = operationId('quick'); }
+                if (quickComposer?.draft !== draft) return;
+                const active = quickComposer;
+                const intent = creationIntents.get(draft.intentId);
+                if (created) { active.input.value = ''; active.status.textContent = 'Saved'; if (active.node.contains(document.activeElement) || active === composer && !moved && document.activeElement === document.body) active.input.focus(); }
+                else active.status.textContent = intent?.phase === 'uncertain' ? 'Outcome unconfirmed. Retry the same creation to reconcile.' : 'Creation failed. Your text is retained; review access and retry.';
+                active.paint();
+            });
+            paint(); input.focus();
+        }
+        const branchLoading = new Set();
         let bound = false;
         let sharedFilters = {};
+        const contextListeners = new Set();
+        // Canonical tasks resolved from other views are not members of the loaded
+        // List query until a branch response includes them.
+        const projectionTaskIds = new Set();
+        function publishContext(change = {}) {
+            const snapshot = { ...contextSnapshot(), ...change };
+            deps.onContextChanged?.(snapshot);
+            contextListeners.forEach(listener => listener(snapshot));
+        }
         let filterGeneration = 0;
         let projectEpoch = 0;
         let refreshSequence = 0;
@@ -92,6 +283,7 @@
         let pending = new Map();
         const movePending = new Set();
         let selectedTaskId = '';
+        let detailOpenIntent = null;
         let selectedTaskIds = [];
         let focusedRowId = '';
         let logicalRows = [];
@@ -105,6 +297,36 @@
         let renderQueued = false;
         let taskMutationQueues = new Map();
         let draftVersions = new Map();
+        // Presentation versions outlive saved draft cleanup, independently of lineage.
+        const fieldUiSequences = new Map();
+        function fieldSaveScope(scope = captureScope()) {
+            return { actorUid: scope.uid, projectId: scope.projectId, epoch: scope.epoch };
+        }
+        function emitFieldSave(scope, taskId, field, editVersion, phase, extra = {}) {
+            // A presentation subscriber must never fail or retry a domain write.
+            try {
+                const event = { scope: fieldSaveScope(scope), taskId: String(taskId), field, editVersion, phase, ...extra };
+                feedbackStore?.accept(event);
+                paintFieldFeedback(taskId);
+                const detailFields = elements.projectsBoardDetailBody?.querySelector?.('[data-detail-fields]');
+                if (detailFields?.dataset.taskId === String(taskId)) paintFieldFeedback(taskId, detailFields);
+                deps.onFieldSaveEvent?.(event);
+            }
+            catch (_) { /* feedback is observational */ }
+        }
+        function dirtyField(scope, taskId, field) {
+            const key = JSON.stringify([scope.uid, scope.projectId, scope.epoch, String(taskId), field]);
+            const version = (fieldUiSequences.get(key) || 0) + 1;
+            fieldUiSequences.set(key, version);
+            emitFieldSave(scope, taskId, field, version, 'dirty');
+            return version;
+        }
+        function resetFieldFeedback() {
+            fieldUiSequences.clear();
+            feedbackStore?.setScope(fieldSaveScope());
+            try { deps.onFieldSaveScopeChanged?.(fieldSaveScope()); }
+            catch (_) { /* feedback is observational */ }
+        }
         const draftBases = new Map();
         let remoteObserver = null;
         let busy = false;
@@ -128,6 +350,44 @@
             }
         }
 
+        const feedbackLabels = { dirty: 'Unsaved', saving: 'Saving…', saved: 'Saved', error: 'Not saved', conflict: 'Conflict — review', uncertain: 'Not confirmed — review', cancelled: 'Not saved' };
+        function paintFieldFeedback(taskId, target = elements.projectsBoardRows?.querySelector(`[data-task-id="${cssEscape(taskId)}"]`)) {
+            if (!presentationV2 || !target || !feedbackStore) return;
+            for (const record of feedbackStore.getSnapshot().filter(item => item.taskId === String(taskId))) {
+                const key = record.field === 'title' ? 'taskTitle' : record.field.startsWith('value:') ? `custom:${record.field.slice(6)}` : ['dates', 'startDate', 'dueDate'].includes(record.field) ? 'dates' : record.field;
+                const cell = Array.from(target.children).find(node => node.dataset.columnKey === key);
+                if (!cell) continue;
+                let label = cell.querySelector('[data-field-feedback]');
+                if (!label) { label = document.createElement('span'); label.className = 'crm-field-feedback'; label.setAttribute('role', 'status'); label.setAttribute('aria-live', 'polite'); cell.appendChild(label); }
+                label.dataset.fieldFeedback = record.field; label.dataset.phase = record.phase;
+                label.textContent = record.reason === 'edit-cancelled' ? 'Edit cancelled' : feedbackLabels[record.phase];
+                label.title = record.message || feedbackLabels[record.phase];
+                const error = ['error', 'conflict', 'uncertain'].includes(record.phase);
+                label.id = `pj-feedback-${target.closest('#projects-board-detail') ? 'detail' : 'row'}-${encodeURIComponent(taskId)}-${encodeURIComponent(record.field)}`;
+                label.setAttribute('aria-atomic', 'true');
+                if (error && record.message) label.textContent += `: ${record.message}`;
+                cell.querySelectorAll('input, select, button').forEach(control => {
+                    control.setAttribute('aria-describedby', label.id);
+                    if (control.matches('input, select')) { if (error) control.setAttribute('aria-invalid', 'true'); else control.removeAttribute('aria-invalid'); }
+                });
+            }
+        }
+        function effectiveField(taskId, field) {
+            const key = draftKeyFor(taskId, field);
+            return drafts.has(key) ? drafts.get(key) : field.startsWith('value:') ? taskFor(taskId)?.values?.[field.slice(6)] : taskFor(taskId)?.[field];
+        }
+        function dateOnly(value) {
+            if (value == null || value === '') return null;
+            if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error('Use a date in YYYY-MM-DD format.');
+            const date = new Date(`${value}T00:00:00.000Z`);
+            if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) throw new Error('Choose a valid calendar date.');
+            return value;
+        }
+        function dateRange(value) {
+            const startDate = dateOnly(value.startDate), dueDate = dateOnly(value.dueDate);
+            if (startDate && dueDate && startDate > dueDate) throw new Error('Start date cannot be after due date.');
+            return { startDate, dueDate };
+        }
         function currentProjectId() { return String(selection.selectedProjectId || '').trim(); }
         function role() { return membership?.role || selection.selectedProject?.role || ''; }
         // Rendering a retained editor never grants mutation authority.
@@ -194,11 +454,13 @@
         }
 
         function syncSectionForm() {
+            if (role() !== 'Owner' || String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid || (project?.lifecycle || 'active') !== 'active') quickTaskAfterSection = false;
             const owner = canSchema();
             const disabled = busy || !owner || sectionCreatePending;
             if (elements.projectsBoardSectionName) elements.projectsBoardSectionName.disabled = disabled;
+            if (elements.projectsBoardSectionName) elements.projectsBoardSectionName.readOnly = !!sectionIntent;
             if (elements.projectsBoardSaveSection) elements.projectsBoardSaveSection.disabled = disabled;
-            if (elements.projectsBoardCancelSection) elements.projectsBoardCancelSection.disabled = sectionCreatePending;
+            if (elements.projectsBoardCancelSection) elements.projectsBoardCancelSection.disabled = sectionCreatePending || !!sectionIntent;
             if (elements.projectsBoardAddSection) elements.projectsBoardAddSection.disabled = disabled;
         }
 
@@ -222,15 +484,33 @@
             if (!canSchema() || busy || sectionCreatePending) return;
             if (elements.projectsBoardSectionForm) elements.projectsBoardSectionForm.hidden = false;
             if (elements.projectsBoardSectionName) {
-                elements.projectsBoardSectionName.value = '';
+                if (!sectionIntent) elements.projectsBoardSectionName.value = '';
                 elements.projectsBoardSectionName.focus();
             }
             syncSectionForm();
         }
 
         function closeSectionForm() {
-            if (sectionCreatePending) return;
+            if (sectionCreatePending || sectionIntent) return;
+            quickTaskAfterSection = false;
             resetSectionForm();
+        }
+
+        function startTopLevelTaskCreation() {
+            if (!canWrite() || busy || sectionCreatePending) return;
+            const realSections = sections.filter(section => !section.isOptimistic && (section.lifecycle || 'active') === 'active');
+            if (realSections.length === 0) {
+                if (!canSchema()) {
+                    quickTaskAfterSection = false;
+                    setStatus('Ask a project Owner to add the first section before creating a task.');
+                    return;
+                }
+                quickTaskAfterSection = captureScope();
+                openSectionForm();
+                setStatus('Name the first section. Your task form will open next.');
+                return;
+            }
+            openQuickComposer(null);
         }
 
         function selectableTask(task) {
@@ -247,13 +527,14 @@
             stateModel?.setSelectedTaskIds?.(next);
             renderVirtualRows();
             renderBatchDock();
-            deps.onContextChanged?.(contextSnapshot());
+            publishContext();
             return next.slice();
         }
         function toggleSelection(taskId) {
             if (!selectableTask(tasks.get(taskId))) return;
             if (!selectedTaskIds.includes(taskId) && selectedTaskIds.length >= 20) { setStatus('Select at most 20 tasks.', 'error'); return; }
             setSelectedTaskIds(selectedTaskIds.includes(taskId) ? selectedTaskIds.filter(id => id !== taskId) : [...selectedTaskIds, taskId]);
+            if (presentationV2) setStatus(`${selectedTaskIds.length} tasks selected.`);
         }
         function renderBatchDock() {
             const dock = document.getElementById('projects-batch-dock');
@@ -273,7 +554,93 @@
                 }
             }
         }
+        function paintBatchResult(run) {
+            if (!scopeIsCurrent(run.scope)) return;
+            let node = document.querySelector('[data-batch-result]');
+            if (!node) { node = document.createElement('div'); node.dataset.batchResult = ''; node.setAttribute('role', 'status'); document.getElementById('projects-batch-dock')?.after(node); }
+            const count = phase => run.items.filter(i => i.phase === phase).length;
+            node.textContent = `${count('saved')} saved · ${count('conflict')} conflicts · ${count('skipped')} skipped · ${count('failed')} failed · ${count('uncertain')} unconfirmed · ${count('waiting')} waiting. `;
+            const list = document.createElement('ol');
+            for (const item of run.items) { const row = document.createElement('li'); row.textContent = `${item.title}: ${item.phase}${item.message ? ' — ' + item.message : ''}`; list.append(row); }
+            node.append(list);
+            if (!run.pending && run.items.some(i => i.phase === 'uncertain')) {
+                const retry = document.createElement('button'); retry.type = 'button'; retry.textContent = 'Retry unconfirmed batch';
+                retry.addEventListener('click', () => dispatchBatch(run)); node.append(retry);
+            }
+            const hint = document.createElement('span'); hint.textContent = 'Review project history for available Undo actions.'; node.append(hint);
+        }
+        async function executeV2Batch(kind, value) {
+            if (!canWrite() || busy || creationIntents.size || sectionIntent || !selectedTaskIds.length || batchRun?.pending || batchRun?.items.some(i => i.phase === 'uncertain')) return;
+            if (kind === 'status' && !STATUS_KEYS.includes(value)) return;
+            if (kind === 'move' && !sections.some(s => s.id === value && !s.isOptimistic)) return;
+            if (kind === 'archive' && !globalScope.confirm(`Archive ${selectedTaskIds.length} selected tasks and their descendants?`)) return;
+            const run = { scope: captureScope(), kind, value, pending: false, items: selectedTaskIds.map(id => ({ id, title: taskFor(id)?.title || id, phase: 'waiting', revision: taskFor(id)?.revision, request: null })) };
+            batchRun = run;
+            await dispatchBatch(run);
+        }
+        async function dispatchBatch(run) {
+            if (run !== batchRun || run.pending || !scopeIsCurrent(run.scope) || !canWrite()) return;
+            run.pending = true; setBusy(true);
+            let stopped = false;
+            try {
+                for (const item of run.items) {
+                    if (!scopeIsCurrent(run.scope)) return;
+                    if (item.phase === 'saved' || item.phase === 'skipped' || item.phase === 'conflict' || item.phase === 'failed') continue;
+                    if (stopped) { item.phase = 'waiting'; continue; }
+                    if (!canWrite()) { item.phase = 'failed'; item.message = 'Permission no longer available'; stopped = true; continue; }
+                    const task = taskFor(item.id);
+                    if (!item.request && (!selectableTask(task) || task.isOptimistic)) { item.phase = 'skipped'; continue; }
+                    if (!item.request && task.revision !== item.revision) { item.phase = 'conflict'; continue; }
+                    if (!item.request && run.kind === 'move' && !task.parentTaskId && resolveEffectiveSectionId(item.id) === run.value) { item.phase = 'skipped'; continue; }
+                    if (!item.request) {
+                        const base = `/api/projects/${encodeURIComponent(run.scope.projectId)}/tasks`;
+                        const operation = operationId(`batch-${run.kind}`);
+                        if (run.kind === 'status') item.request = { path: `${base}/bulk`, body: { operationId: operation, changes: [{ taskId: item.id, expectedRevision: task.revision, patch: { status: run.value } }] } };
+                        else item.request = { path: `${base}/${encodeURIComponent(item.id)}/${run.kind}`, body: { operationId: operation, expectedRevision: task.revision, expectedStructureRevision: structureRevision(), ...(run.kind === 'move' ? { parentTaskId: null, sectionId: run.value, index: rootsForSection(run.value).length } : {}) } };
+                    }
+                    try {
+                        const response = await requestMutation(item.request.path, item.request.body, { scope: run.scope });
+                        if (!scopeIsCurrent(run.scope)) return;
+                        if (!canWrite()) throw Object.assign(new Error('Permission changed before acknowledgement.'), { status: 403 });
+                        const result = response?.result || response;
+                        if (run.kind === 'status') {
+                            const saved = result?.updated?.find(t => t.taskId === item.id);
+                            if (!saved || !Number.isFinite(Number(saved.revision))) throw new Error('Unconfirmed acknowledgement');
+                            const current = taskFor(item.id);
+                            if (current && Number(current.revision) <= Number(saved.revision)) tasks.set(item.id, { ...current, status: run.value, revision: saved.revision });
+                        } else if (run.kind === 'move') {
+                            if (result?.task?.id !== item.id || !Number.isFinite(Number(result.task.revision)) || !Number.isFinite(Number(result.structureRevision))) throw new Error('Unconfirmed acknowledgement');
+                            reconcileTaskMove(item.id, item.request.body, result);
+                        } else {
+                            if (result?.targetId !== item.id || result.lifecycle !== 'archived' || !Number.isFinite(Number(result.structureRevision))) throw new Error('Unconfirmed acknowledgement');
+                            boardRevision.structureRevision = Math.max(structureRevision(), Number(result.structureRevision));
+                            const acknowledged = result.affected?.find(row => row.type === 'task' && row.id === item.id);
+                            if (acknowledged && Number(taskFor(item.id)?.revision || 0) <= Number(acknowledged.revision)) {
+                                for (const [id, row] of tasks) if (id === item.id || (row.ancestorIds || []).includes(item.id)) tasks.delete(id);
+                            }
+                        }
+                        item.phase = 'saved';
+                        setSelectedTaskIds(selectedTaskIds.filter(id => id !== item.id));
+                        invalidateHierarchy();
+                    } catch (error) {
+                        if (!scopeIsCurrent(run.scope)) return;
+                        item.phase = !error?.status || Number(error.status) >= 500 ? 'uncertain' : Number(error.status) === 409 ? 'conflict' : 'failed';
+                        item.message = error.message;
+                        // A structural conflict or unconfirmed write invalidates the remaining revision chain.
+                        stopped = item.phase === 'uncertain' || run.kind !== 'status' || [401, 403].includes(Number(error.status));
+                    }
+                }
+            } finally {
+                run.pending = false;
+                if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) invalidateAccess(currentProjectId());
+                else if (scopeIsCurrent(run.scope)) {
+                    setBusy(false); renderBoard(); paintBatchResult(run);
+                    for (const id of ['projects-batch-status', 'projects-batch-section']) { const control = document.getElementById(id); if (control) control.value = ''; }
+                }
+            }
+        }
         async function executeBatchStatus(newStatus) {
+            if (presentationV2) return executeV2Batch('status', newStatus);
             if (!newStatus || !selectedTaskIds.length || !canWrite()) return;
             const mutationScope = captureScope();
             const taskIdsToUpdate = [...selectedTaskIds];
@@ -303,6 +670,7 @@
             }
         }
         async function executeBatchSection(targetSectionId) {
+            if (presentationV2) return executeV2Batch('move', targetSectionId);
             if (!targetSectionId || !selectedTaskIds.length || !canWrite()) return;
             const mutationScope = captureScope();
             let resolvedTargetId = optimisticSectionIdMap.get(targetSectionId) || targetSectionId;
@@ -344,7 +712,37 @@
                             boardRevision.structureRevision = Math.max(structureRevision(), Number(updatedStructure));
                         }
                         if (movedTask) {
-                            tasks.set(id, { ...t, ...movedTask });
+                            const oldParentId = t.parentTaskId;
+                            if (oldParentId) {
+                                const oldParent = taskFor(oldParentId);
+                                if (oldParent && Number(oldParent.activeChildCount) > 0) oldParent.activeChildCount -= 1;
+                            }
+                            const updatedEffectiveSection = resolvedTargetId;
+                            const updatedTask = {
+                                ...t,
+                                ...movedTask,
+                                sectionId: resolvedTargetId,
+                                effectiveSectionId: updatedEffectiveSection,
+                                parentTaskId: null,
+                                ancestorIds: [],
+                                pathIds: [id]
+                            };
+                            tasks.set(id, updatedTask);
+                            const updateDescendants = (parentId, parentPath) => {
+                                for (const [childId, child] of tasks.entries()) {
+                                    if (child.parentTaskId === parentId) {
+                                        const childPath = [...parentPath, childId];
+                                        tasks.set(childId, {
+                                            ...child,
+                                            effectiveSectionId: updatedEffectiveSection,
+                                            ancestorIds: parentPath,
+                                            pathIds: childPath
+                                        });
+                                        updateDescendants(childId, childPath);
+                                    }
+                                }
+                            };
+                            updateDescendants(id, [id]);
                             invalidateHierarchy();
                         }
                         successCount++;
@@ -373,6 +771,7 @@
             }
         }
         async function executeBatchDelete() {
+            if (presentationV2) return executeV2Batch('archive');
             if (!selectedTaskIds.length || !canWrite()) return;
             if (!window.confirm(`Archive ${selectedTaskIds.length} selected task${selectedTaskIds.length === 1 ? '' : 's'}?`)) return;
             const mutationScope = captureScope();
@@ -401,16 +800,24 @@
         }
         let cachedContextTasks = null;
         let contextTasksVersion = -1;
+        let contextTasksSource = null;
+        let contextTasksEpoch = -1;
         function contextSnapshot() {
             if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) { if (project || tasks.size) invalidateAccess(currentProjectId()); resetColumnForm(); selectedTaskIds = []; stateModel?.setSelectedTaskIds?.([]); }
-            if (contextTasksVersion !== tasksVersion || !cachedContextTasks) {
+            // Loads replace the task map before publishing authority, and that
+            // publication can precede renderBoard's hierarchy invalidation.
+            // Never pair a new project's identity with the previous map's cache.
+            if (contextTasksSource !== tasks || contextTasksEpoch !== projectEpoch || contextTasksVersion !== tasksVersion || !cachedContextTasks) {
                 cachedContextTasks = new Map(tasks);
                 contextTasksVersion = tasksVersion;
+                contextTasksSource = tasks;
+                contextTasksEpoch = projectEpoch;
             }
-            return { project, actorUid: controllerActorUid, authorityPending, authorizationReady: !authorityPending && hasProject() && !refreshRequested(), filterOptionsReady: !!project && !busy && !authorityPending, authorityRevision, membership, members: members.slice(), sections: sections.slice(), columns: columns.slice(), tasks: cachedContextTasks, selectedTaskId, selectedTaskIds: selectedTaskIds.slice() };
+            return { project, actorUid: controllerActorUid, authorityPending, authorizationReady: !authorityPending && hasProject() && !refreshRequested(), filterOptionsReady: !!project && !busy && !authorityPending, authorityRevision, membership, members: members.slice(), sections: sections.slice(), columns: columns.slice(), tasks: cachedContextTasks, selectedTaskId, selectedTaskIds: selectedTaskIds.slice(), filters: { ...sharedFilters }, mutationPending: [...pending.keys()].some(key => { const [id, epoch] = JSON.parse(key); return id === currentProjectId() && epoch === projectEpoch; }) };
         }
 
         function syncTaskCreation() {
+            paintLegacyCreationRecovery();
             const pending = !!taskCreateOperation && scopeIsCurrent(taskCreateOperation.scope);
             const button = elements.projectsBoardAddTask;
             if (!button) return;
@@ -437,10 +844,54 @@
             syncSectionForm();
             if (columnEditor && (!scopeIsCurrent(columnEditor.scope) || (!busy && !canSchema()))) resetColumnForm();
             syncColumnForm();
-            deps.onContextChanged?.(contextSnapshot());
+            publishContext();
+        }
+
+        let suspendedTableEdit = null;
+        function clearSuspendedTableEdit() {
+            if (!suspendedTableEdit) return;
+            document.removeEventListener('focusin', suspendedTableEdit.onFocus, true);
+            document.removeEventListener('pointerdown', clearSuspendedTableEdit, true);
+            suspendedTableEdit = null;
+        }
+        function currentSuspendedTableEdit() {
+            const edit = suspendedTableEdit;
+            if (edit && (!scopeIsCurrent(edit.scope) || edit.filterGeneration !== filterGeneration
+                || !canRenderTaskEditor() || !edit.active.isConnected)) clearSuspendedTableEdit();
+            return suspendedTableEdit;
+        }
+        // Views owns the stale-projection fence; Board owns its native editor.
+        // Hiding an ancestor blurs Chrome's active input before the async loader
+        // can snapshot it. Retain only a dirty editor across that temporary fence.
+        function setTableVisibility(hidden, { preserveFocus = false } = {}) {
+            const table = elements.projectsBoardTableWrap;
+            if (!table) return;
+            if (!preserveFocus) clearSuspendedTableEdit();
+            if (hidden && preserveFocus && !table.hidden && !currentSuspendedTableEdit()) {
+                const active = document.activeElement;
+                const taskId = active?.closest?.('[data-task-id]')?.dataset.taskId;
+                const kind = active?.dataset?.fieldKind;
+                const field = kind === 'value' ? `value:${active.dataset.columnId}` : kind;
+                if (table.contains(active) && active?.classList?.contains('crm-board-field')
+                    && taskId && field && drafts.has(draftKeyFor(taskId, field)) && canRenderTaskEditor()) {
+                    const edit = { active, view: snapshotView(), scope: captureScope(), filterGeneration,
+                        onFocus: event => { if (event.target !== active) clearSuspendedTableEdit(); } };
+                    suspendedTableEdit = edit;
+                    document.addEventListener('focusin', edit.onFocus, true);
+                    document.addEventListener('pointerdown', clearSuspendedTableEdit, true);
+                }
+            }
+            table.hidden = hidden;
+            const edit = currentSuspendedTableEdit();
+            if (!hidden && edit && !busy && canWrite()) {
+                clearSuspendedTableEdit();
+                if (!edit.active.disabled && !edit.active.readOnly) restoreView(edit.view);
+            }
         }
 
         function snapshotView() {
+            const suspended = currentSuspendedTableEdit();
+            if (suspended) return suspended.view;
             const scrollTop = elements.projectsBoardScroll?.scrollTop || 0;
             const scrollLeft = elements.projectsBoardScroll?.scrollLeft || 0;
             const active = document.activeElement;
@@ -451,11 +902,14 @@
                 scrollTop,
                 scrollLeft,
                 externalFocus: !!active && active !== document.body && !row && !taskRow && !sectionRow && !Object.entries(elements).some(([name, element]) => name.startsWith('projectsBoard') && element && (element === active || element.contains?.(active))),
+                detailFocus: presentationV2 && !!active?.closest?.('#projects-board-detail'),
                 activeId: row?.dataset?.rowId || focusedRowId,
                 controlId: active?.id || '',
                 taskId: taskRow?.dataset?.taskId || '',
                 sectionId: sectionRow?.dataset?.sectionId || '',
                 fieldKind: active?.dataset?.fieldKind || '',
+                action: typeof presentationV2 !== 'undefined' && presentationV2 ? active?.dataset?.action || '' : '',
+                columnKey: active?.closest?.('[data-column-key]')?.dataset?.columnKey || '',
                 selectionControl: active?.dataset?.action === 'select-task',
                 columnId: active?.dataset?.columnId || '',
                 selectionStart: typeof active?.selectionStart === 'number' ? active.selectionStart : null,
@@ -466,41 +920,48 @@
 
         function restoreView(view) {
             if (!view) return;
+            if (view.taskId && !view.detailFocus && elements.projectsBoardTableWrap?.hidden) return;
             const safeCss = (val) => (typeof CSS !== 'undefined' && typeof CSS.escape === 'function')
                 ? CSS.escape(val)
                 : (typeof cssEscape === 'function' ? cssEscape(val) : String(val ?? '').replace(/["\\]/g, '\\$&'));
             if (elements.projectsBoardScroll) elements.projectsBoardScroll.scrollTop = view.scrollTop || 0;
             if (elements.projectsBoardScroll) elements.projectsBoardScroll.scrollLeft = view.scrollLeft || 0;
             if (view.externalFocus) return;
+            if (view.detailFocus && !elements.projectsBoardDetail?.open) return;
+            const focusHost = view.detailFocus ? elements.projectsBoardDetailBody : elements.projectsBoardRows;
             let target = view.controlId ? document.getElementById(view.controlId) : null;
+            if (presentationV2 && target?.closest?.('#projects-board-detail') && elements.projectsBoardDetail?.hidden) return;
+            if (!target && view.taskId && view.action) target = focusHost?.querySelector(`[data-task-id="${safeCss(view.taskId)}"] ${view.columnKey ? `[data-column-key="${safeCss(view.columnKey)}"] ` : ''}[data-action="${safeCss(view.action)}"]`);
             if (!target && view.taskId && view.selectionControl) {
-                target = elements.projectsBoardRows?.querySelector(`[data-task-id="${safeCss(view.taskId)}"] [data-action="select-task"]`) || null;
+                target = focusHost?.querySelector(`[data-task-id="${safeCss(view.taskId)}"] [data-action="select-task"]`) || null;
             }
             if (!target && view.taskId && view.fieldKind) {
-                const row = elements.projectsBoardRows?.querySelector(`[data-task-id="${safeCss(view.taskId)}"]`);
+                const row = focusHost?.querySelector(`[data-task-id="${safeCss(view.taskId)}"]`);
                 target = row?.querySelector(`[data-field-kind="${safeCss(view.fieldKind)}"]${view.columnId ? `[data-column-id="${safeCss(view.columnId)}"]` : ''}`) || null;
             }
             if (!target && view.sectionId && view.fieldKind) {
-                const row = elements.projectsBoardRows?.querySelector(`[data-section-id="${safeCss(view.sectionId)}"]`);
+                const row = focusHost?.querySelector(`[data-section-id="${safeCss(view.sectionId)}"]`);
                 target = row?.querySelector(`[data-field-kind="${safeCss(view.fieldKind)}"]`) || null;
             }
             if (target) {
-                target.focus?.();
+                target.focus?.({ preventScroll: true });
                 if (view.selectionStart !== null && typeof target.setSelectionRange === 'function') {
                     try { target.setSelectionRange(view.selectionStart, view.selectionEnd ?? view.selectionStart, view.selectionDirection || 'none'); } catch (_) { /* select range is optional */ }
                 }
                 return;
             }
-            if (view.activeId) elements.projectsBoardRows?.querySelector(`[data-row-id="${safeCss(view.activeId)}"]`)?.focus?.();
+            if (view.activeId) focusHost?.querySelector(`[data-row-id="${safeCss(view.activeId)}"]`)?.focus?.();
         }
 
         function invalidateAccess(deniedProjectId, notifyViews = true) {
             if (String(deniedProjectId || '') !== currentProjectId()) return;
-            closePeoplePicker(); closeStatusPicker();
+            clearQuickCreation();
+            closePeoplePicker(); closeStatusPicker(); closeRowEditor(false); renameSession = null;
             remoteObserver?.stop(); draftBases.clear();
             projectEpoch++; refreshSequence++; authorityPending = true;
             stateModel?.switchProject('');
             selection = { projects: selection.projects.filter((entry) => String(entry.id) !== String(deniedProjectId)), selectedProjectId: '', selectedProject: null };
+            resetFieldFeedback();
             project = null; membership = null; members = []; sections = []; columns = []; tasks = new Map();
             invalidateHierarchy();
             selectedTaskId = ''; selectedTaskIds = []; focusedRowId = ''; logicalRows = [];
@@ -518,7 +979,8 @@
                 if (elements[name]) { elements[name].value = ''; elements[name].disabled = true; }
             }
             if (elements.projectsBoardWorkspace) elements.projectsBoardWorkspace.hidden = true;
-            if (elements.projectsBoardDetail) elements.projectsBoardDetail.hidden = true;
+            if (presentationV2) clearDetailPresentation();
+            else if (elements.projectsBoardDetail) elements.projectsBoardDetail.hidden = true;
             globalScope.CrmProjectsRecovery?.setSelection(null);
             globalScope.CrmProjectsDiscussion?.setSelection(null);
             deps.onTaskSelection?.(null);
@@ -532,7 +994,10 @@
             const nextId = String(Object.prototype.hasOwnProperty.call(nextSelection, 'selectedProjectId') ? (nextSelection.selectedProjectId || '') : (nextProjects[0]?.id || '')).trim();
             const changed = nextId !== currentProjectId();
             if (changed) {
-                closePeoplePicker(); closeStatusPicker();
+                projectionTaskIds.clear();
+                if (presentationV2) clearDetailPresentation();
+                clearQuickCreation();
+                closePeoplePicker(); closeStatusPicker(); closeRowEditor(false); renameSession = null;
                 remoteObserver?.stop(); draftBases.clear();
                 selectedTaskIds = [];
                 sharedFilters = {};
@@ -552,6 +1017,7 @@
                 selectedProjectId: nextId,
                 selectedProject: nextSelection.selectedProject || nextProjects.find((entry) => String(entry.id) === nextId) || null
             };
+            if (changed) resetFieldFeedback();
             if (columnEditor && selection.selectedProject?.role && selection.selectedProject.role !== 'Owner') resetColumnForm();
             renderProjectPicker();
             if (!nextId) {
@@ -569,7 +1035,7 @@
                 }
                 renderDetail(); resetSectionForm();
                 renderEmptyState();
-                deps.onContextChanged?.(contextSnapshot());
+                publishContext();
                 return;
             }
             if (changed || !project) loadProject(nextId);
@@ -608,7 +1074,7 @@
             const queryGeneration = filterGeneration, queryFilters = { ...sharedFilters };
             const response = await apiFetchJson(queryPath(projectId, parentTaskId, cursor, queryFilters));
             if (queryGeneration !== filterGeneration || loadSequence !== refreshSequence || projectId !== currentProjectId() || !scopeIsCurrent(scope) || scope.uid !== controllerActorUid) return null;
-            asArray(response?.tasks).forEach((task) => tasks.set(String(task.id), { ...task }));
+            asArray(response?.tasks).forEach((task) => { tasks.set(String(task.id), { ...task }); projectionTaskIds.delete(String(task.id)); });
             if (Array.isArray(response?.sections)) sections = response.sections.slice().sort(rankCompare);
             if (Array.isArray(response?.columns)) columns = response.columns.slice().sort(rankCompare);
             boardRevision.structureRevision = Number(response?.revision?.structureRevision ?? boardRevision.structureRevision);
@@ -616,6 +1082,7 @@
             loadedBranches.add(key);
             branchCursors.set(key, response?.nextCursor || null);
             branchHasMore.set(key, !!response?.nextCursor);
+            invalidateHierarchy();
             return response;
         }
 
@@ -623,7 +1090,7 @@
             const projectId = currentProjectId();
             if (!projectId || busy) return false;
             if (remoteObserver && !fenced) return remoteObserver.snapshot(projectId, () => loadBranch(parentTaskId, { append, render, fenced: true }));
-            const loadSequence = refreshSequence;
+            const loadSequence = refreshSequence, scope = captureScope();
             const key = parentTaskId || '__root__';
             const cursor = append ? branchCursors.get(key) : null;
             if (append && !cursor) return false;
@@ -633,7 +1100,7 @@
                 if (render) renderBoard();
                 return true;
             } catch (error) {
-                if (loadSequence === refreshSequence) {
+                if (loadSequence === refreshSequence && scopeIsCurrent(scope)) {
                     if ([401, 403, 404].includes(Number(error?.status))) invalidateAccess(projectId);
                     else setStatus(error?.message || 'Tasks could not be loaded.', 'error');
                 }
@@ -729,6 +1196,7 @@
             }
             let successMessage = null;
             let publishView = null;
+            let hasPartialFailure = false;
             const read = async (url) => {
                 try { return await apiFetchJson(url); }
                 catch (error) {
@@ -749,6 +1217,7 @@
                 }
                 // Publish a downgrade immediately, even while the task GET is held.
                 const previousRole = role();
+                if (presentationV2 && (previousRole !== nextMembership.role || (nextProject.lifecycle || 'active') !== 'active')) clearDetailPresentation();
                 membership = nextMembership;
                 if (previousRole !== nextMembership.role) renderBoard();
                 if ((nextProject.lifecycle || 'active') !== 'active') setSelectedTaskIds([]);
@@ -767,6 +1236,7 @@
                                 setStatus(`Some tasks could not be loaded: ${pageError.message || 'connection error'}. Refresh to retry.`, 'warning');
                                 const key = parentTaskId || '__root__';
                                 nextLoaded.add(key); nextCursors.set(key, cursor); nextMore.set(key, true);
+                                hasPartialFailure = true;
                                 return true;
                             }
                             throw pageError;
@@ -783,9 +1253,14 @@
                             project = nextProject;
                             membership = nextMembership;
                             members = asArray(memberResponse?.people);
-                            tasks = new Map(nextTasks);
+                            if (preserve) {
+                                nextTasks.forEach((t, k) => tasks.set(k, t));
+                            } else {
+                                tasks = new Map(nextTasks);
+                            }
                             sections = nextSections;
                             columns = nextColumns;
+                            authorityPending = false;
                             invalidateHierarchy();
                             renderBoard();
                         }
@@ -808,11 +1283,23 @@
                     }
                 }
                 if (!current()) return false;
+                const retainedId = selectedTaskId;
+                let retainedTask = null;
+                if (preserve && Object.keys(loadFilters).length && retainedId && !nextTasks.has(retainedId) && (nextProject.lifecycle || 'active') === 'active') {
+                    try {
+                        const result = await apiFetchJson(`/api/projects/${encodeURIComponent(normalized)}/tasks/${encodeURIComponent(retainedId)}`);
+                        if (result?.task?.id === retainedId && Number.isSafeInteger(result.task.revision) && (result.task.effectiveLifecycle || result.task.lifecycle || 'active') === 'active') retainedTask = result.task;
+                    } catch (error) {
+                        if (current() && [401, 403].includes(Number(error.status))) { invalidateAccess(normalized); return false; }
+                        if (Number(error.status) !== 404) throw error;
+                    }
+                    if (!current()) return false;
+                }
                 publishView = preserve ? snapshotView() : null;
                 // An absent task is only known removed when its parent branch was
                 // fully reloaded without filters. Unloaded descendants retain intent.
                 const previousTasks = tasks;
-                const removed = new Set(Object.keys(loadFilters).length ? [] : [...previousTasks]
+                const removed = new Set(Object.keys(loadFilters).length || hasPartialFailure ? [] : [...previousTasks]
                     .filter(([id, task]) => nextLoaded.has(task.parentTaskId || '__root__') && !nextTasks.has(id)).map(([id]) => id));
                 expanded = new Set([...expanded].filter(id => {
                     const seen = new Set();
@@ -823,16 +1310,30 @@
                     return true;
                 }));
                 project = nextProject; membership = nextMembership; members = asArray(memberResponse?.people);
-                tasks = nextTasks; sections = nextSections; columns = nextColumns;
+                if (preserve && hasPartialFailure) {
+                    const merged = new Map(previousTasks);
+                    nextTasks.forEach((t, k) => merged.set(k, t));
+                    tasks = merged;
+                } else {
+                    tasks = nextTasks;
+                }
+                invalidateHierarchy();
+                sections = nextSections; columns = nextColumns;
+                projectionTaskIds.clear();
+                if (retainedTask && selectedTaskId === retainedId) { tasks.set(retainedId, retainedTask); projectionTaskIds.add(retainedId); }
                 loadedBranches = nextLoaded; branchCursors = nextCursors; branchHasMore = nextMore;
                 boardRevision.structureRevision = nextStructure; boardRevision.schemaRevision = nextSchema;
                 if (!tasks.has(selectedTaskId)) selectedTaskId = '';
                 authorityPending = false;
                 setSelectedTaskIds(selectedTaskIds);
                 authorityRevision += 1;
-                successMessage = (project.lifecycle || 'active') === 'active'
-                    ? ''
-                    : `Project is ${project.lifecycle}. Use project records and recovery to restore it.`;
+                if (hasPartialFailure) {
+                    successMessage = null;
+                } else {
+                    successMessage = (project.lifecycle || 'active') === 'active'
+                        ? ''
+                        : `Project is ${project.lifecycle}. Use project records and recovery to restore it.`;
+                }
                 return true;
             } catch (error) {
                 if (!current()) return false;
@@ -843,7 +1344,7 @@
                     const view = publishView || (preserve ? snapshotView() : null);
                     setBusy(false);
                     if (project) { renderBoard(); restoreView(view); }
-                    if (successMessage !== null) setStatus(successMessage);
+                    if (successMessage !== null && !hasPartialFailure) setStatus(successMessage);
                 }
             }
         }
@@ -878,6 +1379,7 @@
             childrenByParent = new Map();
             const activeRoots = [];
             for (const task of tasks.values()) {
+                if (projectionTaskIds.has(String(task.id))) continue;
                 const lifecycle = task.effectiveLifecycle || task.lifecycle || 'active';
                 if (lifecycle !== 'active') continue;
                 const parentId = task.parentTaskId ? String(task.parentTaskId) : null;
@@ -922,7 +1424,7 @@
         function childrenOf(parentTaskId) {
             ensureHierarchy();
             const parent = parentTaskId ? String(parentTaskId) : null;
-            return childrenByParent.get(parent) || [];
+            return (childrenByParent.get(parent) || []).map(task => taskFor(task.id) || task);
         }
 
         let currentGroupBy = 'section';
@@ -957,12 +1459,14 @@
         }
 
         function rootsForSection(sectionId) {
-            return rootsForGroup(sectionId);
+            if (!presentationV2) return rootsForGroup(sectionId);
+            return [...tasks.values()].filter(task => !projectionTaskIds.has(String(task.id)) && !task.parentTaskId && (task.effectiveLifecycle || task.lifecycle || 'active') === 'active' && String(task.effectiveSectionId || task.sectionId) === String(sectionId)).sort(rankCompare);
         }
 
         function hasPotentialChildren(task) {
             const key = String(task.id);
             if (childrenOf(key).length) return true;
+            if (presentationV2 && loadedBranches.has(key) && branchHasMore.get(key) !== true) return false;
             if (Number.isInteger(Number(task.activeChildCount))) return Number(task.activeChildCount) > 0;
             return !loadedBranches.has(key) || branchHasMore.get(key) === true;
         }
@@ -971,6 +1475,8 @@
             ensureHierarchy();
             const rows = [];
             const appendTask = (task, depth) => {
+                // Hierarchy caches ordering; ordinary edits replace canonical records.
+                task = taskFor(task.id) || task;
                 rows.push({ kind: 'task', id: `task:${String(task.id)}`, task, depth });
                 if (!expanded.has(String(task.id))) return;
                 (childrenByParent.get(String(task.id)) || []).forEach((child) => appendTask(child, depth + 1));
@@ -981,6 +1487,7 @@
                 if (!collapsedSections.has(String(group.id))) {
                     const groupRoots = rootsForGroup(group.id);
                     groupRoots.forEach((task) => appendTask(task, 0));
+                    if (presentationV2 && currentGroupBy === 'section') rows.push({ kind: 'summary', id: `create:${group.id}`, sectionId: group.id, depth: 0 });
                 }
             });
             rowIndexById.clear();
@@ -1002,12 +1509,15 @@
             return PRIORITY_KEYS.map((key) => `<option value="${key}"${current === key ? ' selected' : ''}>${escape(PRIORITY_LABELS[key])}</option>`).join('');
         }
         function memberOptions(current, multiple = false) {
-            const selected = multiple ? new Set(asArray(current)) : new Set(current ? [current] : []);
+            const selected = multiple ? new Set(Array.isArray(current) ? current : current ? [current] : []) : new Set(current ? [current] : []);
             const options = [`<option value="">${multiple ? 'No additional assignees' : 'Unassigned'}</option>`];
             members.forEach((person) => {
                 const uid = String(person.uid || '');
                 if (!uid) return;
                 options.push(`<option value="${escape(uid)}"${selected.has(uid) ? ' selected' : ''}>${escape(person.displayName || person.email || uid)}</option>`);
+            });
+            if (presentationV2) selected.forEach(uid => {
+                if (uid && !members.some(person => String(person.uid) === String(uid))) options.push(`<option value="${escape(uid)}" selected>${escape(uid)} (unavailable)</option>`);
             });
             return options.join('');
         }
@@ -1063,7 +1573,7 @@
         function memberName(uid) {
             if (!uid) return '';
             const person = members.find((entry) => String(entry.uid) === String(uid));
-            return asText(person?.displayName || person?.email || uid);
+            return asText(person?.displayName || person?.email || (presentationV2 ? `${uid} (unavailable)` : uid));
         }
 
         function taskGroupColor(task) {
@@ -1106,6 +1616,7 @@
             const value = drafts.has(draftKey) ? drafts.get(draftKey) : raw;
             const disabled = canWrite() && !busy && !movePending.has(pendingKey(task.id)) ? '' : ' disabled';
             const label = escape(column.label || column.id);
+            if (presentationV2 && !columnModel.supported(column.type)) return `<span class="crm-board-unavailable" aria-label="${label}: unavailable column type">${escape(value == null ? '—' : typeof value === 'object' ? JSON.stringify(value) : value)} (unavailable)</span>`;
             const unavailable = column.type === 'dropdown' && value && !asArray(column.options).some(option => option.key === value);
             const rollup = column.type === 'number' && task.derived?.columnSums?.[column.id] && task.derived.activeLeafCount > 1 ? task.derived.columnSums[column.id] : null;
             const sumBadge = rollup ? `<span class="crm-board-sum-badge" title="Sum: ${rollup.sum} (Avg: ${rollup.average}, Count: ${rollup.count})">&Sigma; ${rollup.sum}</span>` : '';
@@ -1113,6 +1624,7 @@
             if (column.type === 'status') return statusPillMarkup(value, column.statusLabels || {}, disabled, 'value', column.id);
             if (column.type === 'priority') return `<select class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" data-value="${escape(value || 'none')}" aria-label="${label}"${disabled}>${priorityOptions(value || 'none')}</select>`;
             if (column.type === 'dropdown') return `<select class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" aria-label="${label}"${disabled}><option value="">Clear</option>${unavailable ? `<option value="${escape(value)}" selected disabled>${escape(value)} (unavailable)</option>` : ''}${asArray(column.options).map((option) => `<option value="${escape(option.key)}"${value === option.key ? ' selected' : ''}>${escape(option.label || option.key)}</option>`).join('')}</select>`;
+            if (presentationV2 && column.type === 'people') return `<button type="button" class="crm-people-trigger" data-action="pick-people" data-people-kind="value" aria-label="${label}: ${escape((Array.isArray(value) ? value : value ? [value] : []).map(memberName).join(', ') || 'Add people')}"${disabled}>${escape((Array.isArray(value) ? value : value ? [value] : []).map(memberName).join(', ') || 'Add people')}</button><select multiple class="crm-board-field crm-board-people-field" data-field-kind="value" data-column-id="${escape(column.id)}" aria-label="${label}"${disabled}>${memberOptions(value, true)}</select>`;
             if (column.type === 'people') return `<select multiple class="crm-board-field crm-board-people-field" data-field-kind="value" data-column-id="${escape(column.id)}" aria-label="${label}"${disabled}>${memberOptions(value, true)}</select>`;
             const inputType = column.type === 'number' ? 'number' : (column.type === 'date' ? 'date' : 'text');
             const inputValue = Array.isArray(value) ? value.join(', ') : (value ?? '');
@@ -1144,33 +1656,36 @@
             const depth = Math.min(4, Math.max(0, Number(row.depth) || 0));
             const indent = depth * 22;
             const treeElbow = depth > 0 ? '<span class="crm-board-tree-elbow" aria-hidden="true"></span>' : '';
-            const depthChip = depth > 0 ? `<span class="crm-board-depth-chip" title="Subtask Level ${depth}">L${depth}</span>` : '';
+            const depthChip = !presentationV2 && depth > 0 ? `<span class="crm-board-depth-chip" title="Subtask Level ${depth}">L${depth}</span>` : '';
             const status = drafts.get(draftKeyFor(task.id, 'status')) ?? task.status ?? 'not_started';
             const hasKids = hasPotentialChildren(task);
             const isExp = expanded.has(String(task.id));
             const expander = hasKids
                 ? `<button type="button" class="crm-board-expander" data-action="toggle-task" aria-label="${isExp ? 'Collapse' : 'Expand'} ${escape(title)}" aria-expanded="${isExp ? 'true' : 'false'}">${isExp ? '▾' : '▸'}</button>`
-                : `<button type="button" class="crm-board-expander is-leaf" data-action="add-subtask" aria-label="Add subtask to ${escape(title)}" title="Add subtask (Ctrl+N)">▸</button>`;
-            const selectionCheckbox = selectableTask(task) ? `<input type="checkbox" data-action="select-task" aria-label="Select ${escape(title)}"${selectedTaskIds.includes(String(task.id)) ? ' checked' : ''}>` : '';
+                : presentationV2 ? '<span class="crm-board-leaf-space" aria-hidden="true"></span>' : `<button type="button" class="crm-board-expander is-leaf" data-action="add-subtask" aria-label="Add subtask to ${escape(title)}" title="Add subtask (Ctrl+N)">▸</button>`;
+            const selectionInput = `<input type="checkbox" data-action="select-task" aria-label="Select ${escape(title)}"${selectedTaskIds.includes(String(task.id)) ? ' checked' : ''}>`;
+            const selectionCheckbox = selectableTask(task) ? (presentationV2 ? `<label class="crm-board-selection-hit">${selectionInput}</label>` : selectionInput) : '';
             const inputState = (authorityPending || busy) && canRenderTaskEditor() ? ' readonly' : disabled;
-            const titleCell = canRenderTaskEditor()
-                ? `<input class="crm-board-title-input crm-board-field" data-field-kind="title" type="text" value="${escape(title)}" aria-label="Task title"${inputState}>`
+            const titleCell = presentationV2 && renameSession?.taskId !== String(task.id)
+                ? `<button type="button" class="crm-board-title-button" data-action="open-detail" aria-label="Open task: ${escape(title)}">${escape(title)}</button>`
+                : canRenderTaskEditor()
+                ? `<input class="crm-board-title-input crm-board-field" data-field-kind="title" type="text" value="${escape(title)}" aria-label="Task title"${inputState}>${presentationV2 ? `<button type="button" data-action="save-rename" aria-label="Save task name"${disabled}>✓</button><button type="button" data-action="cancel-rename" aria-label="Cancel rename">×</button>` : ''}`
                 : `<span class="crm-board-title-text">${escape(title)}</span>`;
-            const dState = dueState(task);
+            const dState = presentationV2 ? 'none' : dueState(task);
             const relDue = relativeDue(dueDate);
             const dueBadge = relDue && dState !== 'none' && dState !== 'normal' ? `<span class="crm-board-due-badge crm-board-due-${dState}">${escape(relDue)}</span>` : '';
-            const workingDays = computeWorkingDays(startDate, dueDate);
+            const workingDays = presentationV2 ? null : computeWorkingDays(startDate, dueDate);
             // Two date inputs plus two badges do not fit a 238px cell. The due state is
             // the actionable signal, so duration yields to it and stays available as a title.
             const durationBadge = workingDays !== null && !dueBadge ? `<span class="crm-board-duration-badge" title="${workingDays} working days">${workingDays}d</span>` : '';
             const optClass = task.isOptimistic ? ' is-optimistic' : '';
-            return `<div class="crm-projects-board-row${selected ? ' is-selected' : ''}${isPending ? ' is-pending' : ''}${optClass}" role="row" tabindex="0"${canWrite() ? ' aria-keyshortcuts="Alt+ArrowRight Alt+ArrowLeft" aria-description="Alt+Right indents; Alt+Left outdents. Tab navigates controls."' : ''} draggable="${canWrite() && !busy && !movePending.has(pendingKey(task.id)) ? 'true' : 'false'}" data-row-kind="task" data-row-id="${escape(row.id)}" data-task-id="${escape(task.id)}" data-depth="${depth}" aria-selected="${selected ? 'true' : 'false'}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${taskGroupColor(task)}">
-              <div class="crm-projects-board-cell crm-projects-board-task-title" role="cell" style="padding-left:${10 + indent}px">${treeElbow}${depthChip}${task.contextOnly ? '<span class="crm-projects-context">Context</span>' : ''}${selectionCheckbox}${expander}<button type="button" class="crm-board-drag-handle" data-action="drag-handle" aria-label="Move ${escape(title)}">⠿</button>${derivedRing(task)}${titleCell}<button type="button" class="crm-board-add-subtask" data-action="add-subtask" title="Add subtask (Ctrl+N)" aria-label="Add subtask to ${escape(title)}"${disabled}>+</button><button type="button" class="crm-board-detail-button" data-action="open-detail" aria-label="Open details and discussion for ${escape(title)}">&#8599;</button></div>
-              <div class="crm-projects-board-cell crm-board-status-cell" role="cell" data-status="${escape(status)}">${statusBatteryBar(task)}${statusPillMarkup(status, project?.statusLabels || {}, disabled, 'status')}</div>
-              <div class="crm-projects-board-cell crm-board-owner-cell" role="cell"><button type="button" class="crm-people-trigger" data-action="pick-people" data-people-kind="ownerUid" aria-haspopup="listbox" aria-label="Change accountable owner for ${escape(title)}"${disabled}><span class="crm-board-owner-avatar" aria-hidden="true">${escape(ownerInitials(ownerUid))}</span><span class="crm-people-trigger-name">${escape(memberName(ownerUid) || 'Assign')}</span></button><select class="crm-board-field" data-field-kind="ownerUid" aria-label="Accountable owner"${disabled}>${memberOptions(ownerUid)}</select></div>
-              <div class="crm-projects-board-cell crm-board-assignees-cell" role="cell"><button type="button" class="crm-people-trigger is-stack" data-action="pick-people" data-people-kind="assigneeUids" aria-haspopup="listbox" aria-label="Change assignees for ${escape(title)}"${disabled}>${peopleStack(assignees) || '<span class="crm-people-trigger-name">Assign</span>'}</button><select multiple class="crm-board-field crm-board-people-field" data-field-kind="assigneeUids" aria-label="Additional assignees"${disabled}>${memberOptions(assignees, true)}</select></div>
-              <div class="crm-projects-board-cell crm-board-date-cell" role="cell" data-due-state="${dState}">${dueBadge}${durationBadge}${dateControl('startDate', startDate, disabled)}${dateControl('dueDate', dueDate, disabled)}</div>
-              ${columns.map((column) => `<div class="crm-projects-board-cell" role="cell">${customCell(task, column)}</div>`).join('')}
+            return `<div class="crm-projects-board-row${selected ? ' is-selected' : ''}${isPending ? ' is-pending' : ''}${optClass}" role="row" tabindex="0"${canWrite() ? ' aria-keyshortcuts="Alt+ArrowRight Alt+ArrowLeft" aria-description="Alt+Right indents; Alt+Left outdents. Tab navigates controls."' : ''} draggable="${canWrite() && !busy && !movePending.has(pendingKey(task.id)) && (!presentationV2 || currentGroupBy === 'section' && !sharedFilters.sort) ? 'true' : 'false'}" data-row-kind="task" data-row-id="${escape(row.id)}" data-task-id="${escape(task.id)}" data-depth="${presentationV2 ? Math.max(0, Number(row.depth) || 0) : depth}" aria-selected="${selected ? 'true' : 'false'}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${taskGroupColor(task)}">
+              <div class="crm-projects-board-cell crm-projects-board-task-title" role="cell" data-column-key="taskTitle" style="padding-left:${10 + indent}px">${treeElbow}${depthChip}${task.contextOnly ? '<span class="crm-projects-context">Context</span>' : ''}${selectionCheckbox}${expander}<button type="button" class="crm-board-drag-handle" data-action="drag-handle" aria-label="Move ${escape(title)}">⠿</button>${presentationV2 ? '' : derivedRing(task)}${titleCell}<button type="button" class="crm-board-add-subtask" data-action="add-subtask" title="Add subtask (Ctrl+N)" aria-label="Add subtask to ${escape(title)}"${disabled}>+</button>${presentationV2 ? `<button type="button" class="crm-board-task-menu" data-action="task-menu" aria-label="More actions for ${escape(title)}" aria-haspopup="dialog"${disabled}>⋯</button>${branchLoading.has(String(task.id)) ? '<span class="crm-branch-status" role="status">Loading subtasks…</span>' : isExp && branchHasMore.get(String(task.id)) ? '<button type="button" data-action="load-subtasks">Load more subtasks</button>' : ''}` : `<button type="button" class="crm-board-detail-button" data-action="open-detail" aria-label="Open details and discussion for ${escape(title)}">&#8599;</button>`}</div>
+              <div class="crm-projects-board-cell crm-board-status-cell" role="cell" data-column-key="status" data-status="${escape(status)}">${statusBatteryBar(task)}${statusPillMarkup(status, project?.statusLabels || {}, disabled, 'status')}</div>
+              <div class="crm-projects-board-cell crm-board-owner-cell" role="cell" data-column-key="ownerUid"><button type="button" class="crm-people-trigger" data-action="pick-people" data-people-kind="ownerUid" aria-haspopup="listbox" aria-label="Change accountable owner for ${escape(title)}${presentationV2 ? `: ${escape(memberName(ownerUid) || 'Unassigned')}` : ''}"${disabled}><span class="crm-board-owner-avatar" aria-hidden="true">${escape(ownerInitials(ownerUid))}</span><span class="crm-people-trigger-name">${escape(memberName(ownerUid) || (presentationV2 ? 'Unassigned' : 'Assign'))}</span></button><select class="crm-board-field" data-field-kind="ownerUid" aria-label="Accountable owner"${disabled}>${memberOptions(ownerUid)}</select></div>
+              <div class="crm-projects-board-cell crm-board-assignees-cell" role="cell" data-column-key="assigneeUids"><button type="button" class="crm-people-trigger is-stack" data-action="pick-people" data-people-kind="assigneeUids" aria-haspopup="listbox" aria-label="${presentationV2 ? `Collaborators for ${escape(title)}: ${escape(asArray(assignees).map(memberName).join(', ') || 'Add collaborators')}` : `Change assignees for ${escape(title)}`}"${disabled}>${peopleStack(assignees) || `<span class="crm-people-trigger-name">${presentationV2 ? 'Add collaborators' : 'Assign'}</span>`}</button><select multiple class="crm-board-field crm-board-people-field" data-field-kind="assigneeUids" aria-label="Additional assignees"${disabled}>${memberOptions(assignees, true)}</select></div>
+              <div class="crm-projects-board-cell crm-board-date-cell" role="cell" data-column-key="dates" data-due-state="${dState}">${presentationV2 ? `<button type="button" class="crm-board-date-trigger" data-action="edit-dates" aria-haspopup="dialog" aria-label="Edit dates for ${escape(title)}"${disabled}>${escape(startDate || 'No start')} → ${escape(dueDate || 'No due')}</button><span class="crm-working-days">Working days not confirmed</span>` : `${dueBadge}${durationBadge}${dateControl('startDate', startDate, disabled)}${dateControl('dueDate', dueDate, disabled)}`}</div>
+              ${columns.map((column) => `<div class="crm-projects-board-cell" role="cell" data-column-key="custom:${escape(column.id)}" data-column-id="${escape(column.id)}">${customCell(task, column)}</div>`).join('')}
             </div>`;
         }
 
@@ -1185,6 +1700,8 @@
         }
 
         function sectionSummaryRowMarkup(row) {
+            if (presentationV2) return `<div class="crm-projects-board-row crm-quick-footer" role="row" data-row-kind="summary" data-row-id="${escape(row.id)}" data-section-id="${escape(row.sectionId)}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px">${visibleColumns.map(column => `<div class="crm-projects-board-cell" role="cell" data-column-key="${escape(column.key)}">${column.key === 'taskTitle' ? `<button type="button" data-action="quick-task"${canWrite() && !busy ? '' : ' disabled'}>Add a task…</button>` : ''}</div>`).join('')}</div>`;
+
             const groupTasks = Array.from(tasks.values()).filter((t) => {
                 if ((t.effectiveLifecycle || t.lifecycle || 'active') !== 'active') return false;
                 if (currentGroupBy === 'status') return (t.status || 'not_started') === row.sectionId;
@@ -1211,12 +1728,12 @@
                 }
             });
             return `<div class="crm-projects-board-row crm-board-summary-row" role="row" tabindex="-1" data-row-kind="summary" data-row-id="${escape(row.id)}" data-section-id="${escape(row.sectionId)}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${groupColor(row.sectionId)}">
-              <div class="crm-projects-board-cell crm-board-summary-title" role="cell"><span class="crm-board-summary-tag">SUMMARY</span> <span class="crm-muted">${totalCount} task${totalCount === 1 ? '' : 's'}</span></div>
-              <div class="crm-projects-board-cell crm-board-summary-cell" role="cell"><span class="crm-board-summary-stat">${doneCount}/${totalCount} done (${totalCount ? Math.round((doneCount / totalCount) * 100) : 0}%)</span></div>
-              <div class="crm-projects-board-cell crm-board-summary-cell" role="cell"><span class="crm-board-summary-stat">${owners.size} owner${owners.size === 1 ? '' : 's'}</span></div>
-              <div class="crm-projects-board-cell crm-board-summary-cell" role="cell"></div>
-              <div class="crm-projects-board-cell crm-board-summary-cell" role="cell"></div>
-              ${columns.map((col) => `<div class="crm-projects-board-cell crm-board-summary-cell" role="cell">${numericSums[col.id] !== undefined ? `<span class="crm-board-sum-badge">&Sigma; ${numericSums[col.id]}</span>` : ''}</div>`).join('')}
+              <div class="crm-projects-board-cell crm-board-summary-title" role="cell" data-column-key="taskTitle"><span class="crm-board-summary-tag">SUMMARY</span> <span class="crm-muted">${totalCount} task${totalCount === 1 ? '' : 's'}</span></div>
+              <div class="crm-projects-board-cell crm-board-summary-cell" role="cell" data-column-key="status"><span class="crm-board-summary-stat">${doneCount}/${totalCount} done (${totalCount ? Math.round((doneCount / totalCount) * 100) : 0}%)</span></div>
+              <div class="crm-projects-board-cell crm-board-summary-cell" role="cell" data-column-key="ownerUid"><span class="crm-board-summary-stat">${owners.size} owner${owners.size === 1 ? '' : 's'}</span></div>
+              <div class="crm-projects-board-cell crm-board-summary-cell" role="cell" data-column-key="assigneeUids"></div>
+              <div class="crm-projects-board-cell crm-board-summary-cell" role="cell" data-column-key="dates"></div>
+              ${columns.map((col) => `<div class="crm-projects-board-cell crm-board-summary-cell" role="cell" data-column-key="custom:${escape(col.id)}" data-column-id="${escape(col.id)}">${numericSums[col.id] !== undefined ? `<span class="crm-board-sum-badge">&Sigma; ${numericSums[col.id]}</span>` : ''}</div>`).join('')}
             </div>`;
         }
 
@@ -1224,6 +1741,21 @@
         function renderHeader() {
             if (!elements.projectsBoardHeader) return;
             const schema = canSchema();
+            if (presentationV2 && tableLayout) {
+                visibleColumns = tableLayout.resolve(columns, currentProjectId());
+                const layout = columnModel.geometry(visibleColumns);
+                elements.projectsBoardTable.style.setProperty('--crm-project-grid-template', layout.template);
+                elements.projectsBoardTable.style.minWidth = `${layout.minimumWidth}px`;
+                elements.projectsBoardTable.setAttribute('aria-colcount', String(visibleColumns.length));
+                elements.projectsBoardHeader.setAttribute('aria-rowindex', '1');
+                const signature = JSON.stringify([currentProjectId(), schema, busy, visibleColumns.map(c => [c.key,c.label,c.readonly])]);
+                if (signature !== renderedHeaderSignature) {
+                    renderedHeaderSignature = signature;
+                    elements.projectsBoardHeader.innerHTML = visibleColumns.map((c, i) => `<div role="columnheader" data-column-key="${escape(c.key)}" aria-colindex="${i + 1}"${c.source ? ` data-column-id="${escape(c.source.id)}"${schema && !busy ? ' draggable="true"' : ''}` : ''}><span class="crm-projects-board-column-label" title="${escape(c.label)}">${escape(c.label)}</span>${c.source && schema ? `<button type="button" data-action="edit-column" data-column-id="${escape(c.source.id)}" aria-label="Edit column ${escape(c.label)}"${busy ? ' disabled' : ''}>Edit column</button>` : ''}<span role="separator" tabindex="0" aria-orientation="vertical" aria-label="Resize ${escape(c.label)}" aria-valuemin="${c.min}" aria-valuemax="${c.max}" data-column-resize="${escape(c.key)}"></span></div>`).join('');
+                }
+                elements.projectsBoardHeader.querySelectorAll('[data-column-resize]').forEach(handle => { const c = visibleColumns.find(c => c.key === handle.dataset.columnResize); handle.setAttribute('aria-valuenow', String(c.width)); handle.setAttribute('aria-valuetext', `${c.width} pixels`); });
+                return;
+            }
             const sig = `${currentProjectId()}:${schema}:${busy}:${columns.map((c) => `${c.id}:${c.label || c.id}`).join('|')}`;
             if (renderedHeaderSignature === sig && elements.projectsBoardHeader.innerHTML !== '') return;
             renderedHeaderSignature = sig;
@@ -1252,7 +1784,20 @@
         function createRowNode(row) {
             const template = document.createElement('template');
             template.innerHTML = rowMarkup(row).trim();
-            return template.content.firstElementChild;
+            const node = template.content.firstElementChild;
+            if (presentationV2 && node) {
+                node.querySelectorAll('.crm-board-field[data-column-id]').forEach(control => { control.dataset.columnType = columns.find(c => String(c.id) === control.dataset.columnId)?.type || ''; });
+                node.setAttribute('aria-rowindex', String(row.index + 2));
+                if (row.kind !== 'section') {
+                    const cells = new Map(Array.from(node.children).map(cell => [cell.dataset.columnKey, cell]));
+                    const rowColumns = mobileList && row.kind === 'task' ? [...['taskTitle', 'ownerUid', 'status'].map(key => ({ key })), ...visibleColumns.filter(c => !['taskTitle', 'ownerUid', 'status'].includes(c.key))] : visibleColumns;
+                    node.replaceChildren(...rowColumns.map((c, index) => { const cell = cells.get(c.key); cell.setAttribute('aria-colindex', String(index + 1)); return cell; }));
+                } else {
+                    if (node.children[1]) { node.firstElementChild.append(...node.children[1].childNodes); node.children[1].remove(); }
+                    node.firstElementChild.setAttribute('aria-colspan', String(visibleColumns.length));
+                }
+            }
+            return node;
         }
 
         function taskFieldValue(task, control) {
@@ -1291,7 +1836,8 @@
             const compatible = currentControl.tagName === freshControl.tagName
                 && currentControl.type === freshControl.type
                 && (currentControl.dataset.fieldKind || '') === (freshControl.dataset.fieldKind || '')
-                && (currentControl.dataset.columnId || '') === (freshControl.dataset.columnId || '');
+                && (currentControl.dataset.columnId || '') === (freshControl.dataset.columnId || '')
+                && (!presentationV2 || currentControl.dataset.columnType === freshControl.dataset.columnType);
             if (compatible && currentControl.tagName === 'INPUT') currentControl.readOnly = freshControl.readOnly;
             return compatible;
         }
@@ -1301,7 +1847,7 @@
                 .filter((className) => node.classList.contains(className));
             node.className = fresh.className;
             transientClasses.forEach((className) => node.classList.add(className));
-            ['role', 'tabindex', 'draggable', 'aria-selected', 'data-row-kind', 'data-row-id', 'data-task-id', 'data-section-id'].forEach((attribute) => {
+            ['role', 'tabindex', 'draggable', 'aria-selected', 'aria-rowindex', 'data-row-kind', 'data-row-id', 'data-task-id', 'data-section-id'].forEach((attribute) => {
                 if (fresh.hasAttribute(attribute)) node.setAttribute(attribute, fresh.getAttribute(attribute));
                 else node.removeAttribute(attribute);
             });
@@ -1310,22 +1856,24 @@
         function syncSelectionCheckbox(node, fresh) {
             const current = node.querySelector('[data-action="select-task"]');
             const next = fresh.querySelector('[data-action="select-task"]');
-            if (current && !next) current.remove();
-            else if (!current && next) node.querySelector('.crm-projects-board-task-title')?.prepend(next.cloneNode(true));
+            if (current && !next) (current.closest('.crm-board-selection-hit') || current).remove();
+            else if (!current && next) node.querySelector('.crm-projects-board-task-title')?.prepend((next.closest('.crm-board-selection-hit') || next).cloneNode(true));
             else if (current && next) { current.checked = next.checked; current.setAttribute('aria-label', next.getAttribute('aria-label')); }
         }
         function syncFocusedSelectionCell(cell, freshCell, checkbox, action = 'select-task') {
             const nextCheckbox = freshCell?.querySelector(`[data-action="${action}"]`);
             if (!cell || !nextCheckbox || !cell.contains(checkbox)) return false;
+            const retained = checkbox.closest('.crm-board-selection-hit') || checkbox;
+            const replacement = nextCheckbox.closest('.crm-board-selection-hit') || nextCheckbox;
             // Keep the focused action attached. Refresh its surroundings so
             // current permissions and remote titles never retain stale editors.
-            for (const child of Array.from(cell.childNodes)) if (child !== checkbox) child.remove();
+            for (const child of Array.from(cell.childNodes)) if (child !== retained) child.remove();
             for (const attribute of Array.from(cell.attributes)) if (!freshCell.hasAttribute(attribute.name)) cell.removeAttribute(attribute.name);
             for (const attribute of Array.from(freshCell.attributes)) cell.setAttribute(attribute.name, attribute.value);
             let beforeCheckbox = true;
             for (const child of Array.from(freshCell.childNodes)) {
-                if (child === nextCheckbox) { beforeCheckbox = false; continue; }
-                if (beforeCheckbox) cell.insertBefore(child, checkbox);
+                if (child === replacement) { beforeCheckbox = false; continue; }
+                if (beforeCheckbox) cell.insertBefore(child, retained);
                 else cell.appendChild(child);
             }
             return true;
@@ -1371,7 +1919,7 @@
             syncRowMetadata(node, fresh);
             node.style.setProperty('--crm-project-group-color', row.kind === 'section' ? groupColor(row.section.id) : (row.kind === 'summary' ? groupColor(row.sectionId) : taskGroupColor(row.task)));
             // Refresh decoration without replacing a focused native editor.
-            for (const selector of ['.crm-board-status-cell', '[data-field-kind="status"]', '.crm-board-status-pill']) {
+            for (const selector of (presentationV2 ? [] : ['.crm-board-status-cell', '[data-field-kind="status"]', '.crm-board-status-pill'])) {
                 const current = node.querySelector(selector), next = fresh.querySelector(selector);
                 if (current && next) {
                     current.setAttribute('data-status', next.getAttribute('data-status'));
@@ -1384,21 +1932,25 @@
                 }
             }
             const avatar = node.querySelector('.crm-board-owner-avatar');
-            if (avatar) avatar.textContent = fresh.querySelector('.crm-board-owner-avatar')?.textContent || '—';
+            if (avatar && !presentationV2) avatar.textContent = fresh.querySelector('.crm-board-owner-avatar')?.textContent || '—';
             syncSelectionCheckbox(node, fresh);
-            if (interactionPinned && activeElement?.dataset?.action !== 'select-task') {
+            if (interactionPinned && !presentationV2 && activeElement?.dataset?.action !== 'select-task') {
                 syncPinnedExpander(node, fresh);
                 return;
             }
             const focusedCell = (activeElement?.classList?.contains('crm-board-field') || ['select-task', 'toggle-section', 'open-detail', 'pick-status', 'pick-people'].includes(activeElement?.dataset?.action))
-                ? activeElement.closest?.('[role="cell"]')
+                ? activeElement.closest?.('[data-column-key], [role="cell"]')
                 : null;
             const cells = Array.from(node.children);
             const freshCells = Array.from(fresh.children || []);
+            const keyed = presentationV2 && row.kind !== 'section';
+            const cellsByKey = new Map(cells.map(cell => [cell.dataset?.columnKey, cell]));
             const cellCount = Math.max(cells.length, freshCells.length);
             for (let index = 0; index < cellCount; index += 1) {
-                const cell = cells[index];
                 const freshCell = freshCells[index];
+                const cell = keyed ? cellsByKey.get(freshCell?.dataset?.columnKey) : cells[index];
+                if (keyed && cell && freshCell) cell.setAttribute('aria-colindex', freshCell.getAttribute('aria-colindex'));
+                if (keyed && interactionPinned && cell && freshCell) continue;
                 if (cell && cell === focusedCell && ['toggle-section', 'open-detail', 'pick-status', 'pick-people'].includes(activeElement?.dataset?.action)) {
                     const action = activeElement.dataset.action;
                     const next = freshCell?.querySelector(`[data-action="${action}"]`);
@@ -1411,8 +1963,10 @@
                             const nxtText = next.querySelector('.crm-board-status-text');
                             if (curText && nxtText) curText.textContent = nxtText.textContent;
                         } else {
-                            activeElement.textContent = next.textContent;
+                            if (presentationV2) activeElement.innerHTML = next.innerHTML;
+                            else activeElement.textContent = next.textContent;
                         }
+                        if (presentationV2) activeElement.disabled = next.disabled;
                         if (syncFocusedSelectionCell(cell, freshCell, activeElement, action)) continue;
                     }
                 }
@@ -1422,11 +1976,19 @@
                 else if (freshCell) node.appendChild(freshCell);
                 else if (cell) cell.remove();
             }
+            if (keyed) {
+                const keys = new Set(freshCells.map(cell => cell.dataset.columnKey));
+                Array.from(node.children).forEach(cell => { if (!keys.has(cell.dataset.columnKey)) cell.remove(); });
+                const ordered = new Map(Array.from(node.children).map(cell => [cell.dataset.columnKey, cell]));
+                freshCells.forEach((cell, index) => { const target = ordered.get(cell.dataset.columnKey); if (node.children[index] !== target) node.insertBefore(target, node.children[index] || null); });
+                if (focusedCell && node.contains(activeElement) && document.activeElement !== activeElement && !elements.projectsBoardTableWrap?.hidden) activeElement.focus({ preventScroll: true });
+            }
             syncFocusedControl(node, row);
         }
 
         if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
             document.addEventListener('pointerdown', (event) => {
+                if (presentationV2 && rowEditor && !rowEditor.node.contains(event.target) && !rowEditor.trigger?.contains(event.target) && !event.target.closest?.('.crm-datepick')) closeRowEditor(false);
                 if (peoplePopover && !peoplePopover.contains(event.target) && !event.target.closest?.('[data-action="pick-people"]')) {
                     closePeoplePicker();
                 }
@@ -1436,26 +1998,43 @@
             }, true);
         }
 
+        let renderedRowHeight = ROW_HEIGHT, renderedProject = '';
         function renderVirtualRows({ viewportOnly = false, focusRowId = '' } = {}) {
             if (!elements.projectsBoardRows || !elements.projectsBoardScroll) return;
             // Scroll only changes which current rows are mounted. Data, schema,
             // permissions and selection always use the default full render.
             if (!viewportOnly) {
+                const oldPosition = (elements.projectsBoardScroll.scrollTop || 0) / renderedRowHeight;
+                const anchor = presentationV2 && !mobileList && renderedProject === currentProjectId() ? logicalRows[Math.floor(oldPosition)]?.id : null;
                 logicalRows = flattenRows().map((row, index) => ({ ...row, index }));
+                if (mobileProject !== currentProjectId()) { mobileProject = currentProjectId(); mobileLimit = 50; }
                 const totalHeight = logicalRows.length * ROW_HEIGHT;
                 elements.projectsBoardRows.style.height = `${Math.max(totalHeight, ROW_HEIGHT)}px`;
-                elements.projectsBoardTable?.setAttribute('aria-rowcount', String(logicalRows.length));
+                if (anchor) { const index = logicalRows.findIndex(row => row.id === anchor); if (index >= 0) elements.projectsBoardScroll.scrollTop = (index + oldPosition % 1) * ROW_HEIGHT; }
+                renderedRowHeight = ROW_HEIGHT; renderedProject = currentProjectId();
+                elements.projectsBoardTable?.setAttribute('aria-rowcount', String(logicalRows.length + (presentationV2 ? 1 : 0)));
+            }
+            reconcileRowEditors();
+            if (mobileList) {
+                const activeId = document.activeElement?.closest('[data-row-id]')?.dataset.rowId;
+                for (const id of [focusRowId || activeId || focusedRowId]) {
+                    const index = logicalRows.findIndex(row => row.id === id);
+                    if (index >= mobileLimit || index >= 0 && index < mobileLimit - MOBILE_WINDOW) mobileLimit = Math.ceil((index + 1) / 50) * 50;
+                }
             }
             const scrollTop = elements.projectsBoardScroll.scrollTop || 0;
-            const viewport = elements.projectsBoardScroll.clientHeight || 420;
-            const first = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
-            const last = Math.min(logicalRows.length, Math.ceil((scrollTop + viewport) / ROW_HEIGHT) + OVERSCAN);
+            const viewport = Math.max(ROW_HEIGHT, (elements.projectsBoardScroll.clientHeight || 420) - (presentationV2 ? elements.projectsBoardHeader?.offsetHeight || 0 : 0));
+            const { first, last } = mobileList ? { first: Math.max(0, mobileLimit - MOBILE_WINDOW), last: Math.min(mobileLimit, logicalRows.length) } : presentationV2 ? columnModel.windowRange(logicalRows.length, ROW_HEIGHT, scrollTop, viewport, 0, OVERSCAN) : {
+                first: Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN),
+                last: Math.min(logicalRows.length, Math.ceil((scrollTop + viewport) / ROW_HEIGHT) + OVERSCAN)
+            };
             const visibleRows = logicalRows.slice(first, last);
-            const activeElement = document.activeElement;
+            const activeElement = currentSuspendedTableEdit()?.active || document.activeElement;
             const activeRow = activeElement?.closest?.('[data-row-id]');
             const activeRowId = activeRow?.dataset?.rowId || '';
             const sourceRowId = dragSourceRowId();
-            const pinnedIds = new Set([activeRowId, sourceRowId, dragHoverTargetRowId, focusRowId].filter(Boolean));
+            const pickerRowId = presentationV2 ? (rowEditor?.taskId || statusContext?.taskId || peopleContext?.taskId) : null;
+            const pinnedIds = new Set([activeRowId, sourceRowId, dragHoverTargetRowId, focusRowId, presentationV2 ? focusedRowId : '', pickerRowId ? `task:${pickerRowId}` : ''].filter(Boolean));
             const pinnedRows = [];
             pinnedIds.forEach((id) => {
                 const idx = typeof rowIndexById !== 'undefined'
@@ -1466,8 +2045,10 @@
                 }
             });
             const desiredRows = visibleRows.concat(pinnedRows);
+            if (presentationV2) desiredRows.sort((a, b) => a.index - b.index);
             if (!desiredRows.length) {
                 elements.projectsBoardRows.innerHTML = '<div class="crm-projects-board-loading">No tasks yet. Add a task to begin.</div>';
+                syncListSemantics();
                 return;
             }
             const desiredIds = new Set(desiredRows.map((row) => String(row.id)));
@@ -1483,16 +2064,45 @@
                     node = createRowNode(row);
                     if (!node) return;
                     elements.projectsBoardRows.appendChild(node);
+                    existing.set(String(row.id), node);
                 } else if (!viewportOnly) {
-                    const interactionPinned = String(row.id) === sourceRowId || String(row.id) === dragHoverTargetRowId;
+                    const interactionPinned = String(row.id) === sourceRowId || String(row.id) === dragHoverTargetRowId || (presentationV2 && String(row.task?.id) === String(pickerRowId));
                     updateExistingRow(node, row, activeElement, interactionPinned);
-                    elements.projectsBoardRows.appendChild(node);
+                    if (!presentationV2) {
+                        const expected = elements.projectsBoardRows.children[desiredRows.indexOf(row)];
+                        if (expected !== node) elements.projectsBoardRows.insertBefore(node, expected || null);
+                    }
                 }
                 if (!node.dataset.crmFocusBound) {
                     node.dataset.crmFocusBound = 'true';
-                    node.addEventListener('focus', () => { focusedRowId = node.dataset.rowId || ''; });
+                    node.addEventListener('focusin', () => { focusedRowId = node.dataset.rowId || ''; rowNavigationStops(); });
                 }
             });
+            if (presentationV2) {
+                const container = elements.projectsBoardRows;
+                // Keep the drag source (or focused row) attached even on engines
+                // without state-preserving moves. Reconcile its siblings around it.
+                const stationary = existing.get(sourceRowId) || activeRow;
+                const start = activeElement?.selectionStart, end = activeElement?.selectionEnd;
+                const direction = activeElement?.selectionDirection;
+                let before = null;
+                for (let index = desiredRows.length - 1; index >= 0; index -= 1) {
+                    const node = existing.get(String(desiredRows[index].id));
+                    if (!node) continue;
+                    if (node !== stationary && node.nextElementSibling !== before) {
+                        if (typeof container.moveBefore === 'function') container.moveBefore(node, before);
+                        else container.insertBefore(node, before);
+                    }
+                    before = node;
+                }
+                // Legacy DOM moves can blur a separate focused row during a drag.
+                // Restore only that same retained control, without moving the viewport.
+                if (activeRow && container.contains(activeElement) && document.activeElement !== activeElement && !elements.projectsBoardTableWrap?.hidden) {
+                    activeElement.focus({ preventScroll: true });
+                    if (typeof start === 'number') activeElement.setSelectionRange(start, end, direction);
+                }
+            }
+            if (presentationV2) { syncListSemantics(); elements.projectsBoardRows.querySelectorAll('[data-task-id]').forEach(row => paintFieldFeedback(row.dataset.taskId, row)); }
         }
 
         // The drawer used to be one long scroll that put dates, dependencies and
@@ -1510,12 +2120,37 @@
             });
         }
 
-        function renderDetail() {
+        function renderDetail(request = {}) {
             const detail = elements.projectsBoardDetail;
-            const task = taskFor(selectedTaskId);
+            if (!detailSurface && globalScope.CrmProjectsDetailSurfaceV2?.hasOwner(detail)) return;
+            // Keyboard/pointer moves select a row without requesting a modal.
+            // Only explicit open actions establish an intent, scoped to the
+            // current project/actor so delayed renders cannot reopen old details.
+            if (request.open) detailOpenIntent = { taskId: String(selectedTaskId), scope: captureScope() };
+            const task = detailOpenIntent && scopeIsCurrent(detailOpenIntent.scope)
+                && detailOpenIntent.taskId === String(selectedTaskId) ? taskFor(selectedTaskId) : null;
+            if (!task) detailOpenIntent = null;
+            if (presentationV2 && detailSurface) {
+                if (!task || String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid || (project?.lifecycle || 'active') !== 'active') { clearDetailPresentation(!!lastDetailTaskId); return; }
+                const changed = String(task.id) !== String(lastDetailTaskId);
+                if (changed) { detailGeneration++; clearRemoteConflictReview(); globalScope.CrmProjectsDiscussion?.setSelection(null); }
+                lastDetailTaskId = String(task.id);
+                if (elements.projectsBoardDetailTitle) elements.projectsBoardDetailTitle.textContent = asText(task.title, 'Task details');
+                renderOverview(task);
+                const discussionContext = { projectId: currentProjectId(), taskId: task.id, taskRevision: Number(task.revision || 0), role: role(), lifecycle: task.effectiveLifecycle || task.lifecycle || 'active' };
+                const nextDiscussionKey = JSON.stringify(discussionContext);
+                if (changed || detailDiscussionKey !== nextDiscussionKey) {
+                    detailDiscussionKey = nextDiscussionKey;
+                    deps.onTaskSelection?.(task);
+                    globalScope.CrmProjectsDiscussion?.setSelection({ ...discussionContext, deferLoad: changed || detailSurface.activeTab() !== 'updates' });
+                }
+                detailSurface.sync(task, request);
+                mountRemoteConflictReview();
+                return;
+            }
             if (task && String(task.id) !== String(lastDetailTaskId)) {
                 lastDetailTaskId = String(task.id);
-                activateDetailTab('updates');
+                activateDetailTab(presentationV2 ? 'details' : 'updates');
             }
             if (!detail || !task) {
                 if (detail) detail.hidden = true;
@@ -1543,6 +2178,10 @@
                 : '';
             if (elements.projectsBoardDetailBody) {
                 elements.projectsBoardDetailBody.innerHTML = `<div class="crm-detail-property-bar"><div class="crm-detail-path-chip" title="Location: ${escape(path)}"><span class="crm-chip-icon">${PJ_ICON.folder}</span> <span class="crm-chip-text">${escape(path)}</span></div><div class="crm-detail-meta-pills"><span class="crm-detail-pill crm-pill-status" data-status="${escape(statusKey)}"><span class="crm-status-dot"></span> <span>${escape(statusLabel)}</span></span>${ownerMarkup}${priorityMarkup}<span class="crm-detail-pill crm-pill-lifecycle crm-lifecycle-${escape(lifecycle)}">${escape(lifecycle)}</span></div></div><details class="crm-detail-tech-drawer"><summary class="crm-detail-tech-summary"><span class="crm-tech-icon">${PJ_ICON.cog}</span> <span>Task info</span></summary><div class="crm-detail-tech-content"><button type="button" class="crm-detail-copy-id" data-copy-id="${escape(task.id)}" title="Click to copy Task ID" aria-label="Copy Task ID"><span class="crm-copy-icon">${PJ_ICON.copy}</span> <span class="crm-id-code">${escape(task.id)}</span> <span class="crm-copy-feedback" aria-live="polite">Copy ID</span></button><dl><dt>Task ID</dt><dd>${escape(task.id)}</dd></dl><dl><dt>Parent path</dt><dd>${escape(path)}</dd></dl><dl><dt>Revision</dt><dd>${escape(task.revision || 0)}</dd></dl><dl><dt>Lifecycle</dt><dd>${escape(lifecycle)}</dd></dl></div></details>`;
+            }
+            if (presentationV2 && canWrite() && elements.projectsBoardDetailBody) {
+                const add = document.createElement('button'); add.type = 'button'; add.textContent = 'Add subtask';
+                add.addEventListener('click', () => { openQuickComposer(task.id); }); elements.projectsBoardDetailBody.append(add);
             }
             const discussion = globalScope.CrmProjectsDiscussion;
             if (discussion && typeof discussion.setSelection === 'function') discussion.setSelection({
@@ -1579,20 +2218,22 @@
             if (elements.projectsBoardAddColumn) elements.projectsBoardAddColumn.disabled = busy || !owner;
         }
 
-        function renderBoard({ focusRowId = '' } = {}) {
-            deps.onContextChanged?.(contextSnapshot());
+        function renderBoard({ focusRowId = '', projectionChanged = false } = {}) {
+            mountRemoteConflictReview();
+            publishContext({ projectionChanged });
             if (!hasProject()) return;
             globalScope.CrmProjectsRecovery?.setSelection({ projectId: currentProjectId(), role: role(), lifecycle: project?.lifecycle || 'active' });
             if (elements.projectsBoardWorkspace) elements.projectsBoardWorkspace.hidden = (project?.lifecycle || 'active') !== 'active';
-            if ((project?.lifecycle || 'active') !== 'active') { globalScope.CrmProjectsDiscussion?.setSelection(null); return; }
+            if ((project?.lifecycle || 'active') !== 'active') { if (presentationV2) clearDetailPresentation(); globalScope.CrmProjectsDiscussion?.setSelection(null); return; }
             if (elements.projectsBoardEmpty) elements.projectsBoardEmpty.hidden = true;
-            invalidateHierarchy();
             renderHeader();
             renderVirtualRows({ focusRowId });
             renderDetail();
             renderSettings();
             syncSectionForm();
+            if (presentationV2 && elements.projectsBoardAddSection && elements.projectsBoardTableWrap) elements.projectsBoardTableWrap.after(elements.projectsBoardAddSection);
             renderBatchDock();
+            if (quickComposer && !canWrite()) { quickComposer.node.remove(); quickComposer = null; composerDrafts.clear(); }
             if (elements.projectsBoardCount) elements.projectsBoardCount.textContent = `${tasks.size} loaded · ${sections.length} section${sections.length === 1 ? '' : 's'}`;
         }
 
@@ -1610,6 +2251,7 @@
             let lastError = null;
             while (attempt <= retries) {
                 try {
+                    if (options.scope && (!scopeIsCurrent(options.scope) || !canWrite() || options.schema && !canSchema())) throw Object.assign(new Error('Project or permission changed before dispatch.'), { status: 403 });
                     if ((authorityPending && path !== '/api/projects') || String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) throw new Error('Refresh project access before making changes.');
                     return await apiFetchJson(path, { method: options.method || 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
                 } catch (error) {
@@ -1623,6 +2265,314 @@
             throw lastError || new Error('The Projects operation failed.');
         }
 
+        function validateRowValue(taskId, kind, value, control) {
+            if (!canWrite() || busy || !taskFor(taskId) || control.disabled || control.readOnly) throw new Error('Editing is unavailable. Refresh project access.');
+            if (kind === 'title') {
+                if (typeof value !== 'string' || !value.trim() || value.length > 200) throw new Error('Enter a task title (up to 200 characters).');
+            } else if (kind === 'status' && !STATUS_KEYS.includes(value)) throw new Error('Choose a supported status.');
+            else if (kind === 'dates') {
+                const range = dateRange(value);
+                if (range.startDate && range.dueDate && (!control.schedulePreview?.token || !control.schedulePreview.canApply)) throw new Error('Preview the date range before applying it.');
+            } else if (['startDate', 'dueDate'].includes(kind)) {
+                dateRange({ startDate: kind === 'startDate' ? value : effectiveField(taskId, 'startDate'), dueDate: kind === 'dueDate' ? value : effectiveField(taskId, 'dueDate') });
+            } else if (kind === 'ownerUid' || kind === 'assigneeUids') {
+                const selected = kind === 'ownerUid' ? value ? [value] : [] : asArray(value);
+                const previous = kind === 'ownerUid' ? [taskFor(taskId).ownerUid] : asArray(taskFor(taskId).assigneeUids);
+                if (selected.some(uid => !members.some(person => person.uid === uid) && !previous.includes(uid))) throw new Error('This person is unavailable.');
+                if (kind === 'assigneeUids' && selected.includes(effectiveField(taskId, 'ownerUid'))) throw new Error('The owner cannot also be a collaborator.');
+            } else if (kind === 'value') {
+                const column = columns.find(item => String(item.id) === String(control.dataset?.columnId));
+                if (!column || !columnModel.supported(column.type) || column.lifecycle === 'archived') throw new Error('This column is unavailable for editing.');
+                if (control.dataset?.columnType && control.dataset.columnType !== column.type) throw new Error('Column type changed. Review the value before editing again.');
+                if (value == null || value === '') return null;
+                if (column.type === 'number' && (typeof value !== 'number' || !Number.isFinite(value))) throw new Error('Enter a finite number.');
+                if (column.type === 'date') dateOnly(value);
+                if (column.type === 'text' && (typeof value !== 'string' || value.length > 5000)) throw new Error('Enter text up to 5000 characters.');
+                if (column.type === 'priority' && !PRIORITY_KEYS.includes(value)) throw new Error('Choose a supported priority.');
+                if (column.type === 'status' && !STATUS_KEYS.includes(value)) throw new Error('Choose a supported status.');
+                if (column.type === 'dropdown' && !asArray(column.options).some(option => option.key === value)) throw new Error('This option is unavailable. Choose an available option or clear it.');
+                if (column.type === 'people' && !Array.isArray(value)) throw new Error('Choose people from the member list.');
+            }
+            return value;
+        }
+
+        function focusRowControl(taskId, selector = '.crm-board-title-button') {
+            const detailRow = elements.projectsBoardDetail?.open && elements.projectsBoardDetailBody?.querySelector(`[data-task-id="${cssEscape(taskId)}"]`);
+            const row = detailRow || elements.projectsBoardRows?.querySelector(`[data-task-id="${cssEscape(taskId)}"]`);
+            (row?.querySelector(selector) || row)?.focus({ preventScroll: true });
+        }
+        function closeRowEditor(restore = true) {
+            if (!rowEditor) return;
+            const old = rowEditor; rowEditor = null; globalScope.CrmProjectsDatePicker?.close(); old.node.remove();
+            if (restore && scopeIsCurrent(old.scope)) { renderVirtualRows(); focusRowControl(old.taskId, old.returnSelector); }
+        }
+        function reconcileRowEditors() {
+            if (!presentationV2) return;
+            if (!canWrite() || busy) { closePeoplePicker(); closeStatusPicker(); closeRowEditor(false); }
+            if (rowEditor && (!scopeIsCurrent(rowEditor.scope) || !taskFor(rowEditor.taskId))) closeRowEditor(false);
+            if (rowEditor?.columnId && columns.find(c => c.id === rowEditor.columnId)?.type !== rowEditor.columnType) closeRowEditor(false);
+            for (const context of [statusContext, peopleContext]) {
+                if (!context) continue;
+                const column = context.columnId && columns.find(c => String(c.id) === String(context.columnId));
+                if (!scopeIsCurrent(context.scope) || !taskFor(context.taskId) || (context.columnId && (!column || column.type !== context.columnType))) {
+                    closePeoplePicker(); closeStatusPicker(); break;
+                }
+            }
+            if (renameSession && (!scopeIsCurrent(renameSession.scope) || !canRenderTaskEditor() || !taskFor(renameSession.taskId))) renameSession = null;
+        }
+        function followRowPicker(node, context) {
+            if (!node || !context?.trigger?.isConnected) return false;
+            const box = context.trigger.getBoundingClientRect(), viewport = elements.projectsBoardScroll.getBoundingClientRect();
+            // Hidden tabs and native viewport transitions can briefly measure zero.
+            if (!box.width || !viewport.width) return true;
+            if (!context.trigger.closest('dialog[open]') && (box.bottom < viewport.top || box.top > viewport.bottom)) return false;
+            const panel = document.querySelector('[data-panel="projects"]');
+            const scale = parseFloat(globalScope.getComputedStyle?.(panel || document.body).zoom) || 1;
+            const width = node.getBoundingClientRect().width || 280, height = node.getBoundingClientRect().height || 260;
+            node.style.left = `${Math.max(8, Math.min(box.left, (globalScope.innerWidth || 1024) - width - 8)) / scale}px`;
+            node.style.top = `${Math.max(8, Math.min(box.bottom + 4, (globalScope.innerHeight || 768) - height - 8)) / scale}px`;
+            return true;
+        }
+        function openRowEditor(taskId, kind, trigger, markup) {
+            closePeoplePicker(); closeRowEditor(false);
+            if (!presentationV2 || !canWrite() || busy || !taskFor(taskId)) return null;
+            const node = document.createElement('div'); node.className = 'crm-row-editor'; node.dataset.rowEditor = kind;
+            node.setAttribute('role', 'dialog'); node.setAttribute('aria-label', `${kind === 'menu' ? 'Task actions' : kind === 'dates' ? 'Edit dates' : 'Move task'}: ${taskFor(taskId).title}`);
+            node.innerHTML = markup + '<button type="button" data-close-editor>Close</button>';
+            (trigger?.closest('dialog[open]') || document.querySelector('[data-panel="projects"]') || document.body).appendChild(node);
+            const box = trigger.getBoundingClientRect();
+            node.style.left = `${Math.max(8, Math.min(box.left, (globalScope.innerWidth || 1024) - 312))}px`;
+            node.style.top = `${Math.max(8, Math.min(box.bottom + 4, (globalScope.innerHeight || 768) - (node.offsetHeight || 260) - 8))}px`;
+            rowEditor = { node, taskId: String(taskId), scope: captureScope(), trigger, returnSelector: `[data-action="${trigger.dataset.action}"]` };
+            node.addEventListener('click', event => { if (event.target.closest('[data-close-editor]')) closeRowEditor(); });
+            node.addEventListener('keydown', event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeRowEditor(); } });
+            node.querySelector('input,select,button')?.focus();
+            return rowEditor;
+        }
+        function beginRename(taskId) {
+            if (!canWrite() || busy || !taskFor(taskId)) return;
+            closePeoplePicker(); closeRowEditor(false);
+            const key = draftKeyFor(taskId, 'title');
+            renameSession = { taskId: String(taskId), scope: captureScope(), hadDraft: drafts.has(key), draft: drafts.get(key), base: draftBases.get(key), version: draftVersions.get(key) };
+            if (!draftBases.has(key)) draftBases.set(key, Number(taskFor(taskId).revision || 0));
+            renderVirtualRows(); focusRowControl(taskId, 'input[data-field-kind="title"]');
+        }
+        function finishRename(control, cancel) {
+            const session = renameSession;
+            if (!session || !scopeIsCurrent(session.scope)) return;
+            const key = draftKeyFor(session.taskId, 'title');
+            if (cancel) {
+                if (session.hadDraft) { drafts.set(key, session.draft); draftBases.set(key, session.base); draftVersions.set(key, session.version); }
+                else { drafts.delete(key); draftBases.delete(key); draftVersions.delete(key); }
+                const version = dirtyField(session.scope, session.taskId, 'title');
+                if (!session.hadDraft) emitFieldSave(session.scope, session.taskId, 'title', version, 'cancelled', { reason: 'edit-cancelled' });
+                renameSession = null; renderVirtualRows(); focusRowControl(session.taskId); return;
+            }
+            // Keep the editor mounted until this exact draft receives its acknowledgement.
+            const value = control.value;
+            if (session.submitting && session.submittedValue === value) return;
+            session.submitting = true; session.submittedValue = value;
+            saveTaskField(session.taskId, 'title', control).then(lineage => {
+                if (session.submittedValue === value) session.submitting = false;
+                if (lineage && renameSession === session && scopeIsCurrent(session.scope) && control.value === value && !drafts.has(key)) {
+                    const wasFocused = document.activeElement === control;
+                    renameSession = null; renderVirtualRows(); if (wasFocused) focusRowControl(session.taskId);
+                }
+            });
+        }
+        function openDateRange(taskId, trigger) {
+            const retained = effectiveField(taskId, 'dates');
+            const range = retained || { startDate: effectiveField(taskId, 'startDate'), dueDate: effectiveField(taskId, 'dueDate') };
+            const editor = openRowEditor(taskId, 'dates', trigger, `<label>Start <input type="date" name="startDate" value="${escape(range.startDate || '')}"></label><label>Due <input type="date" name="dueDate" value="${escape(range.dueDate || '')}"></label><p data-date-result role="status">Working days not confirmed</p><button type="button" data-preview-dates>Preview dates</button><button type="button" data-apply-dates disabled>Apply dates</button><button type="button" data-review-dates>Review saved dates</button><button type="button" data-rebase-dates hidden>Keep my dates</button><button type="button" data-discard-dates hidden>Discard draft</button>`);
+            if (!editor) return;
+            const key = draftKeyFor(taskId, 'dates');
+            if (!draftBases.has(key)) draftBases.set(key, Number(taskFor(taskId).revision || 0));
+            const read = () => ({ startDate: editor.node.querySelector('[name="startDate"]').value || null, dueDate: editor.node.querySelector('[name="dueDate"]').value || null });
+            const message = editor.node.querySelector('[data-date-result]');
+            let generation = 0, preview = null, applying = false, reviewed = null;
+            const current = () => rowEditor === editor && scopeIsCurrent(editor.scope) && canWrite() && !busy;
+            editor.node.addEventListener('input', () => { generation++; preview = null; editor.node.querySelector('[data-apply-dates]').disabled = true; drafts.set(key, read()); draftVersions.set(key, (draftVersions.get(key) || 0) + 1); dirtyField(editor.scope, taskId, 'dates'); message.textContent = 'Preview these dates before applying.'; });
+            editor.node.addEventListener('click', async event => {
+                if (!current() || applying) return;
+                if (event.target.closest('[data-review-dates]')) {
+                    const version = ++generation;
+                    preview = null; reviewed = null;
+                    editor.node.querySelector('[data-apply-dates]').disabled = true;
+                    editor.node.querySelector('[data-rebase-dates]').hidden = true;
+                    editor.node.querySelector('[data-discard-dates]').hidden = true;
+                    message.textContent = 'Loading saved dates… Your draft is retained.';
+                    try {
+                        const response = await apiFetchJson(`/api/projects/${encodeURIComponent(editor.scope.projectId)}/tasks/${encodeURIComponent(taskId)}`);
+                        if (!current() || version !== generation || refreshRequested()) return;
+                        const observed = taskFor(taskId);
+                        const latest = response?.task;
+                        if (String(latest?.id) !== String(taskId) || !Number.isSafeInteger(latest?.revision)) throw new Error('Saved dates could not be confirmed.');
+                        reviewed = Number(observed?.revision) > latest.revision ? observed : latest;
+                        message.textContent = `Saved dates: ${reviewed.startDate || 'No start'} → ${reviewed.dueDate || 'No due'}. Keep your draft against this revision or discard it, then preview again.`;
+                        editor.node.querySelector('[data-rebase-dates]').hidden = false;
+                        editor.node.querySelector('[data-discard-dates]').hidden = false;
+                    } catch (error) { if (current() && version === generation) message.textContent = error.message || 'Review failed. Your draft is retained.'; }
+                } else if (reviewed && (event.target.closest('[data-rebase-dates]') || event.target.closest('[data-discard-dates]'))) {
+                    generation++; preview = null;
+                    editor.node.querySelector('[data-apply-dates]').disabled = true;
+                    if (event.target.closest('[data-discard-dates]')) {
+                        editor.node.querySelector('[name="startDate"]').value = reviewed.startDate || '';
+                        editor.node.querySelector('[name="dueDate"]').value = reviewed.dueDate || '';
+                    }
+                    // Review changes only the draft base. A new preview and explicit Apply are mandatory.
+                    draftBases.set(key, reviewed.revision);
+                    drafts.set(key, read());
+                    draftVersions.set(key, (draftVersions.get(key) || 0) + 1);
+                    dirtyField(editor.scope, taskId, 'dates');
+                    if (reviewed.revision >= Number(taskFor(taskId)?.revision || 0)) {
+                        tasks.set(taskId, { ...taskFor(taskId), ...reviewed }); invalidateHierarchy();
+                    }
+                    reviewed = null;
+                    editor.node.querySelector('[data-rebase-dates]').hidden = true;
+                    editor.node.querySelector('[data-discard-dates]').hidden = true;
+                    message.textContent = 'Draft ready for a new preview. Dates have not been applied.';
+                } else if (event.target.closest('[data-preview-dates]')) {
+                    const version = ++generation; preview = null; reviewed = null;
+                    editor.node.querySelector('[data-rebase-dates]').hidden = true;
+                    editor.node.querySelector('[data-discard-dates]').hidden = true;
+                    editor.node.querySelector('[data-apply-dates]').disabled = true;
+                    try {
+                        const value = dateRange(read()); message.textContent = 'Preparing preview…';
+                        // The calendar API requires two dates. Clearing remains one atomic task command.
+                        if (!value.startDate || !value.dueDate) {
+                            preview = { canApply: true, after: value };
+                            message.textContent = 'Add both dates to preview working days. Apply to save this incomplete range.';
+                            editor.node.querySelector('[data-apply-dates]').disabled = false;
+                            return;
+                        }
+                        const response = await apiFetchJson(`/api/projects/${encodeURIComponent(editor.scope.projectId)}/schedule-preview`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId, expectedRevision: draftBases.get(key), ...value }) });
+                        if (!current() || version !== generation) return;
+                        preview = response?.preview;
+                        if (!preview?.token || preview.taskId !== taskId || JSON.stringify(dateRange(preview.after || {})) !== JSON.stringify(value)) throw new Error('Preview could not be confirmed. Preview again.');
+                        message.textContent = `${Number.isFinite(preview.workingDayCount) ? `${preview.workingDayCount} working days` : 'Working days not confirmed'}${asArray(preview.warnings).length ? ` · ${preview.warnings.map(w => w.message || w.code || 'Calendar warning').join(', ')}` : ''}${preview.canApply ? '' : ' · Resolve calendar configuration before applying.'}`;
+                        editor.node.querySelector('[data-apply-dates]').disabled = !preview.canApply;
+                    } catch (error) { if (current() && version === generation) message.textContent = `${error.message || 'Preview failed.'} Review saved dates to rebase or discard your retained draft.`; }
+                } else if (event.target.closest('[data-apply-dates]') && preview?.canApply) {
+                    const appliedGeneration = generation;
+                    applying = true; editor.node.querySelector('[data-apply-dates]').disabled = true;
+                    const lineage = await saveTaskField(taskId, 'dates', { value: read(), dataset: {}, schedulePreview: preview });
+                    applying = false;
+                    if (!current()) return;
+                    if (lineage && generation === appliedGeneration) closeRowEditor();
+                    else if (lineage) message.textContent = 'Previous dates saved. Preview your current dates before applying.';
+                    else { preview = null; message.textContent = 'Dates were not confirmed. Draft retained. Review saved dates, then preview again.'; }
+                }
+            });
+        }
+        function openMoveEditor(taskId, trigger) {
+            const task = taskFor(taskId);
+            const parents = Array.from(tasks.values()).filter(t => t.id !== taskId && !asArray(t.ancestorIds || t.pathIds).includes(taskId) && (t.lifecycle || 'active') === 'active');
+            const editor = openRowEditor(taskId, 'move', trigger, `<label>Section <select name="sectionId">${sections.map(s => `<option value="${escape(s.id)}"${s.id === (task.effectiveSectionId || task.sectionId) ? ' selected' : ''}>${escape(s.title || s.name)}</option>`).join('')}</select></label><label>Parent (loaded tasks) <select name="parentTaskId"><option value="">Root task</option>${parents.map(t => `<option value="${escape(t.id)}">${escape(t.title)}</option>`).join('')}</select></label><p role="status" data-move-result>Moves to the end of the selected branch.</p><button type="button" data-apply-move>Move task</button>`);
+            if (!editor) return;
+            editor.node.addEventListener('click', async event => {
+                const button = event.target.closest('[data-apply-move]');
+                if (!button || button.disabled || rowEditor !== editor || !scopeIsCurrent(editor.scope) || !canWrite()) return;
+                button.disabled = true;
+                const parentTaskId = editor.node.querySelector('[name="parentTaskId"]').value || null, sectionId = editor.node.querySelector('[name="sectionId"]').value;
+                const index = parentTaskId ? await appendIndexForParent(parentTaskId, editor.scope) : rootsForSection(sectionId).filter(t => t.id !== taskId).length;
+                if (index === null || rowEditor !== editor || !scopeIsCurrent(editor.scope) || !canWrite()) return;
+                closeRowEditor(false); await moveTask(taskId, { parentTaskId, sectionId: parentTaskId ? null : sectionId, index });
+                if (scopeIsCurrent(editor.scope)) focusRowControl(taskId);
+            });
+        }
+        function openCustomField(taskId, column, trigger, source) {
+            const editor = openRowEditor(taskId, 'field', trigger, '<label data-field-label></label><p data-field-result role="status"></p><button type="button" data-save-field>Save field</button>');
+            if (!editor) return;
+            editor.columnId = column.id; editor.columnType = column.type;
+            const control = source.cloneNode(true), label = editor.node.querySelector('[data-field-label]');
+            label.textContent = column.label || column.id; label.appendChild(control); control.focus();
+            const key = draftKeyFor(taskId, `value:${column.id}`);
+            if (!draftBases.has(key)) draftBases.set(key, Number(taskFor(taskId).revision || 0));
+            let generation = 0, saving = false;
+            const current = () => rowEditor === editor && scopeIsCurrent(editor.scope) && canWrite();
+            control.addEventListener('input', () => { generation++; drafts.set(key, fieldValue(control)); draftVersions.set(key, (draftVersions.get(key) || 0) + 1); dirtyField(editor.scope, taskId, `value:${column.id}`); });
+            const save = async () => {
+                if (!current() || saving) return;
+                saving = true; const version = generation; const button = editor.node.querySelector('[data-save-field]'); button.disabled = true;
+                const lineage = await saveTaskField(taskId, 'value', control); saving = false;
+                if (!current()) return;
+                button.disabled = false;
+                if (lineage && version === generation) closeRowEditor();
+                else editor.node.querySelector('[data-field-result]').textContent = lineage ? 'Previous value saved. Current draft is unsaved.' : feedbackStore?.get(taskId, `value:${column.id}`)?.message || 'Value was not confirmed. Your draft is retained.';
+            };
+            editor.node.querySelector('[data-save-field]').addEventListener('click', save);
+            control.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.isComposing && control.tagName === 'INPUT') { event.preventDefault(); save(); } });
+        }
+        function openMenuField(taskId, key) {
+            closeRowEditor(false);
+            const inDetails = mobileList && !['status', 'ownerUid'].includes(key);
+            if (inDetails) { selectedTaskId = taskId; renderDetail({ open: true }); }
+            const host = inDetails ? elements.projectsBoardDetailBody : elements.projectsBoardRows;
+            const row = host?.querySelector(`[data-task-id="${cssEscape(taskId)}"]`);
+            const cell = Array.from(row?.children || []).find(node => node.dataset.columnKey === key);
+            if (!cell || !canWrite()) return;
+            if (key === 'dates') { openDateRange(taskId, cell.querySelector('[data-action="edit-dates"]')); return; }
+            const status = cell.querySelector('[data-action="pick-status"]'), people = cell.querySelector('[data-action="pick-people"]');
+            if (status) { openStatusPicker(status); return; }
+            if (people) { openPeoplePicker(people); return; }
+            const column = columns.find(c => `custom:${c.id}` === key), control = cell.querySelector('.crm-board-field');
+            if (column && control && columnModel.supported(column.type)) openCustomField(taskId, column, control, control);
+        }
+        function handleRowEditorAction(action, row, event) {
+            const taskId = row.dataset.taskId, trigger = event.target.closest('[data-action]');
+            if (['save-rename', 'cancel-rename'].includes(action)) { finishRename(row.querySelector('input[data-field-kind="title"]'), action === 'cancel-rename'); return true; }
+            if (action === 'edit-dates') { openDateRange(taskId, trigger); return true; }
+            if (action === 'load-subtasks') { loadBranch(taskId, { append: true }); return true; }
+            if (action !== 'task-menu') return false;
+            const fieldActions = visibleColumns.filter(column => column.key !== 'taskTitle' && !column.readonly).map(column => `<button type="button" data-edit-field="${escape(column.key)}">Edit ${escape(column.label)}</button>`).join('');
+            const editor = openRowEditor(taskId, 'menu', trigger, '<button type="button" data-rename-task>Rename (F2)</button><button type="button" data-add-child>Add subtask</button><button type="button" data-move-task>Move to…</button>' + fieldActions);
+            editor?.node.addEventListener('click', e => {
+                if (rowEditor !== editor || !scopeIsCurrent(editor.scope) || !canWrite()) return;
+                if (e.target.closest('[data-rename-task]')) beginRename(taskId);
+                else if (e.target.closest('[data-add-child]')) { closeRowEditor(false); openQuickComposer(taskId); }
+                else if (e.target.closest('[data-move-task]')) openMoveEditor(taskId, trigger);
+                else if (e.target.closest('[data-edit-field]')) openMenuField(taskId, e.target.closest('[data-edit-field]').dataset.editField);
+            });
+            return true;
+        }
+        function handleRowEditorKey(event) {
+            if (event.defaultPrevented || event.isComposing) return true;
+            const row = event.target.closest('[data-row-id]');
+            if (!row) return false;
+            if (event.target.matches('input[data-field-kind="title"]') && ['Enter', 'Escape'].includes(event.key)) { event.preventDefault(); event.stopPropagation(); finishRename(event.target, event.key === 'Escape'); return true; }
+            if (event.key === 'F2' && (event.target === row || event.target.matches('.crm-board-title-button'))) { event.preventDefault(); beginRename(row.dataset.taskId); return true; }
+            if (event.target !== row) {
+                if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); focusNavigationRow(row.dataset.rowId); }
+                return true; // Native controls own their editing keys.
+            }
+            if (!event.altKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+                event.preventDefault();
+                if (row.dataset.rowKind === 'section') {
+                    const collapsed = collapsedSections.has(row.dataset.sectionId);
+                    if (collapsed === (event.key === 'ArrowRight')) row.querySelector('[data-action="toggle-section"]')?.click();
+                } else if (mobileList) {
+                    if (event.key === 'ArrowRight') { selectedTaskId = row.dataset.taskId; renderDetail({ open: true }); }
+                } else {
+                    const id = row.dataset.taskId, task = taskFor(id);
+                    if (event.key === 'ArrowRight') {
+                        if (hasPotentialChildren(task || {}) && !expanded.has(id)) toggleTask(id);
+                        else { const child = logicalRows.find(r => r.task?.parentTaskId === id); if (child) focusNavigationRow(child.id); }
+                    } else if (expanded.has(id)) toggleTask(id);
+                    else if (task?.parentTaskId) focusNavigationRow(`task:${task.parentTaskId}`);
+                }
+                return true;
+            }
+            if (event.key === ' ' && row.dataset.taskId) { event.preventDefault(); toggleSelection(row.dataset.taskId); return true; }
+            if (!event.altKey && ['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
+                event.preventDefault(); const navigationRows = availableRows().filter(r => r.kind !== 'summary');
+                const index = navigationRows.findIndex(r => r.id === row.dataset.rowId);
+                const target = navigationRows[event.key === 'Home' ? 0 : event.key === 'End' ? navigationRows.length - 1 : Math.max(0, Math.min(navigationRows.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)))];
+                if (target) focusNavigationRow(target.id);
+                return true;
+            }
+            return false;
+        }
+
         function fieldValue(control) {
             if (!control || typeof control !== 'object') return control ?? null;
             if (control.multiple) return Array.from(control.selectedOptions || []).map((option) => option.value).filter(Boolean);
@@ -1631,14 +2581,25 @@
         }
 
         async function saveTaskField(taskId, kind, control) {
-            if (refreshRequested()) return;
             const ctrl = control && typeof control === 'object' && ('value' in control || control.nodeType) ? control : { value: control, dataset: {} };
-            const value = fieldValue(ctrl);
+            let value = fieldValue(ctrl);
             const mutationScope = captureScope();
             const mutationProjectId = mutationScope.projectId;
             const columnId = ctrl.dataset?.columnId;
             const key = kind === 'value' && columnId ? `value:${columnId}` : kind;
+            const uiEditVersion = dirtyField(mutationScope, taskId, key);
+            if (presentationV2) {
+                try { value = validateRowValue(taskId, kind, value, ctrl); }
+                catch (error) { ctrl.setAttribute?.('aria-invalid', 'true'); emitFieldSave(mutationScope, taskId, key, uiEditVersion, 'error', { message: error.message }); setStatus(error.message, 'error'); return; }
+                ctrl.removeAttribute?.('aria-invalid');
+            }
+            if (refreshRequested()) {
+                emitFieldSave(mutationScope, taskId, key, uiEditVersion, 'cancelled', { reason: 'refresh-pending' });
+                return;
+            }
             const keyForDraft = draftKeyFor(taskId, key);
+            const reviewGeneration = detailGeneration;
+            if (remoteConflictReview?.key === keyForDraft) clearRemoteConflictReview();
             if (!draftBases.has(keyForDraft)) draftBases.set(keyForDraft, Number(taskFor(taskId)?.revision || 0));
             const baseRevision = draftBases.get(keyForDraft);
             drafts.set(keyForDraft, value);
@@ -1654,32 +2615,59 @@
                 return;
             }
             return enqueueTaskMutation(taskId, async (predecessor) => {
-                if (!scopeIsCurrent(mutationScope)) return;
+                if (!scopeIsCurrent(mutationScope)) {
+                    emitFieldSave(mutationScope, taskId, key, uiEditVersion, 'cancelled', { reason: 'scope-changed' });
+                    return;
+                }
                 const task = taskFor(taskId);
-                if (!task || !canWrite()) return;
+                if (!task || !canWrite()) {
+                    emitFieldSave(mutationScope, taskId, key, uiEditVersion, task ? 'error' : 'cancelled', { reason: task ? 'write-unavailable' : 'task-unavailable' });
+                    return;
+                }
                 // Only acknowledgments from this scoped local queue can advance a draft base.
                 // A newer remotely observed task revision must still conflict and be reviewed.
                 const followsLocal = predecessor?.bases?.includes(baseRevision) === true;
                 const expectedRevision = followsLocal ? predecessor.revision : baseRevision;
-                const patch = kind === 'value' && columnId ? { values: { [columnId]: value } } : { [kind]: value };
+                if (presentationV2) {
+                    try { validateRowValue(taskId, kind, value, ctrl); }
+                    catch (error) { emitFieldSave(mutationScope, taskId, key, uiEditVersion, 'error', { message: error.message }); return; }
+                }
+                const patch = kind === 'value' && columnId ? { values: { [columnId]: value } } : kind === 'dates' && presentationV2 ? dateRange(value) : { [kind]: value };
+                if (presentationV2 && kind === 'ownerUid' && value && asArray(task.assigneeUids).includes(value)) patch.assigneeUids = task.assigneeUids.filter(uid => uid !== value);
                 const previous = { ...task, values: { ...(task.values || {}) } };
                 const next = { ...task, ...patch, values: { ...(task.values || {}), ...(patch.values || {}) } };
                 const opId = operationId(`edit-${taskId}`);
                 const operationPendingKey = pendingKeyFor(mutationScope, taskId);
+                const structural = ['parentTaskId', 'sectionId', 'rank', 'lifecycle'].includes(kind) ||
+                    (currentGroupBy === 'status' && kind === 'status') ||
+                    (currentGroupBy === 'ownerUid' && kind === 'ownerUid') ||
+                    (currentGroupBy === 'priority' && (kind === 'priority' || (kind === 'value' && columnId === 'priority')));
                 tasks.set(taskId, next);
-                invalidateHierarchy();
+                if (structural) invalidateHierarchy();
+                else tasksVersion++;
                 pending.set(operationPendingKey, opId);
+                publishContext();
                 const view = snapshotView();
                 renderVirtualRows();
                 try {
-                    const response = await requestMutation(`/api/projects/${encodeURIComponent(mutationProjectId)}/tasks/${encodeURIComponent(taskId)}`, {
-                        operationId: opId, expectedRevision, ...patch
-                    }, { method: 'PATCH' });
-                    if (!scopeIsCurrent(mutationScope)) return;
+                    emitFieldSave(mutationScope, taskId, key, uiEditVersion, 'saving', { operationId: opId });
+                    const response = kind === 'dates' && presentationV2 && ctrl.schedulePreview?.token
+                        ? await requestMutation(`/api/projects/${encodeURIComponent(mutationProjectId)}/schedule-apply`, { operationId: opId, previewToken: ctrl.schedulePreview.token })
+                        : await requestMutation(`/api/projects/${encodeURIComponent(mutationProjectId)}/tasks/${encodeURIComponent(taskId)}`, {
+                            operationId: opId, expectedRevision, ...patch
+                        }, { method: 'PATCH' });
+                    if (!scopeIsCurrent(mutationScope)) {
+                        emitFieldSave(mutationScope, taskId, key, uiEditVersion, 'cancelled', { operationId: opId, reason: 'scope-changed' });
+                        return;
+                    }
                     const saved = response?.task || response?.result?.task;
+                    if (!saved || String(saved.id) !== String(taskId) || !Number.isSafeInteger(saved.revision) || saved.revision <= expectedRevision) {
+                        throw new Error('The save acknowledgement is incomplete. Refresh and review before retrying; your draft is retained.');
+                    }
                     if (taskFor(taskId) && saved && Number(saved.revision) >= Number(taskFor(taskId).revision || 0)) {
                         tasks.set(taskId, { ...taskFor(taskId), ...saved });
-                        invalidateHierarchy();
+                        if (structural) invalidateHierarchy();
+                        else tasksVersion++;
                     }
                     if (draftVersions.get(keyForDraft) === draftVersion) {
                         drafts.delete(keyForDraft);
@@ -1697,46 +2685,66 @@
                         lineage = { revision: saved.revision, bases: [...(followsLocal ? predecessor.bases : []), expectedRevision] };
                     }
                     setStatus('Task saved.');
+                    emitFieldSave(mutationScope, taskId, key, uiEditVersion, 'saved', { operationId: opId });
                     deps.onTaskMutation?.();
                     return lineage;
                 } catch (error) {
-                    if (!scopeIsCurrent(mutationScope)) return;
+                    if (!scopeIsCurrent(mutationScope)) {
+                        emitFieldSave(mutationScope, taskId, key, uiEditVersion, 'cancelled', { operationId: opId, reason: 'scope-changed' });
+                        return;
+                    }
+                    const phase = Number(error?.status) === 409 ? 'conflict' : (!error?.status || Number(error.status) >= 500) ? 'uncertain' : 'error';
+                    emitFieldSave(mutationScope, taskId, key, uiEditVersion, phase, { operationId: opId, message: error.message || 'The change could not be confirmed.' });
                     if (tasks.get(taskId) === next) {
                         tasks.set(taskId, previous);
-                        invalidateHierarchy();
+                        if (structural) invalidateHierarchy();
+                        else tasksVersion++;
                     }
                     setStatus(error?.message || 'Task save failed. Your draft is retained.', 'error');
-                    if (Number(error?.status) === 409 && elements.projectsBoardStatus) {
+                    if (kind !== 'dates' && Number(error?.status) === 409 && elements.projectsBoardStatus && (!presentationV2 || reviewGeneration === detailGeneration)) {
+                        clearRemoteConflictReview();
                         const review = document.createElement('button'); review.type = 'button'; review.className = 'crm-btn-secondary crm-btn-sm'; review.textContent = 'Review and retry'; review.dataset.remoteConflictReview = taskId;
+                        const recovery = { node: review, taskId, key: keyForDraft, scope: mutationScope, generation: reviewGeneration };
+                        remoteConflictReview = recovery;
+                        const current = () => remoteConflictReview === recovery && scopeIsCurrent(mutationScope) && !refreshRequested() && canWrite() && taskFor(taskId) && drafts.has(keyForDraft) && (!presentationV2 || detailGeneration === reviewGeneration);
                         review.addEventListener('click', async () => {
-                            if (refreshRequested()) return;
+                            if (review.disabled || !current()) return;
                             review.disabled = true;
                             try {
                                 const latest = await apiFetchJson(`/api/projects/${encodeURIComponent(mutationProjectId)}/tasks/${encodeURIComponent(taskId)}`);
-                                if (!scopeIsCurrent(mutationScope) || refreshRequested() || !canWrite() || !latest?.task) return;
+                                if (!current()) return;
+                                if (String(latest?.task?.id) !== String(taskId) || !Number.isSafeInteger(latest.task.revision)) throw new Error('The current task could not be verified. Your draft is retained.');
                                 const observed = taskFor(taskId);
                                 const reviewedTask = Number(observed?.revision || 0) > Number(latest.task.revision || 0) ? observed : latest.task;
-                                const currentValue = kind === 'value' ? reviewedTask.values?.[control.dataset.columnId] : reviewedTask[kind];
+                                const currentValue = kind === 'value' ? reviewedTask.values?.[columnId] : reviewedTask[kind];
                                 if (!globalScope.confirm(`Current saved value: ${JSON.stringify(currentValue ?? '')}\n\nSave your retained draft instead?`)) return;
                                 const retained = drafts.get(keyForDraft);
-                                if (retained === undefined) return;
+                                if (retained === undefined || !current()) return;
                                 if (Number(reviewedTask.revision || 0) >= Number(taskFor(taskId)?.revision || 0)) {
                                     tasks.set(taskId, { ...taskFor(taskId), ...reviewedTask });
                                     invalidateHierarchy();
                                 }
                                 draftBases.set(keyForDraft, reviewedTask.revision);
-                                const retryControl = { dataset: { ...control.dataset }, value: retained, type: control.type, multiple: Array.isArray(retained), selectedOptions: Array.isArray(retained) ? retained.map(value => ({ value })) : [] };
+                                const retryControl = { dataset: { ...ctrl.dataset }, value: retained, type: ctrl.type, multiple: Array.isArray(retained), selectedOptions: Array.isArray(retained) ? retained.map(value => ({ value })) : [] };
+                                clearRemoteConflictReview();
                                 await saveTaskField(taskId, kind, retryControl);
                             } catch (failure) { if (scopeIsCurrent(mutationScope)) setStatus(failure.message || 'Review failed. Your draft is retained.', 'error'); }
-                            finally { review.disabled = false; }
+                            finally {
+                                if (current()) review.disabled = false;
+                                else if (remoteConflictReview === recovery) clearRemoteConflictReview();
+                            }
                         });
-                        elements.projectsBoardStatus.append(' ', review);
+                        mountRemoteConflictReview();
                     }
                 } finally {
                     if (pending.get(operationPendingKey) === opId) pending.delete(operationPendingKey);
                     if (scopeIsCurrent(mutationScope)) {
-                        renderBoard();
-                        restoreView(view);
+                        const completionView = presentationV2 ? snapshotView() : view;
+                        if (presentationV2) {
+                            // Field edits do not change schema/settings or section forms.
+                            publishContext(); renderVirtualRows(); renderDetail(); renderBatchDock(); mountRemoteConflictReview();
+                        } else renderBoard();
+                        restoreView(completionView);
                     }
                 }
             });
@@ -1809,14 +2817,17 @@
 
         async function createSection() {
             if (refreshRequested()) return;
-            if (!canSchema() || busy) return;
+            if (!canSchema() || busy || sectionCreatePending || batchRun?.pending || [...creationIntents.values()].some(i => i.phase === 'uncertain')) return;
             const title = String(elements.projectsBoardSectionName?.value || '').trim();
-            if (!title) {
-                setStatus('Enter a section name.', 'error');
+            if (!title || title.length > 200) {
+                setStatus('Enter a section name (up to 200 characters).', 'error');
                 elements.projectsBoardSectionName?.focus();
                 return;
             }
             const scope = captureScope();
+            const intent = sectionIntent || { id: operationId('section-create'), scope, payload: null };
+            sectionIntent = intent; sectionCreatePending = true;
+            syncSectionForm();
             const optId = `opt-sec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
             const targetIndex = sections.length;
             const optSection = {
@@ -1830,21 +2841,25 @@
             };
             sections.push(optSection);
             sections.sort(rankCompare);
-            resetSectionForm();
+            if (!presentationV2) resetSectionForm();
             renderBoard();
 
-            sectionCreateQueue = sectionCreateQueue.catch(() => {}).then(async () => {
-                if (!scopeIsCurrent(scope)) return;
+            sectionCreateQueue = taskCreateQueue = taskCreateQueue.catch(() => {}).then(async () => {
                 try {
-                    const response = await requestMutation(`/api/projects/${encodeURIComponent(scope.projectId)}/sections`, {
-                        operationId: operationId('section-create'),
+                    if (!scopeIsCurrent(scope)) return;
+                    if (!canSchema()) throw Object.assign(new Error('Section permission changed.'), { status: 403 });
+                    intent.payload ||= {
+                        operationId: intent.id,
                         title,
                         index: targetIndex,
                         expectedStructureRevision: structureRevision()
-                    });
+                    };
+                    const response = await requestMutation(`/api/projects/${encodeURIComponent(scope.projectId)}/sections`, intent.payload, { scope, schema: true });
                     if (!scopeIsCurrent(scope)) return;
+                    if (!canSchema()) throw Object.assign(new Error('Section permission changed.'), { status: 403 });
                     const created = response?.section || response?.result?.section;
-                    if (created) {
+                    if (created?.id && Number.isFinite(Number(created.revision))) {
+                        sectionIntent = null; resetSectionForm();
                         optimisticSectionIdMap.set(optId, created.id);
                         const pendingDrafts = {};
                         for (const [key, value] of Array.from(drafts.entries())) {
@@ -1890,17 +2905,28 @@
                         boardRevision.structureRevision = Math.max(structureRevision(), Number(response?.structureRevision ?? response?.result?.structureRevision ?? boardRevision.structureRevision));
                         renderBoard();
 
+                        if (quickTaskAfterSection && scopeIsCurrent(quickTaskAfterSection) && canSchema()) {
+                            quickTaskAfterSection = false;
+                            if (presentationV2) openQuickComposer(null, created.id);
+                            else createTask(null, created.id);
+                        }
+
                         if (pendingDrafts.title && pendingDrafts.title !== created.title) {
                             saveSection(created.id, { value: pendingDrafts.title });
                         }
-                    } else {
-                        sections = sections.filter((s) => s.id !== optId);
-                        renderBoard();
-                    }
+                    } else { throw new Error('Section acknowledgement is unconfirmed. Retry the same creation.'); }
                 } catch (error) {
+                    if (!scopeIsCurrent(scope)) return;
+                    if (error.status && Number(error.status) < 500) sectionIntent = null;
                     sections = sections.filter((s) => s.id !== optId);
                     renderBoard();
-                    if (scopeIsCurrent(scope)) setStatus(error?.message || 'Section could not be created.', 'error');
+                    if (canSchema()) {
+                        if (elements.projectsBoardSectionName) elements.projectsBoardSectionName.value = title;
+                        if (elements.projectsBoardSectionForm) elements.projectsBoardSectionForm.hidden = false;
+                    }
+                    setStatus(error?.message || 'Section could not be created.', 'error');
+                } finally {
+                    if (scopeIsCurrent(scope)) { sectionCreatePending = false; syncSectionForm(); }
                 }
             });
             await sectionCreateQueue;
@@ -1910,21 +2936,38 @@
         let taskCreateQueue = Promise.resolve();
         const optimisticIdMap = new Map();
 
-        async function createTask(parentTaskId = null, explicitSectionId = null) {
+        async function createTask(parentTaskId = null, explicitSectionId = null, options = {}) {
             if (refreshRequested()) return;
-            if (!canWrite()) return;
+            if (!canWrite() || batchRun?.pending || batchRun?.items.some(i => i.phase === 'uncertain')) return;
+            if ([...creationIntents.values()].some(i => i.phase === 'uncertain' && i.id !== options.intentId)) {
+                paintLegacyCreationRecovery();
+                setStatus('Resolve the unconfirmed creation using Retry same creation before adding another task.', 'error');
+                return;
+            }
+            const replay = creationIntents.get(options.intentId)?.payload;
+            const initialTitle = String(replay?.title ?? options.initialTitle ?? 'New task').trim();
+            if (!initialTitle || initialTitle.length > 200) { setStatus('Enter a task title (up to 200 characters).', 'error'); return; }
             const scope = captureScope();
-            const resolvedParentTaskId = parentTaskId ? (optimisticIdMap.get(parentTaskId) || parentTaskId) : null;
-            const rawSectionId = explicitSectionId || (resolvedParentTaskId ? resolveEffectiveSectionId(resolvedParentTaskId) : (resolveEffectiveSectionId(selectedTaskId) || sections[0]?.id));
+            const intentKey = options.intentId || operationId('task-create');
+            let intent = creationIntents.get(intentKey);
+            if (intent && (!scopeIsCurrent(intent.scope) || intent.phase === 'saving')) return;
+            if (!intent) intent = { id: intentKey, scope, phase: 'draft', payload: null, temporaryIds: [] };
+            creationIntents.set(intentKey, intent);
+            const resolvedParentTaskId = replay ? replay.parentTaskId : parentTaskId ? (optimisticIdMap.get(parentTaskId) || parentTaskId) : null;
+            const rawSectionId = replay ? replay.sectionId : resolvedParentTaskId ? resolveEffectiveSectionId(resolvedParentTaskId) : (explicitSectionId || resolveEffectiveSectionId(selectedTaskId) || sections[0]?.id);
             const sectionId = optimisticSectionIdMap.get(rawSectionId) || rawSectionId;
-            if (!sectionId) { showToast('Create a section before adding tasks.', 'error'); return; }
+            // A retained operation must reach the canonical receipt check even if its parent
+            // or section is no longer loaded. Query membership cannot disprove a prior write.
+            if (!replay && (!sectionId || !sections.some(s => String(s.id) === String(sectionId)) || resolvedParentTaskId && !taskFor(resolvedParentTaskId))) { creationIntents.delete(intentKey); showToast('Choose an available parent and real section.', 'error'); return; }
+            creationFeedback(intent, 'saving');
 
             const optId = `opt-task-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+            intent.temporaryIds.push(optId);
             const parent = resolvedParentTaskId ? taskFor(resolvedParentTaskId) : null;
             const optTask = {
                 id: optId,
                 projectId: scope.projectId,
-                title: 'New task',
+                title: initialTitle,
                 status: 'not_started',
                 priority: 'none',
                 parentTaskId: resolvedParentTaskId ? String(resolvedParentTaskId) : null,
@@ -1945,6 +2988,7 @@
             };
 
             tasks.set(optId, optTask);
+            invalidateHierarchy();
             if (resolvedParentTaskId) {
                 expanded.add(String(resolvedParentTaskId));
                 if (parent) parent.activeChildCount = (Number(parent.activeChildCount) || 0) + 1;
@@ -1958,54 +3002,55 @@
             document.addEventListener?.('pointerdown', trackFocus);
             syncTaskCreation();
 
-            renderBoard({ focusRowId: `task:${optId}` });
+            renderBoard({ focusRowId: options.keepComposerFocus ? '' : `task:${optId}` });
             const optRow = elements.projectsBoardRows?.querySelector(`[data-task-id="${cssEscape(optId)}"]`);
-            const titleInput = optRow?.querySelector('[data-field-kind="title"]');
+            const titleInput = options.keepComposerFocus ? null : (optRow?.querySelector('[data-field-kind="title"]') || optRow?.querySelector('.crm-board-title-button') || optRow);
             titleInput?.focus?.();
             titleInput?.select?.();
 
+            const sectionDependency = sectionCreateQueue;
             taskCreateQueue = taskCreateQueue.catch(() => {}).then(async () => {
-                if (!scopeIsCurrent(scope)) return;
-                if (sectionId && (String(sectionId).startsWith('opt-sec-') || sections.some(s => s.id === sectionId && s.isOptimistic))) {
-                    await sectionCreateQueue;
-                    if (!scopeIsCurrent(scope)) return;
-                }
-                const effectiveParentId = resolvedParentTaskId ? (optimisticIdMap.get(resolvedParentTaskId) || resolvedParentTaskId) : null;
-                if (resolvedParentTaskId && String(resolvedParentTaskId).startsWith('opt-task-') && !optimisticIdMap.has(resolvedParentTaskId)) {
-                    tasks.delete(optId);
-                    renderBoard();
-                    setStatus('Subtask could not be created because the parent task failed to save.', 'error');
-                    return;
-                }
-                const targetSectionId = optimisticSectionIdMap.get(sectionId) || sectionId;
-                if (!sections.some(s => String(s.id) === String(targetSectionId))) {
-                    tasks.delete(optId);
-                    renderBoard();
-                    setStatus('Task could not be created because the section failed to save.', 'error');
-                    return;
-                }
-                const targetIndex = effectiveParentId
-                    ? childrenOf(effectiveParentId).filter(t => t.id !== optId).length
-                    : rootsForSection(targetSectionId).filter(t => t.id !== optId).length;
-
                 try {
-                    const response = await requestMutation(`/api/projects/${encodeURIComponent(scope.projectId)}/tasks`, {
-                        operationId: operationId('task-create'),
-                        title: 'New task',
-                        parentTaskId: effectiveParentId || null,
-                        sectionId: targetSectionId,
-                        index: targetIndex,
-                        expectedStructureRevision: structureRevision()
-                    });
                     if (!scopeIsCurrent(scope)) return;
+                    if ([...creationIntents.values()].some(other => other !== intent && other.phase === 'uncertain') || sectionIntent && !sectionCreatePending) throw Object.assign(new Error('Resolve the preceding unconfirmed creation first.'), { status: 409 });
+                    if (!canWrite()) throw Object.assign(new Error('Creation permission changed.'), { status: 403 });
+                    if (sectionId && (String(sectionId).startsWith('opt-sec-') || sections.some(s => s.id === sectionId && s.isOptimistic))) {
+                        await sectionDependency;
+                        if (!scopeIsCurrent(scope)) return;
+                    }
+                    const effectiveParentId = resolvedParentTaskId ? (optimisticIdMap.get(resolvedParentTaskId) || resolvedParentTaskId) : null;
+                    if (!intent.payload && resolvedParentTaskId && String(resolvedParentTaskId).startsWith('opt-task-') && !optimisticIdMap.has(resolvedParentTaskId)) {
+                        tasks.delete(optId);
+                        invalidateHierarchy();
+                        renderBoard();
+                        throw Object.assign(new Error('Parent task failed to save. Subtask text is retained.'), { status: 409 });
+                    }
+                    const targetSectionId = optimisticSectionIdMap.get(sectionId) || sectionId;
+                    if (!intent.payload && !sections.some(s => String(s.id) === String(targetSectionId) && !s.isOptimistic)) {
+                        tasks.delete(optId);
+                        invalidateHierarchy();
+                        renderBoard();
+                        throw Object.assign(new Error('Section failed to save. Task text is retained.'), { status: 409 });
+                    }
+                    const targetIndex = effectiveParentId
+                        ? childrenOf(effectiveParentId).filter(t => t.id !== optId && !t.isOptimistic).length
+                        : rootsForSection(targetSectionId).filter(t => t.id !== optId && !t.isOptimistic).length;
+
+                    if (!canWrite()) throw Object.assign(new Error('Creation is no longer permitted.'), { status: 403 });
+                    intent.payload ||= {
+                        operationId: intentKey, title: initialTitle, parentTaskId: effectiveParentId || null, sectionId: targetSectionId, index: targetIndex, expectedStructureRevision: structureRevision()
+                    };
+                    const response = await requestMutation(`/api/projects/${encodeURIComponent(scope.projectId)}/tasks`, intent.payload, { scope });
+                    if (!scopeIsCurrent(scope)) return;
+                    if (!canWrite()) throw Object.assign(new Error('Creation permission changed.'), { status: 403 });
                     const created = response?.task || response?.result?.task;
                     const activeEl = document.activeElement;
                     const hadFocusInOpt = activeEl && activeEl.closest?.(`[data-task-id="${cssEscape(optId)}"]`);
                     const fieldKind = hadFocusInOpt ? activeEl.getAttribute('data-field-kind') : null;
-                    const shouldFocus = !operation.moved && (hadFocusInOpt || !document.activeElement || document.activeElement === operation.trigger || document.activeElement === document.body);
+                    const shouldFocus = !!hadFocusInOpt || !options.keepComposerFocus && !operation.moved && (!document.activeElement || document.activeElement === operation.trigger || document.activeElement === document.body);
 
-                    if (created) {
-                        optimisticIdMap.set(optId, created.id);
+                    if (created?.id && Number.isFinite(Number(created.revision))) {
+                        for (const temporaryId of intent.temporaryIds) optimisticIdMap.set(temporaryId, created.id);
                         const pendingDrafts = {};
                         for (const [key, value] of Array.from(drafts.entries())) {
                             try {
@@ -2037,17 +3082,36 @@
                             } catch (_) { /* ignore draft key parse error */ }
                         }
 
-                        if (selectedTaskId === optId) selectedTaskId = String(created.id);
+                        if (selectedTaskId === optId) {
+                            selectedTaskId = String(created.id);
+                            if (detailOpenIntent?.taskId === optId && scopeIsCurrent(detailOpenIntent.scope)) {
+                                detailOpenIntent.taskId = String(created.id);
+                            }
+                            detailSurface?.replaceTaskId(optId, created.id);
+                            if (lastDetailTaskId === optId) lastDetailTaskId = String(created.id);
+                        }
                         const selIdx = selectedTaskIds.indexOf(optId);
                         if (selIdx !== -1) selectedTaskIds[selIdx] = String(created.id);
 
+                        if (expanded.delete(optId)) expanded.add(String(created.id));
+                        if (focusedRowId === `task:${optId}`) focusedRowId = `task:${created.id}`;
+                        for (const child of tasks.values()) {
+                            if (intent.temporaryIds.includes(child.parentTaskId)) child.parentTaskId = String(created.id);
+                            if (child.ancestorIds) child.ancestorIds = child.ancestorIds.map(id => intent.temporaryIds.includes(id) ? String(created.id) : id);
+                            if (child.pathIds) child.pathIds = child.pathIds.map(id => intent.temporaryIds.includes(id) ? String(created.id) : id);
+                        }
+                        stateModel?.setSelectedTaskIds?.(selectedTaskIds);
                         tasks.delete(optId);
                         if (!created.effectiveSectionId) created.effectiveSectionId = targetSectionId;
                         tasks.set(String(created.id), created);
+                        invalidateHierarchy();
+                        settleComposerParent(intent.temporaryIds, created, scope);
 
                         boardRevision.structureRevision = Math.max(structureRevision(), Number(response?.structureRevision ?? response?.result?.structureRevision ?? boardRevision.structureRevision));
                         if (effectiveParentId) expanded.add(String(effectiveParentId));
 
+                        creationFeedback(intent, 'saved', { temporaryId: optId, taskId: String(created.id) });
+                        creationIntents.delete(intentKey);
                         renderBoard({ focusRowId: shouldFocus ? `task:${created.id}` : '' });
                         const newRow = elements.projectsBoardRows?.querySelector(`[data-task-id="${cssEscape(created.id)}"]`);
                         if (shouldFocus) {
@@ -2055,7 +3119,7 @@
                                 const field = newRow?.querySelector(`[data-field-kind="${cssEscape(fieldKind)}"]`);
                                 field?.focus?.();
                             } else {
-                                const title = newRow?.querySelector('[data-field-kind="title"]');
+                                const title = newRow?.querySelector('[data-field-kind="title"]') || newRow?.querySelector('.crm-board-title-button') || newRow;
                                 title?.focus?.();
                             }
                         }
@@ -2074,12 +3138,14 @@
                                 saveTaskField(created.id, field, { value: val });
                             }
                         }
-                    } else {
-                        tasks.delete(optId);
-                        renderBoard();
-                    }
+                    } else { throw new Error('Creation acknowledgement is unconfirmed.'); }
                 } catch (error) {
+                    if (!scopeIsCurrent(scope)) return;
+                    const uncertain = !error?.status || Number(error.status) >= 500;
+                    creationFeedback(intent, uncertain ? 'uncertain' : 'failed', { temporaryId: optId });
+                    if (!uncertain) creationIntents.delete(intentKey);
                     tasks.delete(optId);
+                    invalidateHierarchy();
                     if (resolvedParentTaskId) {
                         const p = taskFor(resolvedParentTaskId);
                         if (p) p.activeChildCount = Math.max(0, (Number(p.activeChildCount) || 1) - 1);
@@ -2100,7 +3166,8 @@
                     document.removeEventListener?.('focusin', trackFocus);
                     document.removeEventListener?.('pointerdown', trackFocus);
                     if (taskCreateOperation === operation) taskCreateOperation = null;
-                    syncTaskCreation();
+                    if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) invalidateAccess(currentProjectId());
+                    else if (scopeIsCurrent(scope)) syncTaskCreation();
                 }
             });
             await taskCreateQueue;
@@ -2263,6 +3330,49 @@
             return destinationIndex !== null && currentIndex !== null && destinationIndex === currentIndex;
         }
 
+        // Both single-row and batch moves consume persisted fields, then derive the loaded tree.
+        function reconcileTaskMove(taskId, destination, result) {
+            boardRevision.structureRevision = Math.max(structureRevision(), Number(result?.structureRevision ?? structureRevision()));
+            const task = taskFor(taskId);
+            if (!task || result?.task && Number(task.revision) > Number(result.task.revision)) return;
+            const saved = result?.task;
+            const destParent = destination.parentTaskId ? taskFor(destination.parentTaskId) : null;
+            const effectiveSec = destination.parentTaskId ? resolveEffectiveSectionId(destination.parentTaskId) : destination.sectionId;
+            const ancestorIds = destParent ? [...(destParent.ancestorIds || []), destParent.id] : [];
+            const pathIds = destParent ? [taskId, ...(destParent.pathIds || [destParent.id])] : [taskId];
+            const oldParentId = task.parentTaskId;
+            if (oldParentId && oldParentId !== destination.parentTaskId) {
+                const oldParent = taskFor(oldParentId);
+                if (oldParent && oldParent.activeChildCount > 0) oldParent.activeChildCount -= 1;
+            }
+            if (destination.parentTaskId && destination.parentTaskId !== oldParentId) {
+                const newParent = taskFor(destination.parentTaskId);
+                if (newParent) newParent.activeChildCount = (Number(newParent.activeChildCount) || 0) + 1;
+            }
+            const updatedTask = {
+                ...task,
+                ...(saved || {}),
+                parentTaskId: destination.parentTaskId || null,
+                sectionId: destination.parentTaskId ? null : destination.sectionId,
+                effectiveSectionId: effectiveSec,
+                ancestorIds,
+                pathIds
+            };
+            tasks.set(String(taskId), updatedTask);
+            const updateDescendants = (parentId, pSectionId) => {
+                for (const child of childrenOf(parentId)) {
+                    child.effectiveSectionId = pSectionId;
+                    const p = taskFor(parentId);
+                    child.ancestorIds = p ? [...(p.ancestorIds || []), p.id] : [];
+                    child.pathIds = p ? [child.id, ...(p.pathIds || [p.id])] : [child.id];
+                    tasks.set(String(child.id), child);
+                    updateDescendants(child.id, pSectionId);
+                }
+            };
+            updateDescendants(taskId, effectiveSec);
+            invalidateHierarchy();
+        }
+
         async function moveTask(taskId, destination) {
             if (refreshRequested()) return;
             const mutationScope = captureScope();
@@ -2296,45 +3406,10 @@
                 const destParentTaskId = destination.parentTaskId ? (optimisticIdMap.get(destination.parentTaskId) || destination.parentTaskId) : null;
                 const response = await requestMutation(`/api/projects/${encodeURIComponent(mutationProjectId)}/tasks/${encodeURIComponent(taskId)}/move`, { operationId: opId, expectedRevision: task.revision, expectedStructureRevision: structureRevision(), parentTaskId: destParentTaskId, sectionId: destSectionId, index: destination.index });
                 if (!scopeIsCurrent(mutationScope)) return;
-                boardRevision.structureRevision = Number(response?.structureRevision ?? response?.result?.structureRevision ?? boardRevision.structureRevision);
                 expandDestinationAncestry(destination);
                 selectedTaskId = String(taskId);
-                const saved = response?.task || response?.result?.task;
-                const destParent = destination.parentTaskId ? taskFor(destination.parentTaskId) : null;
-                const effectiveSec = destination.parentTaskId ? resolveEffectiveSectionId(destination.parentTaskId) : destSectionId;
-                const ancestorIds = destParent ? [...(destParent.ancestorIds || []), destParent.id] : [];
-                const pathIds = destParent ? [taskId, ...(destParent.pathIds || [destParent.id])] : [taskId];
-                const oldParentId = task.parentTaskId;
-                if (oldParentId && oldParentId !== destination.parentTaskId) {
-                    const oldParent = taskFor(oldParentId);
-                    if (oldParent && oldParent.activeChildCount > 0) oldParent.activeChildCount -= 1;
-                }
-                if (destination.parentTaskId && destination.parentTaskId !== oldParentId) {
-                    const newParent = taskFor(destination.parentTaskId);
-                    if (newParent) newParent.activeChildCount = (Number(newParent.activeChildCount) || 0) + 1;
-                }
-                const updatedTask = {
-                    ...task,
-                    ...(saved || {}),
-                    parentTaskId: destination.parentTaskId || null,
-                    sectionId: destination.parentTaskId ? null : destSectionId,
-                    effectiveSectionId: effectiveSec,
-                    ancestorIds,
-                    pathIds
-                };
-                tasks.set(String(taskId), updatedTask);
-                const updateDescendants = (parentId, pSectionId) => {
-                    for (const child of childrenOf(parentId)) {
-                        child.effectiveSectionId = pSectionId;
-                        const p = taskFor(parentId);
-                        child.ancestorIds = p ? [...(p.ancestorIds || []), p.id] : [];
-                        child.pathIds = p ? [child.id, ...(p.pathIds || [p.id])] : [child.id];
-                        tasks.set(String(child.id), child);
-                        updateDescendants(child.id, pSectionId);
-                    }
-                };
-                updateDescendants(taskId, effectiveSec);
-                invalidateHierarchy();
+                reconcileTaskMove(taskId, { parentTaskId: destParentTaskId, sectionId: destSectionId }, response?.result || response);
+                await loadProject(mutationProjectId, { preserve: true });
             } catch (error) {
                 if (!scopeIsCurrent(mutationScope)) return;
                 setStatus(error?.message || 'Move conflicted; refresh and retry.', 'error');
@@ -2422,6 +3497,7 @@
                 }
                 columns.sort(rankCompare);
                 renderBoard();
+                await loadProject(scope.projectId, { preserve: true });
             } catch (error) { if (scopeIsCurrent(scope)) setStatus(error?.message || 'Column move conflicted; refresh and retry.', 'error'); }
             finally {
                 columnMovesPending.delete(scope);
@@ -2489,13 +3565,17 @@
 
         async function toggleTask(taskId) {
             const id = String(taskId || '');
-            if (!id) return;
+            if (!id || (presentationV2 && !hasPotentialChildren(taskFor(id) || {}))) return;
             if (expanded.has(id)) { expanded.delete(id); renderBoard(); return; }
             expanded.add(id);
             renderBoard();
             const scope = captureScope(), sequence = refreshSequence;
             const current = () => scopeIsCurrent(scope) && sequence === refreshSequence && !busy;
-            if (!loadedBranches.has(id) && !await loadAllBranch(id)) return;
+            if (presentationV2 && !loadedBranches.has(id)) {
+                branchLoading.add(id); renderVirtualRows();
+                try { if (!await loadBranch(id)) return; }
+                finally { branchLoading.delete(id); if (scopeIsCurrent(scope)) renderVirtualRows(); }
+            } else if (!loadedBranches.has(id) && !await loadAllBranch(id)) return;
             // Reopening a collapsed branch restores only reachable expanded paths.
             // Descendants behind another collapsed ancestor remain unloaded.
             let pendingExpansion = true;
@@ -2512,7 +3592,7 @@
                         seen.add(parentId);
                     }
                     if (!reachable) continue;
-                    if (!await loadAllBranch(childId)) return;
+                    if (!await (presentationV2 ? loadBranch(childId) : loadAllBranch(childId))) return;
                     pendingExpansion = true;
                 }
             }
@@ -2659,11 +3739,186 @@
         // address. This is a search-and-pick popover; the native <select> underneath
         // stays the value store, so saveTaskField and every pinned selector are intact.
         let lastDetailTaskId = null;
+        let detailSurface = null, detailDiscussionKey = '';
+        let detailGeneration = 0, remoteConflictReview = null;
+        function clearRemoteConflictReview() {
+            remoteConflictReview?.node.remove();
+            remoteConflictReview = null;
+        }
+        function mountRemoteConflictReview() {
+            const recovery = remoteConflictReview;
+            if (!recovery) return;
+            if (!scopeIsCurrent(recovery.scope) || !canWrite() || !drafts.has(recovery.key) || (presentationV2 && recovery.generation !== detailGeneration)) { clearRemoteConflictReview(); return; }
+            // Move the one canonical action into the native dialog's active tree.
+            // Keep it outside tab panels and Overview's replaceable field host.
+            if (detailSurface && String(selectedTaskId) === String(recovery.taskId)) {
+                elements.projectsBoardDetail.querySelector('.crm-projects-board-detail-head')?.after(recovery.node);
+            } else elements.projectsBoardStatus?.append(recovery.node);
+        }
+        const detailRemovers = [];
+        function clearDetailPresentation(restore = false) {
+            if (!detailSurface && globalScope.CrmProjectsDetailSurfaceV2?.hasOwner(elements.projectsBoardDetail)) return;
+            if (!lastDetailTaskId && !elements.projectsBoardDetail?.open) return;
+            detailDiscussionKey = ''; detailChildren = null;
+            detailGeneration++; clearRemoteConflictReview();
+            closePeoplePicker(); closeStatusPicker(); closeRowEditor(false); globalScope.CrmProjectsDatePicker?.close();
+            selectedTaskId = ''; lastDetailTaskId = null;
+            detailSurface?.forceClose({ clear: true, restore });
+            if (elements.projectsBoardDetailBody) elements.projectsBoardDetailBody.replaceChildren();
+            if (elements.projectsBoardDetailTitle) elements.projectsBoardDetailTitle.textContent = '';
+            document.getElementById('projects-task-planning')?.replaceChildren();
+            globalScope.CrmProjectsDiscussion?.setSelection(null);
+            deps.onTaskSelection?.(null);
+        }
+        function canRestoreDetailFocus(taskId, scope) {
+            const task = taskFor(taskId);
+            return scopeIsCurrent(scope) && !authorityPending && hasProject() && String(project.id) === currentProjectId()
+                && String(deps.getCurrentUser?.()?.uid || '') === controllerActorUid && (project.lifecycle || 'active') === 'active'
+                && !!task && (task.effectiveLifecycle || task.lifecycle || 'active') === 'active';
+        }
+        function restoreDetailFocus(taskId, scope) {
+            if (!canRestoreDetailFocus(taskId, scope)) {
+                const heading = document.getElementById('projects-workspace-name');
+                heading?.setAttribute('tabindex', '-1'); heading?.focus({ preventScroll: true }); return;
+            }
+            const viewContent = document.getElementById('projects-view-content');
+            if (viewContent && !viewContent.hidden) {
+                const opener = Array.from(viewContent.querySelectorAll('[data-task-open]')).find(node => node.dataset.taskOpen === String(taskId));
+                const target = opener || document.getElementById('projects-workspace-name');
+                if (!opener) target?.setAttribute('tabindex', '-1');
+                target?.focus({ preventScroll: true }); return;
+            }
+            renderVirtualRows();
+            const row = logicalRows.find(entry => String(entry.task?.id) === String(taskId));
+            if (row && elements.projectsBoardScroll) {
+                elements.projectsBoardScroll.scrollTop = row.index * ROW_HEIGHT;
+                renderVirtualRows({ focusRowId: row.id }); focusRowControl(taskId);
+                // Mobile rows flow at their content height; the table's fixed-row
+                // estimate mounts the target but cannot ensure it is in view.
+                if (mobileList) document.activeElement?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+                return;
+            }
+            const heading = document.getElementById('projects-workspace-name');
+            heading?.setAttribute('tabindex', '-1'); heading?.focus({ preventScroll: true });
+        }
+        let detailChildren = null;
+        function renderDetailChildren(task) {
+            const body = elements.projectsBoardDetailBody;
+            let region = body.querySelector('[data-detail-children]');
+            if (!region) {
+                region = document.createElement('section'); region.dataset.detailChildren = '';
+                region.setAttribute('aria-label', 'Subtasks');
+                region.innerHTML = '<button type="button" data-detail-parent></button><button type="button" data-detail-children-previous>Show earlier loaded subtasks</button><ul aria-label="Existing subtasks" data-detail-child-list></ul><p role="status" data-detail-children-status></p><button type="button" data-detail-children-more></button>';
+                body.querySelector('[data-detail-add]').before(region);
+            }
+            region.hidden = !mobileList;
+            if (!mobileList) return;
+            const id = String(task.id);
+            if (!detailChildren || detailChildren.id !== id || detailChildren.generation !== detailGeneration || !detailChildren.current()) {
+                const scope = captureScope(), sequence = refreshSequence, query = filterGeneration, authority = authorityRevision;
+                const state = { id, generation: detailGeneration, limit: 50, pending: false, error: false };
+                state.current = () => detailChildren === state && scopeIsCurrent(scope) && sequence === refreshSequence && query === filterGeneration
+                    && authority === authorityRevision && !authorityPending && selectedTaskId === id && state.generation === detailGeneration;
+                detailChildren = state;
+            }
+            const state = detailChildren;
+            const navigate = (nextId, returnChild = '') => {
+                if (!state.current() || busy || !taskFor(nextId)) return;
+                closePeoplePicker(); closeStatusPicker(); closeRowEditor(false); globalScope.CrmProjectsDatePicker?.close();
+                selectedTaskId = String(nextId); renderDetail({ open: true, preserveOrigin: true });
+                const returnIndex = returnChild ? childrenOf(nextId).findIndex(child => String(child.id) === returnChild) : -1;
+                if (returnIndex >= detailChildren.limit || returnIndex >= 0 && returnIndex < detailChildren.limit - MOBILE_WINDOW) { detailChildren.limit = Math.ceil((returnIndex + 1) / 50) * 50; renderDetailChildren(taskFor(nextId)); }
+                if (!returnChild) elements.projectsBoardDetail.scrollTop = 0;
+                const target = returnChild && Array.from(body.querySelectorAll('[data-detail-child]')).find(node => node.dataset.detailChild === returnChild);
+                (target || elements.projectsBoardDetailTitle)?.focus();
+            };
+            const parent = taskFor(task.parentTaskId), back = region.querySelector('[data-detail-parent]');
+            back.hidden = !parent; back.disabled = busy || !state.current();
+            back.textContent = parent ? `Back to parent: ${parent.title || 'Untitled task'}` : '';
+            back.onclick = () => { if (parent) navigate(parent.id, id); };
+            const children = childrenOf(id).filter(child => (child.effectiveLifecycle || child.lifecycle || 'active') === 'active');
+            const list = region.querySelector('[data-detail-child-list]');
+            const firstChild = Math.max(0, state.limit - MOBILE_WINDOW);
+            const markup = children.slice(firstChild, state.limit).map(child => `<li><button type="button" data-detail-child="${escape(child.id)}" aria-label="Open subtask: ${escape(child.title || 'Untitled task')}"${busy || !state.current() ? ' disabled' : ''}>${escape(child.title || 'Untitled task')}</button></li>`).join('');
+            if (list.innerHTML !== markup) list.innerHTML = markup;
+            list.onclick = event => { const button = event.target.closest('[data-detail-child]'); if (button && !button.disabled && list.contains(button)) navigate(button.dataset.detailChild); };
+            const earlier = region.querySelector('[data-detail-children-previous]');
+            earlier.hidden = !firstChild; earlier.disabled = state.pending || busy || !state.current();
+            earlier.onclick = () => { if (!state.current() || state.pending || busy) return; state.limit = Math.max(50, state.limit - MOBILE_WINDOW); renderDetailChildren(task); list.querySelector('[data-detail-child]')?.focus(); };
+            const more = region.querySelector('[data-detail-children-more]'), status = region.querySelector('[data-detail-children-status]');
+            const unloaded = !loadedBranches.has(id) && hasPotentialChildren(task);
+            more.hidden = !state.error && !unloaded && children.length <= state.limit && !branchHasMore.get(id);
+            more.disabled = state.pending || busy || !state.current();
+            more.textContent = state.error ? 'Retry loading subtasks' : children.length > state.limit ? 'Show more loaded subtasks' : 'Load more subtasks';
+            status.textContent = state.pending ? 'Loading subtasks…' : state.error ? 'Subtasks could not be loaded. Retry to continue.' : children.length ? `Showing ${firstChild + 1}–${Math.min(children.length, state.limit)} of ${children.length} loaded subtasks` : unloaded ? '' : 'No subtasks';
+            const load = async (focusNext = false) => {
+                if (!state.current() || state.pending || busy) return;
+                const previousCount = Math.min(children.length, state.limit);
+                if (children.length > state.limit) {
+                    state.limit += 50; renderDetailChildren(task);
+                } else {
+                    state.pending = true; state.error = false; renderDetailChildren(task);
+                    const loaded = await loadBranch(id, { append: loadedBranches.has(id), render: false });
+                    if (loaded) invalidateHierarchy();
+                    if (!state.current()) return;
+                    state.pending = false; state.error = !loaded;
+                    if (loaded && focusNext && previousCount >= state.limit) state.limit += 50;
+                    renderDetailChildren(taskFor(id));
+                }
+                if (focusNext && state.current()) {
+                    const next = list.querySelectorAll('[data-detail-child]')[previousCount - Math.max(0, state.limit - MOBILE_WINDOW)];
+                    (next || more)?.focus();
+                }
+            };
+            more.onclick = () => { void load(true); };
+            if (unloaded && !state.pending && !state.error && !busy && state.current()) void load();
+        }
+        function renderOverview(task) {
+            const body = elements.projectsBoardDetailBody;
+            if (!body) return;
+            let fields = body.querySelector('[data-detail-fields]');
+            if (!fields || fields.dataset.taskId !== String(task.id)) {
+                body.replaceChildren(); fields = document.createElement('div'); fields.dataset.detailFields = '';
+                fields.dataset.taskId = task.id; fields.dataset.rowId = `task:${task.id}`; fields.dataset.rowKind = 'task';
+                fields.className = 'crm-detail-fields'; body.append(fields);
+                const path = document.createElement('p'); path.dataset.detailPath = ''; body.append(path);
+                const subtasks = document.createElement('p'); subtasks.dataset.detailSubtasks = ''; body.append(subtasks);
+                const add = document.createElement('button'); add.type = 'button'; add.textContent = 'Add subtask'; add.dataset.detailAdd = '';
+                add.addEventListener('click', () => { if (selectedTaskId !== String(task.id) || !canWrite()) return; detailSurface?.requestClose(); openQuickComposer(task.id); }); body.append(add);
+            }
+            const template = document.createElement('template');
+            template.innerHTML = taskRowMarkup({ kind: 'task', id: `task:${task.id}`, task, depth: 0, index: 0 });
+            const cells = Array.from(template.content.firstElementChild.children);
+            const title = cells.find(cell => cell.dataset.columnKey === 'taskTitle');
+            title.innerHTML = `<input class="crm-board-field" data-field-kind="title" type="text" maxlength="200" aria-label="Task title" value="${escape(effectiveField(task.id, 'title') || task.title)}"${canWrite() && !busy ? '' : ' disabled'}>`;
+            const keys = new Set();
+            for (const fresh of cells) {
+                const key = fresh.dataset.columnKey; keys.add(key);
+                fresh.setAttribute('role', 'group');
+                const descriptor = key.startsWith('custom:') ? columns.find(column => `custom:${column.id}` === key) : null;
+                const labels = { taskTitle: 'Task title', status: 'Status', ownerUid: 'Owner', assigneeUids: 'Collaborators', dates: 'Dates' };
+                const label = document.createElement('span'); label.className = 'crm-detail-field-label'; label.textContent = descriptor?.label || labels[key] || key; fresh.prepend(label); fresh.setAttribute('aria-label', label.textContent);
+                fresh.querySelectorAll('[data-column-id]').forEach(control => { control.dataset.columnType = descriptor?.type || ''; });
+                const old = Array.from(fields.children).find(cell => cell.dataset.columnKey === key);
+                const pinned = [rowEditor, peopleContext, statusContext].some(context => old?.contains(context?.trigger));
+                if (old && canWrite() && !busy && (pinned || canPreserveFocusedEditor(old, fresh, document.activeElement))) continue;
+                if (old) { if (old.innerHTML !== fresh.innerHTML) old.replaceWith(fresh); }
+                else fields.append(fresh);
+            }
+            Array.from(fields.children).forEach(cell => { if (!keys.has(cell.dataset.columnKey)) cell.remove(); });
+            body.querySelector('[data-detail-path]').textContent = `Parent path: ${asArray(task.pathIds).map(id => taskFor(id)?.title || id).join(' → ') || 'Root task'}`;
+            const derived = task.derived;
+            body.querySelector('[data-detail-subtasks]').textContent = derived?.activeLeafCount != null ? `Subtasks: ${derived.completedLeafCount ?? 0} / ${derived.activeLeafCount} leaves complete` : `Subtasks: ${Number(task.activeChildCount || 0)} direct children`;
+            body.querySelector('[data-detail-add]').hidden = !canWrite();
+            paintFieldFeedback(task.id, fields);
+            renderDetailChildren(task);
+        }
         let statusPopover = null;
         let statusContext = null;
 
         function closeStatusPicker() {
             if (!statusPopover) return;
+            statusContext?.trigger?.setAttribute('aria-expanded', 'false');
             statusPopover.remove();
             statusPopover = null;
             statusContext = null;
@@ -2674,7 +3929,7 @@
             const status = newStatus || control.value || 'not_started';
             control.value = status;
             control.setAttribute('data-status', status);
-            const cell = control.closest('[role="cell"]');
+            const cell = control.closest('[data-column-key], [role="cell"]');
             if (cell) cell.setAttribute('data-status', status);
             const pill = cell?.querySelector('.crm-board-status-pill');
             if (pill) {
@@ -2688,9 +3943,11 @@
 
         function commitStatus(newStatus) {
             if (!statusContext) return;
-            const { control, trigger, labels, taskId, fieldKind, columnId } = statusContext;
+            const { control, trigger, labels, taskId, fieldKind, columnId, scope } = statusContext;
+            if (presentationV2 && (!scopeIsCurrent(scope) || !canWrite() || busy)) { closeStatusPicker(); return; }
             closeStatusPicker();
             if (!control || control.disabled) return;
+            if (presentationV2) trigger.focus({ preventScroll: true });
             // Synchronously update DOM attributes, pill text, and cell immediately (0ms)
             syncStatusElement(control, newStatus, labels);
             // Synchronously update draft in drafts map so any re-renders retain it immediately
@@ -2704,9 +3961,10 @@
         }
 
         function openStatusPicker(trigger) {
+            if (presentationV2) { closeRowEditor(false); if (!canWrite() || busy) return; }
             closeStatusPicker();
             closePeoplePicker();
-            const cell = trigger.closest('[role="cell"]');
+            const cell = trigger.closest('[data-column-key], [role="cell"]');
             const row = trigger.closest('[data-task-id]');
             const control = cell?.querySelector('.crm-board-field');
             if (!control || control.disabled || !row) return;
@@ -2718,7 +3976,7 @@
             const column = columnId ? columns.find((c) => String(c.id) === String(columnId)) : null;
             const labels = (fieldKind === 'status' ? project?.statusLabels : column?.statusLabels) || {};
 
-            statusContext = { control, trigger, labels, taskId, fieldKind, columnId, current };
+            statusContext = { control, trigger, labels, taskId, fieldKind, columnId, current, scope: captureScope(), columnType: column?.type };
 
             statusPopover = document.createElement('div');
             statusPopover.className = 'crm-status-popover';
@@ -2739,7 +3997,7 @@
             const panel = document.querySelector('[data-panel="projects"]');
             const scale = (panel && globalScope.getComputedStyle && parseFloat(globalScope.getComputedStyle(panel).zoom)) || 1;
             const validScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
-            (panel || document.body).appendChild(statusPopover);
+            (trigger.closest('dialog[open]') || panel || document.body).appendChild(statusPopover);
 
             const box = trigger.getBoundingClientRect();
             const popoverRect = statusPopover.getBoundingClientRect();
@@ -2755,6 +4013,7 @@
                 statusPopover.style.top = `${Math.max(8, box.top - popoverRect.height - 4) / validScale}px`;
             }
 
+            trigger.setAttribute('aria-expanded', 'true');
             const chosenItem = statusPopover.querySelector('.crm-status-popover-item.is-chosen') || statusPopover.querySelector('.crm-status-popover-item');
             chosenItem?.focus();
 
@@ -2769,7 +4028,7 @@
 
             statusPopover.addEventListener('keydown', (event) => {
                 if (event.key === 'Escape') {
-                    event.stopPropagation();
+                    event.preventDefault(); event.stopPropagation();
                     closeStatusPicker();
                     trigger.focus();
                 } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -2804,8 +4063,9 @@
         function peopleRowMarkup(person, chosen) {
             const uid = String(person.uid || '');
             const name = asText(person.displayName || person.email || uid);
+            const excluded = presentationV2 && peopleContext?.control.dataset.fieldKind === 'assigneeUids' && uid && effectiveField(peopleContext.taskId, 'ownerUid') === uid;
             const secondary = person.displayName && person.email ? escape(person.email) : '';
-            return `<button type="button" role="option" aria-selected="${chosen ? 'true' : 'false'}" class="crm-people-option${chosen ? ' is-chosen' : ''}" data-people-uid="${escape(uid)}">`
+            return `<button type="button" role="option" aria-selected="${chosen ? 'true' : 'false'}" class="crm-people-option${chosen ? ' is-chosen' : ''}" data-people-uid="${escape(uid)}"${excluded ? ' disabled title="Already the accountable owner"' : ''}>`
                 + `<span class="crm-board-owner-avatar" aria-hidden="true">${escape(ownerInitials(uid))}</span>`
                 + `<span class="crm-people-option-text"><span class="crm-people-option-name">${escape(name)}</span>`
                 + (secondary ? `<span class="crm-people-option-mail">${secondary}</span>` : '')
@@ -2816,7 +4076,8 @@
             if (!peoplePopover || !peopleContext) return;
             const term = String(query || '').trim().toLowerCase();
             const chosen = new Set(peopleContext.selected);
-            const matches = members.filter((person) => {
+            const available = presentationV2 ? [...members, ...peopleContext.selected.filter(uid => !members.some(p => p.uid === uid)).map(uid => ({ uid, displayName: `${uid} (unavailable)` }))] : members;
+            const matches = available.filter((person) => {
                 if (!term) return true;
                 const name = asText(person.displayName || '').toLowerCase();
                 const mail = asText(person.email || '').toLowerCase();
@@ -2824,62 +4085,122 @@
             });
             const list = peoplePopover.querySelector('[data-people-list]');
             if (!list) return;
+            const activeUid = presentationV2 && list.contains(document.activeElement) ? document.activeElement.dataset.peopleUid : null;
             const none = peopleContext.multiple
                 ? ''
                 : peopleRowMarkup({ uid: '', displayName: 'Unassigned' }, !peopleContext.selected.length);
             list.innerHTML = none + (matches.length
                 ? matches.map((person) => peopleRowMarkup(person, chosen.has(String(person.uid)))).join('')
                 : '<p class="crm-people-empty">No members match.</p>');
+            if (activeUid !== null) list.querySelector(`[data-people-uid="${cssEscape(activeUid)}"]:not(:disabled)`)?.focus({ preventScroll: true });
+        }
+
+        async function reloadPeopleSelection() {
+            const context = peopleContext;
+            if (!context || context.saving || context.reloading || !scopeIsCurrent(context.scope) || !canWrite() || busy || refreshRequested()) return;
+            context.reloading = true;
+            try {
+                const response = await apiFetchJson(`/api/projects/${encodeURIComponent(context.scope.projectId)}/tasks/${encodeURIComponent(context.taskId)}`);
+                if (peopleContext !== context || !scopeIsCurrent(context.scope) || !canWrite() || busy || refreshRequested()) return;
+                const latest = response?.task, observed = taskFor(context.taskId);
+                if (String(latest?.id) !== String(context.taskId) || !Number.isSafeInteger(latest?.revision)) throw new Error('Saved assignments could not be confirmed.');
+                const reviewed = Number(observed?.revision) > latest.revision ? observed : latest;
+                const value = context.columnId ? reviewed.values?.[context.columnId] : reviewed[context.control.dataset.fieldKind];
+                context.selected = context.multiple ? [...asArray(value)] : value ? [value] : [];
+                context.baseRevision = reviewed.revision;
+                context.needsReview = false;
+                drafts.delete(context.draftKey); draftVersions.delete(context.draftKey); draftBases.set(context.draftKey, reviewed.revision);
+                tasks.set(context.taskId, { ...observed, ...reviewed }); invalidateHierarchy();
+                renderPeopleOptions(peoplePopover.querySelector('[data-people-search]').value);
+                peoplePopover.querySelector('[data-people-result]').textContent = 'Saved assignments loaded. Review the selection before changing it.';
+                renderVirtualRows();
+            } catch (error) { if (peopleContext === context && scopeIsCurrent(context.scope)) peoplePopover.querySelector('[data-people-result]').textContent = error.message || 'Reload failed. Selection retained.'; }
+            finally { context.reloading = false; }
         }
 
         function commitPeople(uid) {
             if (!peopleContext) return;
-            const control = peopleContext.control;
+            const context = peopleContext, control = context.control;
             if (!control) return;
+            if (presentationV2 && (!scopeIsCurrent(context.scope) || !canWrite() || busy || control.disabled)) { closePeoplePicker(); return; }
+            if (presentationV2) {
+                if (context.reloading) return;
+                if (context.needsReview || Number(taskFor(context.taskId)?.revision || 0) !== context.baseRevision) {
+                    context.needsReview = true;
+                    peoplePopover.querySelector('[data-people-result]').textContent = 'Task changed. Reload saved assignments and review before choosing again.';
+                    return;
+                }
+                // The selected value and its revision are one snapshot, including between successive clicks.
+                if (!draftBases.has(context.draftKey)) draftBases.set(context.draftKey, context.baseRevision);
+            }
+            if (presentationV2 && control.dataset.fieldKind === 'assigneeUids' && uid === effectiveField(context.taskId, 'ownerUid')) return;
             if (peopleContext.multiple) {
                 const next = new Set(peopleContext.selected);
                 if (next.has(uid)) next.delete(uid); else next.add(uid);
                 peopleContext.selected = Array.from(next).filter(Boolean);
                 Array.from(control.options).forEach((option) => { option.selected = peopleContext.selected.includes(option.value); });
                 renderPeopleOptions(peoplePopover?.querySelector('[data-people-search]')?.value);
+                if (presentationV2) {
+                    const names = peopleContext.selected.map(memberName).join(', ');
+                    const collaborators = control.dataset.fieldKind === 'assigneeUids';
+                    peopleContext.trigger.innerHTML = collaborators ? peopleStack(peopleContext.selected) || '<span class="crm-people-trigger-name">Add collaborators</span>' : escape(names || 'Add people');
+                    peopleContext.trigger.setAttribute('aria-label', `${collaborators ? 'Collaborators' : 'People'}: ${names || 'Unassigned'}`);
+                }
             } else {
                 peopleContext.selected = uid ? [uid] : [];
                 control.value = uid;
                 closePeoplePicker();
             }
-            control.dispatchEvent(new Event('change', { bubbles: true }));
+            if (presentationV2 && !context.multiple) { if (context.trigger.closest('dialog[open]')) context.trigger.focus(); else focusRowControl(context.taskId, `[data-people-kind="${context.trigger.dataset.peopleKind}"]`); }
+            if (presentationV2) {
+                context.saving = (context.saving || 0) + 1;
+                const selected = [...context.selected];
+                saveTaskField(context.taskId, control.dataset.fieldKind, { value: selected[0] || '', dataset: { ...control.dataset }, multiple: context.multiple, selectedOptions: selected.map(value => ({ value })) }).then(lineage => {
+                    context.saving--;
+                    if (lineage?.bases.includes(context.baseRevision)) context.baseRevision = lineage.revision;
+                    else if (!lineage) context.needsReview = true;
+                    if (peopleContext === context && context.needsReview) peoplePopover.querySelector('[data-people-result]').textContent = 'Assignments were not confirmed. Reload saved assignments and review before choosing again.';
+                });
+            } else control.dispatchEvent(new Event('change', { bubbles: true }));
         }
 
         function openPeoplePicker(trigger) {
+            if (presentationV2) { closeRowEditor(false); if (!canWrite() || busy) return; }
             closePeoplePicker();
-            const cell = trigger.closest('[role="cell"]');
+            const cell = trigger.closest('[data-column-key], [role="cell"]');
             const control = cell?.querySelector('.crm-board-field');
             if (!control || control.disabled) return;
-            const multiple = trigger.dataset.peopleKind === 'assigneeUids';
+            const multiple = trigger.dataset.peopleKind === 'assigneeUids' || (presentationV2 && control.multiple);
             peopleContext = {
-                control,
+                control, trigger, taskId: trigger.closest('[data-task-id]')?.dataset.taskId, scope: captureScope(), columnId: control.dataset.columnId, columnType: columns.find(c => c.id === control.dataset.columnId)?.type,
                 multiple,
                 selected: multiple
                     ? Array.from(control.selectedOptions || []).map((option) => option.value).filter(Boolean)
                     : (control.value ? [control.value] : [])
             };
+            if (presentationV2) {
+                const field = control.dataset.fieldKind === 'value' ? `value:${control.dataset.columnId}` : control.dataset.fieldKind;
+                peopleContext.draftKey = draftKeyFor(peopleContext.taskId, field);
+                peopleContext.baseRevision = draftBases.get(peopleContext.draftKey) ?? Number(taskFor(peopleContext.taskId)?.revision || 0);
+            }
             peoplePopover = document.createElement('div');
             peoplePopover.className = 'crm-people-popover';
             peoplePopover.setAttribute('role', 'dialog');
+            peoplePopover.setAttribute('aria-label', multiple ? 'Choose collaborators or people' : 'Choose accountable owner');
             peoplePopover.innerHTML = '<input type="search" class="crm-people-search" data-people-search placeholder="Search people" aria-label="Search people">'
-                + '<div class="crm-people-list" role="listbox" data-people-list></div>';
+                + `<div class="crm-people-list" role="listbox"${multiple ? ' aria-multiselectable="true"' : ''} data-people-list></div>${presentationV2 ? '<p role="status" data-people-result></p><button type="button" data-reload-people>Reload saved assignments</button><button type="button" data-people-done>Done</button>' : ''}`;
             // Parent to the panel, not <body>: the --pj-* tokens and the dark
             // override are declared on the panel, so a popover outside it has
             // no surface, no border and no ink.
             const panel = document.querySelector('[data-panel="projects"]');
             const scale = (panel && globalScope.getComputedStyle && parseFloat(globalScope.getComputedStyle(panel).zoom)) || 1;
             const validScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
-            (panel || document.body).appendChild(peoplePopover);
+            (trigger.closest('dialog[open]') || panel || document.body).appendChild(peoplePopover);
             const box = trigger.getBoundingClientRect();
             const width = 248;
             const visualWidth = width * validScale;
             peoplePopover.style.left = `${Math.max(8, Math.min(box.left, (globalScope.innerWidth || 1024) - visualWidth - 8)) / validScale}px`;
-            peoplePopover.style.top = `${(box.bottom + 4) / validScale}px`;
+            peoplePopover.style.top = `${Math.max(8, Math.min(box.bottom + 4, (globalScope.innerHeight || 768) - (peoplePopover.offsetHeight || 300) - 8)) / validScale}px`;
             peoplePopover.style.width = `${width}px`;
             renderPeopleOptions('');
             peoplePopover.querySelector('[data-people-search]')?.focus();
@@ -2887,15 +4208,25 @@
                 if (event.target.matches('[data-people-search]')) renderPeopleOptions(event.target.value);
             });
             peoplePopover.addEventListener('click', (event) => {
+                if (event.target.closest('[data-reload-people]')) { reloadPeopleSelection(); return; }
+                if (event.target.closest('[data-people-done]')) { closePeoplePicker(); if (trigger.closest('dialog[open]')) trigger.focus(); else { renderVirtualRows(); focusRowControl(peopleTaskId, peopleSelector); } return; }
                 const option = event.target.closest('[data-people-uid]');
-                if (option) { event.preventDefault(); commitPeople(option.dataset.peopleUid); }
+                if (option && !option.disabled) { event.preventDefault(); commitPeople(option.dataset.peopleUid); }
             });
-            peoplePopover.addEventListener('keydown', (event) => { if (event.key === 'Escape') { event.stopPropagation(); closePeoplePicker(); trigger.focus(); } });
+            const peopleTaskId = peopleContext.taskId, peopleSelector = `[data-people-kind="${trigger.dataset.peopleKind}"]`;
+            peoplePopover.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closePeoplePicker(); if (presentationV2 && !trigger.closest('dialog[open]')) { renderVirtualRows(); focusRowControl(peopleTaskId, peopleSelector); } else trigger.focus(); }
+                else if (presentationV2 && ['ArrowDown', 'ArrowUp'].includes(event.key)) {
+                    event.preventDefault(); const options = Array.from(peoplePopover.querySelectorAll('[data-people-uid]:not(:disabled)'));
+                    const index = options.indexOf(document.activeElement), delta = event.key === 'ArrowDown' ? 1 : -1;
+                    options[(index + delta + options.length) % options.length]?.focus();
+                }
+            });
         }
 
         function onBoardClick(event) {
             const row = event.target.closest('[data-row-id]');
-            if (row?.dataset?.rowKind === 'summary') return;
+            if (row?.dataset?.rowKind === 'summary' && !event.target.closest('[data-action="quick-task"]')) return;
             const action = event.target.closest('[data-action]')?.dataset?.action;
             if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) { invalidateAccess(currentProjectId()); return; }
             if (action === 'toggle-section' && row?.dataset?.rowKind === 'section') {
@@ -2906,14 +4237,17 @@
                 return;
             }
             if (action === 'select-task' && row) { event.stopPropagation(); toggleSelection(row.dataset.taskId); event.target.checked = selectedTaskIds.includes(row.dataset.taskId); return; }
+            if (presentationV2 && row && handleRowEditorAction(action, row, event)) return;
             if (action === 'toggle-task' && row) { toggleTask(row.dataset.taskId); return; }
-            if (action === 'add-subtask' && row) { event.stopPropagation(); createTask(row.dataset.taskId); return; }
+            if (action === 'quick-task') { openQuickComposer(null, event.target.closest('[data-section-id]')?.dataset.sectionId); return; }
+            if (action === 'add-subtask' && row) { event.stopPropagation(); openQuickComposer(row.dataset.taskId); return; }
             if (action === 'pick-date') { event.stopPropagation(); globalScope.CrmProjectsDatePicker?.open(event.target.closest('.crm-board-date-control')?.querySelector('input')); return; }
             if (action === 'pick-people') { event.stopPropagation(); openPeoplePicker(event.target.closest('[data-people-kind]')); return; }
             if (action === 'pick-status') { event.stopPropagation(); openStatusPicker(event.target.closest('.crm-board-status-pill')); return; }
             if (action === 'drag-handle') return;
-            if (action !== 'open-detail' && event.target.closest('input, select, textarea, button, a')) return;
-            if (row?.dataset?.rowKind === 'task') { selectedTaskId = row.dataset.taskId; focusedRowId = row.dataset.rowId; renderDetail(); renderVirtualRows(); }
+            if (presentationV2 && !['open-detail', 'open-subtasks'].includes(action)) return;
+            if (!['open-detail', 'open-subtasks'].includes(action) && event.target.closest('input, select, textarea, button, a')) return;
+            if (row?.dataset?.rowKind === 'task') { selectedTaskId = row.dataset.taskId; focusedRowId = row.dataset.rowId; renderDetail({ open: true }); renderVirtualRows(); }
         }
 
         function onBoardChange(event) {
@@ -2922,7 +4256,7 @@
                 syncStatusElement(control, control.value);
             }
             const row = control?.closest('[data-task-id]');
-            if (control && row) saveTaskField(row.dataset.taskId, control.dataset.fieldKind, control);
+            if (control && row && !(presentationV2 && control.dataset.fieldKind === 'title')) saveTaskField(row.dataset.taskId, control.dataset.fieldKind, control);
             const sectionInput = event.target.closest('.crm-board-section-input');
             if (sectionInput) saveSection(sectionInput.closest('[data-section-id]')?.dataset?.sectionId, sectionInput);
         }
@@ -2954,12 +4288,14 @@
             if (!draftBases.has(key)) draftBases.set(key, Number(taskFor(taskId)?.revision || 0));
             drafts.set(key, fieldValue(control));
             draftVersions.set(key, (draftVersions.get(key) || 0) + 1);
+            dirtyField(captureScope(), taskId, kind === 'value' ? `value:${control.dataset.columnId}` : kind);
         }
 
         function onBoardKeydown(event) {
+            if (presentationV2 && handleRowEditorKey(event)) return;
             const row = event.target.closest('[data-row-id]');
             if (!row) return;
-            if (event.key === 'Enter' && event.target === row) { event.preventDefault(); selectedTaskId = row.dataset.taskId || ''; renderDetail(); return; }
+            if (event.key === 'Enter' && event.target === row) { event.preventDefault(); selectedTaskId = row.dataset.taskId || ''; renderDetail({ open: true }); return; }
             if (row.dataset.rowKind !== 'task' || event.target !== row) return;
             selectedTaskId = row.dataset.taskId;
             if (event.key === 'Tab') return;
@@ -2968,7 +4304,7 @@
             else if (event.key === 'ArrowLeft') { event.preventDefault(); if (expanded.has(selectedTaskId)) toggleTask(selectedTaskId); else { const parent = taskFor(selectedTaskId)?.parentTaskId; if (parent) { selectedTaskId = parent; renderBoard(); } } }
             else if (event.key === 'ArrowDown') { event.preventDefault(); selectedSiblingMove(1); }
             else if (event.key === 'ArrowUp') { event.preventDefault(); selectedSiblingMove(-1); }
-            else if (event.key.toLowerCase() === 'n' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); createTask(selectedTaskId); }
+            else if (event.key.toLowerCase() === 'n' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); openQuickComposer(selectedTaskId); }
         }
 
         async function refresh() {
@@ -2997,6 +4333,34 @@
         }
 
         function init() {
+            if (presentationV2 && !detailSurface && globalScope.CrmProjectsDetailSurfaceV2 && elements.projectsBoardDetail) {
+                detailSurface = globalScope.CrmProjectsDetailSurfaceV2.createController({ panel: document.querySelector('[data-panel="projects"]'), dialog: elements.projectsBoardDetail,
+                    onClose: () => { selectedTaskId = ''; renderDetail(); }, fallbackFocus: restoreDetailFocus,
+                    captureFocusScope: captureScope, canRestoreFocus: canRestoreDetailFocus,
+                    onTabActivated: name => {
+                        const task = taskFor(selectedTaskId);
+                        if (task && scopeIsCurrent(captureScope()) && !authorityPending) globalScope.CrmProjectsDiscussion?.setSelection({ deferLoad: name !== 'updates', projectId: currentProjectId(), taskId: task.id, taskRevision: Number(task.revision || 0), role: role(), lifecycle: task.effectiveLifecycle || task.lifecycle || 'active' });
+                    },
+                    onClear: () => { globalScope.CrmProjectsDiscussion?.setSelection(null); document.getElementById('projects-task-planning')?.replaceChildren(); } });
+                detailSurface.init();
+                const body = elements.projectsBoardDetailBody;
+                const click = event => { const row = event.target.closest('[data-task-id]'), trigger = event.target.closest('[data-action]'); if (!row || !trigger) return; if (trigger.dataset.action === 'pick-status') openStatusPicker(trigger); else if (trigger.dataset.action === 'pick-people') openPeoplePicker(trigger); else if (trigger.dataset.action === 'edit-dates') openDateRange(row.dataset.taskId, trigger); };
+                const change = event => { if (elements.projectsBoardDetail.dataset.detailTransition) return; if (event.target.dataset.fieldKind === 'title') saveTaskField(event.target.closest('[data-task-id]').dataset.taskId, 'title', event.target); else onBoardChange(event); };
+                for (const [type, handler] of [['click', click], ['input', onBoardInput], ['change', change]]) { body?.addEventListener(type, handler); detailRemovers.push(() => body?.removeEventListener(type, handler)); }
+            }
+            if (presentationV2 && !tableLayout) {
+                tableLayout = globalScope.CrmProjectsTableLayoutV2.createController({ elements, getCurrentUser: deps.getCurrentUser, storage: deps.presentationStorage, onChange: () => { renderHeader(); renderVirtualRows(); } });
+                tableLayout.init();
+                mobileMore = document.createElement('button'); mobileMore.type = 'button'; mobileMore.textContent = 'Show more loaded tasks'; mobileMore.hidden = true;
+                mobileMore.dataset.mobileMore = ''; elements.projectsBoardScroll.after(mobileMore);
+                mobileMore.addEventListener('click', () => { const next = logicalRows[mobileLimit]; mobileLimit += 50; renderVirtualRows({ focusRowId: next?.id || '' }); if (next) focusNavigationRow(next.id); });
+                mobilePrevious = document.createElement('button'); mobilePrevious.type = 'button'; mobilePrevious.textContent = 'Show earlier loaded tasks'; mobilePrevious.hidden = true; mobilePrevious.dataset.mobilePrevious = '';
+                mobileMore.before(mobilePrevious);
+                mobilePrevious.addEventListener('click', () => { mobileLimit = Math.max(50, mobileLimit - MOBILE_WINDOW); const row = logicalRows[Math.max(0, mobileLimit - MOBILE_WINDOW)]; renderVirtualRows({ focusRowId: row?.id || '' }); if (row) focusNavigationRow(row.id); });
+                const panel = document.querySelector('[data-panel="projects"]');
+                if (globalScope.ResizeObserver && panel) { layoutObserver = new globalScope.ResizeObserver(syncListWidth); layoutObserver.observe(panel); }
+                syncListWidth();
+            }
             if (bound) return;
             bound = true;
             elements.projectsBoardProjectSelect?.addEventListener('change', (event) => selectProject(event.target.value));
@@ -3011,12 +4375,12 @@
             elements.projectsBoardSectionForm?.addEventListener('submit', (event) => { event.preventDefault(); createSection(); });
             elements.projectsBoardAddSection?.addEventListener('click', openSectionForm);
             elements.projectsBoardCancelSection?.addEventListener('click', closeSectionForm);
-            document.getElementById('btn-projects-board-add-task')?.addEventListener('click', () => createTask(null));
+            document.getElementById('btn-projects-board-add-task')?.addEventListener('click', startTopLevelTaskCreation);
             document.getElementById('btn-projects-board-add-column')?.addEventListener('click', () => openColumnForm());
             document.getElementById('btn-projects-board-save-column')?.addEventListener('click', createColumn);
             document.getElementById('btn-projects-board-cancel-column')?.addEventListener('click', () => { if (!columnEditor?.pending) resetColumnForm(); });
             document.getElementById('btn-projects-board-save-settings')?.addEventListener('click', saveSettings);
-            document.getElementById('btn-projects-board-close-detail')?.addEventListener('click', () => { selectedTaskId = ''; renderDetail(); });
+            document.getElementById('btn-projects-board-close-detail')?.addEventListener('click', () => { if (globalScope.CrmProjectsDetailSurfaceV2?.hasOwner(elements.projectsBoardDetail)) return; selectedTaskId = ''; renderDetail(); });
             elements.projectsBoardDetail?.addEventListener('click', (event) => {
                 const copyBtn = event.target.closest?.('[data-copy-id]');
                 if (copyBtn?.dataset?.copyId) {
@@ -3041,7 +4405,12 @@
                 }
             });
             elements.projectsBoardScroll?.addEventListener('scroll', () => renderVirtualRows({ viewportOnly: true }), { passive: true });
-            elements.projectsBoardScroll?.addEventListener('scroll', () => { closePeoplePicker(); closeStatusPicker(); }, { passive: true });
+            elements.projectsBoardScroll?.addEventListener('scroll', () => {
+                if (!presentationV2) { closePeoplePicker(); closeStatusPicker(); return; }
+                if (peoplePopover && !followRowPicker(peoplePopover, peopleContext)) closePeoplePicker();
+                if (statusPopover && !followRowPicker(statusPopover, statusContext)) closeStatusPicker();
+                if (rowEditor && !followRowPicker(rowEditor.node, rowEditor)) closeRowEditor(false);
+            }, { passive: true });
             elements.projectsBoardRows?.addEventListener('click', onBoardClick);
             elements.projectsBoardRows?.addEventListener('change', onBoardChange);
             elements.projectsBoardRows?.addEventListener('input', onBoardInput);
@@ -3076,10 +4445,10 @@
             document.getElementById('btn-projects-batch-delete')?.addEventListener('click', executeBatchDelete);
             elements.projectsBoardDetail?.addEventListener?.('click', (event) => {
                 const tab = event.target.closest?.('[data-detail-tab]');
-                if (tab) activateDetailTab(tab.dataset.detailTab);
+                if (tab && !globalScope.CrmProjectsDetailSurfaceV2?.hasOwner(elements.projectsBoardDetail)) activateDetailTab(tab.dataset.detailTab);
             });
             elements.projectsBoardDetail?.addEventListener?.('keydown', (event) => {
-                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) || !event.target.matches?.('[data-detail-tab]')) return;
+                if (globalScope.CrmProjectsDetailSurfaceV2?.hasOwner(elements.projectsBoardDetail) || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) || !event.target.matches?.('[data-detail-tab]')) return;
                 const tabs = Array.from(elements.projectsBoardDetail.querySelectorAll('[data-detail-tab]'));
                 const index = tabs.indexOf(event.target);
                 const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
@@ -3096,12 +4465,14 @@
             if (!change.isCurrent() || !project || currentProjectId() !== change.authority.project.id) return false;
             const view = snapshotView();
             const authority = change.authority;
+            const previousProject = project;
             const structureChanged = Number(authority.project.structureRevision || 0) !== structureRevision();
             const schemaChanged = Number(authority.project.schemaRevision || 0) !== boardRevision.schemaRevision;
             const lifecycleChanged = authority.project.lifecycle !== project.lifecycle;
             const membershipChanged = authority.project.membershipRevision !== project.membershipRevision || authority.membership.role !== role();
             if (Number(authority.project.revision || 0) >= projectRevision()) project = { ...project, ...authority.project };
             membership = { ...membership, ...authority.membership };
+            if (presentationV2 && (membershipChanged || lifecycleChanged)) clearDetailPresentation();
             if (membershipChanged) { authorityRevision++; if (!canSchema()) { resetSectionForm(); resetColumnForm(); } }
             const hasChanges = Boolean(change.changes && change.changes.length > 0);
             const selfEcho = Boolean(
@@ -3109,6 +4480,7 @@
                     ? change.changes.every(item => item.operationId && recentlyExecutedOperations.has(item.operationId))
                     : (change.operationId && recentlyExecutedOperations.has(change.operationId))
             );
+            const projectionChanged = !selfEcho && asArray(change.changes).some(entry => entry.command !== 'updateTaskLinks' && asArray(entry.taskIds).some(id => !tasks.has(id)));
             const aggregateChange = Boolean(hasChanges && change.changes.some(item => item.aggregates));
             const selectedAggregateChange = Boolean(aggregateChange && selectedTaskId && asArray(change.hydration?.tasks).some(task => asArray(task.ancestorIds).includes(selectedTaskId)));
             if (!selfEcho && (change.refresh || structureChanged || schemaChanged || lifecycleChanged || membershipChanged || selectedAggregateChange || (hasChanges && Object.keys(sharedFilters).length))) {
@@ -3121,6 +4493,15 @@
                     boardRevision.structureRevision = Math.max(structureRevision(), Number(authority?.project?.structureRevision || 0));
                     boardRevision.schemaRevision = Math.max(boardRevision.schemaRevision, Number(authority?.project?.schemaRevision || 0));
                 }
+                // A fully acknowledged local echo contains no new presentation
+                // state. Do not rebuild rows, detail or context subscribers twice.
+                if (selfEcho && !membershipChanged && !change.authorityChanged && !change.refresh
+                    && JSON.stringify(previousProject) === JSON.stringify(project)
+                    && !asArray(change.hydration?.unavailableTaskIds).length
+                    && asArray(change.hydration?.tasks).every(task => {
+                        const old = taskFor(task.id);
+                        return old && JSON.stringify({ ...old, ...task }) === JSON.stringify(old);
+                    })) return true;
                 const removed = new Set(change.hydration?.unavailableTaskIds || []);
                 for (const [taskId, task] of tasks) if (removed.has(taskId) || asArray(task.ancestorIds).some(id => removed.has(id))) tasks.delete(taskId);
                 for (const task of asArray(change.hydration?.tasks)) {
@@ -3134,44 +4515,182 @@
                 if (!taskFor(selectedTaskId)) selectedTaskId = '';
                 selectedTaskIds = selectedTaskIds.filter(id => tasks.has(id));
                 invalidateHierarchy();
-                if (hasChanges || membershipChanged || change.authorityChanged) { renderBoard(); restoreView(view); }
+                if (hasChanges || membershipChanged || change.authorityChanged) { renderBoard({ projectionChanged }); restoreView(view); }
             }
             return true;
         }
+        function reconcileUnavailableTask(taskId) {
+            const removed = new Set([String(taskId)]);
+            // A missing/archived parent also invalidates its loaded descendants.
+            let changed = true;
+            while (changed) {
+                changed = false;
+                for (const [id, entry] of tasks) {
+                    if (!removed.has(id) && (removed.has(entry.parentTaskId) || asArray(entry.ancestorIds).some(id => removed.has(id)) || asArray(entry.pathIds).some(id => removed.has(id)))) {
+                        removed.add(id); changed = true;
+                    }
+                }
+            }
+            const active = document.activeElement;
+            const activeTask = active?.closest?.('[data-task-id]')?.dataset.taskId;
+            const detailRemoved = removed.has(selectedTaskId);
+            const losesFocus = removed.has(activeTask) || detailRemoved && elements.projectsBoardDetail?.contains(active)
+                || removed.has(rowEditor?.taskId) && rowEditor.node.contains(active)
+                || removed.has(statusContext?.taskId) && statusPopover?.contains(active)
+                || removed.has(peopleContext?.taskId) && peoplePopover?.contains(active);
+            const index = logicalRows.findIndex(row => row.id === (active?.closest?.('[data-row-id]')?.dataset.rowId || `task:${taskId}`));
+            const available = row => row.task && !removed.has(String(row.task.id));
+            const fallback = logicalRows.slice(index + 1).find(available) || logicalRows.slice(0, Math.max(0, index)).reverse().find(available);
+            removed.forEach(id => {
+                tasks.delete(id); projectionTaskIds.delete(id); expanded.delete(id);
+                loadedBranches.delete(id); branchCursors.delete(id); branchHasMore.delete(id);
+            });
+            if (detailRemoved) selectedTaskId = '';
+            if (removed.has(focusedRowId.replace(/^task:/, ''))) focusedRowId = fallback?.id || '';
+            invalidateHierarchy();
+            setSelectedTaskIds(selectedTaskIds.filter(id => !removed.has(id)));
+            renderVirtualRows({ focusRowId: losesFocus ? fallback?.id || '' : '' });
+            if (detailRemoved) renderDetail();
+            if (elements.projectsBoardCount) elements.projectsBoardCount.textContent = `${tasks.size} loaded · ${sections.length} section${sections.length === 1 ? '' : 's'}`;
+            setStatus('Task is unavailable. Select another task.', 'warning');
+            publishContext({ unavailableTaskIds: [...removed] });
+            if (losesFocus) {
+                const target = fallback && Array.from(elements.projectsBoardRows?.children || []).find(node => node.dataset.rowId === fallback.id);
+                (target || elements.projectsBoardRefresh)?.focus?.({ preventScroll: true });
+            }
+        }
+        // Read projections may supply identity/revision, never mutation authority or
+        // branch completeness. Resolve against the active project's canonical endpoint.
+        async function resolveTask(taskId, { projectId = currentProjectId(), actorUid = controllerActorUid, revision, isCurrent = () => true } = {}) {
+            const scope = captureScope(), authority = authorityRevision;
+            const valid = () => scopeIsCurrent(scope) && isCurrent() && String(deps.getCurrentUser?.()?.uid || '') === controllerActorUid && actorUid === controllerActorUid && projectId === currentProjectId()
+                && !authorityPending && !refreshRequested() && authority === authorityRevision && hasProject();
+            if (!taskId || !valid()) throw new Error('Task context is no longer available.');
+            let result;
+            try { result = await apiFetchJson(`/api/projects/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}`); }
+            catch (error) {
+                if (valid() && [401, 403].includes(Number(error.status))) invalidateAccess(projectId);
+                if (valid() && Number(error.status) === 404) {
+                    reconcileUnavailableTask(taskId);
+                }
+                throw error;
+            }
+            if (!valid()) throw new Error('Task context changed while loading.');
+            const next = result?.task, old = taskFor(taskId);
+            if (!next || String(next.id) !== String(taskId) || (next.projectId && next.projectId !== projectId)
+                || !Number.isSafeInteger(next.revision)) throw new Error('Task is no longer available.');
+            if ((next.effectiveLifecycle || next.lifecycle || 'active') !== 'active') {
+                reconcileUnavailableTask(taskId);
+                throw new Error('Task is no longer available.');
+            }
+            if (revision !== undefined && (next.revision !== revision || (old && old.revision > revision))) throw new Error('Task changed. Refresh this view before editing.');
+            if (pending.has(pendingKey(taskId))) throw new Error('A task change is still saving.');
+            const canonical = old && Number(old.revision) > next.revision ? old : { ...old, ...next };
+            if (!old) projectionTaskIds.add(String(taskId));
+            tasks.set(String(taskId), canonical); invalidateHierarchy();
+            // Do not touch loadedBranches, cursors, selection or draft bases here.
+            return canonical;
+        }
+        async function setTaskField(command = {}) {
+            const { taskId, field, value, revision } = command;
+            if (!['status', 'title', 'ownerUid', 'assigneeUids'].includes(field) || !Number.isSafeInteger(revision) || !canWrite()) throw new Error('This task command is unavailable.');
+            if (field === 'status' && !Object.prototype.hasOwnProperty.call(STATUS_LABELS, value)) throw new Error('Unknown task status.');
+            const key = draftKeyFor(taskId, field);
+            if (drafts.has(key)) throw new Error('Review the existing field draft before editing from another view.');
+            const resolved = await resolveTask(taskId, command);
+            if (!canWrite() || drafts.has(key)) throw new Error('Task authority or draft changed.');
+            if (resolved[field] === value) return { task: resolved, unchanged: true };
+            const lineage = await saveTaskField(taskId, field, { value, dataset: {}, multiple: Array.isArray(value), selectedOptions: Array.isArray(value) ? value.map(value => ({ value })) : [] });
+            if (!lineage || command.isCurrent?.() === false) throw new Error('The change was not confirmed. Review the retained draft and save feedback.');
+            return { task: taskFor(taskId), lineage };
+        }
         return { init, refresh, setProjects, loadProject, invalidateAccess, setSelectedTaskIds, getSnapshot: contextSnapshot,
+            resolveTask, setTaskField, setTableVisibility,
+            subscribeContext(listener) { contextListeners.add(listener); return () => contextListeners.delete(listener); },
+            closeTask() { if (detailSurface) detailSurface.requestClose(); else { selectedTaskId = ''; renderDetail(); } },
+            activateDetailTab(name) { if (detailSurface) detailSurface.activateTab(name); else activateDetailTab(name); },
+            setColumnPreferences: value => tableLayout?.update(value),
+            getColumnPreferences: () => tableLayout?.getPreferences(),
+            disposePresentation() {
+                clearSuspendedTableEdit();
+                clearQuickCreation();
+                if (!presentationV2) return;
+                clearRemoteConflictReview(); clearDetailPresentation(); detailSurface?.dispose(); detailSurface = null; detailRemovers.splice(0).forEach(remove => remove());
+                closePeoplePicker(); closeStatusPicker(); closeRowEditor(false); renameSession = null; feedbackStore?.dispose();
+                layoutObserver?.disconnect(); mobileMore?.remove(); mobilePrevious?.remove(); mobileList = false; elements.projectsBoardTable?.removeAttribute('data-presentation'); elements.projectsBoardTable?.setAttribute('role', 'table'); elements.projectsBoardRows?.setAttribute('role', 'rowgroup'); elements.projectsBoardHeader.hidden = false;
+                tableLayout?.dispose(); tableLayout = null; presentationV2 = false; renderedHeaderSignature = '';
+                elements.projectsBoardTable?.removeAttribute('aria-colcount'); elements.projectsBoardHeader?.removeAttribute('aria-rowindex');
+                if (String(deps.getCurrentUser?.()?.uid || '') === controllerActorUid) { renderHeader(); renderVirtualRows(); }
+            },
+            getFieldSaveScope: () => fieldSaveScope(),
             attachRemoteObserver(observer) { remoteObserver = observer; }, applyRemote,
-            setDensity: (mode) => {
-                ROW_HEIGHT = mode === 'compact' ? 36 : 44;
+            setDensity: (mode, fontScale) => {
+                const scroll = elements.projectsBoardScroll;
+                const anchor = (scroll?.scrollTop || 0) / ROW_HEIGHT;
+                const scale = Number.isFinite(fontScale) && fontScale >= 0.7 && fontScale <= 1.5 ? Math.max(1, fontScale) : 1;
+                ROW_HEIGHT = Math.ceil((mode === 'compact' ? 36 : 44) * scale);
                 elements.projectsBoardTableWrap?.classList.toggle('is-compact', mode === 'compact');
+                if (fontScale !== undefined) elements.projectsBoardTableWrap?.style?.setProperty('--pj-row-h', `${ROW_HEIGHT}px`);
                 renderBoard();
+                // Update the spacer first: otherwise the browser clamps a larger
+                // scaled scroll offset to the previous layout's maximum.
+                if (scroll && fontScale !== undefined) {
+                    scroll.scrollTop = anchor * ROW_HEIGHT;
+                    renderVirtualRows({ viewportOnly: true });
+                }
             },
             saveTaskField: (taskId, kind, control) => saveTaskField(taskId, kind, control),
             saveSection: (sectionId, control) => saveSection(sectionId, control),
             createSection: () => createSection(),
-            createTask: (parentTaskId, explicitSectionId) => createTask(parentTaskId, explicitSectionId),
+            createTask: (parentTaskId, explicitSectionId, options) => createTask(parentTaskId, explicitSectionId, options),
             moveSection: (sectionId, index) => moveSection(sectionId, index),
             moveTask: (taskId, destination) => moveTask(taskId, destination),
-            setFilters: (filters) => { sharedFilters = { ...filters }; filterGeneration++; if (currentProjectId()) { authorityPending = true; setBusy(true); } return refresh(); },
+            setFilters: (filters, options = {}) => {
+                sharedFilters = { ...filters };
+                filterGeneration++;
+                if (options.refresh === false) return Promise.resolve();
+                if (currentProjectId()) {
+                    authorityPending = true;
+                    setBusy(true);
+                }
+                return refresh();
+            },
             selectTask: (task) => {
-                if (!task?.id || !hasProject()) return;
-                tasks.set(String(task.id), task);
-                if (typeof invalidateHierarchy === 'function') invalidateHierarchy();
-                asArray(task.pathIds).filter((id) => id !== task.id).forEach((id) => expanded.add(String(id)));
-                selectedTaskId = String(task.id);
-                renderDetail();
+                if (!task?.id || !hasProject() || String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid || (task.projectId && String(task.projectId) !== currentProjectId())) return;
+                const id = String(task.id), old = tasks.get(id);
+                if (old && Number(old.revision || 0) > Number(task.revision ?? old.revision)) task = old;
+                const merged = { ...old, ...task };
+                tasks.set(id, merged);
+                invalidateHierarchy();
+                asArray(merged.pathIds).filter(pid => String(pid) !== id).forEach(pid => expanded.add(String(pid)));
+                selectedTaskId = id;
+                renderDetail({ open: true });
                 renderVirtualRows();
             },
             updateTask: (task) => {
                 if (!task?.id || !hasProject()) return;
+                if (task.projectId && String(task.projectId) !== currentProjectId()) return;
+                if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) return;
                 const id = String(task.id);
+                if (!tasks.has(id)) return;
                 const old = tasks.get(id);
-                if (!old || Number(task.revision || 0) >= Number(old.revision || 0)) {
-                    tasks.set(id, { ...old, ...task });
-                    if (typeof invalidateHierarchy === 'function') invalidateHierarchy();
-                    renderVirtualRows();
-                    if (selectedTaskId === id) renderDetail();
-                    deps.onContextChanged?.(contextSnapshot());
+                if (Number(task.revision || 0) < Number(old.revision || 0)) return;
+                const merged = { ...old, ...task };
+                tasks.set(id, merged);
+                tasksVersion++;
+                const isStructural = (task.parentTaskId !== undefined && task.parentTaskId !== old.parentTaskId) ||
+                    (task.sectionId !== undefined && task.sectionId !== old.sectionId) ||
+                    (task.rank !== undefined && task.rank !== old.rank) ||
+                    (task.lifecycle !== undefined && task.lifecycle !== old.lifecycle) ||
+                    (currentGroupBy === 'status' && task.status !== undefined && task.status !== old.status) ||
+                    (currentGroupBy === 'ownerUid' && task.ownerUid !== undefined && task.ownerUid !== old.ownerUid) ||
+                    (currentGroupBy === 'priority' && (task.priority !== old.priority || task.values?.priority !== old.values?.priority));
+                if (isStructural && typeof invalidateHierarchy === 'function') {
+                    invalidateHierarchy();
                 }
+                renderVirtualRows();
+                if (selectedTaskId === id) renderDetail();
+                publishContext();
             },
             getState: contextSnapshot };
     }

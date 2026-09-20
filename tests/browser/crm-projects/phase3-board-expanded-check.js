@@ -157,16 +157,19 @@ async function listAllTaskPages(context, token, projectId, filters = { parentSco
 }
 
 async function selectBoardProject(page, projectId, taskId = null) {
-    const picker = page.locator('#projects-board-project-select');
-    await picker.waitFor({ state: 'visible', timeout: 30000 });
-    await picker.selectOption(projectId);
+    // The native picker is retained for controller compatibility; the sidebar
+    // is the visible project navigation in the legacy workspace too.
+    await page.locator(`#projects-workspace-projects [data-workspace-project="${projectId}"]`).click();
+    await page.locator('[data-view="board"]').click();
     await page.waitForFunction((id) => {
         const pickerElement = document.getElementById('projects-board-project-select');
         const section = document.getElementById('projects-board-section');
-        const status = document.getElementById('projects-board-status')?.textContent || '';
+        const count = document.getElementById('projects-board-count')?.textContent || '';
+        const loaded = window.projectsViewsController?.getState()?.response;
         return pickerElement?.value === id
-            && section?.getAttribute('aria-busy') !== 'true'
-            && /access\s+·\s+\d+\s+loaded task/.test(status);
+            && section?.getAttribute('aria-busy') === 'false'
+            && loaded?.project?.id === id && Boolean(loaded?.membership?.role)
+            && /^\d+ loaded · \d+ sections?$/.test(count);
     }, projectId, { timeout: 30000 });
     if (taskId) await page.waitForSelector(`[data-task-id="${taskId}"]`, { timeout: 30000 });
     else await page.waitForSelector('#projects-board-workspace:not([hidden])', { timeout: 30000 });
@@ -181,16 +184,21 @@ async function assertBoardDetailTitle(page, taskId, expectedTitle) {
     await page.waitForFunction((title) => document.getElementById('projects-board-detail-title')?.textContent === title, expectedTitle, { timeout: 30000 });
     assert.strictEqual(await page.locator('#projects-board-detail-title').textContent(), expectedTitle, 'board detail must render the canonical task title.');
     assert.strictEqual(await page.locator('#projects-board-detail-body dl').filter({ has: page.locator('dt', { hasText: /^Task ID$/ }) }).locator('dd').textContent(), taskId, 'board detail must belong to the selected task.');
+    await page.locator('#btn-projects-board-close-detail').click();
+    await page.locator('#projects-board-detail').waitFor({ state: 'hidden', timeout: 30000 });
 }
 
 async function waitForBoardInteractive(page) {
     await page.waitForFunction(() => {
         const workspace = document.getElementById('projects-board-workspace');
         const section = document.getElementById('projects-board-section');
-        const status = document.getElementById('projects-board-status')?.textContent || '';
+        const count = document.getElementById('projects-board-count')?.textContent || '';
+        const loaded = window.projectsViewsController?.getState()?.response;
         const addSection = document.getElementById('btn-projects-board-add-section');
-        return workspace && !workspace.hidden && section?.getAttribute('aria-busy') !== 'true'
-            && /access\s+·\s+\d+\s+loaded task/.test(status)
+        return workspace && !workspace.hidden && section?.getAttribute('aria-busy') === 'false'
+            && document.getElementById('projects-board-table-wrap')?.hidden === false
+            && loaded?.project?.id === document.getElementById('projects-board-project-select')?.value
+            && Boolean(loaded?.membership?.role) && /^\d+ loaded · \d+ sections?$/.test(count)
             && addSection && !addSection.disabled;
     }, null, { timeout: 30000 });
 }
@@ -216,7 +224,13 @@ async function waitForRenderedTaskOrder(page, beforeId, afterId) {
 }
 
 async function reloadBoard(page, projectId, taskId = null) {
-    await page.reload({ waitUntil: 'domcontentloaded' });
+    // Reload the board route, not a task modal left in navigation by a prior
+    // selection or move. Task-detail restoration is a different interaction.
+    const boardUrl = new URL(page.url());
+    boardUrl.searchParams.delete('pjTask');
+    boardUrl.searchParams.delete('pjTab');
+    if (boardUrl.href === page.url()) await page.reload({ waitUntil: 'domcontentloaded' });
+    else await page.goto(boardUrl.href, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => document.getElementById('crm-loading')?.style.display === 'none', null, { timeout: 30000 });
     await page.waitForSelector('#projects-board-workspace:not([hidden])', { timeout: 30000 });
     await selectBoardProject(page, projectId, taskId);
@@ -227,7 +241,11 @@ function projectMutationCount(context, predicate) {
 }
 
 function waitForProjectResponse(page, pathname, method) {
-    const responsePromise = page.waitForResponse((response) => response.url().includes(pathname) && response.request().method() === method, { timeout: 30000 });
+    const expectedPath = pathname.replace(/\/$/, '');
+    const responsePromise = page.waitForResponse((response) => (
+        new URL(response.url()).pathname.replace(/\/$/, '') === expectedPath
+        && response.request().method() === method
+    ), { timeout: 30000 });
     // The action that follows can fail before the expected response is awaited.
     // Attach a rejection observer immediately so browser cleanup cannot turn the
     // abandoned response promise into an unhandled error that masks that action.
@@ -269,9 +287,10 @@ async function createUiProjectAndRows(context) {
     const projectName = `Phase3 UI ${Date.now()}`;
     await page.locator('#btn-projects-board-create-project').click();
     await page.locator('#projects-board-project-name').fill(projectName);
-    const responsePromise = waitForProjectResponse(page, '/api/projects/', 'POST');
+    const responsePromise = waitForProjectResponse(page, '/api/projects', 'POST');
     await page.locator('#btn-projects-board-save-project').click();
     const response = await responsePromise;
+    assert.strictEqual(response.status(), 200, 'UI project creation must be acknowledged.');
     const body = await response.json();
     const project = bodyValue(body, 'project');
     assert.ok(project?.id, 'UI project creation must return a persisted project ID.');
@@ -324,12 +343,11 @@ async function createUiProjectAndRows(context) {
     const root = bodyValue(taskBody, 'task');
     assert.ok(root?.id, 'UI root task creation must return a persisted task ID.');
     await page.waitForSelector(`[data-task-id="${root.id}"]`, { timeout: 30000 });
-    await page.locator(`[data-task-id="${root.id}"]`).click();
     const childResponsePromise = waitForProjectResponse(page, `/api/projects/${project.id}/tasks`, 'POST');
-    await page.locator('#btn-projects-board-add-task').click();
+    await page.locator(`[data-task-id="${root.id}"] .crm-board-add-subtask`).click();
     const childBody = await (await childResponsePromise).json();
     const child = bodyValue(childBody, 'task');
-    assert.strictEqual(child?.parentTaskId, root.id, 'Add task with selected row must create a subtask under that row.');
+    assert.strictEqual(child?.parentTaskId, root.id, 'The row subtask action must create a subtask under that row.');
     await page.waitForSelector(`[data-task-id="${child.id}"]`, { timeout: 30000 });
     return { project, section, root, child };
 }
@@ -383,8 +401,20 @@ async function runCreationAndTypedColumnCase(context) {
         const column = columns.find((entry) => entry.label === definition.label);
         const field = row.locator(`.crm-board-field[data-field-kind="value"][data-column-id="${column.id}"]`);
         assert.strictEqual(await field.count(), 1, `typed ${suffix} editor must be rendered for the task`);
-        assert.strictEqual(await field.isVisible(), true, `typed ${suffix} editor must be visible in the board layout.`);
-        const fieldBox = await field.boundingBox();
+        const editor = definition.type === 'status'
+            ? row.locator(`.crm-board-status-pill[data-column-id="${column.id}"]`) : field;
+        await editor.waitFor({ state: 'visible', timeout: 30000 });
+        assert.strictEqual(await editor.isVisible(), true, `typed ${suffix} editor must be visible in the board layout.`);
+        // A save can trigger a fenced Table refresh between visibility and
+        // geometry reads. Sample usable geometry after that fence settles.
+        const geometry = await page.waitForFunction(({ taskId, columnId, status }) => {
+            const row = document.querySelector(`[data-task-id="${taskId}"]`);
+            const control = row?.querySelector(`${status ? '.crm-board-status-pill' : '.crm-board-field[data-field-kind="value"]'}[data-column-id="${columnId}"]`);
+            const rect = control?.getBoundingClientRect();
+            return rect && rect.width > 12 && rect.height > 12 ? rect.toJSON() : null;
+        }, { taskId, columnId: column.id, status: definition.type === 'status' }, { timeout: 30000 });
+        const fieldBox = await geometry.jsonValue();
+        await geometry.dispose();
         assert.ok(fieldBox && fieldBox.width > 12 && fieldBox.height > 12, `typed ${suffix} editor must have a usable hit target.`);
         if (suffix === 'typed-people') {
             const options = await field.locator('option').count();
@@ -399,7 +429,10 @@ async function runCreationAndTypedColumnCase(context) {
         }
         const value = values.get(suffix);
         const mutation = waitForProjectResponse(page, `/api/projects/${projectId}/tasks/${taskId}`, 'PATCH');
-        if (await field.evaluate((element) => element.tagName === 'SELECT')) await field.selectOption(value);
+        if (definition.type === 'status') {
+            await editor.click();
+            await page.locator(`.crm-status-popover [data-status-key="${value}"]`).click();
+        } else if (await field.evaluate((element) => element.tagName === 'SELECT')) await field.selectOption(value);
         else await field.fill(value);
         await field.blur();
         const response = await mutation;
@@ -407,23 +440,26 @@ async function runCreationAndTypedColumnCase(context) {
     }
     await page.locator('#projects-board-scroll').evaluate((element) => { element.scrollLeft = element.scrollWidth; element.dispatchEvent(new Event('scroll')); });
     const edgeColumn = columns.find((entry) => entry.type === 'status');
-    const edgeStatus = row.locator(`select[data-column-id="${edgeColumn.id}"]`);
+    const edgeStatus = row.locator(`.crm-board-status-pill[data-column-id="${edgeColumn.id}"]`);
     const edgeBox = await edgeStatus.boundingBox();
     assert.ok(edgeBox && edgeBox.width > 12 && edgeBox.height > 12, 'rightmost status editor must remain hit-testable after horizontal scroll.');
-    const edgeHit = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest?.('.crm-board-field')?.getAttribute('data-column-id') || '', {
+    const edgeHit = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest?.('.crm-board-status-pill')?.getAttribute('data-column-id') || '', {
         x: edgeBox.x + Math.min(edgeBox.width / 2, 10), y: edgeBox.y + Math.min(edgeBox.height / 2, 10)
     });
     assert.strictEqual(edgeHit, edgeColumn.id, 'right-edge field hit testing must resolve to the visible status control.');
     const rowBox = await row.boundingBox();
     const dateCell = row.locator('.crm-board-date-cell');
     const peopleField = row.locator(`select[data-column-id="${columns.find((entry) => entry.type === 'people').id}"]`);
-    for (const [label, control] of [['date', row.locator('input[data-field-kind="startDate"]')], ['people', peopleField]]) {
+    const startDateTrigger = row.locator('.crm-board-date-control').filter({ has: page.locator('input[data-field-kind="startDate"]') }).locator('.crm-board-date-trigger');
+    for (const [label, control] of [['date', startDateTrigger], ['people', peopleField]]) {
         await control.scrollIntoViewIfNeeded();
         const box = await control.boundingBox();
         assert.ok(box && box.width > 12 && box.height > 12, `${label} editor must remain hit-testable after scrolling.`);
         assert.ok(!rowBox || box.height <= rowBox.height + 2, `${label} editor must stay within the bounded task row height.`);
         const hit = await page.evaluate(({ x, y }) => {
-            const field = document.elementFromPoint(x, y)?.closest?.('.crm-board-field');
+            const target = document.elementFromPoint(x, y);
+            const field = target?.closest?.('.crm-board-field')
+                || target?.closest?.('.crm-board-date-control')?.querySelector('input.crm-board-field');
             return { fieldKind: field?.getAttribute('data-field-kind') || '', columnId: field?.getAttribute('data-column-id') || '' };
         }, {
             x: box.x + Math.min(box.width / 2, 10), y: box.y + Math.min(box.height / 2, 10)
@@ -449,6 +485,7 @@ async function runStatusLabelAndRoleCase(context, typed) {
     const page = contextValue(context, 'page');
     const projectId = typed?.projectId || context.projectId;
     const project = await readProject(context, projectId, ownerToken);
+    await page.locator('[data-projects-open="projects-workspace-settings"]').click();
     const statusInput = page.locator('#projects-board-status-in-progress');
     await statusInput.fill('Working now');
     const save = waitForProjectResponse(page, `/api/projects/${projectId}`, 'PATCH');
@@ -572,8 +609,13 @@ async function runStatusLabelAndRoleCase(context, typed) {
         membershipRevision = Number(revokeBody.membershipRevision ?? revokeBody.removed?.membershipRevision ?? membershipRevision + 1);
         await viewerPage.reload({ waitUntil: 'domcontentloaded' });
         await viewerPage.waitForFunction(() => document.getElementById('crm-loading')?.style.display === 'none', null, { timeout: 30000 });
-        await viewerPage.locator('#projects-board-project-select').waitFor({ state: 'visible', timeout: 30000 });
+        await viewerPage.waitForFunction(() => {
+            const picker = document.getElementById('projects-board-project-select');
+            const refresh = document.getElementById('btn-projects-access-refresh');
+            return picker && !picker.disabled && refresh && !refresh.disabled;
+        }, null, { timeout: 30000 });
         assert.strictEqual(await viewerPage.locator(`#projects-board-project-select option[value="${projectId}"]`).count(), 0, 'revoked membership must disappear from the project picker after a direct reload.');
+        assert.strictEqual(await viewerPage.locator(`#projects-workspace-projects [data-workspace-project="${projectId}"]`).count(), 0, 'revoked membership must disappear from visible project navigation.');
         assert.strictEqual(await viewerPage.locator('#projects-board-workspace:not([hidden])').count(), 0, 'revoked membership must not retain project board data after reload.');
     } finally {
         await context.closeRolePage?.(viewerPage);
@@ -594,11 +636,13 @@ async function runStatusLabelAndRoleCase(context, typed) {
         const editorRefresh = editorPage.waitForResponse((response) => response.url().endsWith(`/api/projects/${projectId}`)
             && response.request().method() === 'GET', { timeout: 30000 });
         await editorPage.locator('#btn-projects-board-refresh').click();
-        await editorRefresh;
+        const editorRefreshResponse = await editorRefresh;
+        assert.strictEqual(editorRefreshResponse.status(), 200, 'downgraded membership refresh must succeed.');
+        const editorRefreshBody = await editorRefreshResponse.json();
         await editorPage.waitForFunction(() => document.getElementById('projects-board-section')?.getAttribute('aria-busy') !== 'true', null, { timeout: 30000 });
         assert.strictEqual(await editorPage.locator('#btn-projects-board-add-task').isDisabled(), true, 'a role downgrade must revoke task creation controls after refresh.');
         assert.strictEqual(await editorPage.locator(`[data-task-id="${typed.taskId}"] input[data-field-kind="title"]`).count(), 0, 'a focused Editor draft must lose mutation controls after an Owner-to-Viewer refresh.');
-        assert.match(await editorPage.locator('#projects-board-status').textContent(), /Viewer access/, 'role downgrade refresh must render the current Viewer membership.');
+        assert.strictEqual(bodyValue(editorRefreshBody, 'membership')?.role, 'Viewer', 'the refresh that revokes Editor controls must return the current Viewer membership.');
     } finally {
         await context.closeRolePage?.(editorPage);
     }
@@ -740,6 +784,7 @@ async function runHoverAndEdgeAutoscrollCase(context, pagination) {
                 const relatedRow = event.relatedTarget?.closest?.('[data-task-id], [data-section-id]') || null;
                 window.__phase3DragAudit.push({
                     type,
+                    pointer: { x: event.clientX, y: event.clientY },
                     targetId,
                     targetConnected: Boolean(targetRow?.isConnected),
                     targetMatchesCurrent: Boolean(targetRow && currentTarget === targetRow),
@@ -755,9 +800,13 @@ async function runHoverAndEdgeAutoscrollCase(context, pagination) {
         window.__phase3DragAuditSourceId = sourceId;
         window.__phase3DragAuditParentId = parentId;
     }, { sourceId: rootIds[1], parentId: rootIds[0] });
+    if (context.artifactDir) fs.writeFileSync(path.join(context.artifactDir, 'phase3-board-hover-start-geometry.json'), `${JSON.stringify({ sourceBox, parentBox, destination: { x: parentBox.x + parentBox.width * .84, y: parentBox.y + parentBox.height / 2 } }, null, 2)}\n`, 'utf8');
     await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
     await page.mouse.down();
     await page.mouse.move(parentBox.x + parentBox.width * .84, parentBox.y + parentBox.height / 2, { steps: 8 });
+    // Crossing child controls can end on dragenter. Send the next native move
+    // at the destination so the parent receives dragover before the hover wait.
+    await page.mouse.move(parentBox.x + parentBox.width * .84, parentBox.y + parentBox.height / 2);
     await page.waitForFunction((id) => document.querySelector(`[data-task-id="${id}"] .crm-board-expander`)?.getAttribute('aria-expanded') === 'true', rootIds[0], { timeout: 5000 });
     assert.ok(await page.locator(`[data-task-id="${rootIds[0]}"] .crm-board-expander`).getAttribute('aria-expanded') === 'true', 'hovering a parent drop target must expand it before release.');
     const dragAuditAtExpand = await page.evaluate(({ sourceId, parentId }) => ({
@@ -1203,7 +1252,7 @@ async function runDeferredRemoteAndFailureCase(context, typed, pagination) {
         const initialScrollTop = await page.locator('#projects-board-scroll').evaluate((element) => element.scrollTop);
         await dirty.fill('Local dirty draft');
         await dirty.focus();
-        await dirty.evaluate((element) => element.setSelectionRange(5, 5));
+        await dirty.evaluate((element) => { element.setSelectionRange(5, 5); window.__phase3DirtyTitle = element; });
         assert.deepEqual(await dirty.evaluate(element => ({ active: document.activeElement === element, value: element.value, caret: element.selectionStart })), { active: true, value: 'Local dirty draft', caret: 5 });
         const before = await listTasks(context, ownerToken, typed.projectId);
         const task = before.tasks.find((entry) => entry.id === typed.taskId);
@@ -1223,6 +1272,7 @@ async function runDeferredRemoteAndFailureCase(context, typed, pagination) {
                 value: active?.value,
                 activeTaskId: active?.closest?.('[data-task-id]')?.dataset?.taskId || '',
                 selectionStart: active?.selectionStart ?? null,
+                sameInput: active === window.__phase3DirtyTitle,
                 busy: document.getElementById('projects-board-section')?.getAttribute('aria-busy'),
                 status: document.getElementById('projects-board-status')?.textContent,
                 scrollTop: scroll?.scrollTop ?? null
@@ -1231,7 +1281,9 @@ async function runDeferredRemoteAndFailureCase(context, typed, pagination) {
         assert.strictEqual(draftView.value, 'Local dirty draft', `remote refresh must retain dirty input: ${JSON.stringify(draftView)}`);
         assert.strictEqual(draftView.activeTaskId, typed.taskId, 'remote refresh must preserve editing focus on the same task.');
         assert.strictEqual(draftView.selectionStart, 5, 'remote refresh must preserve the dirty caret position.');
+        assert.strictEqual(draftView.sameInput, true, 'remote refresh must retain the same native input node.');
         assert.strictEqual(draftView.scrollTop, initialScrollTop, 'remote refresh must preserve the current vertical scroll position.');
+        if (context.artifactDir) fs.writeFileSync(path.join(context.artifactDir, 'phase3-board-focus-continuity.json'), `${JSON.stringify(draftView, null, 2)}\n`, 'utf8');
 
         // A real scroll event must keep the dirty editor mounted and must not
         // turn the draft into an unsolicited PATCH while rows are rerendered.
@@ -1251,8 +1303,16 @@ async function runDeferredRemoteAndFailureCase(context, typed, pagination) {
         await scrollDraft.evaluate((element) => element.setSelectionRange(6, 6));
         const scrollBefore = await page.locator('#projects-board-scroll').evaluate((element) => element.scrollTop);
         const scrollPatchesBefore = projectMutationCount(context, (entry) => entry.url.endsWith(`/tasks/${scrollTaskId}`) && entry.url.includes(`/projects/${scrollProjectId}/`) && entry.method === 'PATCH');
-        const expectedScroll = scrollBefore + 46;
-        await page.locator('#projects-board-scroll').evaluate((element, nextTop) => { element.scrollTop = nextTop; element.dispatchEvent(new Event('scroll')); }, expectedScroll);
+        const requestedScroll = scrollBefore + 46;
+        const expectedScroll = await page.locator('#projects-board-scroll').evaluate((element, nextTop) => {
+            element.scrollTop = nextTop;
+            // Chrome quantizes fractional offsets on assignment. Preserve the
+            // exact accepted position across the render, with no tolerance.
+            const acceptedTop = element.scrollTop;
+            element.dispatchEvent(new Event('scroll'));
+            return acceptedTop;
+        }, requestedScroll);
+        assert.ok(expectedScroll > scrollBefore, 'the scroll assignment must move the viewport before its render event.');
         const scrollDraftView = await page.evaluate(() => {
             const active = document.activeElement;
             const scroll = document.getElementById('projects-board-scroll');
@@ -1420,12 +1480,17 @@ async function runPointerKeyboardAndNoopCase(context) {
     assert.ok(canonicalRootOrder.some((task) => task.id === rootB && task.sectionId === sectionA && !task.parentTaskId), 'root B must start as a section A root.');
     assert.ok(canonicalRootOrder.some((task) => task.id === rootC && task.sectionId === sectionB && !task.parentTaskId), 'root C must start as a section B root.');
     await reloadBoard(page, projectId, rootA);
-    await page.locator(`[data-task-id="${rootB}"]`).click();
+    // Clicking the row opens its detail dialog. Keyboard moves start on the
+    // focusable board row, as the indent/outdent/down cases below do too.
+    await page.locator(`[data-task-id="${rootB}"]`).focus();
+    assert.strictEqual(await page.locator('dialog[open]').count(), 0, 'keyboard move setup must leave the board unobstructed.');
     const beforeKeyboardUp = projectMutationCount(context, (entry) => entry.url.endsWith(`/tasks/${rootB}/move`));
     const keyboardUp = waitForProjectResponse(page, `/api/projects/${projectId}/tasks/${rootB}/move`, 'POST');
     await page.locator(`[data-task-id="${rootB}"]`).press('ArrowUp');
     await keyboardUp;
     await waitForBoardInteractive(page);
+    assert.strictEqual(await page.locator('dialog[open]').count(), 0, 'keyboard reorder must not auto-open task details.');
+    assert.strictEqual(await page.evaluate(() => document.activeElement?.dataset?.taskId), rootB, 'ArrowUp must retain native row focus after reconciliation.');
     assert.strictEqual(projectMutationCount(context, (entry) => entry.url.endsWith(`/tasks/${rootB}/move`)), beforeKeyboardUp + 1, 'keyboard sibling move must issue one operation.');
     const afterKeyboardUp = await listTasks(context, ownerToken, projectId, { parentScope: 'root' });
     const sectionARootIdsAfterUp = afterKeyboardUp.tasks
@@ -1502,13 +1567,15 @@ async function runPointerKeyboardAndNoopCase(context) {
     }), rootA);
     assert.strictEqual(focusedAfterIndent.activeRowId, rootA, 'keyboard indent must retain focus on the moved child row.');
     assert.strictEqual(focusedAfterIndent.selected, 'true', 'keyboard indent must retain selection on the moved child row.');
+    assert.strictEqual(await page.locator('dialog[open]').count(), 0, 'keyboard indent must leave the board unobstructed.');
     await captureKeyboardMoveState(context, page, ownerToken, projectId, rootA, rootB, 'phase3-board-keyboard-after-indent.json');
     const beforeKeyboardOutdent = projectMutationCount(context, (entry) => entry.url.endsWith(`/tasks/${rootA}/move`));
     const keyboardOutdent = waitForProjectResponse(page, `/api/projects/${projectId}/tasks/${rootA}/move`, 'POST');
-    await page.locator(`[data-task-id="${rootA}"]`).focus();
-    await page.locator(`[data-task-id="${rootA}"]`).press('Alt+ArrowLeft');
+    await page.keyboard.press('Alt+ArrowLeft');
     await keyboardOutdent;
     await waitForBoardInteractive(page);
+    assert.strictEqual(await page.locator('dialog[open]').count(), 0, 'keyboard outdent must not auto-open task details.');
+    assert.strictEqual(await page.evaluate(() => document.activeElement?.dataset?.taskId), rootA, 'keyboard outdent must retain native row focus.');
     assert.strictEqual(projectMutationCount(context, (entry) => entry.url.endsWith(`/tasks/${rootA}/move`)), beforeKeyboardOutdent + 1, 'keyboard outdent must issue one operation.');
     if (await page.locator(`[data-task-id="${deep}"]`).count() === 0) {
         await page.locator(`[data-task-id="${rootB}"] .crm-board-expander`).click();
@@ -1614,7 +1681,20 @@ async function runPointerKeyboardAndNoopCase(context) {
     await waitForBoardInteractive(page);
     await waitForTaskGestureReady(page, rootB);
     assert.strictEqual(await page.locator(`[data-task-id="${rootB}"]`).isVisible(), true, 'successful reparent must keep the moved row visible after the settled response.');
+    // Reorder selection does not request a modal; explicitly open the moved task
+    // before checking its canonical new-parent detail path.
+    await page.locator(`[data-task-id="${rootB}"]`).focus();
+    await page.keyboard.press('Enter');
+    await page.locator('#projects-board-detail').waitFor({ state: 'visible' });
     assert.match(await page.locator('#projects-board-detail-body').textContent(), /Move C/, 'successful reparent detail path must include the new parent.');
+    const detailRefresh = page.waitForResponse(response => response.request().method() === 'GET'
+        && response.url().includes(`/api/projects/${projectId}/tasks?`));
+    await page.locator('#btn-projects-board-refresh').dispatchEvent('click');
+    await detailRefresh;
+    await waitForBoardInteractive(page);
+    assert.strictEqual(await page.locator('#projects-board-detail').isVisible(), true, 'ordinary refresh must preserve an explicit detail-open intent.');
+    assert.strictEqual(await page.locator('#projects-board-detail-body dl').filter({ has: page.locator('dt', { hasText: /^Task ID$/ }) }).locator('dd').textContent(), rootB);
+    assert.match(await page.locator('#projects-board-detail-body').textContent(), /Move C/);
     try {
         await reloadBoard(page, projectId, rootC);
         await page.locator(`[data-task-id="${rootC}"] .crm-board-expander`).click();
@@ -1647,10 +1727,26 @@ async function runPointerKeyboardAndNoopCase(context) {
         throw error;
     }
     await waitForBoardInteractive(page);
+    await page.evaluate(() => {
+        document.addEventListener('click', event => {
+            window.__phase3ReparentClick = { tag: event.target.tagName, taskId: event.target.closest('[data-task-id]')?.dataset.taskId || '',
+                action: event.target.closest('[data-action]')?.dataset.action || '', html: event.target.outerHTML.slice(0, 350) };
+        }, { capture: true, once: true });
+    });
     await page.locator(`[data-task-id="${rootB}"]`).click();
+    const clickTarget = await page.evaluate(() => ({ ...window.__phase3ReparentClick,
+        detailOpen: document.getElementById('projects-board-detail')?.open === true }));
+    if (context.artifactDir) fs.writeFileSync(path.join(context.artifactDir, 'phase3-board-reparent-click-target.json'), `${JSON.stringify(clickTarget, null, 2)}\n`, 'utf8');
+    // Reload intentionally discards modal navigation. A row-center click can
+    // hit an inline control; use the explicit row keyboard action for details.
+    if (await page.locator('#projects-board-detail').isVisible()) await page.locator('#btn-projects-board-close-detail').click();
+    await page.locator(`[data-task-id="${rootB}"]`).focus();
+    await page.keyboard.press('Enter');
+    await page.locator('#projects-board-detail').waitFor({ state: 'visible' });
     await waitForTaskGestureReady(page, rootB);
     const reparentedAfterReload = await listTasks(context, ownerToken, projectId, { parentScope: 'direct', parentTaskId: rootC });
     assert.ok(reparentedAfterReload.tasks.some((entry) => entry.id === rootB), 'reparent must survive a direct board reload.');
+    assert.strictEqual(await page.locator('#projects-board-detail-body dl').filter({ has: page.locator('dt', { hasText: /^Task ID$/ }) }).locator('dd').textContent(), rootB, 'reloaded detail must belong to the moved task.');
     assert.match(await page.locator('#projects-board-detail-body').textContent(), /Move C/, 'reparented detail path must remain bound to the new parent after reload.');
     await captureScreenshot(context, page, 'phase3-board-expanded-moves.png');
     return { projectId, rootA, rootB, rootC, deep };

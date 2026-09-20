@@ -159,7 +159,7 @@
         popover.className = 'crm-datepick';
         popover.setAttribute('role', 'dialog');
         popover.setAttribute('aria-label', 'Choose a date');
-        host().appendChild(popover);
+        (target.closest('[data-projects-ui="v2"]') && target.closest('dialog[open]') || host()).appendChild(popover);
         render();
         place(target);
         popover.querySelector('.crm-datepick-day.is-selected, .crm-datepick-day.is-today, .crm-datepick-day')?.focus();
@@ -220,6 +220,7 @@
         document.addEventListener('keydown', (event) => {
             if (!popover) return;
             if (event.key === 'Escape') {
+                if (field?.closest('[data-projects-ui="v2"]')) event.preventDefault();
                 event.stopPropagation();
                 const target = field;
                 close();

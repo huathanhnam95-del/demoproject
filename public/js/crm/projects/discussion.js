@@ -30,6 +30,7 @@
     let caretInteractionSequence = 0;
     let remoteObserver = null;
     let remoteRepair = null;
+    let selectionActive = true, selectionLoaded = false;
     const mentionsByScope = new Map();
     const draftByScope = new Map();
     const caretByScope = new Map();
@@ -195,13 +196,14 @@
         });
         const currentUid = getCurrentUser()?.uid || '';
         const renderMessage = (message, depth = 0) => {
+          const repairing = remoteRepair?.ids.includes(message.id);
           const hidden = message.moderationState && message.moderationState !== 'visible';
-          const body = message.redacted ? '<span class="crm-muted">This message is unavailable.</span>' : escape(message.body || '').replace(/\r?\n/g, '<br>');
+          const body = repairing ? '<span class="crm-muted">Refreshing this update…</span>' : message.redacted ? '<span class="crm-muted">This message is unavailable.</span>' : escape(message.body || '').replace(/\r?\n/g, '<br>');
           const own = currentUid && currentUid === message.authorUid;
           const replies = (byParent.get(message.id) || []).map((reply) => renderMessage(reply, depth + 1)).join('');
           const controls = `<button type="button" class="crm-btn-secondary crm-btn-sm" data-discussion-history="${escape(message.id)}">History</button>${canWrite() ? `<button type="button" class="crm-btn-secondary crm-btn-sm" data-discussion-reply="${escape(message.id)}">Reply</button>${own && !hidden ? `<button type="button" class="crm-btn-secondary crm-btn-sm" data-discussion-edit="${escape(message.id)}">Edit</button>` : ''}${selection.role === 'Owner' ? `<button type="button" class="crm-btn-secondary crm-btn-sm" data-discussion-moderate="${escape(message.id)}" data-moderation-action="${hidden ? 'restore' : 'hide'}">${hidden ? 'Restore' : 'Hide'}</button>` : ''}` : ''}`;
-          const mentionLine = Array.isArray(message.mentions) && message.mentions.length ? `<p class="crm-muted">Mentioned: ${message.mentions.map((uid) => `@${escape(uid)}`).join(', ')}</p>` : '';
-          return `<article class="crm-projects-discussion-message${hidden ? ' is-moderated' : ''}" data-message-id="${escape(message.id)}" style="margin-left:${Math.min(depth, 3) * 16}px"><header><strong>${escape(message.authorUid || 'Member')}</strong><time>${escape(message.createdAt || '')}</time>${hidden ? '<span class="crm-muted">Moderated</span>' : ''}</header><p>${body}</p>${mentionLine}${attachmentButtons(message)}<div class="crm-inline-fields">${controls}</div>${replies}</article>`;
+          const mentionLine = !repairing && Array.isArray(message.mentions) && message.mentions.length ? `<p class="crm-muted">Mentioned: ${message.mentions.map((uid) => `@${escape(uid)}`).join(', ')}</p>` : '';
+          return `<article class="crm-projects-discussion-message${hidden ? ' is-moderated' : ''}" data-message-id="${escape(message.id)}" style="margin-left:${Math.min(depth, 3) * 16}px"><header><strong>${escape(message.authorUid || 'Member')}</strong><time>${escape(message.createdAt || '')}</time>${hidden ? '<span class="crm-muted">Moderated</span>' : ''}</header><p>${body}</p>${mentionLine}${repairing ? '' : attachmentButtons(message)}<div class="crm-inline-fields">${repairing ? '' : controls}</div>${replies}</article>`;
         };
         const visibleIds = new Set(messages.map((message) => message.id));
         target.innerHTML = messages.filter((message) => !message.parentMessageId || !visibleIds.has(message.parentMessageId)).map((message) => renderMessage(message)).join('');
@@ -545,7 +547,7 @@
         historySequence += 1;
         pending = false;
         activeMutationToken += 1;
-        selection = null;
+        selection = null; selectionLoaded = false; selectionActive = false; remoteRepair = null;
         scopeTuple = '';
         authorityKey = '';
         memberDirectoryCache.clear();
@@ -564,12 +566,15 @@
         render();
         return;
       }
+      selectionActive = next.deferLoad !== true;
       const normalized = { actorUid, projectId: String(next.projectId), taskId: String(next.taskId), taskRevision: Number(next.taskRevision || 0), role: String(next.role || ''), lifecycle: String(next.lifecycle || 'active') };
       const nextTuple = JSON.stringify([normalized.actorUid, normalized.projectId, normalized.taskId]);
       const nextAuthority = `${normalized.role}|${normalized.lifecycle}`;
       const tupleChanged = nextTuple !== scopeTuple;
       const authorityChanged = nextAuthority !== authorityKey;
       if (tupleChanged || authorityChanged) {
+        remoteRepair = null;
+        selectionLoaded = false;
         requestEpoch += 1;
         loadSequence += 1;
         historySequence += 1;
@@ -603,7 +608,8 @@
         messageHistory = []; historyMessageId = '';
       }
       render();
-      if (tupleChanged || authorityChanged) {
+      if (selectionActive && !selectionLoaded) {
+        selectionLoaded = true;
         const scope = currentScope();
         load();
         loadMentionOptions(scope);
@@ -631,7 +637,9 @@
       if (event.target.closest('#btn-projects-board-discussion-more')) load({ append: true });
     }
 
+    let initialized = false;
     function init() {
+      if (initialized) return; initialized = true;
       elements.projectsBoardDiscussionForm?.addEventListener('submit', sendMessage);
       ['focus', 'pointerdown', 'keydown'].forEach((name) => {
         elements.projectsBoardDiscussionInput?.addEventListener(name, () => { caretInteractionSequence += 1; });
@@ -671,16 +679,28 @@
     async function applyRemote(change) {
       if (!selection || !change.isCurrent()) return true;
       const scope = currentScope();
+      if (!scope) return false;
       const list = elements.projectsBoardDiscussionList;
       const scrollTop = list?.scrollTop;
-      const relevant = change.hydration.messages.some(message => message.taskId === selection.taskId)
-        || change.hydration.unavailableMessageIds.some(id => messages.some(message => message.id === id));
+      const incoming = change.hydration?.messages || [];
+      const unavailable = change.hydration?.unavailableMessageIds || [];
+      const relevant = incoming.some(message => message.taskId === selection.taskId)
+        || unavailable.some(id => messages.some(message => message.id === id));
       if (!relevant && !change.discussionRefresh && !change.authorityChanged) return true;
-      mergeMessages(change.hydration.messages, change.hydration.unavailableMessageIds);
+      // Hidden loaded history still owns invalidations. Apply supplied scoped
+      // records/tombstones and finish bounded repairs before acknowledging them.
+      // A never-opened Overview has no loaded history to repair; activation will
+      // take its first authorized snapshot without eagerly reading history here.
+      if (!selectionActive && !selectionLoaded && !messages.length) return true;
+      mergeMessages(incoming, unavailable);
       if (change.discussionRefresh || change.authorityChanged) {
         const repairKey = `${scopeTuple}:${scope.epoch}:${change.cursor}`;
-        if (remoteRepair?.key !== repairKey) remoteRepair = { key: repairKey, ids: [...new Set([...messages.map(message => message.id), ...change.messageIds])], offset: 0, fallback: change.hydrationFallback === true, pageCursor: '', seen: new Set() };
+        if (remoteRepair?.key !== repairKey) remoteRepair = { key: repairKey, ids: [...new Set([...messages.map(message => message.id), ...(change.messageIds || [])])], offset: 0, fallback: change.hydrationFallback === true, pageCursor: '', seen: new Set() };
         const repair = remoteRepair;
+        // Keep loaded history and its position, but never display unvalidated
+        // old bodies/attachments if the user opens Updates during a failed or
+        // held repair. The same observer page retains the retry obligation.
+        render(); if (list && scrollTop !== undefined) list.scrollTop = scrollTop;
         // At most four requests per turn. The observer retains this exact page
         // and rereads authority/heads before resuming, without acknowledging it.
         for (let work = 0; work < 4; work++) {

@@ -34,9 +34,6 @@ function resolveTaskState({ tasks, taskId, projectLifecycle = 'active', sections
     if (sections && !section) throw new DomainError(409, 'INVALID_SECTION_REFERENCE', 'Root task section must belong to this project.');
     if (sections && (section.data.lifecycle || 'active') !== 'active') rank = Math.max(rank, lifecycleRank(section.data.lifecycle || 'archived'));
     const pathIds = chain.map((row) => row.id);
-    if (pathIds.length > 5) {
-        throw new DomainError(400, 'MAX_DEPTH_EXCEEDED', 'Subtask hierarchy cannot exceed 5 levels.');
-    }
     return {
         pathIds,
         ancestorIds: pathIds.slice(1),
@@ -50,27 +47,12 @@ function assertNoCycle({ tasks, targetId, parentTaskId }) {
     const byId = tasks instanceof Map ? tasks : new Map((tasks || []).map((row) => [row.id, row]));
     let current = parentTaskId;
     const seen = new Set([targetId]);
-    let parentDepth = 0;
     while (current) {
         if (seen.has(current)) throw new DomainError(409, 'ANCESTRY_CYCLE', 'A task cannot become its own ancestor.');
         seen.add(current);
-        parentDepth++;
         const row = byId.get(current);
         if (!row) throw new DomainError(409, 'INVALID_PARENT_REFERENCE', 'Task parent must belong to the same project.');
         current = row.data.parentTaskId || null;
-    }
-    function getSubtreeDepth(rootId) {
-        let max = 1;
-        for (const [id, row] of byId) {
-            if (row.data.parentTaskId === rootId) {
-                max = Math.max(max, 1 + getSubtreeDepth(id));
-            }
-        }
-        return max;
-    }
-    const targetSubtreeDepth = getSubtreeDepth(targetId);
-    if (parentDepth + targetSubtreeDepth > 5) {
-        throw new DomainError(400, 'MAX_DEPTH_EXCEEDED', 'Subtask hierarchy cannot exceed 5 levels.');
     }
 }
 

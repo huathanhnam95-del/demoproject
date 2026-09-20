@@ -38,6 +38,19 @@ function run(command, args, extraEnv = {}) {
 
 function buildLegacyChecks() {
     return [
+        ['node', ['tests/crm/projects/v2-entry.test.js']],
+        ['node', ['tests/crm/projects/v2-shell.test.js']],
+        ['node', ['tests/crm/projects/v2-columns.test.js']],
+        ['node', ['tests/crm/projects/v2-row-editors.test.js']],
+        ['node', ['tests/crm/projects/v2-quick-create.test.js']],
+        ['node', ['tests/crm/projects/v2-task-detail.test.js']],
+        ['node', ['tests/crm/projects/v2-views-navigation.test.js']],
+        ['node', ['tests/crm/projects/v2-automations.test.js']],
+        ['node', ['tests/crm/projects/v2-mobile-accessibility.test.js']],
+        ['node', ['tests/crm/projects/v2-performance-reconciliation.test.js']],
+        ['node', ['tests/crm/projects/v2-rollout-readiness.test.js']],
+        ['node', ['tests/crm/projects/field-save-feedback.test.js']],
+        ['node', ['tests/crm/projects/board-local-save-lineage.test.js']],
         ['node', ['tests/crm/admin-router-contract.test.js']],
         ['node', ['tests/crm/accounts-role-management.test.js']],
         ['node', ['tests/crm/collection-contracts.test.js']],

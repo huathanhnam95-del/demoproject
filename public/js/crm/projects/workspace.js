@@ -66,6 +66,10 @@
             dialog?.querySelectorAll('[data-projects-settings-panel]').forEach(section => { section.hidden = section.dataset.projectsSettingsPanel !== name; });
         }
         function closeDialog(dialog, delegate = true) {
+            if (deps.presentationV2 && dialog.id === 'projects-board-detail') {
+                globalScope.CrmProjectsDetailSurfaceV2?.close(dialog);
+                return;
+            }
             const cancelIds = { 'projects-board-detail': 'btn-projects-board-close-detail', 'projects-board-create-project': 'btn-projects-board-cancel-project', 'projects-board-column-form': 'btn-projects-board-cancel-column' };
             const cancel = byId(cancelIds[dialog.id]);
             if (cancel?.disabled) return;
@@ -143,7 +147,10 @@
                 const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
                 event.preventDefault(); activateSettings(tabs[next].dataset.projectsSettingsTab); tabs[next].focus();
             });
-            panel.querySelectorAll('[data-projects-dialog]').forEach(watchDialog);
+            panel.querySelectorAll('[data-projects-dialog]').forEach(dialog => {
+                if (deps.presentationV2 && dialog.id === 'projects-board-detail') return;
+                watchDialog(dialog);
+            });
             activateSettings();
             const filters = byId('projects-view-filters');
             listen(filters, 'input', event => {
@@ -156,6 +163,8 @@
                 filters.querySelectorAll('details').forEach(details => { details.open = false; });
             });
             listen(filters, 'reset', () => { clearTimeout(timer); });
+            // V2 owns utility navigation, while this controller retains dialogs/search.
+            if (deps.presentationV2) { render(); return; }
             const utilityRail = byId('projects-utility-rail');
             // Below 1700px the rail overlays the board instead of sharing the grid,
             // so it must start as the 49px icon strip or it covers the right-hand columns.
@@ -241,7 +250,10 @@
         }
         function dispose() {
             disposed = true; clearTimeout(timer); observers.forEach(observer => observer.disconnect()); removers.forEach(remove => remove());
-            panel?.querySelectorAll('[data-projects-dialog]').forEach(dialog => { if (dialog.open) dialog.close(); dialog.hidden = true; });
+            panel?.querySelectorAll('[data-projects-dialog]').forEach(dialog => {
+                if (deps.presentationV2 && dialog.id === 'projects-board-detail') { globalScope.CrmProjectsDetailSurfaceV2?.close(dialog); return; }
+                if (dialog.open) dialog.close(); dialog.hidden = true;
+            });
         }
         return { init, dispose, closeForNavigation() { if (current()) panel?.querySelectorAll('[data-projects-dialog]').forEach(dialog => { if (dialog.open) closeDialog(dialog); }); }, setSelection(value) { selection = value || {}; render(); }, setContext(value) { context = value; render(); } };
     }

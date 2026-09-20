@@ -20,13 +20,24 @@ const CRM_ROOTS = [
   'functions/src/crm'
 ];
 const EXPECTED_LEGACY_CHECK_COUNT = 66;
-// Added in 58b1a2c19e39ed3b48cd48fd2fb252bec63aec7f after the frozen baseline.
+// Enumerate additions after the frozen baseline, including subsequent Projects
+// and teacher-scheduler checks; never discard an arbitrary slice of the runner.
 const EXPECTED_EXISTING_ADDITIONAL_CHECKS = [
+  ...['v2-entry', 'v2-shell', 'v2-columns', 'v2-row-editors', 'v2-quick-create', 'v2-task-detail', 'v2-views-navigation', 'v2-automations', 'v2-mobile-accessibility', 'v2-performance-reconciliation', 'v2-rollout-readiness', 'field-save-feedback', 'board-local-save-lineage'].map(name => ['node', [`tests/crm/projects/${name}.test.js`]]),
   ['node', ['tests/crm/enrollment-1on1-scheduling.test.js']],
   ['node', ['tests/crm/student-route-deep-link.test.js']],
   ['node', ['tests/crm/scheduling-service.test.js']]
 ];
-const EXPECTED_CURRENT_CHECK_COUNT = EXPECTED_LEGACY_CHECK_COUNT + EXPECTED_EXISTING_ADDITIONAL_CHECKS.length;
+const EXPECTED_SCHEDULER_ADDITIONAL_CHECKS = [
+  ['node', ['tests/crm/scheduling-operation-service.test.js']],
+  ['node', ['tests/crm/classroom-api-operation-id.test.js']],
+  ['node', ['tests/crm/teacher-scheduler-router-contract.test.js']],
+  ['node', ['tests/crm/teacher-scheduler-behavior.test.js']],
+  ['node', ['tests/crm/teacher-scheduler-series-route.test.js']],
+  ['node', ['tests/crm/teacher-scheduler-client-controller.test.js']]
+];
+const EXPECTED_CURRENT_CHECK_COUNT = EXPECTED_LEGACY_CHECK_COUNT
+  + EXPECTED_EXISTING_ADDITIONAL_CHECKS.length + EXPECTED_SCHEDULER_ADDITIONAL_CHECKS.length;
 const APPROVED_ADDITIONAL_LINT_GLOBS = [
   'functions/src/routes/crm/**/*.{js,cjs,mjs}',
   'services/crm-voice-relay/**/*.{js,cjs,mjs}'
@@ -296,11 +307,12 @@ test('runner list preserves the frozen baseline, existing scheduling additions a
     'src/routes/admin.js',
     '--quiet'
   ]);
-  assert.deepEqual(checks.slice(10, 13), EXPECTED_EXISTING_ADDITIONAL_CHECKS);
-  assert.equal(checks.filter(([command]) => command !== 'eslint').length, 68);
-  // Remove only the exact existing scheduling slice and approved lint additions
-  // before comparing the original frozen hash, including all 65 original nonlint checks.
-  const legacyChecks = [...checks.slice(0, 10), ...checks.slice(13)].map(([command, args]) => [command, command === 'eslint'
+  const additions = new Set([...EXPECTED_EXISTING_ADDITIONAL_CHECKS, ...EXPECTED_SCHEDULER_ADDITIONAL_CHECKS].map(check => JSON.stringify(check)));
+  assert.deepEqual(checks.filter(check => additions.has(JSON.stringify(check))), [...EXPECTED_EXISTING_ADDITIONAL_CHECKS, ...EXPECTED_SCHEDULER_ADDITIONAL_CHECKS]);
+  assert.equal(checks.filter(([command]) => command !== 'eslint').length, EXPECTED_CURRENT_CHECK_COUNT - 1);
+  // Remove only explicitly enumerated additions. Preserve the original frozen
+  // count, order and hash, including all 65 original nonlint checks.
+  const legacyChecks = checks.filter(check => !additions.has(JSON.stringify(check))).map(([command, args]) => [command, command === 'eslint'
     ? args.filter(arg => !APPROVED_ADDITIONAL_LINT_GLOBS.includes(arg))
     : args]);
   assert.equal(checksHash(legacyChecks), EXPECTED_COMPOSED_LEGACY_SHA256);

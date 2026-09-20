@@ -9,7 +9,7 @@ function expectCode(fn, code) {
 }
 
 async function testHierarchyDepth() {
-    console.log('Testing 5-level hierarchy depth limit...');
+    console.log('Testing deep hierarchy resolution and cycle safety...');
 
     // Construct a 5-level chain: L0 -> L1 -> L2 -> L3 -> L4
     const tasks = [
@@ -28,27 +28,24 @@ async function testHierarchyDepth() {
     assert.strictEqual(s4.pathIds.length, 5);
     assert.deepStrictEqual(s4.pathIds, ['t4', 't3', 't2', 't1', 't0']);
 
-    // Now add L5 (6th level)
-    const tasks6 = [
-        ...tasks,
-        { id: 't5', data: { sectionId: null, parentTaskId: 't4', lifecycle: 'active' } },
-    ];
+    // Preserve true depth beyond the old five-level presentation limit.
+    const deepTasks = [...tasks];
+    for (let depth = 5; depth < 25; depth += 1) {
+        deepTasks.push({ id: `t${depth}`, data: { sectionId: null, parentTaskId: `t${depth - 1}`, lifecycle: 'active' } });
+    }
+    const deepState = resolveTaskState({ tasks: deepTasks, taskId: 't24', sections });
+    assert.strictEqual(deepState.pathIds.length, 25);
+    assert.strictEqual(deepState.pathIds.at(-1), 't0');
 
-    expectCode(() => {
-        resolveTaskState({ tasks: tasks6, taskId: 't5', sections });
-    }, 'MAX_DEPTH_EXCEEDED');
-
-    // Test assertNoCycle with depth limit
-    // Moving a 2-level subtree (subRoot -> subChild) under t3 would make depth: 4 (t3 depth) + 2 = 6 > 5 -> throws MAX_DEPTH_EXCEEDED
+    // Moving a subtree deeper remains valid when it does not introduce a cycle.
     const treeTasks = [
         ...tasks,
         { id: 'subRoot', data: { sectionId: 's1', parentTaskId: null, lifecycle: 'active' } },
         { id: 'subChild', data: { sectionId: null, parentTaskId: 'subRoot', lifecycle: 'active' } },
     ];
-    // Moving subRoot under t3 (t3 is at depth 4) -> 4 + 2 = 6 -> MAX_DEPTH_EXCEEDED
-    expectCode(() => {
+    assert.doesNotThrow(() => {
         assertNoCycle({ tasks: treeTasks, targetId: 'subRoot', parentTaskId: 't3' });
-    }, 'MAX_DEPTH_EXCEEDED');
+    });
 
     // Moving subRoot under t2 (t2 is at depth 3) -> 3 + 2 = 5 -> allowed!
     assert.doesNotThrow(() => {
@@ -60,7 +57,7 @@ async function testHierarchyDepth() {
         assertNoCycle({ tasks: treeTasks, targetId: 't0', parentTaskId: 't4' });
     }, 'ANCESTRY_CYCLE');
 
-    console.log('✅ All hierarchy depth tests passed.');
+    console.log('✅ All deep hierarchy tests passed.');
 }
 
 testHierarchyDepth().catch((err) => {

@@ -11,7 +11,7 @@ const notifsSource = fs.readFileSync(path.resolve(__dirname, '../../../public/js
 const flush = async () => { for (let i = 0; i < 8; i++) await new Promise(setImmediate); };
 
 function createViewsHarness(options = {}) {
-    const controls = new Map(), calls = [];
+    const controls = new Map(), calls = [], commands = [];
     let mutationShouldFail = false;
     let mutationStatus = 500;
 
@@ -117,12 +117,24 @@ function createViewsHarness(options = {}) {
             members: [{ uid: 'uid-owner', displayName: 'Alice' }, { uid: 'uid-dev', displayName: 'Bob' }]
         }),
         setFilters: () => {},
+        setTaskField: async command => {
+            commands.push(command);
+            if (mutationShouldFail) throw Object.assign(new Error('Server error updating status'), { status: mutationStatus });
+            const task = tasks.find(t => t.id === command.taskId);
+            assert.equal(command.revision, task.revision);
+            assert.equal(command.projectId, 'proj-1');
+            assert.equal(command.actorUid, 'uid-owner');
+            assert.equal(command.isCurrent(), true);
+            task[command.field] = command.value; task.revision++;
+            return { task };
+        },
         selectTask: (t) => controller.setTask(t),
         refresh: async () => true
     };
 
     const context = {
         console,
+        setTimeout, clearTimeout,
         URLSearchParams,
         Date,
         Math,
@@ -163,6 +175,7 @@ function createViewsHarness(options = {}) {
         controller,
         el,
         calls,
+        commands,
         tasks,
         setMutationFail: (fail, status = 500) => {
             mutationShouldFail = fail;
@@ -213,7 +226,9 @@ test('kanban status change rolls back on server failure and re-renders prior sta
     const state = h.controller.getState();
     const task1 = state.response.tasks.find(t => t.id === 'task-1');
     assert.equal(task1.status, 'in_progress', 'Status must roll back to in_progress on mutation failure');
-    assert.match(h.el('projects-task-status').textContent, /Server error updating status|Save failed/);
+    assert.match(h.el('projects-view-status').textContent, /Server error updating status|Save failed/);
+    assert.equal(h.commands.length, 1);
+    assert.equal(h.calls.filter(c => c.fetchOptions?.method === 'PATCH').length, 0, 'Views must never PATCH tasks directly');
 });
 
 test('kanban drag and drop updates task status and sets drop effect', async () => {
@@ -258,10 +273,12 @@ test('kanban drag and drop updates task status and sets drop effect', async () =
     });
     await flush();
 
-    const patchCall = h.calls.find(c => c.fetchOptions?.method === 'PATCH' && c.url.includes('/tasks/task-1'));
-    assert.ok(patchCall, 'PATCH mutation should have been dispatched on drop');
-    const body = JSON.parse(patchCall.fetchOptions.body);
-    assert.equal(body.status, 'done');
+    assert.equal(h.commands.length, 1, 'One drop must delegate exactly one canonical command');
+    assert.equal(h.commands[0].taskId, 'task-1');
+    assert.equal(h.commands[0].field, 'status');
+    assert.equal(h.commands[0].value, 'done');
+    assert.equal(h.tasks[0].status, 'done');
+    assert.equal(h.calls.filter(c => c.fetchOptions?.method === 'PATCH').length, 0, 'Views must never PATCH tasks directly');
 });
 
 test('gantt timeline handles zoom toggles, milestone markers, and safe empty dates without RangeError', async () => {
@@ -363,6 +380,7 @@ test('notifications controller synchronizes #projects-notifications-badge count'
     let controller;
     const context = {
         console,
+        setTimeout, clearTimeout,
         URLSearchParams,
         JSON,
         document: documentMock

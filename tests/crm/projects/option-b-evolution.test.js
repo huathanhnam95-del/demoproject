@@ -7,7 +7,7 @@ const AutomationEditor = globalThis.CrmAutomationDefinitionEditor;
 
 console.log('Testing Option B Pragmatic Evolution features...');
 
-// 1. Hierarchy depth limit (Level 0 - Level 4 allowed, Level 5 rejected)
+// 1. Hierarchy preserves true depth beyond the presentation indentation cap.
 {
   const tasks = [
     { id: 't0', data: { sectionId: 's1', parentTaskId: null, lifecycle: 'active' } },
@@ -22,15 +22,13 @@ console.log('Testing Option B Pragmatic Evolution features...');
   const s4 = resolveTaskState({ tasks, taskId: 't4', sections });
   assert.equal(s4.pathIds.length, 5);
 
-  // Level 5 should be rejected
-  assert.throws(() => {
-    resolveTaskState({
-      tasks: [...tasks, { id: 't5', data: { sectionId: null, parentTaskId: 't4', lifecycle: 'active' } }],
-      taskId: 't5',
-      sections
-    });
-  }, (err) => err.code === 'MAX_DEPTH_EXCEEDED');
-  console.log('  ✔ Hierarchy 5-level depth limit verified.');
+  const s5 = resolveTaskState({
+    tasks: [...tasks, { id: 't5', data: { sectionId: null, parentTaskId: 't4', lifecycle: 'active' } }],
+    taskId: 't5',
+    sections
+  });
+  assert.equal(s5.pathIds.length, 6);
+  console.log('  ✔ Deep hierarchy identity preserved.');
 }
 
 // 3. Workspace & Folder schema validation

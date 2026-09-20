@@ -67,10 +67,16 @@
         const s = storage !== undefined ? storage : (typeof window !== 'undefined' ? window.localStorage : null);
 
         const initialScale = readProjectsScale(s);
+        const removers = [];
+        let disposed = false;
+        const listen = (node, event, handler) => {
+            node.addEventListener(event, handler);
+            removers.push(() => node.removeEventListener?.(event, handler));
+        };
         applyProjectsScale(initialScale, { panel: p, input, output, storage: s, persist: false });
 
         if (input) {
-            input.addEventListener('input', (event) => {
+            listen(input, 'input', (event) => {
                 applyProjectsScale(event.target.value, { panel: p, input, output, storage: s, persist: true });
             });
         }
@@ -154,9 +160,11 @@
             }
 
             const themeBtn = popover.querySelector('#btn-projects-theme');
+            let themeTimer = null;
             if (themeBtn) {
-                themeBtn.addEventListener('click', () => {
-                    setTimeout(() => {
+                listen(themeBtn, 'click', () => {
+                    if (themeTimer !== null) clearTimeout(themeTimer);
+                    themeTimer = setTimeout(() => {
                         if (portalHost && p) {
                             portalHost.classList.toggle('projects-dark', p.classList.contains('projects-dark'));
                         }
@@ -164,7 +172,7 @@
                 });
             }
 
-            summary.addEventListener('click', (e) => {
+            listen(summary, 'click', (e) => {
                 e.preventDefault();
                 if (details.open) {
                     details.open = false;
@@ -212,7 +220,7 @@
             };
             doc.addEventListener('keydown', onKeyDown);
 
-            summary.addEventListener('keydown', (e) => {
+            listen(summary, 'keydown', (e) => {
                 if (e.key === 'Tab' && !e.shiftKey && details.open && portalHost) {
                     const focusables = Array.from(portalHost.querySelectorAll('button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'));
                     if (focusables.length > 0) {
@@ -230,7 +238,7 @@
             };
 
             if (input) {
-                input.addEventListener('pointerdown', () => { isDragging = true; });
+                listen(input, 'pointerdown', () => { isDragging = true; });
                 window?.addEventListener?.('pointerup', endDrag);
                 window?.addEventListener?.('pointercancel', endDrag);
             }
@@ -246,6 +254,8 @@
             window?.addEventListener?.('resize', reposition);
 
             disposeFn = () => {
+                if (themeTimer !== null) clearTimeout(themeTimer);
+                details.open = false;
                 closePortal();
                 themeObserver?.disconnect();
                 doc.removeEventListener?.('pointerdown', onPointerDown, true);
@@ -267,7 +277,12 @@
             applyProjectsScale: (val, persist) => applyProjectsScale(val, { panel: p, input, output, storage: s, persist }),
             getScale: () => readProjectsScale(s),
             closePortal: closePortalFn,
-            dispose: disposeFn
+            dispose() {
+                if (disposed) return;
+                disposed = true;
+                removers.forEach(remove => remove());
+                disposeFn();
+            }
         };
     }
 

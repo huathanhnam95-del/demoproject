@@ -25,7 +25,11 @@ async function selectFixtureProject(page) {
         return picker && !picker.disabled && !document.getElementById('btn-projects-access-refresh')?.disabled
             && Array.from(picker.options).some(option => option.value === id);
     }, PROJECT_ID);
-    await page.locator('#projects-board-project-select').selectOption(PROJECT_ID);
+    await page.evaluate(id => {
+        const picker = document.getElementById('projects-board-project-select');
+        picker.value = id;
+        picker.dispatchEvent(new Event('change', { bubbles: true }));
+    }, PROJECT_ID);
     await page.waitForFunction(id => window.projectsViewsController?.getState()?.response?.project?.id === id, PROJECT_ID);
     await page.locator('[data-view="board"]').click();
     await page.waitForFunction(() => document.getElementById('projects-board-section')?.getAttribute('aria-busy') === 'false');
@@ -34,6 +38,11 @@ async function selectFixtureProject(page) {
 function parseEndpoint(value) {
     const [host, port] = String(value || '').split(':');
     return { host, port: Number(port) };
+}
+
+function isProjectsRequest(url) {
+    const pathname = new URL(url).pathname;
+    return pathname === '/api/projects' || pathname.startsWith('/api/projects/');
 }
 
 function buildConfig() {
@@ -81,6 +90,7 @@ function jsonHeaders() { return { 'content-type': 'application/json' }; }
 async function main() {
     assert.strictEqual(process.env.CRM_PROJECTS_EMULATOR_READY, '1', 'Phase3 browser checks require isolated emulators.');
     const config = getEmulatorConfig(process.env);
+    const presentationV2 = process.env.CRM_PROJECTS_V2_PRESENTATION === 'true';
     const app = initializeFixtureApp(config);
     const previousFlag = process.env.CRM_PROJECTS_ENABLED;
     process.env.CRM_PROJECTS_ENABLED = 'true';
@@ -150,6 +160,12 @@ async function main() {
         const rawHtml = fs.readFileSync(path.join(PUBLIC_DIR, 'crm-admin.html'), 'utf8');
         api.get('/crm-admin.html', (_req, res) => {
             const document = buildLocalCrmAdminDocument(rawHtml, process.env, DEMO_PROJECT_ID);
+            if (process.env.CRM_PROJECTS_V2_PRESENTATION === 'true') {
+                document.html = document.html.replace(
+                    'window.__CRM_PRESENTATION_CONFIG__ = Object.freeze({ projectsV2: false });',
+                    'window.__CRM_PRESENTATION_CONFIG__ = Object.freeze({ projectsV2: true });'
+                );
+            }
             res.setHeader('Content-Security-Policy', document.policy);
             res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
             res.type('html').send(document.html);
@@ -189,15 +205,15 @@ async function main() {
             consoleErrorRecords.push({ text: message.text(), url: location.url || '', line: location.lineNumber ?? null, column: location.columnNumber ?? null });
             consoleErrors.push(message.text());
         });
-        page.on('request', (request) => { if (request.url().includes('/api/projects/')) requestLog.push({ method: request.method(), url: request.url(), body: request.postDataJSON?.() }); });
+        page.on('request', (request) => { if (isProjectsRequest(request.url())) requestLog.push({ method: request.method(), url: request.url(), body: request.postDataJSON?.() }); });
         page.on('response', (response) => {
             allResponseLog.push({ method: response.request().method(), url: response.url(), status: response.status() });
-            if (response.url().includes('/api/projects/')) responseLog.push({ method: response.request().method(), url: response.url(), status: response.status() });
+            if (isProjectsRequest(response.url())) responseLog.push({ method: response.request().method(), url: response.url(), status: response.status() });
         });
         page.on('requestfailed', (request) => {
             const failure = { method: request.method(), url: request.url(), failure: request.failure()?.errorText || '' };
             allRequestFailed.push(failure);
-            if (request.url().includes('/api/projects/')) requestFailed.push(failure);
+            if (isProjectsRequest(request.url())) requestFailed.push(failure);
         });
         page.on('dialog', (dialog) => { dialogLog.push({ type: dialog.type(), message: dialog.message(), defaultValue: dialog.defaultValue() }); });
         const baseUrl = `http://127.0.0.1:${server.address().port}`;
@@ -256,31 +272,70 @@ async function main() {
         await page.locator('[data-task-id="phase3-task-one"] .crm-board-expander').click();
         await page.waitForSelector('[data-task-id="phase3-child-one"]', { timeout: 30000 });
         assert.strictEqual(await page.locator('#projects-board-detail').isHidden(), true);
-        await page.locator('[data-task-id="phase3-task-one"]').click();
+        const taskOneRow = page.locator('[role="row"][data-task-id="phase3-task-one"]');
+        const explicitRename = await taskOneRow.locator('.crm-board-title-button').count() > 0;
+        if (explicitRename) await taskOneRow.locator('.crm-board-title-button').click();
+        else await taskOneRow.press('Enter');
         assert.strictEqual(await page.locator('#projects-board-detail').isVisible(), true);
-        const title = page.locator('[data-task-id="phase3-task-one"] input[data-field-kind="title"]');
-        const titleSaveResponse = page.waitForResponse((candidate) => candidate.url().includes('/tasks/phase3-task-one') && candidate.request().method() === 'PATCH');
+        if (!presentationV2) {
+            await page.locator('#btn-projects-board-close-detail').click();
+            await page.waitForFunction(() => !document.getElementById('projects-board-detail')?.open);
+        }
+        if (explicitRename) await taskOneRow.press('F2');
+        const title = explicitRename
+            ? page.locator('[role="row"][data-task-id="phase3-task-one"] input[data-field-kind="title"]')
+            : page.locator('[data-task-id="phase3-task-one"] input[data-field-kind="title"]');
+        const titleSaveResponse = page.waitForResponse((candidate) => {
+            if (!candidate.url().includes('/tasks/phase3-task-one') || candidate.request().method() !== 'PATCH') return false;
+            try { return candidate.request().postDataJSON()?.title === 'Draft brief revised'; } catch (_) { return false; }
+        });
         await title.fill('Draft brief revised');
-        await title.blur();
-        await titleSaveResponse;
+        if (explicitRename) await title.press('Enter');
+        else await title.blur();
+        const titleSave = await titleSaveResponse;
+        assert.strictEqual(titleSave.status(), 200, 'title save must be acknowledged');
+        assert.strictEqual(titleSave.request().postDataJSON()?.title, 'Draft brief revised', 'title save must carry the current draft');
         response = await apiRequest(server, `/api/projects/${PROJECT_ID}/tasks?pageSize=200&filters=${encodeURIComponent(JSON.stringify({ parentScope: 'root' }))}`, ownerToken);
         assert.strictEqual(response.status, 200);
         assert.strictEqual(response.body.tasks.find((task) => task.id === 'phase3-task-one').title, 'Draft brief revised');
         const beforeCreate = requestLog.filter((entry) => entry.method === 'POST' && entry.url.endsWith('/tasks')).length;
         const createTaskResponse = page.waitForResponse((candidate) => candidate.url().endsWith('/tasks') && candidate.request().method() === 'POST');
         await page.locator('#btn-projects-board-add-task').click();
-        await createTaskResponse;
+        if (explicitRename) {
+            await page.locator('[data-quick-create] input').fill('Authenticated V2 task');
+            const section = page.locator('[data-quick-create] select');
+            if (!await section.inputValue()) {
+                const firstSection = await section.locator('option:not([value=""])').first().getAttribute('value');
+                await section.selectOption(firstSection);
+            }
+            await page.evaluate(() => document.querySelector('[data-quick-create]').requestSubmit());
+        }
+        const createdTaskResponse = await createTaskResponse;
+        let createdTask = null;
+        if (presentationV2) {
+            assert.strictEqual(createdTaskResponse.status(), 200, 'quick create must be acknowledged');
+            const createdBody = await createdTaskResponse.json();
+            createdTask = createdBody?.task || createdBody?.result?.task || null;
+            assert.ok(createdTask?.id, 'quick create must return a persisted task identity');
+            assert.strictEqual(createdTask.title, 'Authenticated V2 task');
+        }
         const afterCreate = requestLog.filter((entry) => entry.method === 'POST' && entry.url.endsWith('/tasks')).length;
         assert.strictEqual(afterCreate, beforeCreate + 1, 'one Add task click must create one command');
         await page.reload({ waitUntil: 'domcontentloaded' });
         await page.waitForFunction(() => document.getElementById('crm-loading')?.style.display === 'none', null, { timeout: 30000 });
         await selectFixtureProject(page);
         await page.waitForSelector('[data-task-id="phase3-task-one"]', { timeout: 30000 });
-        assert.strictEqual(await page.locator('[data-task-id="phase3-task-one"] input[data-field-kind="title"]').inputValue(), 'Draft brief revised');
+        if (presentationV2) {
+            assert.strictEqual(await page.locator('[role="row"][data-task-id="phase3-task-one"] .crm-board-title-button').textContent(), 'Draft brief revised');
+            await page.waitForSelector(`[role="row"][data-task-id="${createdTask.id}"]`, { timeout: 30000 });
+            assert.strictEqual(await page.locator(`[role="row"][data-task-id="${createdTask.id}"] .crm-board-title-button`).textContent(), 'Authenticated V2 task');
+        } else {
+            assert.strictEqual(await page.locator('[data-task-id="phase3-task-one"] input[data-field-kind="title"]').inputValue(), 'Draft brief revised');
+        }
         await page.screenshot({ path: path.join(ROOT, 'test-results/crm-projects/phase3-board-owner.png'), fullPage: true });
 
         let expandedCounter = 0;
-        const expanded = await runPhase3BoardExpandedChecks({
+        const expanded = presentationV2 ? null : await runPhase3BoardExpandedChecks({
             page,
             server,
             browser,
@@ -330,12 +385,16 @@ async function main() {
             },
             closeRolePage: async (rolePage) => rolePage.context().close()
         });
-        assert.strictEqual(expanded?.typed?.columns?.length, 7, 'expanded Phase3 matrix must exercise all seven typed columns.');
-        process.stdout.write(`crm projects Phase3 expanded Chrome cases settled: ${JSON.stringify({
-            pagination: expanded.pagination?.boundedRows,
-            totalRows: expanded.pagination?.total,
-            rolesSkipped: expanded.roleResult?.skippedRolePages === true
-        })}\n`);
+        if (presentationV2) {
+            process.stdout.write('crm projects authenticated V2 owner workflow settled; this noncanonical smoke run excludes the legacy expanded matrix.\n');
+        } else {
+            assert.strictEqual(expanded?.typed?.columns?.length, 7, 'expanded Phase3 matrix must exercise all seven typed columns.');
+            process.stdout.write(`crm projects Phase3 expanded Chrome cases settled: ${JSON.stringify({
+                pagination: expanded.pagination?.boundedRows,
+                totalRows: expanded.pagination?.total,
+                rolesSkipped: expanded.roleResult?.skippedRolePages === true
+            })}\n`);
+        }
 
         const viewerContext = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
         const viewerPage = await viewerContext.newPage();
@@ -362,16 +421,55 @@ async function main() {
         await viewerPage.screenshot({ path: path.join(ROOT, 'test-results/crm-projects/phase3-board-viewer.png'), fullPage: true });
         await viewerContext.close();
         writeConsoleNetworkArtifact();
-        const typedTaskResponses = allResponseLog.filter((entry) => entry.method === 'PATCH' && entry.url.includes(expectedTypedTaskPath));
-        assert.ok(typedTaskResponses.some((entry) => entry.status === 403), 'expected typed task Viewer downgrade denial must be observed as an exact 403 response.');
-        assert.ok(typedTaskResponses.some((entry) => entry.status === 409), 'expected typed task conflict injection must be observed as an exact 409 response.');
-        assert.ok(allRequestFailed.some((entry) => entry.method === 'PATCH' && entry.url.includes(expectedTypedTaskPath) && entry.failure === 'net::ERR_FAILED'), 'expected typed task uncertain-save abort must be observed as an exact failed request.');
+        if (!presentationV2) {
+            const typedTaskResponses = allResponseLog.filter((entry) => entry.method === 'PATCH' && entry.url.includes(expectedTypedTaskPath));
+            assert.ok(typedTaskResponses.some((entry) => entry.status === 403), 'expected typed task Viewer downgrade denial must be observed as an exact 403 response.');
+            assert.ok(typedTaskResponses.some((entry) => entry.status === 409), 'expected typed task conflict injection must be observed as an exact 409 response.');
+            assert.ok(allRequestFailed.some((entry) => entry.method === 'PATCH' && entry.url.includes(expectedTypedTaskPath) && entry.failure === 'net::ERR_FAILED'), 'expected typed task uncertain-save abort must be observed as an exact failed request.');
+        }
         const unexpectedConsoleErrors = consoleErrorRecords.filter((entry) => !expectedConsoleRecord(entry));
         assert.deepStrictEqual(unexpectedConsoleErrors, [], `Unexpected Chrome errors: ${unexpectedConsoleErrors.map((entry) => `${entry.url}: ${entry.text}`).join('; ')}`);
         assert.deepStrictEqual(pageErrorRecords, [], `Chrome page errors: ${pageErrorRecords.map((entry) => entry.message).join('; ')}`);
         assert.ok(requestLog.some((entry) => entry.method === 'PATCH' && entry.body?.operationId), 'Task mutation must carry an operation ID.');
         assert.ok(requestLog.some((entry) => entry.method === 'GET' && entry.url.includes('parentScope')), 'Board must query canonical branch filters.');
         process.stdout.write('crm projects Phase3 board Chrome persisted matrix passed\n');
+    } catch (error) {
+        const page = browser?.contexts()[0]?.pages()[0];
+        if (page && !page.isClosed()) {
+            try {
+                const state = await page.evaluate(() => ({
+                    selectedProject: document.getElementById('projects-board-project-select')?.value,
+                    status: document.getElementById('projects-board-status')?.textContent,
+                    count: document.getElementById('projects-board-count')?.textContent,
+                    busy: document.getElementById('projects-board-section')?.getAttribute('aria-busy'),
+                    openDialogs: Array.from(document.querySelectorAll('dialog[open]')).map((dialog) => dialog.id),
+                    loadedProject: window.projectsViewsController?.getState()?.response?.project?.id,
+                    membership: window.projectsViewsController?.getState()?.response?.membership?.role,
+                    viewport: { width: innerWidth, height: innerHeight, scrollX, scrollY },
+                    dragAudit: window.__phase3DragAudit || [],
+                    dragParent: (() => {
+                        const row = document.querySelector(`[data-task-id="${window.__phase3DragAuditParentId}"]`);
+                        return row ? { rect: row.getBoundingClientRect().toJSON(), classes: row.className, expanded: row.querySelector('.crm-board-expander')?.getAttribute('aria-expanded') } : null;
+                    })()
+                }));
+                // Diagnostic only: keep the original assertion failure, even if
+                // a later refresh restores the screen while evidence is captured.
+                await page.waitForTimeout(1000);
+                const settled = await page.evaluate(() => ({
+                    activeTag: document.activeElement?.tagName,
+                    activeTaskId: document.activeElement?.closest?.('[data-task-id]')?.dataset.taskId || '',
+                    activeValue: document.activeElement?.value,
+                    caret: document.activeElement?.selectionStart ?? null,
+                    tableHidden: document.getElementById('projects-board-table-wrap')?.hidden,
+                    busy: document.getElementById('projects-board-section')?.getAttribute('aria-busy'),
+                    viewStatus: document.getElementById('projects-view-status')?.textContent,
+                    titles: Array.from(document.querySelectorAll('#projects-board-rows input[data-field-kind="title"]')).slice(0, 8).map((input) => ({ taskId: input.closest('[data-task-id]')?.dataset.taskId, value: input.value, caret: input.selectionStart }))
+                }));
+                fs.writeFileSync(path.join(ROOT, 'test-results/crm-projects/phase3-board-failure.json'), `${JSON.stringify({ error: error.message, state, settled }, null, 2)}\n`, 'utf8');
+                await page.screenshot({ path: path.join(ROOT, 'test-results/crm-projects/phase3-board-failure.png'), fullPage: true });
+            } catch (_) { /* preserve the original browser failure */ }
+        }
+        throw error;
     } finally {
         try { writeConsoleNetworkArtifact(); } catch (_) { /* preserve the original browser failure */ }
         if (browser) await browser.close();

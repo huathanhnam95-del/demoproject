@@ -139,7 +139,7 @@ async function main() {
       const created=await responseAction(page,'POST',`/api/projects/${c.projectId}/automations`,()=>action(page,'save').click());await idle(page);
       const id=created.rule.ruleId;assert.deepEqual((await state(page)).draft.definition,created.version.definition);
       await sample(page);const before=await content(c);const projection=await preview(page,c,id);assert.deepEqual(await content(c),before);assert.equal(projection.effects[0].type,'notify');
-      await shot(page,'created-preview');await responseAction(page,'POST',`/api/projects/${c.projectId}/automations/${id}/activate`,()=>action(page,'activate').click());await idle(page);
+      await shot(page,'created-preview');await action(page,'activate').click();await responseAction(page,'POST',`/api/projects/${c.projectId}/automations/${id}/activate`,()=>action(page,'confirm-activate').click());await idle(page);
       const event=await c.edit('subject',{status:'done'});const processor=suite.processor('phase7-browser');await processor.processEvent(event);
       const runs=(await c.rows('runs')).filter(r=>r.ruleId===id);assert.equal(runs.length,1);await processor.processRun(runs[0].runId);
       assert.equal((await c.rows('runs')).find(r=>r.runId===runs[0].runId).state,'completed');

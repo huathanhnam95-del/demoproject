@@ -140,7 +140,128 @@ async function exerciseFailedSaveNext(page, width, check, action) {
   }
 }
 
-async function exerciseAssessedNext(page, width, check, retryDuringNext = false, saveFailureAction = null) {
+async function exerciseAssessedArchive(page, width, check, options) {
+  await page.evaluate(options => {
+    const archive = window.PTEAttemptArchive, history = window.PteAttemptHistory;
+    const flow = window.__pteAssessedArchive = {
+      ...options, failCapture: options.captureFailure, failAssessment: true,
+      saves: 0, updates: 0, successfulUpdates: 0, records: new Map(),
+      originals: { saveAttempt: archive.saveAttempt, patchAttempt: archive.patchAttempt,
+        fetchUserAttemptsCached: archive.fetchUserAttemptsCached, recordLocal: history.recordLocal }
+    };
+    archive.saveAttempt = async input => {
+      flow.saves += 1;
+      if (flow.failCapture) throw new Error('Assessed archive offline');
+      if (!flow.signedIn) return { skipped: true, reason: 'guest' };
+      flow.captureId ||= input.attemptId;
+      flow.captureUrl ||= URL.createObjectURL(input.media[0].blob);
+      flow.records.set(input.attemptId, { ...input, createdAt: new Date().toISOString(),
+        audio: { studentUrl: flow.captureUrl, durationMs: input.media[0].durationMs } });
+      return { attemptId: input.attemptId };
+    };
+    archive.patchAttempt = async (id, input) => {
+      flow.updates += 1;
+      if (flow.failAssessment) throw new Error('Assessed archive offline');
+      flow.successfulUpdates += 1;
+      flow.records.set(id, { ...flow.records.get(id), ...input });
+      return { success: true };
+    };
+    archive.fetchUserAttemptsCached = async () => flow.signedIn ? [...flow.records.values()] : null;
+    history.recordLocal = input => {
+      if (input.scoringSnapshot?.success) {
+        flow.updates += 1;
+        if (flow.failAssessment) throw new Error('Assessed archive offline');
+        flow.successfulUpdates += 1;
+      } else {
+        flow.captureId ||= input.attemptId;
+        flow.captureUrl ||= input.audio?.studentUrl;
+      }
+      flow.records.set(input.attemptId, input);
+      return flow.originals.recordLocal(input);
+    };
+  }, options);
+  try { await exerciseAssessedNext(page, width, check, false, null, true); }
+  finally {
+    await page.evaluate(() => {
+      const flow = window.__pteAssessedArchive;
+      const { recordLocal, ...archive } = flow.originals;
+      Object.assign(window.PTEAttemptArchive, archive);
+      window.PteAttemptHistory.recordLocal = recordLocal;
+      delete window.__pteAssessedArchive;
+    });
+  }
+}
+
+async function verifyAssessedArchiveRecovery(page, width, check) {
+  const options = await page.evaluate(() => {
+    const flow = window.__pteAssessedArchive;
+    flow.session = window.ReadAloudMode.lastAssessmentSession;
+    flow.reference = flow.session.referenceText;
+    flow.expectedWords = window.ReadAloudMode.lastAssessmentPayload.words;
+    flow.failCapture = false;
+    return { signedIn: flow.signedIn, captureFailure: flow.captureFailure, invalidate: flow.invalidate };
+  });
+  const label = `${width}: ${options.signedIn ? 'signed-in' : 'guest'} assessed archive ${options.captureFailure ? 'capture recovery' : 'update recovery'}${options.invalidate ? ' Retry' : ''}`;
+  check(`${label} surfaces archive failure after assessment`, await page.locator('.pte-dock__status').textContent(), 'Assessed archive offline');
+  if (options.invalidate) {
+    await page.evaluate(() => {
+      const flow = window.__pteAssessedArchive, mode = window.ReadAloudMode;
+      flow.beforeUpdates = flow.updates;
+      const originalSave = mode.savePteCapture;
+      const gate = new Promise(resolve => { flow.release = resolve; });
+      mode.savePteCapture = async function (...args) {
+        flow.waiting = true;
+        await gate;
+        return originalSave.apply(this, args);
+      };
+    });
+    await page.locator('#pte-next-read-aloud').click();
+    await page.waitForFunction(() => window.__pteAssessedArchive.waiting);
+    await page.locator('#ra-retry-btn').click();
+    await page.waitForFunction(() => window.ReadAloudMode.state === 'PREP');
+    await page.evaluate(() => { const flow = window.__pteAssessedArchive; flow.failAssessment = false; flow.release(); });
+    await page.waitForFunction(() => window.__pteAssessedNext.finishedCount === 1 && !document.getElementById('pte-next-read-aloud').disabled);
+    check(`${label} prevents stale assessed writes and navigation`, await page.evaluate(() => ({
+      extraUpdates: window.__pteAssessedArchive.updates - window.__pteAssessedArchive.beforeUpdates,
+      successfulUpdates: window.__pteAssessedArchive.successfulUpdates,
+      loads: window.__pteAssessedNext.loadCalls, state: window.ReadAloudMode.state,
+      staleError: document.querySelector('.pte-dock__status').textContent.includes('Assessed archive offline')
+    })), { extraUpdates: 0, successfulUpdates: 0, loads: 0, state: 'PREP', staleError: false });
+    return;
+  }
+  await page.locator('#pte-next-read-aloud').click();
+  await page.waitForFunction(() => window.__pteAssessedNext.finishedCount === 1 && !document.getElementById('pte-next-read-aloud').disabled);
+  check(`${label} blocks Next while assessed update is offline`, await page.evaluate(() => ({
+    loads: window.__pteAssessedNext.loadCalls, state: window.ReadAloudMode.state,
+    status: document.querySelector('.pte-dock__status').textContent
+  })), { loads: 0, state: 'RESULTS', status: 'Assessed archive offline' });
+  await page.evaluate(() => { window.__pteAssessedArchive.failAssessment = false; });
+  // A broken pre-fix Next already left RESULTS; retain diagnostics without a PREP dialog timeout.
+  if (await page.evaluate(() => window.ReadAloudMode.state === 'RESULTS')) {
+    await page.locator('#pte-next-read-aloud').click();
+    await page.waitForFunction(() => window.__pteAssessedNext.finishedCount === 2 && !document.getElementById('pte-next-read-aloud').disabled);
+  }
+  check(`${label} retains scores words and recording after exactly one assessed save`, await page.evaluate(() => {
+    const flow = window.__pteAssessedArchive;
+    const row = flow.records.get(flow.captureId);
+    return { result: row?.resultSnapshot ?? null, words: row?.answerSnapshot?.words ?? null,
+      reference: row?.responseSnapshot?.referenceText === flow.reference,
+      scoring: row?.scoringSnapshot?.source === 'azure' && row.scoringSnapshot.success === true
+        && row.scoringSnapshot.status !== 'unassessed',
+      recording: row?.audio?.studentUrl === flow.captureUrl && !!flow.captureUrl,
+      records: flow.records.size, successes: flow.successfulUpdates, loads: window.__pteAssessedNext.loadCalls,
+      state: window.ReadAloudMode.state };
+  }), {
+    result: { accuracyScore: 84, fluencyScore: 78, completenessScore: 96, pronScore: 82,
+      connectedSpeech: { status: 'available', events: [], summary: { total: 0, detected: 0 } } },
+    words: await page.evaluate(() => window.__pteAssessedArchive.expectedWords), reference: true, scoring: true,
+    recording: true, records: 1, successes: 1, loads: 1, state: 'PREP'
+  });
+  await page.locator('.pte-attempts__scope').getByRole('button', { name: /^All / }).click();
+  check(`${label} history renders assessed scores`, await page.locator('.pte-attempts__row').first().textContent().then(text => text.includes('84') && text.includes('82')));
+}
+
+async function exerciseAssessedNext(page, width, check, retryDuringNext = false, saveFailureAction = null, archiveRecovery = false) {
   const referenceText = await page.evaluate(failSaving => {
     const mode = window.ReadAloudMode;
     mode.retryCurrentPrompt();
@@ -201,6 +322,10 @@ async function exerciseAssessedNext(page, width, check, retryDuringNext = false,
       { method: 'POST', referencePresent: true }
     ]);
     check(`${width}: actual assessed scores`, await page.locator('.pte-stats strong').allTextContents(), ['84%', '78%', '96%', '82%']);
+    if (archiveRecovery) {
+      await verifyAssessedArchiveRecovery(page, width, check);
+      return;
+    }
     if (saveFailureAction) {
       await exerciseFailedSaveNext(page, width, check, saveFailureAction);
       return;
@@ -1191,6 +1316,10 @@ async function run() {
       if (retrySessionVariant) await exerciseAssessedNext(page, width, check, true);
       if (retrySessionVariant) {
         for (const action of ['recover', 'retry', 'prompt']) await exerciseAssessedNext(page, width, check, false, action);
+        for (const signedIn of [false, true]) {
+          for (const captureFailure of [true, false]) await exerciseAssessedArchive(page, width, check, { signedIn, captureFailure });
+          await exerciseAssessedArchive(page, width, check, { signedIn, captureFailure: false, invalidate: true });
+        }
       }
       await page.close();
     }

@@ -4192,6 +4192,9 @@ class ReadAloudMode {
   async savePteNextCapture(ownership) {
     try {
       await this.savePteCapture(ownership.session);
+      if (!this.shouldApplyPteNextOwnership(ownership)) return false;
+      if (ownership.session.assessedArchiveInput
+        && !await this.savePteAssessedArchive(ownership.session)) return false;
     } catch (error) {
       if (!this.shouldApplyPteNextOwnership(ownership)) return false;
       throw error;
@@ -4237,6 +4240,7 @@ class ReadAloudMode {
       if (!window.PTEAttemptArchive?.saveAttempt) throw new Error('Attempt saving is unavailable. Please try again.');
       const saved = await window.PTEAttemptArchive.saveAttempt(input);
       if (saved?.skipped && saved.reason !== 'guest') throw new Error('This attempt could not be saved.');
+      if (!this.shouldApplyAssessment(session)) return saved;
       if (saved?.skipped) {
         session.localAttemptId ||= `ra-${Date.now()}-${session.id}`;
         session.historyAudioUrl ||= URL.createObjectURL(blob);
@@ -4246,6 +4250,50 @@ class ReadAloudMode {
       return saved;
     })().catch(error => { session.archivePromise = null; throw error; });
     return session.archivePromise;
+  }
+
+  async savePteAssessedArchive(session) {
+    const input = session.assessedArchiveInput;
+    const isCurrent = () => !!input && this.shouldApplyAssessment(session)
+      && session.questionId === this.currentQuestionId && session.assessedArchiveInput === input;
+    if (!isCurrent()) return false;
+    if (session.savedAssessedArchiveInput === input) return true;
+    if (session.assessedArchiveOperation?.input === input) return session.assessedArchiveOperation.promise;
+
+    const operation = { input };
+    session.assessedArchiveOperation = operation;
+    operation.promise = (async () => {
+      try {
+        await this.savePteCapture(session);
+        if (!isCurrent()) return false;
+        if (session.archiveAttemptId) {
+          const result = await window.PTEAttemptArchive.patchAttempt(session.archiveAttemptId, input);
+          if (!isCurrent()) return false;
+          if (result?.skipped) throw new Error('Assessment saving is unavailable. Please try again.');
+        } else {
+          if (!window.PteAttemptHistory?.recordLocal) throw new Error('Attempt history is unavailable. Please try again.');
+          window.PteAttemptHistory.recordLocal({ ...input, media: undefined, attemptId: session.localAttemptId,
+            promptId: session.questionId, audio: { studentUrl: session.historyAudioUrl, durationMs: session.durationMs } });
+        }
+        if (!isCurrent()) return false;
+        session.savedAssessedArchiveInput = input;
+        window.SpeakingPracticeController?.setNextError?.('read-aloud', '');
+        if (session.archiveAttemptId) {
+          window.PTEAttemptArchive.invalidateHistoryCache();
+          window.dispatchEvent(new CustomEvent('pte-attempt-archive:saved', {
+            detail: { attemptId: session.archiveAttemptId, practiceMode: 'read-aloud', promptId: session.questionId }
+          }));
+        }
+        return true;
+      } catch (error) {
+        if (!isCurrent()) return false;
+        window.SpeakingPracticeController?.setNextError?.('read-aloud', error.message || 'Assessment saving failed. Please try again.');
+        throw error;
+      } finally {
+        if (session.assessedArchiveOperation === operation) session.assessedArchiveOperation = null;
+      }
+    })();
+    return operation.promise;
   }
 
   async submitToAzure(rawBlob, recordingSession) {
@@ -4756,20 +4804,10 @@ class ReadAloudMode {
       }] : []
     };
     if (this.isPteShellEnabled() && recordingSession.wavBlob) {
+      // Keep this completed assessment with its recording until the assessed update succeeds.
+      recordingSession.assessedArchiveInput = attemptInput;
       try {
-        await this.savePteCapture(recordingSession);
-        if (!this.shouldApplyAssessment(recordingSession)) return false;
-        if (recordingSession.archiveAttemptId) {
-          if (!this.shouldApplyAssessment(recordingSession)) return false;
-          await window.PTEAttemptArchive.patchAttempt(recordingSession.archiveAttemptId, attemptInput);
-          if (!this.shouldApplyAssessment(recordingSession)) return false;
-          window.PTEAttemptArchive.invalidateHistoryCache();
-          window.dispatchEvent(new CustomEvent('pte-attempt-archive:saved', { detail: { attemptId: recordingSession.archiveAttemptId, practiceMode: 'read-aloud', promptId: recordingSession.questionId } }));
-        } else {
-          if (!this.shouldApplyAssessment(recordingSession)) return false;
-          window.PteAttemptHistory?.recordLocal({ ...attemptInput, media: undefined, attemptId: recordingSession.localAttemptId, promptId: recordingSession.questionId,
-            audio: { studentUrl: recordingSession.historyAudioUrl, durationMs: recordingSession.durationMs } });
-        }
+        if (!await this.savePteAssessedArchive(recordingSession)) return false;
       } catch (error) {
         if (this.shouldApplyAssessment(recordingSession)) {
           console.warn('[PTE Archive] Read Aloud save failed:', error);

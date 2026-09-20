@@ -2109,6 +2109,12 @@
     isV2Active: isV2Active,
     createSheet: createSheet,
     setPhase: setPhase,
+    setNextError: (modeId, message) => {
+      const state = activeControllers.get(modeId);
+      if (!state?.isV3) return;
+      state.nextError = String(message || '');
+      setPhase(modeId, state.phase);
+    },
     getPhase: modeId => activeControllers.get(modeId)?.phase || null,
     openDialog: (modeId, kind) => {
       const state = activeControllers.get(modeId);

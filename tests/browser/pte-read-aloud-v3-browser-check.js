@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createHarness } = require('./helpers/pte-shell-harness');
 const evidence = process.env.PTE_SHELL_EVIDENCE;
+const retrySessionVariant = process.argv.includes('--retry-session-invalidation');
 if (!evidence) throw new Error('PTE_SHELL_EVIDENCE must point outside the repository');
 
 async function exerciseWordPopover(page, item, options = {}) {
@@ -460,6 +461,137 @@ async function run() {
       check(`${width}: late assessment completion cannot restore stale results after navigation`, staleCompletion, {
         state: 'PREP', payload: null, session: null
       });
+
+      if (retrySessionVariant) {
+        await page.evaluate(() => {
+          const mode = window.ReadAloudMode;
+          const session = {
+            id: mode.recordingRequestId,
+            disposition: 'submit',
+            promptToken: mode.promptLifecycleToken,
+            referenceText: mode.currentPromptPlainText,
+            questionId: mode.currentQuestionId,
+            wavBlob: new Blob(['same-prompt-retry'], { type: 'audio/wav' }),
+            archiveAttemptId: 'retry-session-old-attempt',
+            sessionViewMode: mode.getEffectiveViewMode(),
+            sessionConnectedSpeechModes: Object.freeze(mode.getActiveConnectedSpeechModes()),
+            sessionConnectedSpeechLevel: mode.connectedSpeechLevel || 'off'
+          };
+          const payload = {
+            success: true,
+            accuracyScore: 37,
+            fluencyScore: 41,
+            completenessScore: 43,
+            pronScore: 39,
+            recognizedText: mode.currentPromptPlainText,
+            words: [{ word: 'stale', accuracyScore: 37, startMs: 0, endMs: 240 }],
+            connectedSpeech: {
+              status: 'available',
+              events: [{
+                eventId: 'stale-retry-feedback',
+                phrase: 'stale retry',
+                category: 'linking',
+                family: 'linking',
+                subtype: 'consonant_to_vowel',
+                status: 'detected',
+                startWordIndex: 0,
+                endWordIndex: 1,
+                startMs: 0,
+                endMs: 240,
+                feedbackText: 'This prior attempt must stay stale.'
+              }],
+              summary: { total: 1, detected: 1 }
+            }
+          };
+
+          mode.pendingSession = session;
+          mode.pendingBlob = new Blob(['same-prompt-retry'], { type: 'audio/webm' });
+          mode.state = 'RECORDED';
+          mode.updateUIForState();
+
+          let releaseCoach;
+          const coachGate = new Promise(resolve => { releaseCoach = resolve; });
+          const originals = {
+            handleCheckResult: mode.handleCheckResult,
+            submitToAzure: mode.submitToAzure,
+            loadSpeechCoachAudioManifest: mode.loadSpeechCoachAudioManifest,
+            savePteCapture: mode.savePteCapture,
+            patchAttempt: window.PTEAttemptArchive?.patchAttempt
+          };
+          window.__pteRetrySessionRace = {
+            archiveWrites: 0,
+            releaseCoach,
+            session,
+            originals
+          };
+          mode.loadSpeechCoachAudioManifest = () => coachGate;
+          mode.savePteCapture = async () => {
+            window.__pteRetrySessionRace.archiveWrites += 1;
+          };
+          if (window.PTEAttemptArchive) {
+            window.PTEAttemptArchive.patchAttempt = async () => {
+              window.__pteRetrySessionRace.archiveWrites += 1;
+            };
+          }
+          mode.submitToAzure = (_blob, recordingSession) => mode.processAzureResults(payload, recordingSession);
+          mode.handleCheckResult = function (...args) {
+            const completion = originals.handleCheckResult.apply(this, args);
+            window.__pteRetrySessionRace.completion = completion;
+            return completion;
+          };
+        });
+
+        await page.locator('#ra-check-btn').click();
+        await page.waitForFunction(() => window.ReadAloudMode.state === 'RESULTS'
+          && !!window.__pteRetrySessionRace?.completion);
+        await page.locator('#ra-retry-btn').click();
+        await page.waitForFunction(() => window.ReadAloudMode.state === 'PREP');
+        await page.evaluate(() => window.__pteRetrySessionRace.releaseCoach());
+        await page.evaluate(() => window.__pteRetrySessionRace.completion);
+
+        const retryRace = await page.evaluate(() => {
+          const mode = window.ReadAloudMode;
+          const race = window.__pteRetrySessionRace;
+          const observed = {
+            state: mode.state,
+            payload: mode.lastAssessmentPayload ?? null,
+            session: mode.lastAssessmentSession ?? null,
+            renderedPayload: mode.pteView?.payload ?? null,
+            staleMetricsVisible: [...document.querySelectorAll('.pte-stats strong')]
+              .some(node => ['37', '41', '43', '39'].includes(node.textContent.trim())),
+            coachMeta: document.getElementById('ra-connected-speech-meta')?.textContent || '',
+            staleCoachVisible: document.getElementById('ra-connected-speech-list')?.textContent.includes('stale retry') || false,
+            archiveWrites: race.archiveWrites,
+            oldSessionDisposition: race.session.disposition,
+            requestIdAdvanced: mode.recordingRequestId > race.session.id
+          };
+          mode.handleCheckResult = race.originals.handleCheckResult;
+          mode.submitToAzure = race.originals.submitToAzure;
+          mode.loadSpeechCoachAudioManifest = race.originals.loadSpeechCoachAudioManifest;
+          mode.savePteCapture = race.originals.savePteCapture;
+          if (window.PTEAttemptArchive && race.originals.patchAttempt) {
+            window.PTEAttemptArchive.patchAttempt = race.originals.patchAttempt;
+          }
+          delete window.__pteRetrySessionRace;
+          return observed;
+        });
+        check(`${width}: actual Retry invalidates same-prompt processing phase`, retryRace.state, 'PREP');
+        check(`${width}: actual Retry keeps prior assessment ownership cleared`, {
+          payload: retryRace.payload,
+          session: retryRace.session,
+          renderedPayload: retryRace.renderedPayload
+        }, { payload: null, session: null, renderedPayload: null });
+        check(`${width}: actual Retry keeps prior metrics cleared`, retryRace.staleMetricsVisible, false);
+        check(`${width}: actual Retry keeps Coach out of stale feedback`, {
+          feedback: retryRace.coachMeta === 'Feedback',
+          staleCoachVisible: retryRace.staleCoachVisible
+        }, { feedback: false, staleCoachVisible: false });
+        check(`${width}: actual Retry advances and discards prior session identity`, {
+          disposition: retryRace.oldSessionDisposition,
+          requestIdAdvanced: retryRace.requestIdAdvanced
+        }, { disposition: 'discard', requestIdAdvanced: true });
+        check(`${width}: actual Retry blocks prior assessment archive writes`, retryRace.archiveWrites, 0);
+      }
       await page.close();
     }
     for (const flag of ['legacy', '']) {

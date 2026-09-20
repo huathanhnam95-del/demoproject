@@ -2676,10 +2676,17 @@ class ReadAloudMode {
   }
 
   invalidateRecordingSession() {
+    const invalidatedSessions = new Set([
+      this.currentRecordingSession,
+      this.pendingSession
+    ].filter(Boolean));
     this.recordingRequestId += 1;
-    if (this.currentRecordingSession) {
-      this.currentRecordingSession.disposition = 'discard';
-    }
+    invalidatedSessions.forEach((session) => {
+      session.disposition = 'discard';
+      session.assessmentAbortController?.abort();
+      session.assessmentAbortController = null;
+    });
+    this.isSubmitInFlight = false;
   }
 
   isSameRecordingSession(session) {
@@ -2872,6 +2879,7 @@ class ReadAloudMode {
   }
 
   retryCurrentPrompt() {
+    this.invalidateRecordingSession();
     if (this.isPteShellEnabled()) { this.pendingBlob = null; this.pendingSession = null; }
     this.invalidateSpeechCoachResultRender();
     this.stopTimer();
@@ -4190,11 +4198,15 @@ class ReadAloudMode {
   }
 
   async submitToAzure(rawBlob, recordingSession) {
+    if (!this.shouldApplyAssessment(recordingSession)) return false;
     if (this.isSubmitInFlight) return false;
     this.isSubmitInFlight = true;
+    const assessmentAbortController = typeof AbortController === 'function'
+      ? new AbortController()
+      : null;
+    recordingSession.assessmentAbortController = assessmentAbortController;
     const statusMsg = document.getElementById('ra-status-message');
     try {
-      if (!this.shouldApplyAssessment(recordingSession)) return false;
       if (statusMsg) statusMsg.textContent = 'Formatting audio...';
       const wavBlob = await this.prepareWavBlob(rawBlob);
       recordingSession.wavBlob = wavBlob;
@@ -4219,7 +4231,8 @@ class ReadAloudMode {
 
       const response = await fetch('/api/read-aloud/assess', {
         method: 'POST',
-        body: formData
+        body: formData,
+        ...(assessmentAbortController ? { signal: assessmentAbortController.signal } : {})
       });
 
       const payload = await response.json().catch(() => null);
@@ -4241,8 +4254,8 @@ class ReadAloudMode {
 
       return await this.processAzureResults(payload, recordingSession);
     } catch (err) {
-      console.error('Azure assessment error:', err);
       if (!this.shouldApplyAssessment(recordingSession)) return false;
+      console.error('Azure assessment error:', err);
       let failureStatus;
       if (err?.code === 'INVALID_AUDIO' && err?.reason === 'too_long') {
         failureStatus = 'That recording was too long to score. Keep it under 40 seconds and try again.';
@@ -4273,7 +4286,12 @@ class ReadAloudMode {
       this.renderAssessmentFailure(failureStatus, fallbackText);
       return false;
     } finally {
-      this.isSubmitInFlight = false;
+      if (recordingSession.assessmentAbortController === assessmentAbortController) {
+        recordingSession.assessmentAbortController = null;
+      }
+      if (recordingSession.id === this.recordingRequestId) {
+        this.isSubmitInFlight = false;
+      }
     }
   }
 
@@ -4568,6 +4586,7 @@ class ReadAloudMode {
     return !!recordingSession
       && this.isActive
       && recordingSession.disposition === 'submit'
+      && recordingSession.id === this.recordingRequestId
       && recordingSession.promptToken === this.promptLifecycleToken
       && recordingSession.referenceText === this.currentPromptPlainText;
   }

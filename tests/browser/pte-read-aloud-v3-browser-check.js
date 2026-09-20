@@ -5,6 +5,7 @@ const path = require('node:path');
 const { createHarness } = require('./helpers/pte-shell-harness');
 const evidence = process.env.PTE_SHELL_EVIDENCE;
 const retrySessionVariant = process.argv.includes('--retry-session-invalidation');
+const coachSaveRacesOnly = process.argv.includes('--coach-save-races-only');
 if (!evidence) throw new Error('PTE_SHELL_EVIDENCE must point outside the repository');
 
 async function exerciseWordPopover(page, item, options = {}) {
@@ -144,7 +145,7 @@ async function exerciseAssessedArchive(page, width, check, options) {
   await page.evaluate(options => {
     const archive = window.PTEAttemptArchive, history = window.PteAttemptHistory;
     const flow = window.__pteAssessedArchive = {
-      ...options, failCapture: options.captureFailure, failAssessment: true,
+      ...options, failCapture: options.captureFailure, failAssessment: !options.coachLoading && !options.rawSaveError,
       saves: 0, updates: 0, successfulUpdates: 0, records: new Map(),
       originals: { saveAttempt: archive.saveAttempt, patchAttempt: archive.patchAttempt,
         fetchUserAttemptsCached: archive.fetchUserAttemptsCached, recordLocal: history.recordLocal }
@@ -152,6 +153,10 @@ async function exerciseAssessedArchive(page, width, check, options) {
     archive.saveAttempt = async input => {
       flow.saves += 1;
       if (flow.failCapture) throw new Error('Assessed archive offline');
+      if (flow.holdRecovery) {
+        flow.recoveryWaiting = true;
+        await new Promise(resolve => { flow.releaseRecovery = resolve; });
+      }
       if (!flow.signedIn) return { skipped: true, reason: 'guest' };
       flow.captureId ||= input.attemptId;
       flow.captureUrl ||= URL.createObjectURL(input.media[0].blob);
@@ -180,6 +185,31 @@ async function exerciseAssessedArchive(page, width, check, options) {
       return flow.originals.recordLocal(input);
     };
   }, options);
+  if (options.coachLoading) {
+    await page.evaluate(() => {
+      const mode = window.ReadAloudMode, flow = window.__pteAssessedArchive;
+      flow.originalManifest = mode.loadSpeechCoachAudioManifest;
+      flow.originalResults = mode.processAzureResults;
+      flow.originalAssessedSave = mode.savePteAssessedArchive;
+      flow.assessedSaveCalls = 0;
+      mode.processAzureResults = async function (...args) {
+        try { return await flow.originalResults.apply(this, args); }
+        finally { flow.processFinished = true; }
+      };
+      mode.savePteAssessedArchive = function (...args) {
+        flow.assessedSaveCalls += 1;
+        return flow.originalAssessedSave.apply(this, args);
+      };
+      const gate = new Promise(resolve => { flow.releaseCoach = resolve; });
+      mode.loadSpeechCoachAudioManifest = async function (...args) {
+        if (this.isSubmitInFlight && this.lastAssessmentPayload) {
+          flow.coachWaiting = true;
+          await gate;
+        }
+        return flow.originalManifest.apply(this, args);
+      };
+    });
+  }
   try { await exerciseAssessedNext(page, width, check, false, null, true); }
   finally {
     await page.evaluate(() => {
@@ -187,6 +217,9 @@ async function exerciseAssessedArchive(page, width, check, options) {
       const { recordLocal, ...archive } = flow.originals;
       Object.assign(window.PTEAttemptArchive, archive);
       window.PteAttemptHistory.recordLocal = recordLocal;
+      if (flow.originalManifest) window.ReadAloudMode.loadSpeechCoachAudioManifest = flow.originalManifest;
+      if (flow.originalResults) window.ReadAloudMode.processAzureResults = flow.originalResults;
+      if (flow.originalAssessedSave) window.ReadAloudMode.savePteAssessedArchive = flow.originalAssessedSave;
       delete window.__pteAssessedArchive;
     });
   }
@@ -261,6 +294,103 @@ async function verifyAssessedArchiveRecovery(page, width, check) {
   check(`${label} history renders assessed scores`, await page.locator('.pte-attempts__row').first().textContent().then(text => text.includes('84') && text.includes('82')));
 }
 
+async function checkRetainedAssessment(page, label, check, fixture, loads = 1) {
+  check(`${label} retains assessed payload and recording exactly once`, await page.evaluate(() => {
+    const flow = window.__pteAssessedArchive, row = flow.records.get(flow.captureId);
+    return {
+      result: row?.resultSnapshot ?? null, words: row?.answerSnapshot?.words ?? null,
+      reference: row?.responseSnapshot?.referenceText ?? null,
+      prompt: row?.promptSnapshot?.promptId === flow.session.questionId,
+      assessed: row?.scoringSnapshot?.source === 'azure' && row.scoringSnapshot.success === true,
+      recording: !!flow.captureUrl && row?.audio?.studentUrl === flow.captureUrl,
+      records: flow.records.size, updates: flow.updates, successes: flow.successfulUpdates,
+      loads: window.__pteAssessedNext.loadCalls
+    };
+  }), {
+    result: { accuracyScore: 84, fluencyScore: 78, completenessScore: 96, pronScore: 82, connectedSpeech: fixture.connectedSpeech },
+    words: fixture.words, reference: fixture.recognizedText, prompt: true, assessed: true, recording: true,
+    records: 1, updates: 1, successes: 1, loads
+  });
+}
+
+async function exerciseNextDuringCoach(page, width, check, fixture) {
+  await page.waitForFunction(() => window.__pteAssessedArchive.coachWaiting);
+  const options = await page.evaluate(() => {
+    const flow = window.__pteAssessedArchive, mode = window.ReadAloudMode;
+    flow.session = mode.lastAssessmentSession;
+    if (flow.invalidate || flow.overlap) {
+      const originalSave = mode.savePteCapture;
+      const gate = new Promise(resolve => { flow.releaseSave = resolve; });
+      let calls = 0;
+      mode.savePteCapture = async function (...args) {
+        calls += 1;
+        // The overlap case holds the assessed operation's capture dependency, after Next's raw-save check.
+        if (flow.invalidate || calls === 2) { flow.saveWaiting = true; await gate; }
+        return originalSave.apply(this, args);
+      };
+    }
+    return { signedIn: flow.signedIn, invalidate: flow.invalidate, overlap: flow.overlap };
+  });
+  const label = `${width}: ${options.signedIn ? 'signed-in' : 'guest'} Next during Coach ${options.invalidate ? 'Retry' : options.overlap ? 'overlap' : 'loading'}`;
+  check(`${label} feedback enables actual Next while metadata waits`, await page.locator('#pte-next-read-aloud').isEnabled());
+  await page.locator('#pte-next-read-aloud').click();
+  if (options.invalidate || options.overlap) {
+    // The pre-fix path may wrongly finish before starting an assessed save; keep the failure diagnostic bounded.
+    await page.waitForFunction(() => window.__pteAssessedArchive.saveWaiting || window.__pteAssessedNext.finished);
+    if (options.invalidate) {
+      await page.locator('#ra-retry-btn').click();
+      await page.waitForFunction(() => window.ReadAloudMode.state === 'PREP');
+    } else {
+      check(`${label} waits for assessed archival before navigation`, await page.evaluate(() => ({
+        loads: window.__pteAssessedNext.loadCalls, updates: window.__pteAssessedArchive.updates,
+        pending: document.getElementById('pte-next-read-aloud').disabled
+      })), { loads: 0, updates: 0, pending: true });
+    }
+    await page.evaluate(() => window.__pteAssessedArchive.releaseCoach());
+    // Allow the original assessment continuation to join the same pending save.
+    await page.waitForFunction(() => window.__pteAssessedArchive.assessedSaveCalls === 2 || window.__pteAssessedArchive.processFinished);
+    if (options.overlap) check(`${label} assessment continuation joins Next's save`, await page.evaluate(() => window.__pteAssessedArchive.assessedSaveCalls), 2);
+    await page.evaluate(() => window.__pteAssessedArchive.releaseSave());
+  }
+  await page.waitForFunction(() => window.__pteAssessedNext.finished && !document.getElementById('pte-next-read-aloud').disabled);
+  if (options.invalidate) {
+    check(`${label} blocks late assessed writes and navigation`, await page.evaluate(() => ({
+      updates: window.__pteAssessedArchive.updates, loads: window.__pteAssessedNext.loadCalls,
+      state: window.ReadAloudMode.state, error: document.querySelector('.pte-dock__status').textContent.includes('offline')
+    })), { updates: 0, loads: 0, state: 'PREP', error: false });
+  } else {
+    await checkRetainedAssessment(page, label, check, fixture);
+  }
+  await page.evaluate(() => window.__pteAssessedArchive.releaseCoach());
+  await page.waitForFunction(() => window.__pteAssessedArchive.processFinished);
+  check(`${label} late Coach completion cannot repeat saving or navigation`, await page.evaluate(() => ({
+    updates: window.__pteAssessedArchive.updates, successes: window.__pteAssessedArchive.successfulUpdates,
+    loads: window.__pteAssessedNext.loadCalls, state: window.ReadAloudMode.state
+  })), { updates: options.invalidate ? 0 : 1, successes: options.invalidate ? 0 : 1,
+    loads: options.invalidate ? 0 : 1, state: 'PREP' });
+}
+
+async function checkRawSaveError(page, width, check, invalidate) {
+  const error = 'Recording captured, but saving failed: Assessed archive offline';
+  await page.waitForFunction(() => document.querySelector('.pte-dock__status').textContent.includes('Assessed archive offline'));
+  check(`${width}: raw-save failure has no persisted identity`, await page.evaluate(() => {
+    const session = window.ReadAloudMode.pendingSession;
+    return !!(session.archiveAttemptId || session.localAttemptId);
+  }), false);
+  for (const interaction of ['open', 'close']) {
+    await page.locator('#ra-pte-coach-btn').click();
+    check(`${width}: raw-save error survives Coach ${interaction}`, await page.locator('.pte-dock__status').textContent(), error);
+  }
+  if (invalidate) {
+    await page.locator('#ra-retry-btn').click();
+    check(`${width}: Retry clears raw-save error without a write`, await page.evaluate(() => ({
+      state: window.ReadAloudMode.state, records: window.__pteAssessedArchive.records.size,
+      error: document.querySelector('.pte-dock__status').textContent.includes('offline')
+    })), { state: 'PREP', records: 0, error: false });
+  }
+  return error;
+}
+
 async function exerciseAssessedNext(page, width, check, retryDuringNext = false, saveFailureAction = null, archiveRecovery = false) {
   const referenceText = await page.evaluate(failSaving => {
     const mode = window.ReadAloudMode;
@@ -296,6 +426,10 @@ async function exerciseAssessedNext(page, width, check, retryDuringNext = false,
     return mode.currentPromptPlainText;
   }, !!saveFailureAction);
   const assessmentRequests = [];
+  const archiveOptions = await page.evaluate(() => {
+    const flow = window.__pteAssessedArchive;
+    return { coachLoading: !!flow?.coachLoading, rawSaveError: !!flow?.rawSaveError, invalidate: !!flow?.invalidate };
+  });
   const fixture = {
     success: true, accuracyScore: 84, fluencyScore: 78, completenessScore: 96, pronScore: 82,
     recognizedText: referenceText,
@@ -307,6 +441,7 @@ async function exerciseAssessedNext(page, width, check, retryDuringNext = false,
       method: route.request().method(),
       referencePresent: route.request().postData()?.includes(referenceText) === true
     });
+    if (archiveOptions.rawSaveError) await page.waitForFunction(() => window.__pteAssessedArchive.releaseAssessment);
     await route.fulfill({ json: fixture });
   };
   await page.route('**/api/read-aloud/assess', respond);
@@ -315,13 +450,40 @@ async function exerciseAssessedNext(page, width, check, retryDuringNext = false,
     await page.waitForFunction(() => window.ReadAloudMode.state === 'RECORDING');
     await page.locator('#ra-stop-btn').click();
     await page.waitForFunction(() => window.ReadAloudMode.state === 'RECORDED');
+    let rawError;
+    if (archiveOptions.rawSaveError) {
+      rawError = await checkRawSaveError(page, width, check, archiveOptions.invalidate);
+      if (archiveOptions.invalidate) return;
+    }
     await page.getByRole('button', { name: 'Get feedback', exact: true }).click();
+    if (archiveOptions.coachLoading) {
+      await exerciseNextDuringCoach(page, width, check, fixture);
+      check(`${width}: Coach race uses actual assessment request`, assessmentRequests, [{ method: 'POST', referencePresent: true }]);
+      return;
+    }
+    if (archiveOptions.rawSaveError) {
+      await page.waitForFunction(() => window.ReadAloudMode.isSubmitInFlight);
+      check(`${width}: raw-save error survives feedback loading before recovery`, await page.locator('.pte-dock__status').textContent(), rawError);
+      await page.evaluate(() => { const flow = window.__pteAssessedArchive; flow.failCapture = false; flow.holdRecovery = true; flow.releaseAssessment = true; });
+      await page.waitForFunction(() => window.__pteAssessedArchive.recoveryWaiting);
+      check(`${width}: raw-save error survives results phase before recovery`, await page.locator('.pte-dock__status').textContent(), rawError);
+      await page.locator('#ra-pte-tab-coach').click();
+      check(`${width}: raw-save error survives Coach tips before recovery`, await page.locator('.pte-dock__status').textContent(), rawError);
+      await page.locator('#ra-pte-tab-results').click();
+      await page.evaluate(() => window.__pteAssessedArchive.releaseRecovery());
+    }
     await page.waitForFunction(() => window.ReadAloudMode.state === 'RESULTS'
       && window.ReadAloudMode.pendingSession === null && !window.ReadAloudMode.isSubmitInFlight);
     check(`${width}: actual Get feedback sends recording for assessment`, assessmentRequests, [
       { method: 'POST', referencePresent: true }
     ]);
     check(`${width}: actual assessed scores`, await page.locator('.pte-stats strong').allTextContents(), ['84%', '78%', '96%', '82%']);
+    if (archiveOptions.rawSaveError) {
+      await page.evaluate(() => { window.__pteAssessedArchive.session = window.ReadAloudMode.lastAssessmentSession; });
+      await checkRetainedAssessment(page, `${width}: raw-save recovery`, check, fixture, 0);
+      check(`${width}: verified recovery clears raw-save error`, await page.locator('.pte-dock__status').textContent(), 'Saved to Previous attempts below.');
+      return;
+    }
     if (archiveRecovery) {
       await verifyAssessedArchiveRecovery(page, width, check);
       return;
@@ -454,6 +616,11 @@ async function run() {
       await page.evaluate(async () => { await window.switchToMode('read-aloud'); });
       await page.waitForFunction(() => window.ReadAloudMode?.currentPromptReady);
       await page.evaluate(() => window.ReadAloudMode.stopTimer());
+      if (coachSaveRacesOnly) {
+        await exerciseCoachSaveWorkflows(page, width, check);
+        await page.close();
+        continue;
+      }
       check(`${width}: v3 card`, await page.locator('#mode-read-aloud .pte-card').count(), 1);
       check(`${width}: prep`, await page.locator('.pte-card').getAttribute('data-pte-phase'), 'prep');
       check(`${width}: countdown`, await page.locator('#ra-pte-recorder .pte-rec').getAttribute('data-state'), 'countdown');
@@ -1320,6 +1487,7 @@ async function run() {
           for (const captureFailure of [true, false]) await exerciseAssessedArchive(page, width, check, { signedIn, captureFailure });
           await exerciseAssessedArchive(page, width, check, { signedIn, captureFailure: false, invalidate: true });
         }
+        await exerciseCoachSaveWorkflows(page, width, check);
       }
       await page.close();
     }
@@ -1336,5 +1504,16 @@ async function run() {
   }
   console.log(`${passed} passed, ${failed} failed, ${skipped} skipped`);
   if (failures.length) throw new Error(`Phase 2 browser failures:\n${failures.join('\n')}`);
+}
+
+async function exerciseCoachSaveWorkflows(page, width, check) {
+  for (const signedIn of [false, true]) {
+    for (const variation of [{}, { overlap: true }, { invalidate: true }]) {
+      await exerciseAssessedArchive(page, width, check, { signedIn, coachLoading: true, ...variation });
+    }
+  }
+  for (const invalidate of [false, true]) {
+    await exerciseAssessedArchive(page, width, check, { signedIn: false, rawSaveError: true, captureFailure: true, invalidate });
+  }
 }
 run().catch(error => { console.error(error); process.exitCode = 1; });

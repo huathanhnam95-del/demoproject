@@ -2678,6 +2678,7 @@ class ReadAloudMode {
 
   invalidateRecordingSession() {
     this.pendingPteNextOwnership = null;
+    window.SpeakingPracticeController?.setSaveError?.('read-aloud', '');
     const invalidatedSessions = new Set([
       this.currentRecordingSession,
       this.pendingSession
@@ -4044,8 +4045,7 @@ class ReadAloudMode {
         if (this.isPteShellEnabled()) {
           this.savePteCapture(recordingSession).catch(error => {
             if (!this.shouldApplyAssessment(recordingSession)) return;
-            const status = this.pteView?.panel.querySelector('.pte-dock__status');
-            if (status) status.textContent = `Recording captured, but saving failed: ${error.message}`;
+            window.SpeakingPracticeController?.setSaveError?.('read-aloud', `Recording captured, but saving failed: ${error.message}`);
           });
         }
       });
@@ -4242,11 +4242,13 @@ class ReadAloudMode {
       if (saved?.skipped && saved.reason !== 'guest') throw new Error('This attempt could not be saved.');
       if (!this.shouldApplyAssessment(session)) return saved;
       if (saved?.skipped) {
+        if (!window.PteAttemptHistory?.recordLocal) throw new Error('Attempt history is unavailable. Please try again.');
         session.localAttemptId ||= `ra-${Date.now()}-${session.id}`;
         session.historyAudioUrl ||= URL.createObjectURL(blob);
-        window.PteAttemptHistory?.recordLocal({ ...input, media: undefined, attemptId: session.localAttemptId, promptId: session.questionId,
+        window.PteAttemptHistory.recordLocal({ ...input, media: undefined, attemptId: session.localAttemptId, promptId: session.questionId,
           audio: { studentUrl: session.historyAudioUrl, durationMs: session.durationMs } });
       } else session.archiveAttemptId = saved?.attemptId || input.attemptId;
+      window.SpeakingPracticeController?.setSaveError?.('read-aloud', '');
       return saved;
     })().catch(error => { session.archivePromise = null; throw error; });
     return session.archivePromise;
@@ -4748,23 +4750,6 @@ class ReadAloudMode {
       showAdvContainer.style.display = isSimpleTier && assessmentModes.size > 0 ? 'block' : 'none';
     }
     if (showAdvBtn && isSimpleTier) showAdvBtn.textContent = '✨ Show detailed analysis';
-    {
-      this.renderPromptForCurrentView();
-      await this.renderConnectedSpeechResults(payload.connectedSpeech, {
-        transcriptText: payload.recognizedText || this.currentPromptPlainText,
-        words: payload.words || [],
-        metrics: {
-          fluencyScore: payload.fluencyScore,
-          completenessScore: payload.completenessScore,
-          pronScore: payload.pronScore
-        },
-        sessionViewMode: sessionView,
-        sessionConnectedSpeechModes: [...assessmentModes],
-        sessionConnectedSpeechLevel: sessionLevel
-      });
-    }
-    if (!this.shouldApplyAssessment(recordingSession)) return false;
-
     const attemptInput = {
       practiceMode: 'read-aloud',
       promptSnapshot: {
@@ -4804,8 +4789,24 @@ class ReadAloudMode {
       }] : []
     };
     if (this.isPteShellEnabled() && recordingSession.wavBlob) {
-      // Keep this completed assessment with its recording until the assessed update succeeds.
+      // Retain scored data before Coach metadata can yield to an enabled Next control.
       recordingSession.assessedArchiveInput = attemptInput;
+    }
+    this.renderPromptForCurrentView();
+    await this.renderConnectedSpeechResults(payload.connectedSpeech, {
+      transcriptText: payload.recognizedText || this.currentPromptPlainText,
+      words: payload.words || [],
+      metrics: {
+        fluencyScore: payload.fluencyScore,
+        completenessScore: payload.completenessScore,
+        pronScore: payload.pronScore
+      },
+      sessionViewMode: sessionView,
+      sessionConnectedSpeechModes: [...assessmentModes],
+      sessionConnectedSpeechLevel: sessionLevel
+    });
+    if (!this.shouldApplyAssessment(recordingSession)) return false;
+    if (this.isPteShellEnabled() && recordingSession.wavBlob) {
       try {
         if (!await this.savePteAssessedArchive(recordingSession)) return false;
       } catch (error) {

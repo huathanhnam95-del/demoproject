@@ -1712,7 +1712,7 @@
       }
     });
     const defaults = { listen: 'Listen carefully. The recorder appears when the audio ends.', prep: 'Recording starts automatically when the countdown ends.', complete: 'Recording saved. Listen back or get feedback.', feedback: 'Saved to Previous attempts below.' };
-    status.textContent = state.nextError || (state.config.v3.statusText?.[phase] ?? defaults[phase] ?? '');
+    status.textContent = state.nextError || state.saveError || (state.config.v3.statusText?.[phase] ?? defaults[phase] ?? '');
     next.textContent = phase === 'feedback' ? 'Next question →' : 'Next →';
     next.classList.toggle('pte-btn--primary', phase === 'feedback'); next.classList.toggle('pte-btn--ghost', phase !== 'feedback');
     next.disabled = phase === 'loading' || !!state.nextPending;
@@ -2113,6 +2113,13 @@
       const state = activeControllers.get(modeId);
       if (!state?.isV3) return;
       state.nextError = String(message || '');
+      setPhase(modeId, state.phase);
+    },
+    setSaveError: (modeId, message) => {
+      const state = activeControllers.get(modeId);
+      if (!state?.isV3) return;
+      // A phase change is not proof of saving; the mode clears this on recovery or invalidation.
+      state.saveError = String(message || '');
       setPhase(modeId, state.phase);
     },
     getPhase: modeId => activeControllers.get(modeId)?.phase || null,

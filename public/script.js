@@ -8493,6 +8493,9 @@
   // Speak mode check function
   const performCheckSpeak = async (userAnswer, scoreElement) => {
     const v3Token = repeatSentenceV3.active ? repeatSentenceV3.generation : null;
+    const v3Attempt = v3Token !== null ? repeatSentenceV3.attempt : null;
+    const isCurrent = () => v3Token === null || (repeatSentenceV3.active
+      && v3Token === repeatSentenceV3.generation && v3Attempt === repeatSentenceV3.attempt);
     const totalWords = getCorrectWordCount("speak");
     if (!userAnswer.trim()) {
       result.innerHTML = `<span class="errors">Please provide your answer before checking.</span>`;
@@ -8501,15 +8504,18 @@
     }
 
     if (repeatSentenceStopPromise) {
-      await repeatSentenceStopPromise;
-      repeatSentenceStopPromise = null;
+      const pendingStop = repeatSentenceStopPromise;
+      await pendingStop;
+      if (!isCurrent()) return;
+      if (repeatSentenceStopPromise === pendingStop) repeatSentenceStopPromise = null;
     }
 
     // Call Azure Pronunciation Assessment if student audio was recorded
-    if (window.repeatSentenceWavBlob && correctSentenceSpeak) {
+    const assessmentBlob = v3Attempt ? v3Attempt.blob : window.repeatSentenceWavBlob;
+    if (assessmentBlob && correctSentenceSpeak) {
       try {
         const formData = new FormData();
-        formData.append('audio', window.repeatSentenceWavBlob, 'recording.wav');
+        formData.append('audio', assessmentBlob, 'recording.wav');
         formData.append('referenceText', correctSentenceSpeak);
         if (typeof currentSpeakQuestionId !== 'undefined' && currentSpeakQuestionId) {
           formData.append('questionId', String(currentSpeakQuestionId));
@@ -8519,7 +8525,7 @@
           body: formData
         });
         const assessData = await assessRes.json().catch(() => null);
-        if (v3Token !== null && (!repeatSentenceV3.active || v3Token !== repeatSentenceV3.generation)) return;
+        if (!isCurrent()) return;
         if (assessRes.ok && assessData && assessData.success && Array.isArray(assessData.words) && assessData.words.length > 0) {
           window.lastRepeatSentenceAssessment = assessData;
         }
@@ -8528,7 +8534,7 @@
       }
     }
 
-    if (v3Token !== null && (!repeatSentenceV3.active || v3Token !== repeatSentenceV3.generation)) return;
+    if (!isCurrent()) return;
     const diff = diffWords(userAnswer, correctSentenceSpeak);
     const hasErrors = diff.some((p) => p.type !== "match");
     const { matches: scoreValue, f1: wordAccuracy } = getWordDiffMetrics(diff);
@@ -8795,7 +8801,10 @@
 
   const loadQuestion = async (mode, questionId, navigationApproved = false) => {
     if (mode === 'speak' && repeatSentenceV3.active) {
+      const generation = repeatSentenceV3.generation;
       if (!navigationApproved && !await repeatSentenceV3.beforeNavigate()) return false;
+      if (!repeatSentenceV3.active || generation !== repeatSentenceV3.generation) return false;
+      repeatSentenceV3.stopShadow();
       repeatSentenceV3.generation++; clearInterval(repeatSentenceV3.timer); repeatSentenceV3.audioBox.reset();
       repeatSentenceV3.setPhase('loading');
     }
@@ -10047,7 +10056,8 @@
 
   // Repeat Sentence owns v3 timing and presentation; the shared widgets own no mode state.
   const repeatSentenceV3 = {
-    active: false, phase: 'loading', generation: 0, timer: null, busy: null, retryOperation: null, origins: [],
+    active: false, phase: 'loading', generation: 0, timer: null, busy: null, retryOperation: null,
+    departureCleanup: null, shadowEpoch: 0, shadowTitleTimer: null, shadowUtterance: null, origins: [],
     replaysLeft() {
       const limit = window.DifficultyManager?.getCurrentSettings('speak')?.maxReplays ?? 5;
       return Math.max(0, limit - (window.speakReplayCount || 0));
@@ -10111,15 +10121,33 @@
       // The shell adopts dock controls after onMount returns.
       const mountGeneration = this.generation;
       queueMicrotask(async () => {
-        const pending = this.retryOperation?.promise || this.busy;
-        if (pending) await pending.catch(() => {});
+        if (!this.active || mountGeneration !== this.generation) return;
+        // The shared dock can open its no-skip dialog without calling the mode's
+        // navigation hook. Stop Shadow before that shared handler takes over.
+        document.getElementById('pte-next-speak')?.addEventListener('click', () => this.stopShadow(), { capture: true });
+        await Promise.allSettled([this.departureCleanup, this.retryOperation?.promise, this.busy]);
         if (this.active && mountGeneration === this.generation) this.begin();
       });
     },
     unmount() {
+      if (!this.active) return;
+      this.stopShadow();
       this.buttonLabels?.forEach(({ node, previous }) => { node.textContent = previous; });
       this.active = false; this.generation++; clearInterval(this.timer); this.audioBox?.destroy(); this.recorder?.destroy(); this.playback?.pause();
-      if (isRecording) { isRecording = false; recognition?.stop(); stopRepeatSentenceAudioCapture(); }
+      // Capture helpers publish the WAV and decoded buffer after DSP. Keep their
+      // entire lifecycle owned until it drains, including an in-flight start.
+      const pending = [this.departureCleanup, this.retryOperation?.promise, this.busy, repeatSentenceStopPromise];
+      const cleanup = (async () => {
+        await Promise.allSettled(pending);
+        await stopRepeatSentenceRecording();
+        if (repeatSentenceStopPromise) await repeatSentenceStopPromise;
+        if (this.departureCleanup === cleanup) {
+          window.repeatSentenceWavBlob = null; window.repeatSentenceAudioBuffer = null;
+          window.lastRepeatSentenceAssessment = null; repeatSentenceStopPromise = null;
+        }
+      })().finally(() => { if (this.departureCleanup === cleanup) this.departureCleanup = null; });
+      this.departureCleanup = cleanup;
+      cleanup.catch(error => console.warn('[RepeatSentence] Departure cleanup failed:', error));
       this.origins.reverse().forEach(({ node, anchor, style, hidden }) => {
         anchor.replaceWith(node); if (style === null) node.removeAttribute('style'); else node.setAttribute('style', style); node.hidden = hidden;
       });
@@ -10130,6 +10158,34 @@
       this.playback.src = kind === 'yours' ? this.recordingUrl || '' : audio.currentSrc || audio.querySelector('source')?.src || '';
       this.playback.setAttribute('aria-label', kind === 'yours' ? 'Your recording' : 'Original sentence');
       ['yours', 'original'].forEach(item => document.getElementById(`speak-pte-${item}`).setAttribute('aria-pressed', String(item === kind)));
+    },
+    stopShadow() {
+      this.shadowEpoch++; clearTimeout(this.shadowTitleTimer);
+      if (this.shadowUtterance || window.isShadowModeActive) window.speechSynthesis?.cancel();
+      this.shadowUtterance = null; window.isShadowModeActive = false;
+      shadowModeBtn.classList.remove('active'); shadowModeBtn.setAttribute('aria-pressed', 'false'); shadowModeBtn.title = 'Shadow Mode';
+    },
+    async toggleShadow() {
+      if (!this.active || this.phase !== 'prep' || this.busy || this.retryOperation || this.departureCleanup) return;
+      if (window.isShadowModeActive) { this.stopShadow(); return; }
+      const owner = { epoch: ++this.shadowEpoch, generation: this.generation, question: currentSpeakQuestionId, phase: this.phase };
+      const isCurrent = () => this.active && this.shadowEpoch === owner.epoch && this.generation === owner.generation
+        && currentSpeakQuestionId === owner.question && this.phase === owner.phase && !this.busy && !this.retryOperation;
+      try {
+        const result = window.useActiveSkillForAttempt
+          ? await window.useActiveSkillForAttempt('shadow_mode', 'speak', owner.question) : { success: true };
+        if (!isCurrent() || !result?.success) return;
+        window.isShadowModeActive = true; shadowModeBtn.classList.add('active'); this.sync();
+        window.speechSynthesis?.cancel();
+        const utterance = new SpeechSynthesisUtterance(correctSentenceSpeak); utterance.rate = 0.6;
+        this.shadowUtterance = utterance;
+        utterance.onend = () => {
+          if (!isCurrent() || this.shadowUtterance !== utterance) return;
+          shadowModeBtn.title = 'Shadow Mode — Done!';
+          this.shadowTitleTimer = setTimeout(() => { if (isCurrent()) shadowModeBtn.title = 'Shadow Mode'; }, 2000);
+        };
+        window.speechSynthesis?.speak(utterance); shadowModeBtn.title = 'Shadowing... speak along!';
+      } catch (error) { if (isCurrent()) { this.stopShadow(); this.fail(error); } }
     },
     setPhase(phase) {
       if (!this.active) return;
@@ -10158,7 +10214,10 @@
       if (status) status.textContent = error?.message || 'This attempt could not be completed. Try again.';
     },
     async begin() {
+      this.stopShadow();
       const token = ++this.generation; clearInterval(this.timer); this.audioBox.reset(); this.replaying = false;
+      if (this.departureCleanup) await this.departureCleanup;
+      if (!this.active || token !== this.generation) return;
       this.attempt = null; this.setPhase('listen');
       try {
         await this.audioBox.countdown(3);
@@ -10191,24 +10250,30 @@
       }
     },
     async start() {
-      if (!this.active || this.phase !== 'prep' || this.busy || this.retryOperation) return;
+      if (!this.active || this.phase !== 'prep' || this.busy || this.retryOperation || this.departureCleanup) return;
+      this.stopShadow();
       // Invalidate replay completion before cancelling its audio promise. It must
       // not restart a prep timer after this recording has taken ownership.
       const token = ++this.generation;
       clearInterval(this.timer); this.audioBox.reset(); this.audioBox.setCompleted(); this.replaying = false;
-      this.busy = startRepeatSentenceRecording(); this.sync();
-      try {
-        await this.busy;
-        if (!this.active || token !== this.generation) { await stopRepeatSentenceRecording(); return; }
-        if (!isRecording || !repeatSentenceMediaStream) throw new Error('Microphone recording could not start. Allow microphone access and try again.');
-        this.attempt = { id: `rs-${Date.now()}-${Math.random().toString(36).slice(2)}`, promptId: currentSpeakQuestionId, text: correctSentenceSpeak, started: Date.now() };
-        this.recorder.showRecording(15); this.recorder.attachStream(repeatSentenceMediaStream); this.setPhase('recording');
-        this.timer = setInterval(() => {
-          const elapsed = (Date.now() - this.attempt.started) / 1000; this.recorder.setElapsed(elapsed);
-          if (elapsed >= 15) this.stop().catch(error => this.fail(error));
-        }, 100);
-      } catch (error) { await stopRepeatSentenceRecording(); this.fail(error); }
-      finally { this.busy = null; this.sync(); }
+      const operation = (async () => {
+        try {
+          await startRepeatSentenceRecording();
+          if (!this.active || token !== this.generation) { await stopRepeatSentenceRecording(); return; }
+          if (!isRecording || !repeatSentenceMediaStream) throw new Error('Microphone recording could not start. Allow microphone access and try again.');
+          this.attempt = { id: `rs-${Date.now()}-${Math.random().toString(36).slice(2)}`, promptId: currentSpeakQuestionId, text: correctSentenceSpeak, started: Date.now() };
+          this.recorder.showRecording(15); this.recorder.attachStream(repeatSentenceMediaStream); this.setPhase('recording');
+          this.timer = setInterval(() => {
+            const elapsed = (Date.now() - this.attempt.started) / 1000; this.recorder.setElapsed(elapsed);
+            if (elapsed >= 15) this.stop().catch(error => this.fail(error));
+          }, 100);
+        } catch (error) {
+          await stopRepeatSentenceRecording();
+          if (this.active && token === this.generation) this.fail(error);
+        } finally { if (this.busy === operation) { this.busy = null; this.sync(); } }
+      })();
+      this.busy = operation; this.sync();
+      return operation;
     },
     async save(resultSnapshot = null) {
       const attempt = this.attempt;
@@ -10259,6 +10324,7 @@
     retry(discard = false) {
       if (this.retryOperation) return this.retryOperation.promise;
       if (!this.active) return Promise.resolve(false);
+      this.stopShadow();
       // Cancel owns the old capture until its DSP/save work drains. Repeated
       // clicks join that operation instead of exposing a new prep countdown.
       const operation = { generation: ++this.generation, attempt: this.attempt, pending: this.busy };
@@ -10324,19 +10390,25 @@
         fluencyScore: assessment?.fluencyScore, completenessScore: assessment?.completenessScore, words: assessment?.words });
     },
     async beforeNavigate(approved = false) {
+      this.stopShadow();
+      const token = this.generation, attempt = this.attempt;
+      const isCurrent = () => this.active && token === this.generation && attempt === this.attempt;
+      if (this.departureCleanup) { await this.departureCleanup; return false; }
       if (this.retryOperation) { await this.retryOperation.promise; return false; }
       if (this.busy) await this.busy;
-      if (!this.active) return false;
+      if (!isCurrent()) return false;
       if (!approved && this.phase === 'prep') {
         await window.SpeakingPracticeController.openDialog('speak', 'noskip'); return false;
       }
       if (!approved && ['listen', 'recording', 'complete'].includes(this.phase)) {
         if (!await window.SpeakingPracticeController.openDialog('speak', 'confirm')) return false;
+        if (!isCurrent()) return false;
         if (this.phase === 'prep') { await window.SpeakingPracticeController.openDialog('speak', 'noskip'); return false; }
       }
       if (this.phase === 'recording') await this.stop();
+      if (!isCurrent()) return false;
       if (this.attempt && !this.attempt.saved) await this.save();
-      return true;
+      return isCurrent();
     },
     async navigate(direction, approved = false) {
       if (this.navigating) return false;
@@ -10441,6 +10513,7 @@
         handleLockedSkillClick('shadow_mode');
         return;
       }
+      if (repeatSentenceV3.active) return repeatSentenceV3.toggleShadow();
 
       const nextState = !window.isShadowModeActive;
       if (nextState) {
@@ -10536,6 +10609,8 @@
   }
 
   async function startRepeatSentenceRecording() {
+    // Also protect a legacy-scope start following departure from v3.
+    if (repeatSentenceV3.departureCleanup) await repeatSentenceV3.departureCleanup;
     if (!recognition || isRecording) return;
     await ensureMicrophoneAccess();
       // Start recording

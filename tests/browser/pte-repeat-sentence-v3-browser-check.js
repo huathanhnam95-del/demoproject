@@ -9,11 +9,12 @@ const sentence = 'The library opens during the examination period.';
 const assessment = { success: true, pronScore: 72, fluencyScore: 80, completenessScore: 91,
   words: sentence.split(' ').map((word, i) => ({ word, accuracyScore: i === 5 ? 45 : i === 1 ? 70 : 95,
     startMs: i * 100, endMs: (i + 1) * 100, syllables: [{ text: word, accuracyScore: 70, startMs: i * 100, endMs: (i + 1) * 100, heardIpa: 'e' }] })) };
-function wave() {
+function wave(sample = 0) {
   const samples = 8000, b = Buffer.alloc(44 + samples * 2);
   b.write('RIFF'); b.writeUInt32LE(b.length - 8, 4); b.write('WAVEfmt ', 8); b.writeUInt32LE(16, 16);
   b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22); b.writeUInt32LE(16000, 24); b.writeUInt32LE(32000, 28);
   b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34); b.write('data', 36); b.writeUInt32LE(samples * 2, 40);
+  for (let i = 44; i < b.length; i += 2) b.writeInt16LE(sample, i);
   return b;
 }
 
@@ -106,12 +107,164 @@ async function exerciseListenBackRetry(page, width) {
   assert.deepEqual(await page.evaluate(() => window.__playedSources), [state.recordingUrl]);
 }
 
+async function leaveAndReturn(page) {
+  await page.getByRole('button', { name: 'Back to dashboard', exact: true }).click();
+  await page.waitForFunction(() => !window.RepeatSentenceV3.active);
+  await page.locator('#mode-btn-speak').click();
+  await page.waitForFunction(() => window.RepeatSentenceV3.active);
+}
+
+async function exerciseDeparture(page, width, ordering) {
+  const uploads = [];
+  await page.route('**/api/repeat-sentence/assess', route => {
+    const body = route.request().postDataBuffer(), wavOffset = body.indexOf('RIFF');
+    assert.ok(wavOffset >= 0, 'assessment uploads a WAV');
+    uploads.push(body.readInt16LE(wavOffset + 44));
+    return route.fulfill({ json: assessment });
+  });
+  await page.evaluate(({ oldWave, newWave }) => {
+    window.__captureCalls = 0; window.__archiveAudio = [];
+    window.AudioDspPipeline = { enhance: async () => {
+      const capture = ++window.__captureCalls;
+      if (capture === 1) await new Promise(resolve => { window.__releaseDeparture = resolve; });
+      return { wavBlob: new Blob([Uint8Array.from(capture === 1 ? oldWave : newWave)], { type: 'audio/wav' }) };
+    } };
+    const save = window.PTEAttemptArchive.saveAttempt;
+    window.PTEAttemptArchive.saveAttempt = async input => {
+      window.__archiveAudio.push({ id: input.attemptId,
+        sample: new DataView(await input.media[0].blob.arrayBuffer()).getInt16(44, true) });
+      return save(input);
+    };
+  }, { oldWave: [...wave(4096)], newWave: [...wave(8192)] });
+  if (ordering === 'start') await page.evaluate(() => {
+    const getUserMedia = navigator.mediaDevices.getUserMedia;
+    navigator.mediaDevices.getUserMedia = async (...args) => {
+      await new Promise(resolve => { window.__releaseMicrophone = resolve; });
+      navigator.mediaDevices.getUserMedia = getUserMedia;
+      return getUserMedia(...args);
+    };
+  });
+  await page.locator('#record-btn').click();
+  if (ordering === 'start') await page.waitForFunction(() => !!window.__releaseMicrophone);
+  else await page.waitForFunction(() => RepeatSentenceV3.phase === 'recording' && !RepeatSentenceV3.busy);
+  const oldId = await page.evaluate(() => RepeatSentenceV3.attempt?.id || null);
+  if (ordering === 'navigation') {
+    await page.locator('#pte-next-speak').click();
+    await page.locator('.pte-dialog button').last().click();
+    await page.waitForFunction(() => !!window.__releaseDeparture);
+  }
+  await leaveAndReturn(page);
+  if (ordering === 'start') await page.evaluate(() => window.__releaseMicrophone());
+  await page.waitForFunction(() => !!window.__releaseDeparture);
+  await leaveAndReturn(page); // Repeated remounts must retain the same departure barrier.
+  let startedBeforeRelease = false;
+  if (ordering === 'last') {
+    startedBeforeRelease = await page.waitForFunction(() => RepeatSentenceV3.phase === 'prep', null, { timeout: 5000 }).then(() => true, () => false);
+    if (startedBeforeRelease) {
+      await page.locator('#record-btn').click();
+      await page.waitForFunction(() => RepeatSentenceV3.phase === 'recording' && !RepeatSentenceV3.busy
+        && document.getElementById('transcription-text').textContent.includes('library'));
+      await page.locator('#speak-pte-stop').click();
+      await page.waitForFunction(() => RepeatSentenceV3.phase === 'complete' && !RepeatSentenceV3.busy);
+    }
+  }
+  await page.evaluate(() => window.__releaseDeparture());
+  if (!startedBeforeRelease) {
+    await page.waitForFunction(() => RepeatSentenceV3.phase === 'prep');
+    await page.locator('#record-btn').click();
+    await page.waitForFunction(() => RepeatSentenceV3.phase === 'recording' && !RepeatSentenceV3.busy
+      && document.getElementById('transcription-text').textContent.includes('library'));
+    await page.locator('#speak-pte-stop').click();
+    await page.waitForFunction(() => RepeatSentenceV3.phase === 'complete' && !RepeatSentenceV3.busy);
+  }
+  await page.locator('#check-btn-speak').click();
+  await page.waitForFunction(() => RepeatSentenceV3.phase === 'feedback' && !RepeatSentenceV3.busy);
+  const state = await page.evaluate(async () => ({ id: RepeatSentenceV3.attempt.id,
+    prompt: document.getElementById('current-question-id-speak').textContent,
+    wav: new DataView(await window.repeatSentenceWavBlob.arrayBuffer()).getInt16(44, true),
+    decoded: window.repeatSentenceAudioBuffer.getChannelData(0)[Math.floor(window.repeatSentenceAudioBuffer.length / 2)], archive: window.__archiveAudio }));
+  fs.writeFileSync(path.join(evidence, `${width}-departure-${ordering}.json`), JSON.stringify({ oldId, startedBeforeRelease, uploads, state }, null, 2));
+  assert.deepEqual(uploads, [8192], 'assessment must upload the current capture, not departed DSP output');
+  assert.equal(state.wav, 8192);
+  // Chrome resamples 16 kHz into the device-rate context; tolerate its filter
+  // ripple while distinguishing the current 0.25 sample from the departed 0.125.
+  assert.ok(Math.abs(state.decoded - 0.25) < 0.001, 'decoded buffer belongs to the current capture');
+  assert.notEqual(state.id, oldId);
+  assert.ok(state.archive.length >= 2 && state.archive.every(item => item.id === state.id && item.sample === 8192), 'archive and assessment use the same current audio');
+  assert.equal(state.prompt, '1', 'departed navigation must not change the remounted question');
+  assert.equal(startedBeforeRelease, false, 'new capture waits for departure DSP to settle');
+}
+
+async function exerciseShadow(page, width, outcome) {
+  await page.evaluate(() => {
+    window.__shadowSpeech = []; window.__shadowUtterances = []; window.__shadowCancels = 0;
+    window.speechSynthesis.speak = utterance => { window.__shadowUtterances.push(utterance); window.__shadowSpeech.push(utterance.text); };
+    window.speechSynthesis.cancel = () => { window.__shadowCancels++; };
+    document.getElementById('shadow-mode-btn').classList.remove('locked');
+    window.useActiveSkillForAttempt = () => new Promise((resolve, reject) => {
+      window.__resolveShadow = () => resolve({ success: true });
+      window.__rejectShadow = () => reject(new Error('Deferred Shadow activation failed'));
+    });
+  });
+  await page.locator('#shadow-mode-btn').click();
+  await page.waitForFunction(() => !!window.__resolveShadow);
+  if (outcome.startsWith('active-')) {
+    await page.evaluate(() => window.__resolveShadow());
+    await page.waitForFunction(() => window.__shadowSpeech.length === 1);
+    const cancels = await page.evaluate(() => window.__shadowCancels);
+    if (outcome === 'active-unmount') await leaveAndReturn(page);
+    else if (outcome === 'active-navigation') {
+      await page.locator('#pte-next-speak').click();
+      await page.locator('.pte-dialog button').click();
+    } else {
+      await page.locator('#record-btn').click();
+      await page.waitForFunction(() => RepeatSentenceV3.phase === 'recording' && !RepeatSentenceV3.busy);
+    }
+    const stopped = await page.evaluate(() => ({ cancels: window.__shadowCancels, active: window.isShadowModeActive,
+      pressed: document.getElementById('shadow-mode-btn').getAttribute('aria-pressed') }));
+    assert.ok(stopped.cancels > cancels, 'leaving Shadow must cancel ongoing synthesis');
+    assert.equal(stopped.active, false); assert.equal(stopped.pressed, 'false');
+    await page.evaluate(() => window.__shadowUtterances[0].onend?.());
+    assert.equal(await page.locator('#shadow-mode-btn').getAttribute('title'), 'Shadow Mode', 'obsolete speech completion cannot update the current controls');
+    return;
+  }
+  if (outcome.startsWith('unmount')) await leaveAndReturn(page);
+  else {
+    await page.locator('#record-btn').click();
+    await page.waitForFunction(() => RepeatSentenceV3.phase === 'recording' && !RepeatSentenceV3.busy);
+    if (outcome === 'retry') {
+      await page.locator('#speak-pte-cancel').click();
+      await page.waitForFunction(() => RepeatSentenceV3.phase === 'prep');
+    }
+    if (outcome === 'navigation') {
+      await page.locator('#pte-next-speak').click();
+      await page.locator('.pte-dialog button').last().click();
+      await page.waitForFunction(() => document.getElementById('current-question-id-speak').textContent === '2');
+    }
+  }
+  await page.evaluate(reject => reject ? window.__rejectShadow() : window.__resolveShadow(), outcome.includes('reject'));
+  await page.waitForTimeout(100); // Flush the activation continuation and possible unhandled rejection.
+  const stale = await page.evaluate(() => ({ speech: window.__shadowSpeech, active: window.isShadowModeActive,
+    pressed: document.getElementById('shadow-mode-btn').getAttribute('aria-pressed'), title: document.getElementById('shadow-mode-btn').title }));
+  fs.writeFileSync(path.join(evidence, `${width}-shadow-${outcome}.json`), JSON.stringify(stale, null, 2));
+  assert.deepEqual(stale.speech, [], 'stale Shadow activation must never speak');
+  assert.equal(stale.active, false); assert.equal(stale.pressed, 'false');
+  assert.notEqual(stale.title, 'Shadowing... speak along!');
+}
+
 async function run() {
   fs.mkdirSync(evidence, { recursive: true });
   const harness = await createHarness(); const report = [], failures = [];
-  const scenarios = process.argv.includes('--cancel-race-only') ? ['cancel']
+  const ownershipScenarios = ['departure-first', 'departure-last', 'departure-navigation', 'departure-start',
+    'shadow-resolve', 'shadow-reject', 'shadow-retry', 'shadow-navigation', 'shadow-unmount', 'shadow-unmount-reject',
+    'shadow-active-start', 'shadow-active-unmount', 'shadow-active-navigation'];
+  const selectedScenario = process.argv.find(arg => arg.startsWith('--scenario='))?.slice(11);
+  const scenarios = selectedScenario ? [selectedScenario] : process.argv.includes('--ownership-only') ? ownershipScenarios
+    : process.argv.includes('--departure-only') ? ownershipScenarios.filter(s => s.startsWith('departure'))
+    : process.argv.includes('--shadow-only') ? ownershipScenarios.filter(s => s.startsWith('shadow'))
+    : process.argv.includes('--cancel-race-only') ? ['cancel']
     : process.argv.includes('--listen-back-only') ? ['listen']
-      : process.argv.includes('--replay-start-only') ? ['full'] : ['full', 'cancel', 'listen'];
+      : process.argv.includes('--replay-start-only') ? ['full'] : ['full', 'cancel', 'listen', ...ownershipScenarios];
   try {
     for (const scenario of scenarios) for (const width of [1440, 390]) {
       const page = await harness.browser.newPage({ viewport: { width, height: width === 390 ? 844 : 900 } });
@@ -159,10 +312,17 @@ async function run() {
       if (scenario !== 'full') {
         try {
           if (scenario === 'cancel') await exerciseCancelledCapture(page, width);
+          else if (scenario.startsWith('departure-')) await exerciseDeparture(page, width, scenario.slice(10));
+          else if (scenario.startsWith('shadow-')) await exerciseShadow(page, width, scenario.slice(7));
           else await exerciseListenBackRetry(page, width);
           assert.deepEqual(errors, [], 'review regressions produce no JavaScript errors');
           report.push({ scenario, width, passed: true });
-        } catch (error) { failures.push(`${scenario} ${width}: ${error.message}`); report.push({ scenario, width, passed: false, error: error.message }); }
+        } catch (error) {
+          failures.push(`${scenario} ${width}: ${error.message}`); report.push({ scenario, width, passed: false, error: error.message });
+          console.error(scenario, width, error.stack);
+          await page.screenshot({ path: path.join(evidence, `${width}-${scenario}-failure.png`), fullPage: true });
+        }
+        console.log(JSON.stringify(report.at(-1)));
         await page.close();
         continue;
       }

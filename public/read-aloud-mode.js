@@ -71,6 +71,7 @@ class ReadAloudMode {
     this.pendingFontHydration = null;
     this.connectedSpeechPanelMode = 'hidden';
     this.currentGuideExplanationItems = [];
+    this.currentGuideInteractionItems = new Map();
     this.selectedGuideItemId = null;
     this.currentGuideHasVisibleAssimilation = false;
     // The toggle wrote 'ra-speech-coach-visible' but nothing ever read it, so
@@ -2495,7 +2496,12 @@ class ReadAloudMode {
       }
       const summaryText = window.ReadAloudLinking.buildAccessibleSummary(filteredAnalysis, familyOptions);
       summary.textContent = summaryText;
-      this.renderPromptGuideExplanations(filteredAnalysis);
+      // Results own the Coach rail once assessment has completed. A late
+      // ResizeObserver/font hydration pass must not replace assessed feedback
+      // with the prompt's Preview cards.
+      if (this.state !== 'RESULTS') {
+        this.renderPromptGuideExplanations(filteredAnalysis);
+      }
 
       const promptWidth = Math.min(window.innerWidth || 0, promptStage.getBoundingClientRect().width || 0);
       const useFallback = promptWidth < (window.ReadAloudLinking.DESKTOP_MIN_WIDTH || 560);
@@ -4722,6 +4728,7 @@ class ReadAloudMode {
     if (invalidate) this.invalidateSpeechCoachResultRender();
     this.connectedSpeechPanelMode = 'hidden';
     this.currentGuideExplanationItems = [];
+    this.currentGuideInteractionItems = new Map();
     this.selectedGuideItemId = null;
     this.currentGuideHasVisibleAssimilation = false;
     this.guideExplanationsExpanded = null;
@@ -4811,7 +4818,27 @@ class ReadAloudMode {
       return;
     }
 
-    const rawItems = window.ReadAloudLinking.buildGuideExplanationItems(analysis);
+    const buildItems = window.ReadAloudLinking.buildGuideExplanationItems;
+    // buildGuideExplanationItems intentionally caps/deduplicates the Coach
+    // drawer. The passage renderer does not: it marks every eligible boundary
+    // and weak-form token. Build each source item in isolation as well so every
+    // rendered target retains complete popover metadata without expanding the
+    // concise drawer summary.
+    const completeItemsById = new Map();
+    const collectCompleteItems = (scopedAnalysis) => {
+      buildItems(scopedAnalysis).forEach((item) => {
+        if (item?.id && !completeItemsById.has(item.id)) completeItemsById.set(item.id, item);
+      });
+    };
+    collectCompleteItems(analysis);
+    (Array.isArray(analysis?.boundaries) ? analysis.boundaries : []).forEach((boundary) => {
+      collectCompleteItems({ ...analysis, boundaries: [boundary], tokenAnnotations: [] });
+    });
+    (Array.isArray(analysis?.tokenAnnotations) ? analysis.tokenAnnotations : []).forEach((annotation) => {
+      collectCompleteItems({ ...analysis, boundaries: [], tokenAnnotations: [annotation] });
+    });
+
+    const rawItems = buildItems(analysis);
     if (!rawItems.length) {
       this.hideConnectedSpeechPanel();
       return;
@@ -4830,19 +4857,28 @@ class ReadAloudMode {
       this.hideConnectedSpeechPanel();
       return;
     }
-    const seen = new Set();
-    const items = [];
-    for (const item of rawItems) {
+    const normalizeAllowedItem = (item) => {
       const itemCategory = this.normalizeConnectedSpeechMode(
         item?.category || item?.layer || item?.subtype || item?.badge || ''
       );
-      if (allowedCategories && allowedCategories.size && !allowedCategories.has(itemCategory)) {
-        continue;
-      }
+      if (allowedCategories && allowedCategories.size && !allowedCategories.has(itemCategory)) return null;
+      return { ...item, category: itemCategory };
+    };
+    this.currentGuideInteractionItems = new Map();
+    completeItemsById.forEach((item, id) => {
+      const normalized = normalizeAllowedItem(item);
+      if (normalized) this.currentGuideInteractionItems.set(id, normalized);
+    });
+
+    const seen = new Set();
+    const items = [];
+    for (const item of rawItems) {
+      const normalized = normalizeAllowedItem(item);
+      if (!normalized) continue;
       const key = `${item.label}|${item.spokenAs}|${item.badge}`;
       if (!seen.has(key)) {
         seen.add(key);
-        items.push({ ...item, category: itemCategory });
+        items.push(normalized);
       }
     }
 
@@ -5469,6 +5505,7 @@ class ReadAloudMode {
 
     this.connectedSpeechPanelMode = 'results';
     this.currentGuideExplanationItems = [];
+    this.currentGuideInteractionItems = new Map();
     this.selectedGuideItemId = null;
     this.currentGuideHasVisibleAssimilation = false;
     box.style.display = '';
@@ -6759,7 +6796,10 @@ class ReadAloudMode {
     let copy = subtype && window.ReadAloudLinking
       ? window.ReadAloudLinking.getSoundChangeCopy(subtype)
       : null;
-    const item = this.pteView && this.currentGuideExplanationItems.find(entry => entry.id === guideId);
+    const item = this.pteView && (
+      this.currentGuideInteractionItems?.get(guideId)
+      || this.currentGuideExplanationItems.find(entry => entry.id === guideId)
+    );
     if (!copy && item) copy = { arrow: item.spokenAs || item.sayItLike || item.badge, explanation: item.explanation };
     if (!copy) {
       this.hideSoundChangeTooltip();

@@ -24,9 +24,9 @@ async function exerciseWordPopover(page, item, options = {}) {
     if (guideItem.subtype) target.dataset.soundChangeSubtype = guideItem.subtype;
     window.__ptePopoverRestore = {
       items: mode.currentGuideExplanationItems,
+      interactionItems: mode.currentGuideInteractionItems,
       panelMode: mode.connectedSpeechPanelMode,
       questionId: mode.currentQuestionId,
-      modelHandler: mode.playSpeechCoachModelAudio,
       target,
       createdTarget,
       oldGuideTarget,
@@ -41,13 +41,13 @@ async function exerciseWordPopover(page, item, options = {}) {
     if (withModelAudio) {
       const eventId = 'q-1-consonant_to_vowel-0-1';
       const hash = 'a'.repeat(64);
+      const file = `/database/RA/speech-coach-audio/v1/clips/aa/${hash}.mp3`;
       mode.speechCoachAudioManifestCache.set('1', {
         version: 'sc-kokoro-v1', questionId: '1', events: {
-          [eventId]: { status: 'ready', eventId, assetId: 'browser-fixture', durationMs: 900, mp3Sha256: hash, file: `/database/RA/speech-coach-audio/v1/clips/aa/${hash}.mp3` }
+          [eventId]: { status: 'ready', eventId, assetId: 'browser-fixture', durationMs: 900, mp3Sha256: hash, file }
         }
       });
-      window.__ptePopoverModelPlays = 0;
-      mode.playSpeechCoachModelAudio = () => { window.__ptePopoverModelPlays += 1; };
+      window.__pteExpectedModelSrc = file;
     }
     mode.showSoundChangeTooltip(guideItem.id, target, { pinned: true });
   }, { guideItem: item, linkingIpa: options.linkingIpa || null, withModelAudio: !!options.withModelAudio });
@@ -60,9 +60,9 @@ async function restoreWordPopover(page) {
     mode.hideSoundChangeTooltip();
     if (restore) {
       mode.currentGuideExplanationItems = restore.items;
+      mode.currentGuideInteractionItems = restore.interactionItems;
       mode.connectedSpeechPanelMode = restore.panelMode;
       mode.currentQuestionId = restore.questionId;
-      mode.playSpeechCoachModelAudio = restore.modelHandler;
       if (restore.createdTarget) {
         restore.target?.remove();
       } else if (restore.target) {
@@ -99,6 +99,33 @@ async function run() {
     for (const width of [1440, 390]) {
       const page = await harness.open({ width, height: width === 390 ? 844 : 900 });
       await page.evaluate(() => {
+        window.__pteMediaPlayCalls = [];
+        window.__pteMediaPauseCalls = [];
+        window.__pteMediaLoadCalls = [];
+        const BrowserAudio = window.Audio;
+        window.Audio = function (...args) {
+          const audio = new BrowserAudio(...args);
+          const addEventListener = audio.addEventListener.bind(audio);
+          audio.addEventListener = (type, listener, options) => {
+            if (type !== 'error') addEventListener(type, listener, options);
+          };
+          return audio;
+        };
+        window.Audio.prototype = BrowserAudio.prototype;
+        HTMLMediaElement.prototype.play = function () {
+          window.__pteMediaPlayCalls.push({
+            id: this.id || '',
+            src: this.getAttribute('src') || '',
+            currentSrc: this.currentSrc || ''
+          });
+          return Promise.resolve();
+        };
+        HTMLMediaElement.prototype.pause = function () {
+          window.__pteMediaPauseCalls.push({ id: this.id || '', src: this.getAttribute('src') || '' });
+        };
+        HTMLMediaElement.prototype.load = function () {
+          window.__pteMediaLoadCalls.push({ id: this.id || '', src: this.getAttribute('src') || '' });
+        };
         MediaRecorder.prototype.stop = function () {
           this.state = 'inactive';
           const sampleRate = 16000, samples = sampleRate * 2;
@@ -144,20 +171,66 @@ async function run() {
       if (width === 1440) await page.screenshot({ path: path.join(evidence, 'ra-1440-picker.png'), fullPage: true });
       await page.keyboard.press('Escape');
 
+      await page.evaluate(async () => {
+        const mode = window.ReadAloudMode;
+        const questionIndex = mode.database.findIndex(row => String(row.ID) === '1025');
+        if (questionIndex < 0) throw new Error('Q1025 is missing from the Read Aloud database');
+        await mode.loadSpecificPrompt(questionIndex);
+        mode.stopTimer();
+      });
+      await page.waitForFunction(() => window.ReadAloudMode.currentQuestionId === '1025');
+      await page.waitForFunction(() => {
+        const candidates = [...document.querySelectorAll('#ra-prompt-stage [data-guide-target]')];
+        return candidates.filter(node => ['and', 'can'].includes((node.textContent || '').trim().toLowerCase())).length >= 2;
+      });
+      const laterMarkedTarget = page.locator('#ra-prompt-stage [data-guide-target]').filter({ hasText: /^(and|can)$/i }).last();
+      check(`${width}: Q1025 later marked target exists`, await laterMarkedTarget.count(), 1);
+      check(`${width}: every Q1025 mark retains interaction metadata`, await page.evaluate(() => (
+        [...document.querySelectorAll('#ra-prompt-stage [data-guide-target]')]
+          .filter(node => !window.ReadAloudMode.currentGuideInteractionItems?.has(node.getAttribute('data-guide-target')))
+          .map(node => ({ id: node.getAttribute('data-guide-target'), text: (node.textContent || '').trim() }))
+      )), []);
+      check(`${width}: Q1025 later target is outside capped Coach drawer`, await laterMarkedTarget.evaluate(node => {
+        const id = node.getAttribute('data-guide-target');
+        return !window.ReadAloudMode.currentGuideExplanationItems.some(item => item.id === id);
+      }));
+      await laterMarkedTarget.click({ force: true });
+      check(`${width}: Q1025 later marked target opens popover`, await page.locator('#ra-sound-change-tooltip').getAttribute('aria-hidden'), 'false');
+      check(`${width}: Q1025 later popover identifies its marked word`, await page.locator('.ra-sound-change-tooltip__words').textContent().then(text => /\b(and|can)\b/i.test(text)));
+      check(`${width}: Q1025 later popover has coaching copy`, await page.locator('.ra-sound-change-tooltip__explanation').textContent().then(text => text.trim().length > 0));
+      await page.locator('.ra-sound-change-tooltip__close').evaluate(button => button.click());
+
       await page.evaluate(() => {
         const mode = window.ReadAloudMode;
-        mode.audioManifest = { ...(mode.audioManifest || {}), [mode.currentQuestionId]: '/sample-browser-fixture.mp3' };
-        window.__pteSampleVoiceClicks = 0;
-        mode.playAudio = () => { window.__pteSampleVoiceClicks += 1; };
+        const filename = 'sample-browser-fixture.mp3';
+        mode.selectedGender = 'female';
+        mode.selectedVoiceId = 'browser-fixture';
+        mode.selectedSpeed = '100';
+        mode.audioManifest = {
+          ...(mode.audioManifest || {}),
+          [mode.currentQuestionId]: {
+            female: {
+              'browser-fixture': { files: { '100': filename } }
+            }
+          }
+        };
         mode.refreshQuestionPickerV7AudioShortcuts();
+        mode.updateAudioPlayerVisibility();
       });
       check(`${width}: sample voice control`, await page.locator('#ra-play-audio-btn').count(), 1);
+      check(`${width}: sample voice source selection`, await page.locator('#ra-elevenlabs-audio').getAttribute('src'), '/database/RA/Voice/audio/Audio by folder/1025/sample-browser-fixture.mp3');
       await page.evaluate(() => {
         const button = document.getElementById('ra-play-audio-btn');
-        button.disabled = false;
         button.click();
       });
-      check(`${width}: sample voice action`, await page.evaluate(() => window.__pteSampleVoiceClicks), 1);
+      await page.waitForTimeout(0);
+      check(`${width}: sample voice invokes media play`, await page.evaluate(() => window.__pteMediaPlayCalls.at(-1)), {
+        id: 'ra-elevenlabs-audio',
+        src: '/database/RA/Voice/audio/Audio by folder/1025/sample-browser-fixture.mp3',
+        currentSrc: await page.locator('#ra-elevenlabs-audio').evaluate(audio => audio.currentSrc)
+      });
+      check(`${width}: sample voice accessible playing state`, await page.locator('#ra-play-audio-btn').textContent(), 'Pause');
+      check(`${width}: sample voice remains enabled`, await page.locator('#ra-play-audio-btn').isEnabled());
 
       await page.locator('#pte-next-read-aloud').click();
       check(`${width}: cannot-skip dialog`, await page.getByRole('alertdialog').textContent().then(text => text.includes('Cannot skip')));
@@ -186,10 +259,6 @@ async function run() {
       await page.locator('#ra-pte-coach-btn').click();
 
       if (width === 1440) {
-        await page.locator('#ra-prompt-stage [data-guide-target]').first().click({ force: true });
-        await page.waitForTimeout(50);
-        check('1440: passage-mark popover visible', await page.locator('#ra-sound-change-tooltip').getAttribute('aria-hidden'), 'false');
-        await page.locator('.ra-sound-change-tooltip__close').evaluate(button => button.click());
         await exerciseWordPopover(page, {
           id: 'browser-linking-target', category: 'linking', subtype: 'consonant_to_vowel', layer: 'linking',
           label: 'take it', badge: 'Linking', sayItLike: 'run the two words together', spokenAs: null,
@@ -209,7 +278,13 @@ async function run() {
         if (await page.getByRole('button', { name: 'Listen', exact: true, includeHidden: true }).count()) {
           await page.getByRole('button', { name: 'Listen', exact: true, includeHidden: true }).evaluate(button => button.click());
         }
-        check('1440: linking popover model-audio action', await page.evaluate(() => window.__ptePopoverModelPlays), 1);
+        await page.waitForTimeout(0);
+        check('1440: linking popover model-audio source', await page.evaluate(() => {
+          const call = window.__pteMediaPlayCalls.at(-1);
+          return { src: call?.src, expected: window.__pteExpectedModelSrc };
+        }), await page.evaluate(() => ({ src: window.__pteExpectedModelSrc, expected: window.__pteExpectedModelSrc })));
+        check('1440: linking popover invokes real model handler', await page.evaluate(() => window.ReadAloudMode.speechCoachModelAudio instanceof HTMLMediaElement));
+        check('1440: linking popover accessible playing state', await page.locator('.ra-sound-change-tooltip__audio .sc-model-play-btn').getAttribute('aria-label'), 'Stop model audio');
         check('1440: popover explicit Close', await page.locator('.ra-sound-change-tooltip__close').textContent(), 'Close');
         await page.locator('.ra-sound-change-tooltip__close').evaluate(button => button.click());
         check('1440: popover Close hides', await page.locator('#ra-sound-change-tooltip').getAttribute('aria-hidden'), 'true');
@@ -266,8 +341,8 @@ async function run() {
 
       await page.evaluate(async () => {
         const mode = window.ReadAloudMode;
-        const event = { eventId: 'browser-linking-feedback', phrase: 'practice aloud', category: 'linking', family: 'linking', subtype: 'consonant_to_vowel', status: 'detected', startWordIndex: 0, endWordIndex: 1, startMs: 0, endMs: 400, feedbackText: 'Keep the words connected.' };
-        const payload = { accuracyScore: 84, fluencyScore: 78, completenessScore: 96, pronScore: 82, recognizedText: mode.currentPromptPlainText, words: [{ word: 'practice', accuracyScore: 48, startMs: 0, endMs: 400 }], connectedSpeech: { events: [event], summary: {} } };
+        const event = { eventId: 'browser-linking-feedback', phrase: 'rates of', category: 'linking', family: 'linking', subtype: 'consonant_to_vowel', status: 'detected', startWordIndex: 8, endWordIndex: 9, startMs: 320, endMs: 740, feedbackText: 'Keep the words connected.' };
+        const payload = { accuracyScore: 84, fluencyScore: 78, completenessScore: 96, pronScore: 82, recognizedText: mode.currentPromptPlainText, words: [{ word: 'rates', accuracyScore: 48, startMs: 320, endMs: 740 }], connectedSpeech: { status: 'available', events: [event], summary: { total: 1, detected: 1 } } };
         mode.state = 'RESULTS';
         await mode.processAzureResults(payload, mode.pendingSession);
         mode.updateUIForState();
@@ -295,13 +370,29 @@ async function run() {
       await page.waitForTimeout(200);
       check(`${width}: Coach feedback tab selected`, await page.getByRole('tab', { name: /Coach tips/ }).getAttribute('aria-selected'), 'true');
       check(`${width}: Coach feedback visible`, await page.locator('#ra-connected-speech-box').isVisible());
-      check(`${width}: Coach feedback content`, await page.locator('#ra-connected-speech-list').textContent().then(text => text.trim().length > 0));
+      check(`${width}: Coach feedback is assessed output`, await page.locator('#ra-connected-speech-meta').textContent(), 'Feedback');
+      check(`${width}: Coach feedback result label`, await page.locator('#ra-connected-speech-list .sc-section-header').textContent().then(text => text.includes('Successful Links')));
+      check(`${width}: Coach feedback assessed phrase`, await page.locator('#ra-connected-speech-list .sc-word-title').textContent(), 'rates of');
+      check(`${width}: Coach feedback is not Preview hints`, await page.locator('#ra-connected-speech-list .sc-guide-item').count(), 0);
       if (width === 1440) await page.screenshot({ path: path.join(evidence, 'ra-1440-feedback-coach.png'), fullPage: true });
       await page.getByRole('tab', { name: 'Your results', exact: true }).click();
       check(`${width}: advanced analysis available`, await page.locator('#ra-show-advanced-btn').isVisible());
       await page.locator('#ra-show-advanced-btn').click();
       await page.waitForTimeout(300);
       check(`${width}: advanced analysis state`, await page.evaluate(() => window.ReadAloudMode.getCoachTier()), 'full');
+      check(`${width}: advanced analysis visible DOM state`, await page.locator('#mode-read-aloud').getAttribute('data-spc-view'), 'advanced');
+      await page.getByRole('tab', { name: /Coach tips/ }).click();
+      check(`${width}: advanced analysis result content visible`, await page.locator('#ra-connected-speech-list .sc-section-header').filter({ hasText: 'Successful Links' }).isVisible());
+      const analysisToggle = page.locator('#ra-connected-speech-list .sc-chevron-btn[data-sc-accordion-toggle]').first();
+      const analysisContentId = await analysisToggle.getAttribute('data-sc-accordion-toggle');
+      check(`${width}: advanced analysis starts collapsed`, await page.locator(`#${analysisContentId}`).getAttribute('hidden'), '');
+      await analysisToggle.click();
+      check(`${width}: advanced analysis expanded DOM`, await page.locator(`#${analysisContentId}`).isVisible());
+      check(`${width}: advanced analysis expanded accessible state`, await analysisToggle.getAttribute('aria-expanded'), 'true');
+      check(`${width}: advanced analysis expected detail`, await page.locator(`#${analysisContentId}`).textContent().then(text => text.includes('Seamless Link Connected')));
+      await analysisToggle.click();
+      check(`${width}: advanced analysis collapsed DOM`, await page.locator(`#${analysisContentId}`).isVisible(), false);
+      check(`${width}: advanced analysis collapsed accessible state`, await analysisToggle.getAttribute('aria-expanded'), 'false');
       if (width === 1440) await page.screenshot({ path: path.join(evidence, 'ra-1440-advanced-analysis.png'), fullPage: true });
       check(`${width}: history below card`, await page.evaluate(() => !!document.querySelector('.pte-card + .pte-attempts')));
       check(`${width}: guest attempt`, await page.locator('.pte-attempts__row').count() > 0);

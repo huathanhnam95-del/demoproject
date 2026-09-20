@@ -323,6 +323,39 @@
   // in script.js; the adapter centralizes only the shared shell wiring.
   controller.register({
     modeId: 'speak',
+    shell: 'v3',
+    v3: {
+      title: 'Repeat Sentence', skillLabel: 'Speaking', cardBodySelector: '#speak-practice-area',
+      progressSteps: ['Listen', 'Record', 'Feedback'],
+      getPhase: () => window.RepeatSentenceV3?.phase || 'loading',
+      onMount: () => window.RepeatSentenceV3?.mount(),
+      onUnmount: () => window.RepeatSentenceV3?.unmount(),
+      onSync: () => window.RepeatSentenceV3?.sync(),
+      statusText: { recording: 'Repeat the sentence.' },
+      dock: {
+        helpers: [{ id: 'speak-pte-replay', label: 'Replay', phases: ['prep', 'complete'],
+          count: () => window.RepeatSentenceV3?.replaysLeft(), onClick: () => window.RepeatSentenceV3?.replay() }],
+        actions: [
+          { sourceId: 'shadow-mode-btn', label: 'Shadow · 5c', phases: ['prep'], variant: 'helper' },
+          { sourceId: 'record-btn', label: 'Start recording', phases: ['prep'], variant: 'primary' },
+          { sourceId: 'speak-pte-cancel', label: 'Cancel', phases: ['recording'], variant: 'ghost' },
+          { sourceId: 'speak-pte-stop', label: 'Finish recording', phases: ['recording'], variant: 'stop' },
+          { sourceId: 'retry-btn-speak', label: 'Record again', phases: ['complete', 'feedback'], variant: 'ghost' },
+          { sourceId: 'speak-pte-play', label: 'Play', phases: ['complete'], variant: 'secondary' },
+          { sourceId: 'check-btn-speak', label: 'Get feedback', phases: ['complete'], variant: 'primary' }
+        ]
+      },
+      next: {
+        onConfirmFromRecording: () => window.RepeatSentenceV3?.stop(),
+        goNext: () => window.RepeatSentenceV3?.next()
+      },
+      attempts: {
+        practiceMode: 'speak', modeLabel: 'Repeat Sentence',
+        getPromptId: () => document.getElementById('current-question-id-speak')?.textContent,
+        formatScores: attempt => Number.isFinite(attempt.resultSnapshot?.score)
+          ? [`Points ${attempt.resultSnapshot.score}/${attempt.resultSnapshot.maxScore}`] : []
+      }
+    },
     enabledScopes: ['pte', 'english'],
     panelId: 'mode-speak',
     steps: ['Listen', 'Record', 'Results'],

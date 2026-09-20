@@ -40,3 +40,13 @@
 #mode-read-aloud.ra-pte-v3 .ra-merged-transcript-shell {
   border: 0; border-radius: 0; background: transparent; box-shadow: none; padding: 0;
 }
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip { width: 320px; max-width: calc(100vw - 32px); }
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__say,
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__ipa { display: flex; gap: 6px; align-items: baseline; margin-top: 8px; }
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__say[hidden],
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__ipa[hidden] { display: none; }
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__say > span,
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__ipa > span:first-child { flex: 0 0 auto; font-size: 12px; font-weight: 700; color: #92400e; }
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__ipa-value { font-family: Arial, Helvetica, sans-serif; font-size: 14px; }
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__audio { margin-top: 10px; }
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__close { width: auto; height: 32px; padding: 0 8px; font-size: 12px; font-weight: 700; }

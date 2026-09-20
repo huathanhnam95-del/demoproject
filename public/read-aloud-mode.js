@@ -1094,7 +1094,11 @@ class ReadAloudMode {
     this.refreshFilterControls();
     this.announceLinkingStatus('Prompt guides reset.');
     this.observePromptStage();
-    if (this.isPteShellEnabled()) this.connectedSpeechModes = new Set(this.getSimpleTierModes());
+    if (this.isPteShellEnabled()) {
+      const beginnerModes = this.getSimpleTierModes();
+      this.connectedSpeechModes = new Set(beginnerModes);
+      this.sessionConnectedSpeechModes = new Set(beginnerModes);
+    }
 
     // Initialize Settings sheet — moves inline controls into side panel.
     // Deferred to next frame because SPC.activate() runs AFTER onEnter() in switchToMode(),
@@ -6443,6 +6447,14 @@ class ReadAloudMode {
       if (!modelButton.disabled) this.playSpeechCoachModelAudio(modelButton);
       return;
     }
+    const spokenModelButton = event?.type === 'click' && event?.target instanceof Element
+      ? event.target.closest('[data-speak-phrase]')
+      : null;
+    if (spokenModelButton) {
+      event.stopPropagation();
+      if (!spokenModelButton.disabled) this.speakGuidePhrase(spokenModelButton.getAttribute('data-speak-phrase'));
+      return;
+    }
     const target = event?.target instanceof Element
       ? event.target.closest('[data-guide-target]')
       : null;
@@ -6691,6 +6703,53 @@ class ReadAloudMode {
     tooltip.setAttribute('aria-hidden', 'false');
   }
 
+  normalizeGuidePopoverIpa(value, word = '') {
+    const phonetics = window.Phonetics;
+    if (!value || typeof phonetics?.normalizeIPA !== 'function') return '';
+    const source = String(value);
+    const tokens = [...source.matchAll(/\/([^/]+)\//g)].map((match) => match[1]);
+    if (!tokens.length) return '';
+    const normalized = tokens
+      .map((token) => phonetics.normalizeIPA(token, word))
+      .filter(Boolean)
+      .map((token) => `/${String(token).replace(/^\/+|\/+$/g, '')}/`);
+    return [...new Set(normalized)].join(' or ');
+  }
+
+  getGuidePopoverIpa(item) {
+    if (!item) return '';
+    const label = String(item.label || '').trim();
+    const weak = this.normalizeGuidePopoverIpa(item.targetIpa || item.spokenAs, label);
+    const strong = this.normalizeGuidePopoverIpa(item.strongAs, label);
+    if (strong && weak) return `Strong ${strong} · Weak ${weak}`;
+    if (weak || strong) return weak || strong;
+
+    if (item.category === 'linking') {
+      const wordIpas = label.split(/\s+/).map((word) => {
+        const clean = word.replace(/[^a-zA-Z']/g, '').toLowerCase();
+        const source = this.sharedLinkingPronunciations.get(clean) || '';
+        return this.normalizeGuidePopoverIpa(source, clean);
+      }).filter(Boolean);
+      if (wordIpas.length) return wordIpas.join(' + ');
+    }
+    return '';
+  }
+
+  buildGuidePopoverListenControl(item) {
+    if (!item) return '';
+    const guideEvent = this.getSpeechCoachGuideEvent(item);
+    const model = guideEvent ? this.getSpeechCoachAudioEntry(guideEvent) : null;
+    const escapeHtml = ReadAloudMode.escapeHtml;
+    if (model?.status === 'ready' && model.file) {
+      return `<button class="sc-model-play-btn sc-audio-btn sc-audio-btn--model" type="button" data-model-src="${escapeHtml(String(model.file))}" aria-label="Listen"><span aria-hidden="true">▶</span><span>Listen</span></button>`;
+    }
+    const phrase = String(item.label || '').trim();
+    if (phrase && window.speechSynthesis) {
+      return `<button class="sc-audio-btn sc-audio-btn--model sc-audio-btn--synth" type="button" data-speak-phrase="${escapeHtml(phrase)}" aria-label="Listen"><span aria-hidden="true">▶</span><span>Listen</span></button>`;
+    }
+    return '';
+  }
+
   showSoundChangeTooltip(guideId, clickedSpan, { pinned = false } = {}) {
     const tooltip = document.getElementById('ra-sound-change-tooltip');
     const stage = document.getElementById('ra-prompt-stage');
@@ -6725,6 +6784,21 @@ class ReadAloudMode {
     if (explanationEl) explanationEl.textContent = copy.explanation || '';
     const badge = tooltip.querySelector('.ra-sound-change-tooltip__badge');
     if (badge) badge.textContent = item?.badge || 'Sound Change';
+
+    const sayEl = tooltip.querySelector('.ra-sound-change-tooltip__say');
+    const sayValueEl = tooltip.querySelector('.ra-sound-change-tooltip__say-value');
+    const sayItLike = String(item?.sayItLike || copy.sayItLike || '').trim();
+    if (sayValueEl) sayValueEl.textContent = sayItLike;
+    if (sayEl) sayEl.hidden = !sayItLike;
+
+    const ipaEl = tooltip.querySelector('.ra-sound-change-tooltip__ipa');
+    const ipaValueEl = tooltip.querySelector('.ra-sound-change-tooltip__ipa-value');
+    const ipa = this.getGuidePopoverIpa(item || copy);
+    if (ipaValueEl) ipaValueEl.textContent = ipa;
+    if (ipaEl) ipaEl.hidden = !ipa;
+
+    const audioEl = tooltip.querySelector('.ra-sound-change-tooltip__audio');
+    if (audioEl) audioEl.innerHTML = this.buildGuidePopoverListenControl(item);
 
     const closeBtn = tooltip.querySelector('.ra-sound-change-tooltip__close');
     if (closeBtn) {

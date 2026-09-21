@@ -19555,6 +19555,11 @@ body.readingjourney-active #readingjourney-root {
   --ra-guide-shadow: rgba(180, 83, 9, 0.25);
 }
 
+.ra-guide-chip--stress {
+  --ra-guide-accent: #0f172a;
+  --ra-guide-shadow: rgba(15, 23, 42, 0.25);
+}
+
 .ra-guidebar-meta {
   display: flex;
   align-items: center;
@@ -19641,6 +19646,19 @@ body.readingjourney-active #readingjourney-root {
   border-radius: 3px;
   background: var(--coach-sound-tint);
   border: 1px solid var(--coach-sound-strong);
+}
+
+.ra-legend-swatch--stress {
+  height: 14px;
+  border-radius: 3px;
+  background: #0f172a;
+  border: 1px solid #0f172a;
+}
+
+.ra-stress-peak {
+  font-weight: 700;
+  color: inherit;
+  letter-spacing: normal;
 }
 
 /* ── Split: passage stage + coach rail ─────────────────────────────────── */

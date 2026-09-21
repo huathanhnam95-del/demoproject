@@ -142,12 +142,16 @@ const ColloDictateMode = (() => {
     try {
       els.audio.pause();
       els.audio.currentTime = 0;
-    } catch { }
+    } catch (_err) {
+      // Audio pause failure safely ignored
+    }
 
     if (supportsSpeechSynthesis()) {
       try {
         window.speechSynthesis.cancel();
-      } catch { }
+      } catch (_err) {
+        // Speech synthesis cancel failure safely ignored
+      }
     }
   }
 
@@ -411,7 +415,9 @@ const ColloDictateMode = (() => {
           resolvedUrl = res;
           hasOfflineAudio = true;
         }
-      } catch (_) {}
+      } catch (_err) {
+        // Fall back to checkAudioExists
+      }
     }
 
     if (!hasOfflineAudio) {
@@ -430,12 +436,8 @@ const ColloDictateMode = (() => {
       els.audio.src = resolvedUrl;
       els.audio.load();
       await els.audio.play();
-    } catch {
-        // Hybrid: if offline audio fails to decode/play, fall back to browser TTS.
-        if (sessionId !== playbackSession || currentPhrase !== phraseAtStart) return;
-        speakFallback(phraseAtStart);
-      }
     } catch (error) {
+      // Hybrid: if offline audio fails to decode/play, fall back to browser TTS.
       if (sessionId !== playbackSession || currentPhrase !== phraseAtStart) return;
       speakFallback(phraseAtStart);
     } finally {

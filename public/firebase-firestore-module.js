@@ -56,16 +56,36 @@ const CORE_ALWAYS_UNLOCKED_MODES = ['type', 'speak', 'extended', 'watch', 'notes
  * @returns {Promise<Object>} Success or error
  */
 async function createOrUpdateUserProfile(userId, email, isNewUser = false) {
+  const cacheKey = `userProfile_${userId}`;
   try {
     const userRef = doc(db, 'users', userId);
-    let userDoc;
+    let userDoc = null;
+    let fetchFailed = false;
 
     try {
       userDoc = await getDoc(userRef);
     } catch (getErr) {
-      log.warn('Could not fetch existing profile, will attempt to create/overwrite:', getErr.message);
-      // If we can't get it, we'll try to set it. This might happen during signup
-      // if the rule check for "exists" fails due to some race condition.
+      fetchFailed = true;
+      log.warn('Could not fetch existing profile (network/offline):', getErr.message);
+    }
+
+    if (fetchFailed) {
+      // Offline/network failure: do NOT attempt setDoc overwrite.
+      // Return cached data if available.
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        log.log('Using cached profile due to offline/network state');
+        return {
+          success: true,
+          data: JSON.parse(cached),
+          fromCache: true
+        };
+      }
+      return {
+        success: false,
+        error: 'Offline: could not verify user profile with cloud.',
+        code: 'offline'
+      };
     }
 
     if (!userDoc || !userDoc.exists()) {
@@ -83,26 +103,54 @@ async function createOrUpdateUserProfile(userId, email, isNewUser = false) {
       log.debug('Creating new user profile:', profileData);
       await setDoc(userRef, profileData);
       log.log('✓ User profile created');
-    } else if (isNewUser) {
-      // Existing doc (e.g. from seed script) but first client login:
-      // Only update allowlisted fields — do NOT touch isAdmin, totalPoints, or email.
-      await updateDoc(userRef, {
-        lastLoginAt: serverTimestamp(),
-        unlockedModes: CORE_ALWAYS_UNLOCKED_MODES
-      });
-      log.log('✓ User profile updated (first client login, existing doc)');
     } else {
-      // Update existing user profile
+      // Existing user (including isNewUser on existing doc):
+      // Only update allowlisted fields (lastLoginAt) — NEVER pass unlockedModes, isAdmin, totalPoints, or email.
       await updateDoc(userRef, {
         lastLoginAt: serverTimestamp()
       });
       log.log('✓ User profile updated (last login)');
     }
 
-    const finalDoc = await getDoc(userRef);
+    let finalData = null;
+    try {
+      const finalDoc = await getDoc(userRef);
+      if (finalDoc.exists()) {
+        finalData = finalDoc.data();
+      }
+    } catch (_err) {
+      // Fall back to existing doc data or default
+    }
+
+    if (!finalData && userDoc && userDoc.exists()) {
+      finalData = { ...userDoc.data(), lastLoginAt: Date.now() };
+    } else if (!finalData) {
+      finalData = {
+        email: email,
+        lastLoginAt: Date.now(),
+        totalActiveSeconds: 0,
+        unlockedModes: CORE_ALWAYS_UNLOCKED_MODES,
+        isAdmin: false
+      };
+    }
+
+    // Ensure cache is refreshed
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({
+        email: finalData.email,
+        totalPoints: finalData.totalPoints || 0,
+        unlockedModes: finalData.unlockedModes || CORE_ALWAYS_UNLOCKED_MODES,
+        isAdmin: finalData.isAdmin === true,
+        englishLevel: finalData.englishLevel,
+        cachedAt: Date.now()
+      }));
+    } catch (_cacheErr) {
+      // Ignore cache storage errors
+    }
+
     return {
       success: true,
-      data: finalDoc.data()
+      data: finalData
     };
   } catch (error) {
     log.error('Error creating/updating user profile:', {
@@ -158,19 +206,8 @@ async function getUserProfile(userId) {
 
     // Migration for legacy users (missing unlockedModes)
     if (!userData.unlockedModes) {
-      log.log('Legacy user detected: Migrating to unlocked modes...');
-      // Unlock all existing modes for legacy users so they don't lose access
-      const allModes = CORE_ALWAYS_UNLOCKED_MODES;
-
-      try {
-        await updateDoc(doc(db, 'users', userId), {
-          unlockedModes: allModes
-        });
-      } catch (updateError) {
-        log.warn('Could not update legacy user profile:', updateError);
-      }
-
-      userData.unlockedModes = allModes;
+      // In-memory fallback for legacy users (client must not execute prohibited updateDoc)
+      userData.unlockedModes = CORE_ALWAYS_UNLOCKED_MODES;
     }
 
     // Cache to localStorage for future resilience

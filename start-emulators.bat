@@ -14,7 +14,10 @@ cd /d "%~dp0"
 
 :: Auto-detect Java 21 (Firebase Emulators require 21+)
 set "JAVA_HOME="
-for /d %%d in ("C:\Program Files\Eclipse Adoptium\jdk-21*") do set "JAVA_HOME=%%d"
+if exist "C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot" set "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot"
+if "%JAVA_HOME%"=="" (
+    for /d %%d in ("C:\Program Files\Eclipse Adoptium\jdk-21*") do set "JAVA_HOME=%%d"
+)
 if "%JAVA_HOME%"=="" (
     echo WARNING: Java 21 not found. Firebase Emulators may fail.
     echo Install from: https://adoptium.net/temurin/releases/?version=21
@@ -28,20 +31,8 @@ echo   Starting Firebase Emulators + Local Server
 echo ===================================================
 echo.
 
-:: Persist emulator state (Auth/Firestore/Storage) so admin accounts don't vanish on restart.
-set "EMULATOR_DATA_DIR=.local\\firebase-emulator-data"
-if not exist "%EMULATOR_DATA_DIR%" (
-    mkdir "%EMULATOR_DATA_DIR%" >nul 2>&1
-)
-
-:: Only import if an export manifest exists; otherwise start fresh and export on exit.
-set "EMULATOR_IMPORT_ARGS="
-if exist "%EMULATOR_DATA_DIR%\\firebase-export-metadata.json" (
-    set "EMULATOR_IMPORT_ARGS=--import=\"%EMULATOR_DATA_DIR%\""
-)
-
-:: Start emulators in the background
-start "Firebase Emulators" cmd /c "set JAVA_HOME=%JAVA_HOME%&& set PATH=%JAVA_HOME%\bin;%PATH%&& npx firebase emulators:start --only firestore,auth,functions,storage --project listening-tasks-3ae34 %EMULATOR_IMPORT_ARGS% --export-on-exit=\"%EMULATOR_DATA_DIR%\""
+:: Start emulators in the background via scripts\emulators-start.js
+start "Firebase Emulators" cmd /c "set "JAVA_HOME=%JAVA_HOME%"&& set "PATH=%JAVA_HOME%\bin;%PATH%"&& node scripts\emulators-start.js"
 
 :: Wait for Auth emulator to become ready (up to 30 seconds)
 echo Waiting for emulators to start...

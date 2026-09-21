@@ -18,7 +18,10 @@ if errorlevel 1 (
 
 REM Auto-detect Java 21 (Firebase Emulators require 21+)
 set "JAVA_HOME="
-for /d %%d in ("C:\Program Files\Eclipse Adoptium\jdk-21*") do set "JAVA_HOME=%%d"
+if exist "C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot" set "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot"
+if "%JAVA_HOME%"=="" (
+    for /d %%d in ("C:\Program Files\Eclipse Adoptium\jdk-21*") do set "JAVA_HOME=%%d"
+)
 if "%JAVA_HOME%"=="" (
     echo WARNING: Java 21 not found. Firebase Emulators may fail.
     echo Install from: https://adoptium.net/temurin/releases/?version=21
@@ -35,12 +38,12 @@ taskkill /F /IM python.exe /FI "WINDOWTITLE eq Phoneme Service 8082" >nul 2>&1
 taskkill /F /IM java.exe /FI "WINDOWTITLE eq Firebase Emulators" >nul 2>&1
 
 echo [1/5] Starting Firebase Emulators (Firestore :8080, Auth :9099, Functions :5001, Storage :9199, UI :4000)...
-start "Firebase Emulators" /min cmd /c "cd /d %~dp0\..\.. && set JAVA_HOME=%JAVA_HOME%&& set PATH=%JAVA_HOME%\bin;%PATH%&& npx firebase emulators:start --only firestore,auth,functions,storage --project listening-tasks-3ae34"
+start "Firebase Emulators" /min cmd /c "cd /d "%~dp0\..\.." && set "JAVA_HOME=%JAVA_HOME%" && set "PATH=%JAVA_HOME%\bin;%PATH%" && node scripts\emulators-start.js"
 
-REM Wait for Auth emulator to become ready (up to 30 seconds)
+REM Wait for Auth emulator to become ready (up to 60 seconds)
 echo Waiting for Auth emulator to be ready...
 set EMULATOR_READY=0
-for /L %%i in (1,1,30) do (
+for /L %%i in (1,1,60) do (
     if !EMULATOR_READY!==0 (
         timeout /t 1 /nobreak >nul
         curl.exe -s -o nul -w "%%{http_code}" http://127.0.0.1:9099/ >nul 2>&1
@@ -53,7 +56,7 @@ if !EMULATOR_READY!==0 (
 
 REM [2/4] Load .env and seed admin account
 echo [2/5] Seeding admin account into emulators...
-if exist "%~dp0\..\..\..env" (
+if exist "%~dp0\..\..\.env" (
     for /f "usebackq tokens=1,* delims==" %%A in ("%~dp0\..\..\.env") do (
         set "_key=%%A"
         if "!_key:~0,1!" neq "#" (
@@ -126,7 +129,7 @@ if !PHONEME_READY!==1 (
 echo.
 
 echo [4/5] Starting Node.js HTTPS Server (port 8443 -> emulators)...
-start "HTTPS Server 8443" /min cmd /c "cd /d %~dp0\..\.. && set FIRESTORE_EMULATOR_HOST=localhost:8080&& set FIREBASE_AUTH_EMULATOR_HOST=localhost:9099&& set FIREBASE_STORAGE_EMULATOR_HOST=localhost:9199&& set STORAGE_EMULATOR_HOST=http://localhost:9199&& node server.js"
+start "HTTPS Server 8443" /min cmd /c "cd /d "%~dp0\..\.." && node scripts\start-dev-server.cjs"
 
 echo [5/5] Starting Flask API Server (port 8081)...
 if !PHONEME_READY!==1 (

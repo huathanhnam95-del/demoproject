@@ -1,0 +1,21 @@
+[
+  {
+    "origin": [
+      "https://betterenglishlearning.com",
+      "https://www.betterenglishlearning.com",
+      "https://listening-tasks-3ae34.web.app",
+      "https://listening-tasks-3ae34.firebaseapp.com",
+      "http://localhost:5000",
+      "http://127.0.0.1:5000",
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "https://localhost:8443",
+      "https://127.0.0.1:8443",
+      "http://localhost:8443",
+      "http://127.0.0.1:8443"
+    ],
+    "method": ["GET", "HEAD", "OPTIONS"],
+    "responseHeader": ["Range", "Origin", "Accept", "Content-Type", "Access-Control-Allow-Origin"],
+    "maxAgeSeconds": 3600
+  }
+]

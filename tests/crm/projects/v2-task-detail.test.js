@@ -204,11 +204,14 @@ test('Overview shows the canonical dirty saving saved feedback with one field co
         release(); await tick(); assert.equal(h.writes.length, 1); assert.equal(body.querySelector('[data-field-feedback="value:notes"]')?.dataset.phase, 'saved');
     } finally { h.close(); }
 });
-test('Overview add subtask exits modal before focusing the canonical creation composer', async () => {
+test('Overview add subtask keeps drawer open and mounts creation composer inside drawer', async () => {
     const h = await fixture(); try {
         h.row().querySelector('[data-action="open-detail"]').click();
         h.elements.projectsBoardDetailBody.querySelector('[data-detail-add]').click();
-        assert.equal(h.elements.projectsBoardDetail.open, false);
+        assert.equal(h.elements.projectsBoardDetail.open, true);
+        const composer = h.elements.projectsBoardDetailBody.querySelector('[data-quick-create]');
+        assert.ok(composer, 'composer should be mounted in drawer');
+        assert.equal(composer.dataset.inDrawer, 'true');
         assert.ok(h.doc.activeElement.closest('.crm-quick-create'));
     } finally { h.close(); }
 });

@@ -17,7 +17,8 @@ const {
     MAX_REBALANCE_WRITES,
     compareSiblings,
     rankForIndex,
-    computeInsertionRank
+    computeInsertionRank,
+    computePlacementRank
 } = require('../../../functions/src/crm/projects/domain/ordering');
 const {
     createProjectsQueryService,
@@ -108,6 +109,32 @@ async function main() {
     const tied = Array.from({ length: 650 }, (_, index) => ({ id: `tie-${index}`, rank: '0/1' }));
     assert.throws(() => computeInsertionRank(tied, 325), /tied|INVALID_RANK/i, 'tied rank exhaustion must fail explicitly');
     assert.throws(() => computeInsertionRank([{ id: 'oversize', rank: `${'9'.repeat(254)}/1` }], 1), /INVALID_RANK|Rank/);
+
+    const placeSiblings = [{ id: 's0', rank: '0/1' }, { id: 's1', rank: '1/1' }, { id: 's2', rank: '2/1' }];
+    const startOrder = computePlacementRank(placeSiblings, { kind: 'start' });
+    assert.ok(compareSiblings({ id: 'new', rank: startOrder.rank }, placeSiblings[0]) < 0);
+    const endOrder = computePlacementRank(placeSiblings, { kind: 'end' });
+    assert.ok(compareSiblings({ id: 'new', rank: endOrder.rank }, placeSiblings[2]) > 0);
+    const beforeOrder = computePlacementRank(placeSiblings, { kind: 'before', siblingId: 's1' });
+    assert.ok(compareSiblings({ id: 'new', rank: beforeOrder.rank }, placeSiblings[0]) > 0);
+    assert.ok(compareSiblings({ id: 'new', rank: beforeOrder.rank }, placeSiblings[1]) < 0);
+    const afterOrder = computePlacementRank(placeSiblings, { kind: 'after', siblingId: 's1' });
+    assert.ok(compareSiblings({ id: 'new', rank: afterOrder.rank }, placeSiblings[1]) > 0);
+    assert.ok(compareSiblings({ id: 'new', rank: afterOrder.rank }, placeSiblings[2]) < 0);
+    assert.throws(() => computePlacementRank(placeSiblings, { kind: 'before', siblingId: 'missing' }), /Anchor sibling/);
+    assert.throws(() => computePlacementRank(placeSiblings, { kind: 'invalid' }), /Invalid placement kind/);
+    assert.strictEqual(computePlacementRank([], { kind: 'start' }).rank, '0/1');
+    assert.strictEqual(computePlacementRank([], { kind: 'end' }).rank, '0/1');
+    assert.strictEqual(computePlacementRank(null, { kind: 'start' }).rank, '0/1');
+    assert.strictEqual(computePlacementRank(null, { kind: 'end' }).rank, '0/1');
+    assert.strictEqual(computeInsertionRank(null, 0).rank, '0/1');
+    assert.throws(() => computePlacementRank([], { kind: 'before', siblingId: 's1' }), /Anchor sibling/);
+    assert.throws(() => computePlacementRank(placeSiblings, { kind: 'before', siblingId: '   ' }), /requires a non-empty siblingId/);
+    assert.throws(() => computePlacementRank(placeSiblings, { kind: 'after' }), /requires a non-empty siblingId/);
+    assert.throws(() => computePlacementRank(placeSiblings, null), /Placement must be an object/);
+    assert.throws(() => computePlacementRank(placeSiblings, 'invalid'), /Placement must be an object/);
+    const trimmedBefore = computePlacementRank(placeSiblings, { kind: 'before', siblingId: '  s1  ' });
+    assert.strictEqual(trimmedBefore.rank, beforeOrder.rank);
 
     const timestampA = { seconds: '100', nanoseconds: 100 };
     const timestampB = { seconds: '100', nanoseconds: 200 };

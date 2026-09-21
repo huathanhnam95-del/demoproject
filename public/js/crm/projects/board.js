@@ -55,6 +55,76 @@
         }
     }
 
+    function gcdBigInt(left, right) {
+        let a = left < 0n ? -left : left;
+        let b = right < 0n ? -right : right;
+        while (b) { const next = a % b; a = b; b = next; }
+        return a || 1n;
+    }
+
+    function computeOptimisticRank(siblings, placement) {
+        const sorted = (siblings || []).slice().sort(rankCompare);
+        if (!placement || placement.kind === 'end') {
+            if (!sorted.length) return '0/1';
+            try {
+                const last = sorted[sorted.length - 1];
+                const [ln, ld] = asText(last?.rank, '0/1').split('/').map((p) => BigInt(p));
+                const num = ln + ld, den = ld;
+                const div = gcdBigInt(num, den);
+                return `${(num / div).toString()}/${(den / div).toString()}`;
+            } catch (_) { return '999999/1'; }
+        }
+        try {
+            if (placement.kind === 'start') {
+                if (!sorted.length) return '0/1';
+                const first = sorted[0];
+                const [fn, fd] = asText(first?.rank, '0/1').split('/').map((p) => BigInt(p));
+                const num = fn - fd, den = fd;
+                const div = gcdBigInt(num, den);
+                return `${(num / div).toString()}/${(den / div).toString()}`;
+            }
+            if (placement.kind === 'before' && placement.siblingId) {
+                const idx = sorted.findIndex((s) => String(s.id) === String(placement.siblingId));
+                if (idx <= 0) {
+                    if (idx === 0) {
+                        const [fn, fd] = asText(sorted[0]?.rank, '0/1').split('/').map((p) => BigInt(p));
+                        const num = fn - fd, den = fd;
+                        const div = gcdBigInt(num, den);
+                        return `${(num / div).toString()}/${(den / div).toString()}`;
+                    }
+                    return '999999/1';
+                }
+                const prev = sorted[idx - 1], target = sorted[idx];
+                const [pn, pd] = asText(prev?.rank, '0/1').split('/').map((p) => BigInt(p));
+                const [tn, td] = asText(target?.rank, '1/1').split('/').map((p) => BigInt(p));
+                const num = pn * td + tn * pd;
+                const den = 2n * pd * td;
+                const divisor = gcdBigInt(num, den);
+                return `${(num / divisor).toString()}/${(den / divisor).toString()}`;
+            }
+            if (placement.kind === 'after' && placement.siblingId) {
+                const idx = sorted.findIndex((s) => String(s.id) === String(placement.siblingId));
+                if (idx < 0 || idx === sorted.length - 1) {
+                    if (idx >= 0) {
+                        const [ln, ld] = asText(sorted[idx]?.rank, '0/1').split('/').map((p) => BigInt(p));
+                        const num = ln + ld, den = ld;
+                        const div = gcdBigInt(num, den);
+                        return `${(num / div).toString()}/${(den / div).toString()}`;
+                    }
+                    return '999999/1';
+                }
+                const target = sorted[idx], next = sorted[idx + 1];
+                const [tn, td] = asText(target?.rank, '0/1').split('/').map((p) => BigInt(p));
+                const [nn, nd] = asText(next?.rank, '1/1').split('/').map((p) => BigInt(p));
+                const num = tn * nd + nn * td;
+                const den = 2n * td * nd;
+                const divisor = gcdBigInt(num, den);
+                return `${(num / divisor).toString()}/${(den / divisor).toString()}`;
+            }
+        } catch (_) { /* fallback */ }
+        return '999999/1';
+    }
+
     function createController(deps = {}) {
         let ROW_HEIGHT = 44;
         const elements = deps.elements || {};
@@ -171,49 +241,74 @@
         }
         function settleComposerParent(temporaryIds, created, scope) {
             for (const [key, draft] of composerDrafts) {
-                const [uid, projectId, , parentId] = JSON.parse(key);
-                if (uid !== scope.uid || projectId !== scope.projectId || !temporaryIds.includes(parentId)) continue;
-                const nextKey = JSON.stringify([uid, projectId, created.effectiveSectionId || '', String(created.id)]);
+                const parsed = JSON.parse(key);
+                const uid = parsed[0], projectId = parsed[1], parentId = parsed[3];
+                const anchorId = parsed[4] || '', placementKind = parsed[5] || '';
+                const matchesParent = temporaryIds.includes(parentId);
+                const matchesAnchor = temporaryIds.includes(anchorId);
+                if (uid !== scope.uid || projectId !== scope.projectId || (!matchesParent && !matchesAnchor)) continue;
+                const nextParent = matchesParent ? String(created.id) : parentId;
+                const nextAnchor = matchesAnchor ? String(created.id) : anchorId;
+                const nextKey = (nextAnchor || placementKind)
+                    ? JSON.stringify([uid, projectId, created.effectiveSectionId || parsed[2] || '', nextParent, nextAnchor, placementKind])
+                    : JSON.stringify([uid, projectId, created.effectiveSectionId || parsed[2] || '', nextParent]);
                 composerDrafts.delete(key); composerDrafts.set(nextKey, draft);
                 if (quickComposer?.key === key) {
-                    quickComposer.key = nextKey; quickComposer.parentId = String(created.id);
-                    quickComposer.node.querySelector('select').value = created.effectiveSectionId || '';
-                    quickComposer.paint();
+                    quickComposer.key = nextKey;
+                    if (matchesParent) {
+                        quickComposer.parentId = String(created.id);
+                        quickComposer.node.querySelector('select').value = created.effectiveSectionId || '';
+                    }
+                    if (quickComposer.placement && temporaryIds.includes(quickComposer.placement.siblingId)) {
+                        quickComposer.placement.siblingId = String(created.id);
+                    }
+                    quickComposer.paint?.();
                 }
             }
         }
-        function openQuickComposer(parentId = null, sectionId = null) {
+        function openQuickComposer(parentId = null, sectionId = null, options = {}) {
             if (!presentationV2) return createTask(parentId, sectionId);
             if (!canWrite() || busy) return;
             const scope = captureScope();
             if (parentId) sectionId = resolveEffectiveSectionId(parentId);
             if (!sectionId && currentGroupBy === 'section') sectionId = resolveEffectiveSectionId(selectedTaskId) || sections[0]?.id;
-            const key = JSON.stringify([scope.uid, scope.projectId, sectionId || '', parentId || '']);
+            const anchorId = options.anchorId || options.placement?.siblingId || '';
+            const placementKind = options.placement?.kind || '';
+            const inDrawer = !!options.inDrawer;
+            const key = (anchorId || placementKind)
+                ? JSON.stringify([scope.uid, scope.projectId, sectionId || '', parentId || '', anchorId, placementKind])
+                : JSON.stringify([scope.uid, scope.projectId, sectionId || '', parentId || '']);
             if (quickComposer?.key === key) { quickComposer.input.focus(); return; }
             quickComposer?.node.remove();
             const draft = composerDrafts.get(key) || { text: '', intentId: operationId('quick') };
             composerDrafts.set(key, draft);
-            const trigger = document.activeElement;
+            const trigger = options.trigger || document.activeElement;
             let composing = false;
             const node = document.createElement('form'); node.dataset.quickCreate = ''; node.className = 'crm-quick-create';
-            node.innerHTML = `<label>${parentId ? 'New subtask' : 'New task'}<input name="title" aria-label="${parentId ? 'Subtask' : 'Task'} title" aria-describedby="projects-quick-result" autocomplete="off"></label><label>Section<select name="section" aria-label="Task section"><option value="">Choose a section…</option>${sections.filter(s => !s.isOptimistic).map(s => `<option value="${escape(s.id)}">${escape(s.title)}</option>`).join('')}</select></label><button type="submit">Add task</button><button type="button" data-cancel-create>Cancel</button><span id="projects-quick-result" role="status"></span>`;
+            if (inDrawer) node.dataset.inDrawer = 'true';
+            node.innerHTML = `<label>${parentId ? 'New subtask' : 'New task'}<input name="title" aria-label="${parentId ? 'Subtask' : 'Task'} title" aria-describedby="projects-quick-result" autocomplete="off"></label><label>Section<select name="section" aria-label="Task section"><option value="">Choose a section…</option>${sections.filter(s => !s.isOptimistic).map(s => `<option value="${escape(s.id)}">${escape(s.title)}</option>`).join('')}</select></label><button type="submit">${parentId ? 'Add subtask' : 'Add task'}</button><button type="button" data-cancel-create>Cancel</button><span id="projects-quick-result" role="status"></span>`;
             const input = node.querySelector('input'), target = node.querySelector('select'), submit = node.querySelector('[type="submit"]'), status = node.querySelector('[role="status"]');
             input.value = draft.text; target.value = sectionId || ''; target.disabled = !!parentId;
-            const composer = { key, parentId, node, input, scope, draft, status, paint: null }; quickComposer = composer;
-            // Outside the virtual table: one stable composer, no unbounded row pinning.
-            elements.projectsBoardTableWrap?.before(node);
+            const composer = { key, parentId, node, input, scope, draft, status, paint: null, placement: options.placement, inDrawer }; quickComposer = composer;
+            if (inDrawer) {
+                const drawerSubtasks = elements.projectsBoardDetailBody?.querySelector('[data-detail-children]');
+                if (drawerSubtasks) drawerSubtasks.append(node);
+                else elements.projectsBoardTableWrap?.before(node);
+            } else {
+                elements.projectsBoardTableWrap?.before(node);
+            }
             const paint = () => {
                 const intent = creationIntents.get(draft.intentId), unresolved = intent?.phase === 'saving' || intent?.phase === 'uncertain';
                 input.readOnly = !!unresolved; target.disabled = !!composer.parentId || !!unresolved;
                 submit.disabled = intent?.phase === 'saving' || !canWrite();
-                submit.textContent = intent?.phase === 'uncertain' ? 'Retry same creation' : 'Add task';
+                submit.textContent = intent?.phase === 'uncertain' ? 'Retry same creation' : (parentId ? 'Add subtask' : 'Add task');
                 node.querySelector('[data-cancel-create]').disabled = !!unresolved;
             };
             composer.paint = paint;
             input.addEventListener('compositionstart', () => { composing = true; });
             input.addEventListener('compositionend', () => { composing = false; });
             const cancel = () => { node.remove(); if (quickComposer === composer) quickComposer = null; if (scopeIsCurrent(scope) && trigger?.isConnected) trigger.focus(); };
-            target.addEventListener('change', () => { draft.text = input.value; openQuickComposer(composer.parentId, target.value); });
+            target.addEventListener('change', () => { draft.text = input.value; openQuickComposer(composer.parentId, target.value, options); });
             input.addEventListener('input', () => { draft.text = input.value; });
             node.addEventListener('keydown', e => {
                 if (e.isComposing || e.keyCode === 229) return;
@@ -234,7 +329,7 @@
                 let moved = false;
                 const track = event => { if (event.target !== document.body && !node.contains(event.target)) moved = true; };
                 document.addEventListener('focusin', track); document.addEventListener('pointerdown', track);
-                const promise = createTask(composer.parentId, target.value, { initialTitle: title, intentId: draft.intentId, keepComposerFocus: true });
+                const promise = createTask(composer.parentId, target.value, { initialTitle: title, intentId: draft.intentId, keepComposerFocus: true, placement: composer.placement });
                 paint(); status.textContent = 'Saving…';
                 const created = await promise;
                 document.removeEventListener('focusin', track); document.removeEventListener('pointerdown', track);
@@ -474,14 +569,18 @@
             return currentIndex < 0 ? null : Math.min(currentIndex, Math.max(0, rows.length - 1));
         }
 
+        let activeSectionPlacement = null;
+
         function resetSectionForm() {
+            activeSectionPlacement = null;
             if (elements.projectsBoardSectionForm) elements.projectsBoardSectionForm.hidden = true;
             if (elements.projectsBoardSectionName) elements.projectsBoardSectionName.value = '';
             syncSectionForm();
         }
 
-        function openSectionForm() {
+        function openSectionForm(placement = null) {
             if (!canSchema() || busy || sectionCreatePending) return;
+            activeSectionPlacement = placement;
             if (elements.projectsBoardSectionForm) elements.projectsBoardSectionForm.hidden = false;
             if (elements.projectsBoardSectionName) {
                 if (!sectionIntent) elements.projectsBoardSectionName.value = '';
@@ -1696,7 +1795,13 @@
             const editable = canSchema() && !busy
                 ? `<input class="crm-board-section-input crm-board-field" data-field-kind="section-title" type="text" value="${escape(title)}" aria-label="Section title">`
                 : `<span class="crm-board-group-title">${escape(title)}</span>`;
-            return `<div class="crm-projects-board-section-row" role="row" tabindex="0" draggable="${canSchema() && !busy ? 'true' : 'false'}" data-row-kind="section" data-row-id="${escape(row.id)}" data-section-id="${escape(section.id)}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${groupColor(section.id)}"><div role="cell"><button type="button" class="crm-board-group-expander" data-action="toggle-section" aria-expanded="${collapsedSections.has(String(section.id)) ? 'false' : 'true'}" aria-label="${collapsedSections.has(String(section.id)) ? 'Expand' : 'Collapse'} group ${escape(title)}">${collapsedSections.has(String(section.id)) ? '&#9656;' : '&#9662;'}</button><span class="crm-board-drag-handle" aria-hidden="true">⠿</span>${editable}</div><div role="cell"><span class="crm-muted">${rootsForSection(section.id).length} root task${rootsForSection(section.id).length === 1 ? '' : 's'}</span></div></div>`;
+            const addTaskTopBtn = presentationV2 && canWrite() && !busy
+                ? `<button type="button" class="crm-board-add-top-btn" data-action="add-task-top" data-section-id="${escape(section.id)}" aria-label="Add task at top of ${escape(title)}">+ Add task</button>`
+                : '';
+            const sectionMenuBtn = presentationV2 && canSchema() && !busy
+                ? `<button type="button" class="crm-board-section-menu crm-board-action-btn" data-action="section-menu" data-section-id="${escape(section.id)}" aria-label="Section options for ${escape(title)}">⋯</button>`
+                : '';
+            return `<div class="crm-projects-board-section-row" role="row" tabindex="0" draggable="${canSchema() && !busy ? 'true' : 'false'}" data-row-kind="section" data-row-id="${escape(row.id)}" data-section-id="${escape(section.id)}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${groupColor(section.id)}"><div role="cell"><button type="button" class="crm-board-group-expander" data-action="toggle-section" aria-expanded="${collapsedSections.has(String(section.id)) ? 'false' : 'true'}" aria-label="${collapsedSections.has(String(section.id)) ? 'Expand' : 'Collapse'} group ${escape(title)}">${collapsedSections.has(String(section.id)) ? '&#9656;' : '&#9662;'}</button><span class="crm-board-drag-handle" aria-hidden="true">⠿</span>${editable}</div><div role="cell">${addTaskTopBtn}${sectionMenuBtn}<span class="crm-muted">${rootsForSection(section.id).length} root task${rootsForSection(section.id).length === 1 ? '' : 's'}</span></div></div>`;
         }
 
         function sectionSummaryRowMarkup(row) {
@@ -2298,7 +2403,9 @@
 
         function focusRowControl(taskId, selector = '.crm-board-title-button') {
             const detailRow = elements.projectsBoardDetail?.open && elements.projectsBoardDetailBody?.querySelector(`[data-task-id="${cssEscape(taskId)}"]`);
-            const row = detailRow || elements.projectsBoardRows?.querySelector(`[data-task-id="${cssEscape(taskId)}"]`);
+            const row = detailRow
+                || elements.projectsBoardRows?.querySelector(`[data-task-id="${cssEscape(taskId)}"]`)
+                || elements.projectsBoardRows?.querySelector(`[data-section-id="${cssEscape(taskId)}"]`);
             (row?.querySelector(selector) || row)?.focus({ preventScroll: true });
         }
         function closeRowEditor(restore = true) {
@@ -2309,7 +2416,7 @@
         function reconcileRowEditors() {
             if (!presentationV2) return;
             if (!canWrite() || busy) { closePeoplePicker(); closeStatusPicker(); closeRowEditor(false); }
-            if (rowEditor && (!scopeIsCurrent(rowEditor.scope) || !taskFor(rowEditor.taskId))) closeRowEditor(false);
+            if (rowEditor && (!scopeIsCurrent(rowEditor.scope) || (!rowEditor.isSection && !taskFor(rowEditor.taskId)) || (rowEditor.isSection && !sections.some(s => String(s.id) === String(rowEditor.taskId))))) closeRowEditor(false);
             if (rowEditor?.columnId && columns.find(c => c.id === rowEditor.columnId)?.type !== rowEditor.columnType) closeRowEditor(false);
             for (const context of [statusContext, peopleContext]) {
                 if (!context) continue;
@@ -2335,15 +2442,25 @@
         }
         function openRowEditor(taskId, kind, trigger, markup) {
             closePeoplePicker(); closeRowEditor(false);
-            if (!presentationV2 || !canWrite() || busy || !taskFor(taskId)) return null;
+            const isSectionEditor = kind.startsWith('section-');
+            if (!presentationV2 || busy) return null;
+            if (isSectionEditor) {
+                if (!canSchema()) return null;
+            } else {
+                if (!canWrite() || !taskFor(taskId)) return null;
+            }
             const node = document.createElement('div'); node.className = 'crm-row-editor'; node.dataset.rowEditor = kind;
-            node.setAttribute('role', 'dialog'); node.setAttribute('aria-label', `${kind === 'menu' ? 'Task actions' : kind === 'dates' ? 'Edit dates' : 'Move task'}: ${taskFor(taskId).title}`);
+            node.setAttribute('role', 'dialog');
+            const label = isSectionEditor
+                ? `Section actions: ${sections.find(s => String(s.id) === String(taskId))?.title || 'Section'}`
+                : `${kind === 'menu' ? 'Task actions' : kind === 'dates' ? 'Edit dates' : 'Move task'}: ${taskFor(taskId).title}`;
+            node.setAttribute('aria-label', label);
             node.innerHTML = markup + '<button type="button" data-close-editor>Close</button>';
             (trigger?.closest('dialog[open]') || document.querySelector('[data-panel="projects"]') || document.body).appendChild(node);
             const box = trigger.getBoundingClientRect();
             node.style.left = `${Math.max(8, Math.min(box.left, (globalScope.innerWidth || 1024) - 312))}px`;
             node.style.top = `${Math.max(8, Math.min(box.bottom + 4, (globalScope.innerHeight || 768) - (node.offsetHeight || 260) - 8))}px`;
-            rowEditor = { node, taskId: String(taskId), scope: captureScope(), trigger, returnSelector: `[data-action="${trigger.dataset.action}"]` };
+            rowEditor = { node, taskId: String(taskId), isSection: isSectionEditor, scope: captureScope(), trigger, returnSelector: `[data-action="${trigger.dataset.action}"]` };
             node.addEventListener('click', event => { if (event.target.closest('[data-close-editor]')) closeRowEditor(); });
             node.addEventListener('keydown', event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeRowEditor(); } });
             node.querySelector('input,select,button')?.focus();
@@ -2523,13 +2640,55 @@
             if (['save-rename', 'cancel-rename'].includes(action)) { finishRename(row.querySelector('input[data-field-kind="title"]'), action === 'cancel-rename'); return true; }
             if (action === 'edit-dates') { openDateRange(taskId, trigger); return true; }
             if (action === 'load-subtasks') { loadBranch(taskId, { append: true }); return true; }
+            if (action === 'section-menu') {
+                const sectionId = row.dataset.sectionId || trigger?.dataset.sectionId;
+                if (!sectionId || !canSchema()) return false;
+                const menuItems = [
+                    '<button type="button" data-add-section-above>Add section above</button>',
+                    '<button type="button" data-add-section-below>Add section below</button>'
+                ];
+                const editor = openRowEditor(sectionId, 'section-menu', trigger, menuItems.join(''));
+                editor?.node.addEventListener('click', e => {
+                    if (rowEditor !== editor || !scopeIsCurrent(editor.scope) || !canSchema()) return;
+                    if (e.target.closest('[data-add-section-above]')) {
+                        closeRowEditor(false);
+                        openSectionForm({ kind: 'before', siblingId: sectionId });
+                    } else if (e.target.closest('[data-add-section-below]')) {
+                        closeRowEditor(false);
+                        openSectionForm({ kind: 'after', siblingId: sectionId });
+                    }
+                });
+                return true;
+            }
             if (action !== 'task-menu') return false;
+            const targetTask = taskFor(taskId);
+            const isSubtask = !!targetTask?.parentTaskId;
+            const menuItems = [
+                '<button type="button" data-rename-task>Rename (F2)</button>',
+                isSubtask
+                    ? '<button type="button" data-add-sibling-below>Add sibling below</button>'
+                    : '<button type="button" data-add-task-below>Add task below</button>',
+                '<button type="button" data-add-child>Add subtask</button>',
+                '<button type="button" data-move-task>Move to…</button>'
+            ];
             const fieldActions = visibleColumns.filter(column => column.key !== 'taskTitle' && !column.readonly).map(column => `<button type="button" data-edit-field="${escape(column.key)}">Edit ${escape(column.label)}</button>`).join('');
-            const editor = openRowEditor(taskId, 'menu', trigger, '<button type="button" data-rename-task>Rename (F2)</button><button type="button" data-add-child>Add subtask</button><button type="button" data-move-task>Move to…</button>' + fieldActions);
+            const editor = openRowEditor(taskId, 'menu', trigger, menuItems.join('') + fieldActions);
             editor?.node.addEventListener('click', e => {
                 if (rowEditor !== editor || !scopeIsCurrent(editor.scope) || !canWrite()) return;
                 if (e.target.closest('[data-rename-task]')) beginRename(taskId);
-                else if (e.target.closest('[data-add-child]')) { closeRowEditor(false); openQuickComposer(taskId); }
+                else if (e.target.closest('[data-add-task-below]')) {
+                    closeRowEditor(false);
+                    openQuickComposer(null, targetTask?.effectiveSectionId || targetTask?.sectionId, { anchorId: taskId, placement: { kind: 'after', siblingId: taskId } });
+                }
+                else if (e.target.closest('[data-add-sibling-below]')) {
+                    closeRowEditor(false);
+                    openQuickComposer(targetTask?.parentTaskId, targetTask?.effectiveSectionId || targetTask?.sectionId, { anchorId: taskId, placement: { kind: 'after', siblingId: taskId } });
+                }
+                else if (e.target.closest('[data-add-child]')) {
+                    closeRowEditor(false);
+                    if (taskId) expanded.add(String(taskId));
+                    openQuickComposer(taskId, null, { placement: { kind: 'end' } });
+                }
                 else if (e.target.closest('[data-move-task]')) openMoveEditor(taskId, trigger);
                 else if (e.target.closest('[data-edit-field]')) openMenuField(taskId, e.target.closest('[data-edit-field]').dataset.editField);
             });
@@ -2815,10 +2974,11 @@
         let sectionCreateQueue = Promise.resolve();
         const optimisticSectionIdMap = new Map();
 
-        async function createSection() {
+        async function createSection(nameOverride = null, placement = null) {
             if (refreshRequested()) return;
             if (!canSchema() || busy || sectionCreatePending || batchRun?.pending || [...creationIntents.values()].some(i => i.phase === 'uncertain')) return;
-            const title = String(elements.projectsBoardSectionName?.value || '').trim();
+            const effectivePlacement = placement || activeSectionPlacement;
+            const title = String(nameOverride != null ? nameOverride : (elements.projectsBoardSectionName?.value || '')).trim();
             if (!title || title.length > 200) {
                 setStatus('Enter a section name (up to 200 characters).', 'error');
                 elements.projectsBoardSectionName?.focus();
@@ -2830,11 +2990,13 @@
             syncSectionForm();
             const optId = `opt-sec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
             const targetIndex = sections.length;
+            const existingSections = sections.filter(s => !s.isOptimistic);
+            const optRank = computeOptimisticRank(existingSections, effectivePlacement);
             const optSection = {
                 id: optId,
                 projectId: scope.projectId,
                 title,
-                rank: '999999/1',
+                rank: optRank,
                 revision: 1,
                 isOptimistic: true,
                 lifecycle: 'active'
@@ -2851,7 +3013,7 @@
                     intent.payload ||= {
                         operationId: intent.id,
                         title,
-                        index: targetIndex,
+                        ...(effectivePlacement ? { placement: effectivePlacement } : { index: targetIndex }),
                         expectedStructureRevision: structureRevision()
                     };
                     const response = await requestMutation(`/api/projects/${encodeURIComponent(scope.projectId)}/sections`, intent.payload, { scope, schema: true });
@@ -2890,6 +3052,32 @@
                                     draftVersions.set(draftKey(created.id, parsed[2]), ver);
                                 }
                             } catch (_) { /* ignore draft key parse error */ }
+                        }
+
+                        for (const [key, draft] of Array.from(composerDrafts.entries())) {
+                            try {
+                                const parsed = JSON.parse(key);
+                                if (parsed[0] === scope.uid && parsed[1] === scope.projectId && parsed[2] === optId) {
+                                    parsed[2] = created.id;
+                                    const nextKey = JSON.stringify(parsed);
+                                    composerDrafts.delete(key);
+                                    composerDrafts.set(nextKey, draft);
+                                    if (quickComposer?.key === key) {
+                                        quickComposer.key = nextKey;
+                                        const sel = quickComposer.node?.querySelector('select');
+                                        if (sel) {
+                                            if (!Array.from(sel.options).some(o => o.value === created.id)) {
+                                                const opt = document.createElement('option');
+                                                opt.value = created.id;
+                                                opt.textContent = created.title || 'Section';
+                                                sel.appendChild(opt);
+                                            }
+                                            sel.value = created.id;
+                                        }
+                                        quickComposer.paint?.();
+                                    }
+                                }
+                            } catch (_) { /* ignore composer draft key parse error */ }
                         }
 
                         for (const task of tasks.values()) {
@@ -2964,6 +3152,10 @@
             const optId = `opt-task-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
             intent.temporaryIds.push(optId);
             const parent = resolvedParentTaskId ? taskFor(resolvedParentTaskId) : null;
+            const existingSiblings = resolvedParentTaskId
+                ? childrenOf(resolvedParentTaskId).filter(t => !t.isOptimistic)
+                : rootsForSection(sectionId).filter(t => !t.isOptimistic);
+            const optRank = computeOptimisticRank(existingSiblings, options.placement);
             const optTask = {
                 id: optId,
                 projectId: scope.projectId,
@@ -2975,12 +3167,12 @@
                 effectiveSectionId: sectionId,
                 ancestorIds: parent ? [...(parent.ancestorIds || []), parent.id] : [],
                 pathIds: parent ? [optId, ...(parent.pathIds || [parent.id])] : [optId],
-                rank: '999999/1',
+                rank: optRank,
                 lifecycle: 'active',
                 isOptimistic: true,
                 activeChildCount: 0,
                 totalChildCount: 0,
-                ownerUid: null,
+                ownerUid: (presentationV2 ? (options.ownerUid !== undefined ? options.ownerUid : (scope.uid || null)) : null),
                 assigneeUids: [],
                 dueDate: null,
                 startDate: null,
@@ -3038,7 +3230,13 @@
 
                     if (!canWrite()) throw Object.assign(new Error('Creation is no longer permitted.'), { status: 403 });
                     intent.payload ||= {
-                        operationId: intentKey, title: initialTitle, parentTaskId: effectiveParentId || null, sectionId: targetSectionId, index: targetIndex, expectedStructureRevision: structureRevision()
+                        operationId: intentKey,
+                        title: initialTitle,
+                        parentTaskId: effectiveParentId || null,
+                        sectionId: targetSectionId,
+                        ...(options.ownerUid !== undefined ? { ownerUid: options.ownerUid } : {}),
+                        ...(options.placement ? { placement: options.placement } : { index: targetIndex }),
+                        expectedStructureRevision: structureRevision()
                     };
                     const response = await requestMutation(`/api/projects/${encodeURIComponent(scope.projectId)}/tasks`, intent.payload, { scope });
                     if (!scopeIsCurrent(scope)) return;
@@ -3757,6 +3955,7 @@
         }
         const detailRemovers = [];
         function clearDetailPresentation(restore = false) {
+            if (quickComposer?.inDrawer) { quickComposer.node?.remove(); quickComposer = null; }
             if (!detailSurface && globalScope.CrmProjectsDetailSurfaceV2?.hasOwner(elements.projectsBoardDetail)) return;
             if (!lastDetailTaskId && !elements.projectsBoardDetail?.open) return;
             detailDiscussionKey = ''; detailChildren = null;
@@ -3811,8 +4010,7 @@
                 region.innerHTML = '<button type="button" data-detail-parent></button><button type="button" data-detail-children-previous>Show earlier loaded subtasks</button><ul aria-label="Existing subtasks" data-detail-child-list></ul><p role="status" data-detail-children-status></p><button type="button" data-detail-children-more></button>';
                 body.querySelector('[data-detail-add]').before(region);
             }
-            region.hidden = !mobileList;
-            if (!mobileList) return;
+            region.hidden = false;
             const id = String(task.id);
             if (!detailChildren || detailChildren.id !== id || detailChildren.generation !== detailGeneration || !detailChildren.current()) {
                 const scope = captureScope(), sequence = refreshSequence, query = filterGeneration, authority = authorityRevision;
@@ -3878,13 +4076,18 @@
             if (!body) return;
             let fields = body.querySelector('[data-detail-fields]');
             if (!fields || fields.dataset.taskId !== String(task.id)) {
+                if (quickComposer?.inDrawer) { quickComposer.node?.remove(); quickComposer = null; }
                 body.replaceChildren(); fields = document.createElement('div'); fields.dataset.detailFields = '';
                 fields.dataset.taskId = task.id; fields.dataset.rowId = `task:${task.id}`; fields.dataset.rowKind = 'task';
                 fields.className = 'crm-detail-fields'; body.append(fields);
                 const path = document.createElement('p'); path.dataset.detailPath = ''; body.append(path);
                 const subtasks = document.createElement('p'); subtasks.dataset.detailSubtasks = ''; body.append(subtasks);
                 const add = document.createElement('button'); add.type = 'button'; add.textContent = 'Add subtask'; add.dataset.detailAdd = '';
-                add.addEventListener('click', () => { if (selectedTaskId !== String(task.id) || !canWrite()) return; detailSurface?.requestClose(); openQuickComposer(task.id); }); body.append(add);
+                add.addEventListener('click', () => {
+                    if (selectedTaskId !== String(task.id) || !canWrite()) return;
+                    openQuickComposer(task.id, task.effectiveSectionId || task.sectionId, { inDrawer: true, placement: { kind: 'end' } });
+                });
+                body.append(add);
             }
             const template = document.createElement('template');
             template.innerHTML = taskRowMarkup({ kind: 'task', id: `task:${task.id}`, task, depth: 0, index: 0 });
@@ -3906,7 +4109,7 @@
                 else fields.append(fresh);
             }
             Array.from(fields.children).forEach(cell => { if (!keys.has(cell.dataset.columnKey)) cell.remove(); });
-            body.querySelector('[data-detail-path]').textContent = `Parent path: ${asArray(task.pathIds).map(id => taskFor(id)?.title || id).join(' → ') || 'Root task'}`;
+            body.querySelector('[data-detail-path]').textContent = `Location: ${asArray(task.pathIds).map(id => taskFor(id)?.title || id).join(' → ') || 'Root task'}`;
             const derived = task.derived;
             body.querySelector('[data-detail-subtasks]').textContent = derived?.activeLeafCount != null ? `Subtasks: ${derived.completedLeafCount ?? 0} / ${derived.activeLeafCount} leaves complete` : `Subtasks: ${Number(task.activeChildCount || 0)} direct children`;
             body.querySelector('[data-detail-add]').hidden = !canWrite();
@@ -4240,7 +4443,17 @@
             if (presentationV2 && row && handleRowEditorAction(action, row, event)) return;
             if (action === 'toggle-task' && row) { toggleTask(row.dataset.taskId); return; }
             if (action === 'quick-task') { openQuickComposer(null, event.target.closest('[data-section-id]')?.dataset.sectionId); return; }
-            if (action === 'add-subtask' && row) { event.stopPropagation(); openQuickComposer(row.dataset.taskId); return; }
+            if (action === 'add-task-top') {
+                event.stopPropagation();
+                openQuickComposer(null, event.target.closest('[data-section-id]')?.dataset.sectionId, { placement: { kind: 'start' } });
+                return;
+            }
+            if (action === 'add-subtask' && row) {
+                event.stopPropagation();
+                if (row.dataset.taskId) expanded.add(String(row.dataset.taskId));
+                openQuickComposer(row.dataset.taskId);
+                return;
+            }
             if (action === 'pick-date') { event.stopPropagation(); globalScope.CrmProjectsDatePicker?.open(event.target.closest('.crm-board-date-control')?.querySelector('input')); return; }
             if (action === 'pick-people') { event.stopPropagation(); openPeoplePicker(event.target.closest('[data-people-kind]')); return; }
             if (action === 'pick-status') { event.stopPropagation(); openStatusPicker(event.target.closest('.crm-board-status-pill')); return; }
@@ -4394,12 +4607,17 @@
                     }
                     const feedback = copyBtn.querySelector('.crm-copy-feedback');
                     if (feedback) {
-                        const prev = feedback.textContent;
+                        if (copyBtn._copyTimeout) clearTimeout(copyBtn._copyTimeout);
+                        if (!copyBtn.dataset.originalFeedback) {
+                            copyBtn.dataset.originalFeedback = feedback.textContent || 'Copy ID';
+                        }
                         feedback.textContent = 'Copied!';
                         copyBtn.classList.add('is-copied');
-                        setTimeout(() => {
-                            feedback.textContent = prev;
+                        copyBtn._copyTimeout = setTimeout(() => {
+                            feedback.textContent = copyBtn.dataset.originalFeedback || 'Copy ID';
+                            delete copyBtn.dataset.originalFeedback;
                             copyBtn.classList.remove('is-copied');
+                            copyBtn._copyTimeout = null;
                         }, 1800);
                     }
                 }
@@ -4641,7 +4859,7 @@
             },
             saveTaskField: (taskId, kind, control) => saveTaskField(taskId, kind, control),
             saveSection: (sectionId, control) => saveSection(sectionId, control),
-            createSection: () => createSection(),
+            createSection: (nameOverride, placement) => createSection(nameOverride, placement),
             createTask: (parentTaskId, explicitSectionId, options) => createTask(parentTaskId, explicitSectionId, options),
             moveSection: (sectionId, index) => moveSection(sectionId, index),
             moveTask: (taskId, destination) => moveTask(taskId, destination),
@@ -4695,5 +4913,5 @@
             getState: contextSnapshot };
     }
 
-    globalScope.CrmProjectsBoard = { createController };
+    globalScope.CrmProjectsBoard = { createController, computeOptimisticRank };
 })(typeof window !== 'undefined' ? window : globalThis);

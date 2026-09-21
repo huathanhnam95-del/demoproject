@@ -1,5 +1,36 @@
 # Latest Session Work
 
+## Completed Package: CRM Projects V2 Visual Inline Creation & Streamlined Drawer (Tasks 1243 & 1244)
+
+- **Status**: Completed & Empirically Verified on branch `feat/projects-subtasks-people`.
+- **Context & Objectives**: Execute visual inline creation and drawer streamlining per `GEMINI_IMPLEMENTATION_PLAN.md` (Task 1243) and perform exhaustive multi-agent `/boost` audit, debugging, and refactoring (Task 1244) with zero regressions against baseline tests.
+- **Key Deliverables**:
+  1. **Keyboard Hint Neutralization (`public/css/crm-projects.css`, `public/crm-admin.html`)**:
+     - Removed board hint element and disabled focus-within expansion to eliminate all table/header layout shifts.
+  2. **Authoritative Placement Backend (`functions/src/crm/projects/domain/ordering.js`, `command-service.js`, `phase2-domain-api.test.js`)**:
+     - Implemented `computePlacementRank` with rational fraction interpolation (`start`, `end`, `before`, `after`) and bounded rebalancing window.
+     - Updated `createSection` and `createTaskCommand` with anchor lifecycle and parent ownership validation, mutual exclusivity with legacy `index`, and rational rank transactional assignment.
+  3. **Contextual Inline Creation & Draft Continuity (`public/js/crm/projects/presentation/row-layout.js`, `contextual-create.js`, `board.js`)**:
+     - Created layout adapter and contextual composer controllers.
+     - Added `computeOptimisticRank` with exact GCD fraction arithmetic.
+     - Added 6-element draft key migration (`[..., anchorId, placementKind]`) ensuring seamless draft preservation across optimistic section and parent ID settlement.
+  4. **Streamlined Detail Drawer (`public/css/crm-projects-v2.css`, `detail-surface.js`, `views.js`, `board.js`)**:
+     - Fixed drawer header and tabs with dedicated scroll container (`[data-detail-panel]`), preserving scroll offset across resize.
+     - Scoped `.crm-field-feedback` to in-flow display preventing control overlap.
+     - Added native `<details class="crm-detail-disclosure">` components with live summary badges for Schedule, Dependencies, CRM Links, and Task Info.
+     - Unlocked desktop subtask list parity and enabled in-drawer subtask creation with `{ kind: 'end' }`.
+  5. **Post-Implementation `/boost` Audit & Refactor Pass (Task 1244)**:
+     - Fixed 8 defects: fraction arithmetic in `computeOptimisticRank`, exported `createSection` placement forwarding, section settlement draft rekeying, subtask click row unfolding, section placement popover menus, "Copy ID" state freezing, `TypeError` in `contextual-create.js`, and placement sanitization/array guards.
+- **Empirical Verification**:
+  - `v2-quick-create.test.js`: 65/65 PASS
+  - `v2-task-detail.test.js`: 42/42 PASS
+  - `v2-performance-reconciliation.test.js`: 38/38 PASS
+  - `v2-mobile-accessibility.test.js`: 40/40 PASS
+  - `phase2-domain-api.test.js`: PASS
+  - `npm run lint:crm` (`verify-crm-suite.js --lint`): PASS
+  - `git diff --check`: 0 errors across all 13 owned files.
+- **Files Modified/Created**: `functions/src/crm/projects/domain/command-service.js`, `functions/src/crm/projects/domain/ordering.js`, `public/crm-admin.html`, `public/css/crm-projects.css`, `public/css/crm-projects-v2.css`, `public/js/crm/projects/board.js`, `public/js/crm/projects/presentation/contextual-create.js`, `public/js/crm/projects/presentation/detail-surface.js`, `public/js/crm/projects/presentation/row-layout.js`, `public/js/crm/projects/views.js`, `tests/crm/projects/phase2-domain-api.test.js`, `tests/crm/projects/v2-quick-create.test.js`, `tests/crm/projects/v2-task-detail.test.js`, `TASK_TRACKER.csv`.
+
 ## Completed Package: Cross-Mode Data Quality & Controller Remediations (Phases 1–3) (Task 1071)
 
 - **Status**: Completed & Empirically Verified.
@@ -131,10 +162,11 @@ Phase 4 builds on the data quality and controller remediations of Phases 1–3 b
   - Live HTTPS endpoint probe (`curl.exe -k https://localhost:8443/api/health`): HTTP 200, `firestore: connected`.
 - **Files Modified/Added**: `server.js`, `package.json`, `check-server.bat`, `scripts/start-dev-server.cjs`, `scripts/structure/policy.json`, `tests/server/emulator-isolation-guard.test.js`, `tests/server/boot-verification.test.js`, `TASK_TRACKER.csv`.
 
-## Active Package: CRM Projects Board Enhancements & Subtasks (Task 1060)
+## Active Package: CRM Projects Board Enhancements & Subtasks (Branch `feat/projects-subtasks-people`)
 
-- **Status**: In Progress on branch `feat/projects-subtasks-people`.
-- **Scope**: Subtask creation affordance (+ button on hover and Ctrl+N hint), interactive people picker with avatar/name popover search, batch dock filter chips, custom date picker, and drawer density.
+- **Status**: Visual inline creation and drawer streamlining packages completed and verified (Tasks 1243 & 1244).
+- **Completed Components**: Keyboard hints strip layout shift elimination, authoritative rational placement backend (`start`, `end`, `before`, `after`), contextual inline row creation, draft continuity across optimistic parent ID resolution, streamlined task detail drawer with dedicated scroll container and collapsible disclosure cards, desktop subtask parity, and comprehensive 8-defect `/boost` refactoring.
+- **Remaining / Adjacent Scope**: Interactive people picker with avatar/name popover search, batch dock filter chips, custom date picker adjustments.
 
 ## Completed Package: Release V1.8.122 (Task 958, Task 959, Task 960, Task 961, Task 962, Task 963)
 

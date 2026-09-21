@@ -1,5 +1,18 @@
 # Project Progress
 
+## Completed package: CRM-PROJECTS-V2-INLINE-DRAWER-01 Visual inline creation and streamlined drawer (Tasks 1243 & 1244)
+
+- Goal: provide zero-layout-shift inline creation for tasks, subtasks, and sections with authoritative rational placement ranks, and streamline the task detail drawer with dedicated scrolling, collapsible disclosures, in-drawer child creation, and desktop subtask parity.
+- Branch: `feat/projects-subtasks-people`
+- Scope: 13 owned files (`command-service.js`, `ordering.js`, `crm-projects.css`, `crm-projects-v2.css`, `crm-admin.html`, `board.js`, `detail-surface.js`, `views.js`, `row-layout.js`, `contextual-create.js`, `phase2-domain-api.test.js`, `v2-quick-create.test.js`, `v2-task-detail.test.js`).
+- Deliverables:
+  1. Keyboard hints strip neutralization (`public/css/crm-projects.css`, `public/crm-admin.html`) eliminating table header and row layout shifts.
+  2. Authoritative placement backend (`functions/src/crm/projects/domain/ordering.js`, `command-service.js`) with rational rank interpolation (`start`, `end`, `before`, `after`), rebalancing window, mutual exclusivity with `index`, anchor lifecycle validation, and backwards compatibility.
+  3. Contextual inline creation and draft continuity (`public/js/crm/projects/presentation/row-layout.js`, `contextual-create.js`, `board.js`) with 6-element draft key migration, optimistic placement calculation, and parent ID resolution across async server acknowledgment.
+  4. Streamlined task detail drawer (`public/css/crm-projects-v2.css`, `detail-surface.js`, `views.js`, `board.js`) with fixed header, dedicated scroll container, collapsible disclosure cards with live badges, in-flow field feedback, in-drawer subtask creation with `{ kind: 'end' }`, and desktop subtask list parity.
+  5. Post-implementation `/boost` audit, debugging, and refactoring pass (Task 1244) resolving 8 defects (fractional math in `computeOptimisticRank`, exported `createSection` parameter forwarding, section ID settlement draft migration, subtask click auto-unfolding, section placement popover menus, "Copy ID" state freezing, `TypeError` in `contextual-create.js`, and placement sanitization/array guards).
+- Verified evidence: 65/65 quick-create tests, 42/42 task-detail tests, 38/38 performance-reconciliation tests, 40/40 mobile-accessibility tests, domain API test, CRM linter, and git diff check all passed with 0 errors. All unrelated dirty working tree paths preserved.
+
 ## Completed package: DEV-SERVER-RESILIENCE-01 Loopback emulator auto-detection and runner (Task 1061)
 
 - Goal: eliminate startup deadlock where `server.js` refused to boot when port 8443 stopped while Firebase emulators remained active.

@@ -98,8 +98,9 @@ function compactWindow(sorted, insertionIndex) {
     return { rank: formatRank(interpolate(lower, upper, insertionOffset + 1, slots)), rebalance };
 }
 
-function computeInsertionRank(items = [], rawIndex = items.length) {
-    const sorted = items.slice().sort(compareSiblings);
+function computeInsertionRank(items = [], rawIndex = (items ? items.length : 0)) {
+    const list = Array.isArray(items) ? items : [];
+    const sorted = list.slice().sort(compareSiblings);
     if (typeof rawIndex !== 'number' || !Number.isSafeInteger(rawIndex) || rawIndex < 0) throw new Error('Sibling index must be a non-negative integer.');
     const index = Math.min(sorted.length, rawIndex);
     const previous = index > 0 ? parseRank(sorted[index - 1]?.rank) : null;
@@ -112,6 +113,33 @@ function computeInsertionRank(items = [], rawIndex = items.length) {
         if (midpoint.d.toString().length <= MAX_DENOMINATOR_DIGITS) return { rank: formatRank(midpoint), rebalance: [] };
     }
     return compactWindow(sorted, index);
+}
+
+function computePlacementRank(items = [], placement) {
+    if (!placement || typeof placement !== 'object') throw new RankIntegrityError('Placement must be an object.');
+    const { kind } = placement;
+    const siblingId = typeof placement.siblingId === 'string' ? placement.siblingId.trim() : (placement.siblingId != null ? String(placement.siblingId).trim() : '');
+    if (!['start', 'end', 'before', 'after'].includes(kind)) {
+        throw new RankIntegrityError(`Invalid placement kind: ${kind}`);
+    }
+    const list = Array.isArray(items) ? items : [];
+    const sorted = list.slice().sort(compareSiblings);
+    let targetIndex;
+    if (kind === 'start') {
+        targetIndex = 0;
+    } else if (kind === 'end') {
+        targetIndex = sorted.length;
+    } else {
+        if (!siblingId) {
+            throw new RankIntegrityError(`Placement kind '${kind}' requires a non-empty siblingId.`);
+        }
+        const anchorIndex = sorted.findIndex(item => String(item.id) === siblingId);
+        if (anchorIndex === -1) {
+            throw new RankIntegrityError(`Anchor sibling '${siblingId}' not found among active siblings.`);
+        }
+        targetIndex = kind === 'before' ? anchorIndex : anchorIndex + 1;
+    }
+    return computeInsertionRank(sorted, targetIndex);
 }
 
 module.exports = {
@@ -127,5 +155,6 @@ module.exports = {
     rankValue,
     rankForIndex,
     compareSiblings,
-    computeInsertionRank
+    computeInsertionRank,
+    computePlacementRank
 };

@@ -1589,25 +1589,9 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 .crm-projects-utility-pane textarea { width: 100%; border: 1px solid var(--pj-line-strong); border-radius: 7px; background: var(--pj-surface); padding: 8px 9px; font-size: 11.5px; resize: vertical; min-height: 64px; }
 .crm-projects-utility-pane .row { display: flex; gap: 6px; flex-wrap: wrap; }
 
-/* ---------- KEYBOARD HINTS ---------- */
+/* ---------- KEYBOARD HINTS (REMOVED: NO EXPANDING SHORTCUT STRIP) ---------- */
 .crm-projects-board-hints {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 8px 12px;
-  font-size: 10.5px;
-  color: var(--pj-faint);
-  background: var(--pj-raised);
-  border-top: 1px solid var(--pj-line);
-}
-.crm-projects-board-hints kbd {
-  font-family: inherit;
-  font-size: 10px;
-  padding: 1px 4px;
-  border-radius: 3px;
-  background: var(--pj-surface);
-  border: 1px solid var(--pj-line-strong);
-  margin-right: 4px;
+  display: none !important;
 }
 
 /* ---------- BATCH ACTIONS DOCK ---------- */
@@ -1906,23 +1890,14 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 .crm-projects-view-pivot select.crm-input:hover { background: var(--pj-raised); border-color: var(--pj-line); color: var(--pj-ink); }
 .crm-projects-view-tabs { align-items: flex-end; }
 
-/* Keyboard hints belong to keyboard users: reveal them when focus is on the
-   board and keep the vertical space otherwise. */
-.crm-projects-board-hints {
-  max-height: 0;
-  padding-block: 0;
-  opacity: 0;
-  overflow: hidden;
-  border-top-color: transparent;
-  transition: max-height var(--pj-motion) var(--pj-ease),
-              opacity var(--pj-motion) var(--pj-ease),
-              padding var(--pj-motion) var(--pj-ease);
-}
+/* Shortcut hints strip removed: focus on the board does not shift layout */
+.crm-projects-board-hints,
 #projects-board-table-wrap:focus-within .crm-projects-board-hints {
-  max-height: 44px;
-  padding-block: 8px;
-  opacity: 1;
-  border-top-color: var(--pj-line);
+  display: none !important;
+  max-height: 0 !important;
+  padding-block: 0 !important;
+  opacity: 0 !important;
+  border: none !important;
 }
 
 /* The section summary footer reads as data, not as another row of controls. */

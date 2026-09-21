@@ -9,7 +9,7 @@ const tick = async () => { for(let i=0;i<15;i++) await new Promise(setImmediate)
 async function fixture(v2=true) {
     const dom=new JSDOM(fs.readFileSync(path.join(root,'public/crm-admin.html'),'utf8'),{runScripts:'outside-only',pretendToBeVisual:true,url:'https://fixture.invalid'});
     const win=dom.window,doc=win.document;
-    for(const name of ['presentation/column-model','presentation/table-layout','presentation/field-feedback','state','board']) win.eval(fs.readFileSync(path.join(root,`public/js/crm/projects/${name}.js`),'utf8'));
+    for(const name of ['presentation/column-model','presentation/table-layout','presentation/field-feedback','presentation/row-layout','presentation/contextual-create','state','board']) win.eval(fs.readFileSync(path.join(root,`public/js/crm/projects/${name}.js`),'utf8'));
     const elements=Object.fromEntries([...fs.readFileSync(path.join(root,'public/crm-admin.js'),'utf8').matchAll(/elements\.(projects\w+) = document.getElementById\('([^']+)'\)/g)].map(m=>[m[1],doc.getElementById(m[2])]));
     let responder=null;
     let actor='a',role='Owner',hold=null,fail=0,malformed=false,seq=0,structure=1;
@@ -299,4 +299,180 @@ for(const change of ['role','project','actor']) test(`first-section acknowledgem
   release();await tick();assert.equal(h.doc.querySelector('[data-quick-create]'),null);assert.equal(h.writes.filter(w=>w.url.endsWith('/tasks')).length,0);
   if(change==='role'){h.role('Owner');await h.board.refresh();h.elements.projectsBoardAddSection.click();h.elements.projectsBoardSectionName.value='New intent';h.elements.projectsBoardSectionForm.requestSubmit();await tick();assert.equal(h.doc.querySelector('[data-quick-create]'),null);}
  }finally{h.close();}
+});
+
+test('row-layout adapter computes correct offsets, height, and handles empty state', async () => {
+ const h = await fixture();
+ try {
+  const adapter = h.win.CrmProjectsRowLayoutV2.createRowLayoutAdapter();
+  assert.equal(adapter.getRowOffset(0, 44), 0);
+  assert.equal(adapter.getRowOffset(5, 44), 220);
+  assert.equal(adapter.getComposerOffset(44), 0);
+  assert.equal(adapter.getTotalHeight(0, 44), 0);
+  assert.equal(adapter.getTotalHeight(10, 44), 440);
+
+  adapter.setActiveComposer({ anchorIndex: 2, height: 60, id: 'composer-1' });
+  assert.equal(adapter.getRowOffset(0, 44), 0);
+  assert.equal(adapter.getRowOffset(2, 44), 88);
+  assert.equal(adapter.getRowOffset(3, 44), 132 + 60);
+  assert.equal(adapter.getComposerOffset(44), 132);
+  assert.equal(adapter.getTotalHeight(10, 44), 440 + 60);
+  assert.equal(adapter.getTotalHeight(0, 44), 60);
+
+  adapter.clearActiveComposer();
+  assert.equal(adapter.getActiveComposer(), null);
+  assert.equal(adapter.getTotalHeight(5, 44), 220);
+  adapter.dispose();
+ } finally { h.close(); }
+});
+
+test('contextual-create controller manages drafts, rapid entry intent regeneration, escaping, and ID settlement', async () => {
+ const h = await fixture();
+ try {
+  let createdPayload = null;
+  const controller = h.win.CrmProjectsContextualCreate.createController({
+   getCurrentUser: () => ({ uid: 'user-1' }),
+   getProjectId: () => 'proj-1',
+   getSection: id => ({ id, title: 'Planning <script>' }),
+   getTask: id => ({ id, title: 'Task "A" & B' }),
+   canWrite: () => true,
+   createTask: async (parentId, sectionId, opts) => {
+    createdPayload = { parentId, sectionId, ...opts };
+    return { id: 'task-canonical-1', title: opts.initialTitle };
+   }
+  });
+
+  const active = controller.mount({
+   sectionId: 'sec-1',
+   parentTaskId: 'task-parent',
+   anchorId: 'task-anchor',
+   kind: 'subtask',
+   placement: { kind: 'after', siblingId: 'task-anchor' }
+  });
+
+  assert.ok(active);
+  assert.ok(active.node);
+  const input = active.node.querySelector('input[name="title"]');
+  const label = active.node.querySelector('.crm-composer-label-text');
+  assert.ok(label.textContent.includes('New subtask of Task "A" & B'));
+  assert.ok(!active.node.innerHTML.includes('<script>'));
+
+  input.value = 'Draft text';
+  input.dispatchEvent(new h.win.Event('input'));
+
+  const draftBefore = controller.getDraft(active.key);
+  assert.equal(draftBefore.text, 'Draft text');
+  const initialIntentId = draftBefore.intentId;
+
+  active.node.dispatchEvent(new h.win.Event('submit', { bubbles: true, cancelable: true }));
+  await tick();
+
+  assert.ok(createdPayload);
+  assert.equal(createdPayload.initialTitle, 'Draft text');
+  assert.equal(createdPayload.intentId, initialIntentId);
+
+  const draftAfter = controller.getDraft(active.key);
+  assert.equal(draftAfter.text, '');
+  assert.notEqual(draftAfter.intentId, initialIntentId);
+
+  controller.settleId('task-anchor', 'task-canonical-anchor');
+  assert.equal(active.params.anchorId, 'task-canonical-anchor');
+  assert.equal(active.params.placement.siblingId, 'task-canonical-anchor');
+
+  controller.cancel();
+  assert.equal(controller.getActive(), null);
+  controller.dispose();
+ } finally { h.close(); }
+});
+
+test('computeOptimisticRank computes correct unit-scaled fractions for arbitrary denominators', async () => {
+ const h = await fixture();
+ try {
+  const calc = h.win.CrmProjectsBoard.computeOptimisticRank;
+  assert.equal(calc([], null), '0/1');
+  assert.equal(calc([], { kind: 'start' }), '0/1');
+
+  assert.equal(calc([{ id: 'a', rank: '1/2' }], { kind: 'end' }), '3/2');
+  assert.equal(calc([{ id: 'a', rank: '1/2' }], null), '3/2');
+  assert.equal(calc([{ id: 'a', rank: '1/2' }], { kind: 'start' }), '-1/2');
+
+  assert.equal(calc([{ id: 'a', rank: '1/2' }], { kind: 'before', siblingId: 'a' }), '-1/2');
+  assert.equal(calc([{ id: 'a', rank: '1/3' }], { kind: 'after', siblingId: 'a' }), '4/3');
+
+  assert.equal(calc([{ id: 'a', rank: '1/2' }, { id: 'b', rank: '1/1' }], { kind: 'before', siblingId: 'b' }), '3/4');
+  assert.equal(calc([{ id: 'a', rank: '1/2' }, { id: 'b', rank: '1/1' }], { kind: 'after', siblingId: 'a' }), '3/4');
+ } finally { h.close(); }
+});
+
+test('contextual-create isolates drafts by placement.siblingId and supports sectionId migration', async () => {
+ const h = await fixture();
+ try {
+  const controller = h.win.CrmProjectsContextualCreate.createController({
+   getCurrentUser: () => ({ uid: 'user-1' }),
+   getProjectId: () => 'proj-1',
+   getSection: id => ({ id, title: 'Section ' + id }),
+   getTask: id => ({ id, title: 'Task ' + id }),
+   getSections: () => [{ id: 'sec-canonical-1', title: 'Canonical 1' }],
+   canWrite: () => true,
+   createTask: async () => ({ id: 'new-1' })
+  });
+
+  const m1 = controller.mount({ sectionId: 'sec-1', kind: 'task', placement: { kind: 'after', siblingId: 'sibling-1' } });
+  m1.node.querySelector('input[name="title"]').value = 'Draft for sibling 1';
+  m1.node.querySelector('input[name="title"]').dispatchEvent(new h.win.Event('input'));
+
+  const m2 = controller.mount({ sectionId: 'sec-1', kind: 'task', placement: { kind: 'after', siblingId: 'sibling-2' } });
+  assert.notEqual(m1.key, m2.key);
+  assert.equal(m2.node.querySelector('input[name="title"]').value, '');
+  m2.node.querySelector('input[name="title"]').value = 'Draft for sibling 2';
+  m2.node.querySelector('input[name="title"]').dispatchEvent(new h.win.Event('input'));
+
+  const m1Reopened = controller.mount({ sectionId: 'sec-1', kind: 'task', placement: { kind: 'after', siblingId: 'sibling-1' } });
+  assert.equal(m1Reopened.node.querySelector('input[name="title"]').value, 'Draft for sibling 1');
+
+  const m3 = controller.mount({ sectionId: 'opt-sec-99', kind: 'task' });
+  m3.node.querySelector('input[name="title"]').value = 'Task in optimistic section';
+  m3.node.querySelector('input[name="title"]').dispatchEvent(new h.win.Event('input'));
+
+  controller.settleId('opt-sec-99', 'sec-canonical-1');
+  assert.equal(controller.getActive().params.sectionId, 'sec-canonical-1');
+  assert.ok(controller.getActive().key.includes('sec-canonical-1'));
+
+  controller.dispose();
+ } finally { h.close(); }
+});
+
+test('createSection forwards placement and section-menu opens placement menu in V2', async () => {
+ const h = await fixture();
+ try {
+  const createdSec = await h.board.createSection('Section After S', { kind: 'after', siblingId: 's' });
+  assert.ok(createdSec);
+  const lastWrite = h.writes.find(w => w.url.endsWith('/sections') && w.body.title === 'Section After S');
+  assert.ok(lastWrite);
+  assert.deepEqual(lastWrite.body.placement, { kind: 'after', siblingId: 's' });
+
+  const secRow = h.doc.querySelector('[data-row-kind="section"][data-section-id="s"]');
+  assert.ok(secRow);
+  const menuBtn = secRow.querySelector('button[data-action="section-menu"]');
+  assert.ok(menuBtn);
+
+  menuBtn.click();
+  await tick();
+  const editor = h.doc.querySelector('.crm-row-editor[data-row-editor="section-menu"]');
+  assert.ok(editor);
+  assert.ok(editor.querySelector('[data-add-section-above]'));
+  assert.ok(editor.querySelector('[data-add-section-below]'));
+
+  editor.querySelector('[data-add-section-above]').click();
+  await tick();
+  assert.equal(h.elements.projectsBoardSectionForm.hidden, false);
+
+  h.elements.projectsBoardSectionName.value = 'Submitted Above';
+  h.elements.projectsBoardSectionForm.dispatchEvent(new h.win.Event('submit', { bubbles: true, cancelable: true }));
+  await tick();
+
+  const aboveWrite = h.writes.find(w => w.url.endsWith('/sections') && w.body.title === 'Submitted Above');
+  assert.ok(aboveWrite);
+  assert.deepEqual(aboveWrite.body.placement, { kind: 'before', siblingId: 's' });
+ } finally { h.close(); }
 });

@@ -23,7 +23,7 @@ const {
     validateTypedValues,
     safeColumnId
 } = require('./validation');
-const { compareSiblings, computeInsertionRank, RankIntegrityError } = require('./ordering');
+const { compareSiblings, computeInsertionRank, computePlacementRank, RankIntegrityError } = require('./ordering');
 const { resolveTaskState, assertNoCycle: assertHierarchyNoCycle } = require('./hierarchy');
 const { runTransactionWithClosedRetry } = require('./transaction-retry');
 const { prepareEventCapture } = require('../automation/event-capture');
@@ -71,6 +71,20 @@ function expectedIndex(value, fallback = null) {
     if (value === undefined || value === null) return fallback;
     if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) throw new DomainError(400, 'INVALID_INDEX', 'Sibling index must be a non-negative integer.');
     return value;
+}
+
+function normalizePlacement(placement) {
+    if (placement === undefined) return undefined;
+    if (!placement || typeof placement !== 'object' || !['start', 'end', 'before', 'after'].includes(placement.kind)) {
+        throw new DomainError(400, 'INVALID_PLACEMENT', 'Placement kind must be start, end, before, or after.');
+    }
+    if (['before', 'after'].includes(placement.kind)) {
+        if (!placement.siblingId || typeof placement.siblingId !== 'string' || !placement.siblingId.trim()) {
+            throw new DomainError(400, 'INVALID_PLACEMENT', `Placement kind '${placement.kind}' requires siblingId.`);
+        }
+        return { kind: placement.kind, siblingId: placement.siblingId.trim() };
+    }
+    return { kind: placement.kind };
 }
 
 function requiredRevision(value, code, message) {
@@ -353,19 +367,43 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
         delete input.operationId;
         delete input.sectionId;
         delete input.index;
+        delete input.placement;
         delete input.expectedStructureRevision;
         const payload = validateSectionInput(input);
+        if (rawPayload.index !== undefined && rawPayload.placement !== undefined) {
+            throw new DomainError(400, 'EXCLUSIVE_ORDERING_METHOD', 'Specify either index or placement, not both.');
+        }
         const opId = ensureOperation(rawPayload.operationId);
         const expectedStructure = requiredRevision(rawPayload.expectedStructureRevision, 'EXPECTED_STRUCTURE_REVISION_REQUIRED', 'expectedStructureRevision is required for section creation.');
         const sectionId = rawPayload.sectionId ? id(rawPayload.sectionId, 'section ID') : randomId('section', opId, projectId);
-        return runCommand({ actorUid: identity.uid, command: 'createSection', projectId, targetId: sectionId, operationId: opId, payload: { ...payload, sectionId, index: expectedIndex(rawPayload.index, null), expectedStructureRevision: expectedStructure }, access: { owner: true, roles: ['Owner'] }, execute: async ({ transaction, contentAccess }) => {
+        const placement = normalizePlacement(rawPayload.placement);
+        const orderingPayload = placement ? { placement } : { index: expectedIndex(rawPayload.index, null) };
+        return runCommand({ actorUid: identity.uid, command: 'createSection', projectId, targetId: sectionId, operationId: opId, payload: { ...payload, sectionId, ...orderingPayload, expectedStructureRevision: expectedStructure }, access: { owner: true, roles: ['Owner'] }, execute: async ({ transaction, contentAccess }) => {
             const project = contentAccess.project;
             assertProjectActive(project);
             const sections = await readCollection(transaction, projectCollection(db, project.id, 'sections'));
             if (sections.some((row) => row.id === sectionId)) throw new DomainError(409, 'SECTION_EXISTS', 'Section already exists.');
             const active = sortSiblingRows(sections.filter((row) => (row.data.lifecycle || 'active') === 'active').map((row) => ({ ...row, rank: row.data.rank })));
-            const index = expectedIndex(rawPayload.index, active.length);
-            const order = computeOrder(active, index);
+            let order;
+            if (placement) {
+                if (['before', 'after'].includes(placement.kind)) {
+                    const anchor = active.find((s) => s.id === placement.siblingId);
+                    if (!anchor) {
+                        const existingSection = sections.find((s) => s.id === placement.siblingId);
+                        if (!existingSection) throw new DomainError(409, 'INVALID_ANCHOR_REFERENCE', 'Anchor section not found.');
+                        throw new DomainError(409, 'INVALID_ANCHOR_REFERENCE', 'Anchor section must be active and in this project.');
+                    }
+                }
+                try {
+                    order = computePlacementRank(active, placement);
+                } catch (err) {
+                    if (err instanceof RankIntegrityError) throw new DomainError(409, 'INVALID_ANCHOR_REFERENCE', err.message);
+                    throw err;
+                }
+            } else {
+                const index = expectedIndex(rawPayload.index, active.length);
+                order = computeOrder(active, index);
+            }
             validateRankWriteCount(order.rebalance);
             const timestamp = iso(now());
             const sectionMap = mapById(sections);
@@ -422,14 +460,19 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
 
     async function createTaskCommand(identity, projectId, rawPayload = {}, preparationTransaction = null) {
         const input = { ...rawPayload };
-        for (const key of ['operationId', 'taskId', 'parentTaskId', 'sectionId', 'index', 'expectedStructureRevision']) delete input[key];
+        for (const key of ['operationId', 'taskId', 'parentTaskId', 'sectionId', 'index', 'placement', 'expectedStructureRevision']) delete input[key];
         const payload = validateTaskInput(input);
+        if (rawPayload.index !== undefined && rawPayload.placement !== undefined) {
+            throw new DomainError(400, 'EXCLUSIVE_ORDERING_METHOD', 'Specify either index or placement, not both.');
+        }
         const opId = ensureOperation(rawPayload.operationId);
         const expectedStructure = requiredRevision(rawPayload.expectedStructureRevision, 'EXPECTED_STRUCTURE_REVISION_REQUIRED', 'expectedStructureRevision is required for task creation.');
         const parentReference = optionalReference(rawPayload.parentTaskId, 'parent task ID');
         const sectionReference = optionalReference(rawPayload.sectionId, 'section ID');
         const taskId = rawPayload.taskId ? id(rawPayload.taskId, 'task ID') : randomId('task', opId, projectId);
-        return runCommand({ [PREPARATION_TRANSACTION]: preparationTransaction, actorUid: identity.uid, executionContext: getContext(identity), command: 'createTask', projectId, targetId: taskId, operationId: opId, payload: { ...payload, taskId, parentTaskId: parentReference, sectionId: sectionReference, index: expectedIndex(rawPayload.index, null), expectedStructureRevision: expectedStructure }, access: { write: true, roles: ['Owner', 'Editor'] }, execute: async ({ transaction, contentAccess }) => {
+        const placement = normalizePlacement(rawPayload.placement);
+        const orderingPayload = placement ? { placement } : { index: expectedIndex(rawPayload.index, null) };
+        return runCommand({ [PREPARATION_TRANSACTION]: preparationTransaction, actorUid: identity.uid, executionContext: getContext(identity), command: 'createTask', projectId, targetId: taskId, operationId: opId, payload: { ...payload, taskId, parentTaskId: parentReference, sectionId: sectionReference, ...orderingPayload, expectedStructureRevision: expectedStructure }, access: { write: true, roles: ['Owner', 'Editor'] }, execute: async ({ transaction, contentAccess }) => {
             const project = contentAccess.project;
             assertProjectActive(project);
             const taskCollection = projectCollection(db, project.id, 'tasks');
@@ -466,7 +509,25 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
                 && (parentTaskId || row.data.sectionId === resolvedSectionId)
                 && effectiveLifecycle(taskMap, row.id) === 'active')
                 .map((row) => ({ ...row, rank: row.data.rank })));
-            const order = computeOrder(siblings, expectedIndex(rawPayload.index, siblings.length));
+            let order;
+            if (placement) {
+                if (['before', 'after'].includes(placement.kind)) {
+                    const anchor = siblings.find((s) => s.id === placement.siblingId);
+                    if (!anchor) {
+                        const existingTask = taskMap.get(placement.siblingId);
+                        if (!existingTask) throw new DomainError(409, 'INVALID_ANCHOR_REFERENCE', 'Anchor task not found.');
+                        throw new DomainError(409, 'INVALID_ANCHOR_REFERENCE', 'Anchor task must belong to the same parent, section, and project, and must be active.');
+                    }
+                }
+                try {
+                    order = computePlacementRank(siblings, placement);
+                } catch (err) {
+                    if (err instanceof RankIntegrityError) throw new DomainError(409, 'INVALID_ANCHOR_REFERENCE', err.message);
+                    throw err;
+                }
+            } else {
+                order = computeOrder(siblings, expectedIndex(rawPayload.index, siblings.length));
+            }
             validateRankWriteCount(order.rebalance);
             const timestamp = iso(now());
             const rebalanceBefore = order.rebalance.map((change) => ({ id: change.id, rank: taskMap.get(change.id)?.data?.rank || null, revision: readRevision(taskMap.get(change.id)?.data) }));

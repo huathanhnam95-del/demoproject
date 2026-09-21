@@ -71,7 +71,9 @@
             if (compact === next) return;
             compact = next;
             if (!taskId || !dialog.open) return;
-            const active = document.activeElement, scroll = dialog.scrollTop;
+            const active = document.activeElement;
+            const scroller = dialog.querySelector?.('[data-detail-panel]:not([hidden])') || dialog.querySelector?.('[data-detail-panel]') || dialog;
+            const scroll = scroller?.scrollTop || dialog.scrollTop;
             const start = active?.selectionStart, end = active?.selectionEnd;
             dialog.dataset.detailTransition = 'true';
             dialog.close(); mode();
@@ -79,6 +81,7 @@
                 active.focus({ preventScroll: true });
                 if (typeof start === 'number') { try { active.setSelectionRange(start, end); } catch (_) { /* nontext input */ } }
             }
+            if (scroller) scroller.scrollTop = scroll;
             dialog.scrollTop = scroll;
             delete dialog.dataset.detailTransition;
         }
@@ -109,6 +112,8 @@
                 if (event.key === 'Escape') {
                     const topModal = Array.from(document.querySelectorAll('dialog[open]')).find(node => node !== dialog && node.matches?.(':modal'));
                     if (topModal) return;
+                    const openPopover = document.querySelector?.('.crm-people-popover:not([hidden]), .crm-datepick:not([hidden]), .crm-row-editor:not([hidden]), .crm-status-popover:not([hidden]), .crm-projects-view-options[open]');
+                    if (openPopover) return;
                     event.preventDefault(); requestClose(); return;
                 }
                 if (!dialog.contains(event.target)) return;

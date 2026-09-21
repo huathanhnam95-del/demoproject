@@ -223,7 +223,9 @@
         "public/js/read-aloud-prompt-grammar.js",
         "public/js/read-aloud-spoken-forms.js",
         "public/js/read-aloud-connected-speech-rules.js",
-        "public/js/read-aloud-linking.js"
+        "public/js/read-aloud-linking.js",
+        "docs/audits/read-aloud-connected-speech/2026-03-26-coverage/coverage.json",
+        "docs/audits/read-aloud-connected-speech/2026-03-26-coverage/summary.md"
       ],
       "requiredDirectoryPrefixes": [
         "scripts/release/",

@@ -46,7 +46,7 @@ function loadRegisteredAdapters() {
 
 test('all shared speaking adapters declare reversible task-local layout hosts', () => {
   const adapters = loadRegisteredAdapters();
-  assert.deepEqual([...adapters.keys()], ['asq', 'rts', 'describe-image', 'notes', 'sgd', 'speak', 'type', 'read-aloud']);
+  assert.deepEqual([...adapters.keys()], ['asq', 'rts', 'sgd', 'describe-image', 'notes', 'speak', 'type', 'read-aloud']);
 
   for (const modeId of sharedModes) {
     const layout = adapters.get(modeId)?.layout;

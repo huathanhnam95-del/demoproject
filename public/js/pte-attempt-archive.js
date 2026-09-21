@@ -882,14 +882,16 @@
   function summarizeStateResponse(state, extra = {}) {
     const selectedIndices = getSelectedIndices(state);
     const choices = state?.shuffledChoices || state?.choices || state?.options || state?.currentQuestion?.choices || state?.currentQuestion?.options || [];
+    const textVal = cleanString(extra.text ?? state?.text ?? state?.userNotes ?? state?.speechTranscript ?? null, 12000);
     return {
+      text: textVal,
       selectedIndices,
       selectedOptionIds: selectedIndices.map((idx) => choices[idx]?.id ?? choices[idx]?.value ?? idx),
       selectedOptions: selectedIndices.map((idx) => ({
         id: choices[idx]?.id ?? choices[idx]?.value ?? idx,
         text: cleanString(choices[idx]?.text ?? choices[idx]?.label ?? choices[idx], 2000)
       })),
-      userAnswer: extra.userAnswer ?? state?.userAnswer ?? state?.answer ?? null,
+      userAnswer: cleanString(extra.userAnswer ?? state?.userAnswer ?? state?.answer ?? textVal, 12000),
       selectedMappings: extra.selectedMappings || state?.selectedMappings || state?.answers || null,
       order: extra.order || state?.currentOrder || state?.userOrder || null
     };
@@ -910,8 +912,9 @@
       timingSnapshot: extra.timingSnapshot || null,
       scoringSnapshot: extra.scoringSnapshot || null,
       scoringSource: extra.scoringSource || 'client',
-      idempotencyKey: extra.idempotencyKey || null
-    });
+      idempotencyKey: extra.idempotencyKey || null,
+      media: extra.media || extra.mediaBlobs || extra.blob || null
+    }, { shouldPublish: extra.shouldPublish });
   }
 
   async function saveTextAttempt(practiceMode, question, text, result = {}, extra = {}) {

@@ -42,14 +42,34 @@
 
     // V3 State
     let v3Active = false;
-    let v3Phase = 'loading'; // 'loading' | 'listen' | 'complete' | 'feedback'
+    let v3Phase = 'loading'; // 'loading' | 'listen' | 'prep' | 'recording' | 'complete' | 'feedback'
     let pteAudioBox = null;
+    let pteRecorderWidget = null;
     let questionGen = 0;
     let attemptGen = 0;
+    let recordingSessionToken = 0;
     let v3ActiveTab = 'notes-match';
     let v3LastResult = null;
     let v3LastUserNotes = '';
     let v3VideoModal = null;
+
+    // V3 Recording State
+    const PREP_SECONDS = 10;
+    const RECORD_SECONDS = 40;
+    let activeRecorder = null;
+    let activeMediaStream = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordingBlob = null;
+    let recordingBlobUrl = null;
+    let dspPromise = null;
+    let speechRecognition = null;
+    let transcriptText = '';
+    let v3PrepStartTime = 0;
+    let v3RecordStartTime = 0;
+    let v3RecordedDurationSec = 0;
+    let v3PrepRAF = null;
+    let v3RecordRAF = null;
 
     function isV3() {
         return !!(v3Active || window.PteShellConfig?.isModeEnabled?.('notes', 'pte'));
@@ -257,6 +277,24 @@
             elements.userInput.value = '';
         }
 
+        if (activeRecorder) {
+            try { activeRecorder.cancel(); } catch (_) {}
+            activeRecorder = null;
+        }
+        stopAllV3Timers();
+        stopSpeechRecognition();
+        stopMediaStream();
+        recordingSessionToken++;
+        if (recordingBlobUrl) {
+            URL.revokeObjectURL(recordingBlobUrl);
+            recordingBlobUrl = null;
+        }
+        recordingBlob = null;
+        dspPromise = null;
+        transcriptText = '';
+        recordedChunks = [];
+        pteRecorderWidget?.reset?.();
+
         try {
             window.SpeakingPracticeController?.sync?.('notes');
         } catch (_) {}
@@ -389,7 +427,13 @@
             elements.submitBtn.addEventListener('click', submitNotes);
         }
         if (elements.retryBtn) {
-            elements.retryBtn.addEventListener('click', retryPractice);
+            elements.retryBtn.addEventListener('click', () => {
+                if (isV3() && v3Phase === 'complete') {
+                    retryV3Recording();
+                } else {
+                    retryPractice();
+                }
+            });
         }
         if (elements.retryAudioBtn) {
             elements.retryAudioBtn.addEventListener('click', () => {
@@ -1122,47 +1166,78 @@
     /**
      * Submit notes and show results
      */
-    function submitNotes() {
+    async function submitNotes() {
         if (!currentEntry) return;
+        const qGen = questionGen;
+        const aGen = attemptGen;
+        const currentToken = recordingSessionToken;
+
         const userNotes = elements.userInput ? elements.userInput.value.trim() : '';
-        if (!userNotes) {
+        if (!isV3() && !userNotes) {
             showToast('Please enter some notes before submitting.');
             return;
         }
 
-        // Hide audio step, show results step (legacy only)
-        if (!isV3()) {
+        let finalBlob = recordingBlob;
+        if (dspPromise) {
+            try {
+                finalBlob = await dspPromise;
+            } catch (_) {
+                finalBlob = recordingBlob;
+            }
+        }
+        if (isV3() && (qGen !== questionGen || aGen !== attemptGen || currentToken !== recordingSessionToken || !v3Active)) {
+            return;
+        }
+
+        // Compare notes and spoken transcript with lecture transcript
+        const transcript = currentEntry.transcript || '';
+        const notesResult = compareTexts(transcript, userNotes);
+        const spokenResult = compareTexts(transcript, transcriptText || '');
+
+        const hasSpokenMatches = spokenResult.matchedWords && spokenResult.matchedWords.length > 0;
+        const hasNotesMatches = notesResult.matchedWords && notesResult.matchedWords.length > 0;
+        const effectiveMatchedWords = hasSpokenMatches ? spokenResult.matchedWords : (notesResult.matchedWords || []);
+        const effectiveHighlight = hasSpokenMatches
+            ? spokenResult.highlightedTranscript
+            : (hasNotesMatches ? notesResult.highlightedTranscript : spokenResult.highlightedTranscript);
+        const primaryScore = effectiveMatchedWords.length;
+        const primaryMaxScore = hasSpokenMatches ? spokenResult.transcriptWordCount : notesResult.transcriptWordCount;
+
+        if (isV3()) {
+            v3LastResult = {
+                highlightedTranscript: effectiveHighlight,
+                matchedWords: spokenResult.matchedWords,
+                transcriptWordCount: spokenResult.transcriptWordCount,
+                notesMatchedWords: notesResult.matchedWords,
+                notesWordCount: notesResult.transcriptWordCount,
+                spokenTranscript: transcriptText || '',
+                effectiveMatchedWords: effectiveMatchedWords
+            };
+            v3LastUserNotes = userNotes;
+            v3Phase = 'feedback';
+            syncPteV3UI();
+        } else {
             if (elements.stepReady) elements.stepReady.style.display = 'none';
             if (elements.stepVideo) elements.stepVideo.style.display = 'none';
             if (elements.stepAudio) elements.stepAudio.style.display = 'none';
             if (elements.stepResults) elements.stepResults.style.display = 'block';
         }
 
-        // Compare notes with transcript
-        const transcript = currentEntry.transcript || '';
-        const { highlightedTranscript, matchedWords, transcriptWordCount } = compareTexts(transcript, userNotes);
-
-        if (isV3()) {
-            v3LastResult = { highlightedTranscript, matchedWords, transcriptWordCount };
-            v3LastUserNotes = userNotes;
-            v3Phase = 'feedback';
-            syncPteV3UI();
-        }
-
         window.SpeakingPracticeController?.sync?.('notes');
 
         // Display results
-        if (elements.transcriptDisplay) elements.transcriptDisplay.innerHTML = highlightedTranscript;
+        if (elements.transcriptDisplay) elements.transcriptDisplay.innerHTML = notesResult.highlightedTranscript;
         if (elements.userDisplay) elements.userDisplay.textContent = userNotes;
-        if (elements.matchCount) elements.matchCount.textContent = matchedWords.length;
+        if (elements.matchCount) elements.matchCount.textContent = notesResult.matchedWords.length;
 
         const tracker = ensurePerformanceTracker();
         if (tracker) {
-            const safeWordCount = Math.max(1, transcriptWordCount || 0);
-            const accuracy = Math.max(0, Math.min(1, matchedWords.length / safeWordCount));
+            const safeWordCount = Math.max(1, notesResult.transcriptWordCount || 0);
+            const accuracy = Math.max(0, Math.min(1, notesResult.matchedWords.length / safeWordCount));
             const timeTaken = Math.max(2, (Date.now() - (notesAttemptStartTime || Date.now())) / 1000);
             tracker.recordAttempt({
-                correct: matchedWords.length > 0 && matchedWords.length === transcriptWordCount,
+                correct: notesResult.matchedWords.length > 0 && notesResult.matchedWords.length === notesResult.transcriptWordCount,
                 accuracy,
                 attempts: 1,
                 hintUsed: false,
@@ -1172,18 +1247,56 @@
         }
 
         // Save progress if user is logged in
-        saveProgress(userNotes, matchedWords, transcriptWordCount);
+        saveProgress(userNotes, notesResult.matchedWords, notesResult.transcriptWordCount);
 
-        window.PTEAttemptArchive?.saveTextAttempt?.('notes', {
-            ...(currentEntry || {}),
-            audioPath: currentEntry?.audioPath || currentEntry?.audio || currentEntry?.file || null,
-            transcript
-        }, userNotes, {
-            score: matchedWords.length,
-            maxScore: transcriptWordCount,
-            matchedWords,
-            transcriptWordCount
-        }, { scoringSource: 'client' }).catch((error) => console.warn('[PTE Archive] Retell Lecture save failed:', error));
+        if (isV3()) {
+            try {
+                await window.PTEAttemptArchive?.saveStateAttempt?.('notes', {
+                    currentQuestion: currentEntry,
+                    userNotes: userNotes,
+                    speechTranscript: transcriptText || '',
+                    userAnswer: userNotes || transcriptText || '',
+                    text: userNotes || transcriptText || ''
+                }, {
+                    score: primaryScore,
+                    maxScore: primaryMaxScore,
+                    matchedWords: effectiveMatchedWords,
+                    spokenMatchedWords: spokenResult.matchedWords,
+                    transcriptWordCount: primaryMaxScore,
+                    notesMatchedWords: notesResult.matchedWords,
+                    speechTranscript: transcriptText || '',
+                    hasAudio: !!finalBlob
+                }, {
+                    scoringSource: 'client',
+                    responseSnapshot: {
+                        text: userNotes || transcriptText || '',
+                        userNotes: userNotes || '',
+                        transcript: transcriptText || '',
+                        speechTranscript: transcriptText || ''
+                    },
+                    shouldPublish: () => qGen === questionGen && aGen === attemptGen && currentToken === recordingSessionToken && v3Active,
+                    media: finalBlob ? [{
+                        slot: 'student',
+                        label: 'Student retell',
+                        blob: finalBlob,
+                        contentType: finalBlob.type || 'audio/webm'
+                    }] : []
+                });
+            } catch (error) {
+                console.warn('[PTE Archive] Retell Lecture save failed:', error);
+            }
+        } else {
+            window.PTEAttemptArchive?.saveTextAttempt?.('notes', {
+                ...(currentEntry || {}),
+                audioPath: currentEntry?.audioPath || currentEntry?.audio || currentEntry?.file || null,
+                transcript
+            }, userNotes, {
+                score: notesResult.matchedWords.length,
+                maxScore: notesResult.transcriptWordCount,
+                matchedWords: notesResult.matchedWords,
+                transcriptWordCount: notesResult.transcriptWordCount
+            }, { scoringSource: 'client' }).catch((error) => console.warn('[PTE Archive] Retell Lecture save failed:', error));
+        }
 
         window.getPracticeVariantHooks?.('notes')?.afterSubmit?.({
             entryId: String(currentEntry?.id || ''),
@@ -1319,6 +1432,62 @@
 
     /* ──────────────────────────── V3 IMPLEMENTATION ──────────────────────────── */
 
+    function stopAllV3Timers() {
+        if (v3PrepRAF) {
+            cancelAnimationFrame(v3PrepRAF);
+            v3PrepRAF = null;
+        }
+        if (v3RecordRAF) {
+            cancelAnimationFrame(v3RecordRAF);
+            v3RecordRAF = null;
+        }
+    }
+
+    function stopMediaStream() {
+        if (activeMediaStream) {
+            try {
+                activeMediaStream.getTracks().forEach(t => t.stop());
+            } catch (_) {}
+            activeMediaStream = null;
+        }
+    }
+
+    function startSpeechRecognition(token) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return;
+
+        try {
+            speechRecognition = new SpeechRecognition();
+            speechRecognition.continuous = true;
+            speechRecognition.interimResults = false;
+            speechRecognition.lang = 'en-US';
+            speechRecognition.onresult = (event) => {
+                if (token !== recordingSessionToken) return;
+                let full = '';
+                for (let i = 0; i < event.results.length; i++) {
+                    full += event.results[i][0].transcript + ' ';
+                }
+                transcriptText = full.trim();
+            };
+            speechRecognition.onerror = (event) => {
+                console.warn('[TakeNotes v3] Speech recognition error:', event?.error);
+            };
+            speechRecognition.onend = () => {};
+            speechRecognition.start();
+        } catch (err) {
+            console.warn('[TakeNotes v3] Speech recognition start error:', err);
+        }
+    }
+
+    function stopSpeechRecognition() {
+        if (speechRecognition) {
+            try {
+                speechRecognition.stop();
+            } catch (_) {}
+            speechRecognition = null;
+        }
+    }
+
     function ensureV3Elements() {
         if (!elements.practiceArea) cacheElements();
         if (!elements.practiceArea) return;
@@ -1355,6 +1524,13 @@
             audioRow.appendChild(audioHost);
             stage.appendChild(audioRow);
 
+            // Recorder widget host
+            const recHost = document.createElement('div');
+            recHost.id = 'notes-pte-rec-host';
+            recHost.className = 'notes-pte-rec-host';
+            recHost.style.display = 'none';
+            stage.appendChild(recHost);
+
             // Notes wrapper
             const notesWrapper = document.createElement('div');
             notesWrapper.className = 'notes-v3-notes-wrapper';
@@ -1382,6 +1558,20 @@
             pteAudioBox = window.PteAudioBox.create(audioHost, { audio: elements.audio });
         }
 
+        const recHost = document.getElementById('notes-pte-rec-host');
+        if (recHost && !pteRecorderWidget && window.PteRecorderWidget) {
+            pteRecorderWidget = window.PteRecorderWidget.create(recHost, { totalSeconds: RECORD_SECONDS });
+        }
+
+        let studentAudio = document.getElementById('notes-v3-student-audio');
+        if (!studentAudio) {
+            studentAudio = document.createElement('audio');
+            studentAudio.id = 'notes-v3-student-audio';
+            studentAudio.preload = 'auto';
+            studentAudio.style.display = 'none';
+            document.body.appendChild(studentAudio);
+        }
+
         let feedback = document.getElementById('notes-pte-feedback');
         if (!feedback) {
             feedback = document.createElement('div');
@@ -1397,6 +1587,14 @@
             const leftCol = document.createElement('div');
             leftCol.className = 'notes-fb-left';
             leftCol.innerHTML = `
+                <div id="notes-v3-audio-preview" class="notes-v3-audio-preview" style="display: none;">
+                    <label class="notes-fb-heading">Your Recording</label>
+                    <audio id="notes-v3-feedback-audio" controls preload="auto"></audio>
+                </div>
+                <div id="notes-v3-spoken-transcript" class="notes-v3-spoken-transcript" style="display: none;">
+                    <h4 class="notes-fb-heading">What you said</h4>
+                    <p id="notes-v3-spoken-text" class="notes-v3-spoken-text"></p>
+                </div>
                 <h4 class="notes-fb-heading">Your Notes</h4>
                 <div id="notes-v3-matched-notes" class="notes-v3-matched-notes"></div>
             `;
@@ -1435,12 +1633,55 @@
                 });
             });
         }
+
+        // Expose and bind dock action buttons
+        ['notes-record-btn', 'notes-cancel-btn', 'notes-stop-btn', 'notes-rec-play-btn', 'notes-submit-btn', 'notes-retry-btn', 'notes-redo-btn'].forEach(id => {
+            const b = document.getElementById(id);
+            if (b) b.style.display = '';
+        });
+
+        const recordBtn = document.getElementById('notes-record-btn');
+        if (recordBtn && !recordBtn.dataset.v3Bound) {
+            recordBtn.dataset.v3Bound = 'true';
+            recordBtn.addEventListener('click', () => {
+                if (v3Phase === 'prep') startV3Recording();
+            });
+        }
+        const cancelBtn = document.getElementById('notes-cancel-btn');
+        if (cancelBtn && !cancelBtn.dataset.v3Bound) {
+            cancelBtn.dataset.v3Bound = 'true';
+            cancelBtn.addEventListener('click', () => {
+                if (v3Phase === 'recording') cancelRecording();
+            });
+        }
+        const stopBtn = document.getElementById('notes-stop-btn');
+        if (stopBtn && !stopBtn.dataset.v3Bound) {
+            stopBtn.dataset.v3Bound = 'true';
+            stopBtn.addEventListener('click', () => {
+                if (v3Phase === 'recording') stopV3Recording();
+            });
+        }
+        const playBtn = document.getElementById('notes-rec-play-btn');
+        if (playBtn && !playBtn.dataset.v3Bound) {
+            playBtn.dataset.v3Bound = 'true';
+            playBtn.addEventListener('click', () => {
+                if (v3Phase === 'complete') toggleRecordingPlayback();
+            });
+        }
+        const redoBtn = document.getElementById('notes-redo-btn');
+        if (redoBtn && !redoBtn.dataset.v3Bound) {
+            redoBtn.dataset.v3Bound = 'true';
+            redoBtn.addEventListener('click', () => {
+                if (v3Phase === 'feedback') retryPractice();
+            });
+        }
     }
 
     function syncPteV3UI() {
         if (!isV3()) return;
         const stage = document.getElementById('notes-pte-stage');
         const feedback = document.getElementById('notes-pte-feedback');
+        const recHost = document.getElementById('notes-pte-rec-host');
         if (elements.practiceArea) elements.practiceArea.style.display = 'block';
 
         if (v3Phase === 'feedback') {
@@ -1450,12 +1691,33 @@
         } else {
             if (stage) { stage.hidden = false; stage.style.display = 'flex'; }
             if (feedback) { feedback.hidden = true; feedback.style.display = 'none'; }
+            if (recHost) {
+                recHost.style.display = (v3Phase === 'prep' || v3Phase === 'recording' || v3Phase === 'complete') ? '' : 'none';
+            }
         }
     }
 
     async function startV3QuestionFlow() {
         if (!v3Active || !currentEntry) return;
         closeIntroVideoModal();
+        stopAllV3Timers();
+        stopSpeechRecognition();
+        if (activeRecorder) {
+            try { activeRecorder.cancel(); } catch (_) {}
+            activeRecorder = null;
+        }
+        stopMediaStream();
+        recordingSessionToken++;
+        if (recordingBlobUrl) {
+            URL.revokeObjectURL(recordingBlobUrl);
+            recordingBlobUrl = null;
+        }
+        recordingBlob = null;
+        dspPromise = null;
+        transcriptText = '';
+        recordedChunks = [];
+        mediaRecorder = null;
+
         const qGen = ++questionGen;
         const aGen = ++attemptGen;
         v3Phase = 'listen';
@@ -1469,8 +1731,12 @@
         }
         notesAttemptStartTime = null;
 
+        const sub = document.getElementById('notes-v3-subtitle');
+        if (sub) sub.textContent = '· type while you listen';
+
         loadAudio(currentEntry.id);
         pteAudioBox?.reset?.();
+        pteRecorderWidget?.reset?.();
 
         const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
         const cdSec = scale < 1 ? 1 : 3;
@@ -1494,19 +1760,311 @@
         }
         if (qGen !== questionGen || aGen !== attemptGen || !v3Active) return;
 
+        startV3Prep();
+    }
+
+    function startV3Prep() {
+        if (!v3Active || !currentEntry) return;
+        stopAllV3Timers();
+        stopMediaStream();
+
+        const qGen = questionGen;
+        const aGen = ++attemptGen;
+        v3Phase = 'prep';
+        syncPteShell();
+        syncPteV3UI();
+
+        v3RecordedDurationSec = 0;
+        if (recordingBlobUrl) {
+            URL.revokeObjectURL(recordingBlobUrl);
+            recordingBlobUrl = null;
+        }
+        recordingBlob = null;
+        dspPromise = null;
+        transcriptText = '';
+
+        const recHost = document.getElementById('notes-pte-rec-host');
+        if (recHost) recHost.style.display = '';
+
+        const sub = document.getElementById('notes-v3-subtitle');
+        if (sub) sub.textContent = '· prepare your retell';
+
+        const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
+        const effectivePrepScale = scale < 1 ? 1 : scale;
+        const prepDuration = scale < 1 ? 1 : PREP_SECONDS;
+
+        v3PrepStartTime = performance.now();
+        pteRecorderWidget?.showCountdown(prepDuration);
+
+        const tickPrep = () => {
+            if (qGen !== questionGen || aGen !== attemptGen || v3Phase !== 'prep' || !v3Active) return;
+            const elapsed = ((performance.now() - v3PrepStartTime) / 1000) / effectivePrepScale;
+            const remaining = Math.max(0, prepDuration - elapsed);
+            pteRecorderWidget?.tick(remaining);
+            if (elapsed >= prepDuration) {
+                startV3Recording();
+                return;
+            }
+            v3PrepRAF = requestAnimationFrame(tickPrep);
+        };
+        v3PrepRAF = requestAnimationFrame(tickPrep);
+    }
+
+    async function startV3Recording() {
+        stopAllV3Timers();
+
+        const qGen = questionGen;
+        const aGen = ++attemptGen;
+        v3Phase = 'recording';
+        syncPteShell();
+        syncPteV3UI();
+
+        const recHost = document.getElementById('notes-pte-rec-host');
+        if (recHost) recHost.style.display = '';
+
+        const sub = document.getElementById('notes-v3-subtitle');
+        if (sub) sub.textContent = '· look at them while you speak';
+
+        recordingSessionToken++;
+        const myToken = recordingSessionToken;
+        recordedChunks = [];
+        v3RecordedDurationSec = 0;
+        if (recordingBlobUrl) {
+            URL.revokeObjectURL(recordingBlobUrl);
+            recordingBlobUrl = null;
+        }
+        recordingBlob = null;
+        dspPromise = null;
+        transcriptText = '';
+
+        let stream = null;
+        let recorder = null;
+
+        try {
+            if (window.AudioDspPipeline && typeof window.AudioDspPipeline.createRecorder === 'function') {
+                recorder = window.AudioDspPipeline.createRecorder({
+                    onStream: (st) => {
+                        stream = st;
+                        activeMediaStream = st;
+                        pteRecorderWidget?.attachStream(st);
+                    },
+                    onDataAvailable: (chunk) => {
+                        if (chunk && chunk.size > 0) recordedChunks.push(chunk);
+                    }
+                });
+                await recorder.start();
+                activeRecorder = recorder;
+                if (!stream && typeof recorder.getStream === 'function') {
+                    stream = recorder.getStream();
+                    if (stream) {
+                        activeMediaStream = stream;
+                        pteRecorderWidget?.attachStream(stream);
+                    }
+                }
+            } else {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                activeMediaStream = stream;
+                pteRecorderWidget?.attachStream(stream);
+                const mimeType = (typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))
+                    ? 'audio/webm;codecs=opus' : 'audio/webm';
+                const mr = new MediaRecorder(stream, { mimeType });
+                mediaRecorder = mr;
+                mr.ondataavailable = (e) => {
+                    if (e.data.size > 0) recordedChunks.push(e.data);
+                };
+                mr.start(250);
+            }
+        } catch (err) {
+            console.warn('[TakeNotes v3] Microphone access error:', err);
+            if (qGen !== questionGen || aGen !== attemptGen || !v3Active || myToken !== recordingSessionToken) return;
+            showToast('Microphone access was denied or unavailable. You can review your notes and get feedback.');
+            v3Phase = 'complete';
+            syncPteShell();
+            syncPteV3UI();
+            pteRecorderWidget?.showComplete();
+            return;
+        }
+
+        if (qGen !== questionGen || aGen !== attemptGen || v3Phase !== 'recording' || !v3Active || myToken !== recordingSessionToken) {
+            if (recorder) {
+                try { recorder.cancel(); } catch (_) {}
+            }
+            stopMediaStream();
+            return;
+        }
+
+        pteRecorderWidget?.showRecording(RECORD_SECONDS);
+        startSpeechRecognition(myToken);
+
+        v3RecordStartTime = performance.now();
+        const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
+        const effectiveRecScale = scale < 1 ? 0.3 : scale;
+
+        const tickRec = () => {
+            if (qGen !== questionGen || aGen !== attemptGen || v3Phase !== 'recording' || !v3Active || myToken !== recordingSessionToken) return;
+            const elapsed = ((performance.now() - v3RecordStartTime) / 1000) / effectiveRecScale;
+            v3RecordedDurationSec = elapsed;
+            pteRecorderWidget?.setElapsed(elapsed);
+            if (elapsed >= RECORD_SECONDS) {
+                stopV3Recording();
+                return;
+            }
+            v3RecordRAF = requestAnimationFrame(tickRec);
+        };
+        v3RecordRAF = requestAnimationFrame(tickRec);
+    }
+
+    async function stopV3Recording() {
+        if (v3Phase !== 'recording') return;
+        const qGen = questionGen;
+        const aGen = attemptGen;
+        const myToken = recordingSessionToken;
+
+        stopAllV3Timers();
+        stopSpeechRecognition();
         v3Phase = 'complete';
         syncPteShell();
         syncPteV3UI();
+        pteRecorderWidget?.showComplete();
+
+        let stopResult = null;
+        if (activeRecorder) {
+            try {
+                stopResult = await activeRecorder.stop();
+            } catch (err) {
+                console.warn('[TakeNotes v3] recorder.stop() error:', err);
+            }
+            activeRecorder = null;
+        } else if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            try { mediaRecorder.stop(); } catch (_) {}
+        }
+        stopMediaStream();
+
+        if (qGen !== questionGen || aGen !== attemptGen || myToken !== recordingSessionToken || !v3Active) {
+            return;
+        }
+
+        onV3RecordingComplete(stopResult);
+    }
+
+    function onV3RecordingComplete(stopResult) {
+        const currentToken = recordingSessionToken;
+        let blob = stopResult?.wavBlob || stopResult?.rawBlob || null;
+        if (!blob && recordedChunks.length > 0) {
+            blob = new Blob(recordedChunks, { type: 'audio/webm' });
+        }
+
+        recordingBlob = blob;
+        if (blob) {
+            recordingBlobUrl = stopResult?.audioUrl || URL.createObjectURL(blob);
+            const userAudio = document.getElementById('notes-v3-student-audio');
+            if (userAudio) userAudio.src = recordingBlobUrl;
+        }
+
+        if (blob && !stopResult && window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
+            dspPromise = window.AudioDspPipeline.enhance(blob).then((res) => {
+                if (currentToken !== recordingSessionToken) return blob;
+                if (res?.wavBlob) {
+                    if (recordingBlobUrl && !stopResult?.audioUrl) URL.revokeObjectURL(recordingBlobUrl);
+                    recordingBlob = res.wavBlob;
+                    recordingBlobUrl = res.audioUrl || URL.createObjectURL(res.wavBlob);
+                    const userAudio = document.getElementById('notes-v3-student-audio');
+                    if (userAudio) userAudio.src = recordingBlobUrl;
+                    return res.wavBlob;
+                }
+                return blob;
+            }).catch((err) => {
+                console.warn('[TakeNotes v3] DSP enhancement fallback to raw:', err);
+                return blob;
+            });
+        } else {
+            dspPromise = Promise.resolve(blob);
+        }
+    }
+
+    function cancelRecording() {
+        if (v3Phase !== 'recording') return;
+        stopAllV3Timers();
+        stopSpeechRecognition();
+        if (activeRecorder) {
+            try { activeRecorder.cancel(); } catch (_) {}
+            activeRecorder = null;
+        }
+        stopMediaStream();
+        recordingSessionToken++;
+        recordedChunks = [];
+        recordingBlob = null;
+        dspPromise = null;
+        transcriptText = '';
+        startV3Prep();
+    }
+
+    function retryV3Recording() {
+        if (v3Phase !== 'complete') return;
+        stopAllV3Timers();
+        stopMediaStream();
+        recordingSessionToken++;
+        if (recordingBlobUrl) {
+            URL.revokeObjectURL(recordingBlobUrl);
+            recordingBlobUrl = null;
+        }
+        recordingBlob = null;
+        dspPromise = null;
+        transcriptText = '';
+        startV3Prep();
+    }
+
+    function finishRecordingForNext() {
+        if (v3Phase === 'recording') {
+            stopV3Recording();
+        }
+    }
+
+    function toggleRecordingPlayback() {
+        let audioEl = document.getElementById('notes-v3-student-audio');
+        if (!audioEl) return;
+        if (recordingBlobUrl && audioEl.src !== recordingBlobUrl) {
+            audioEl.src = recordingBlobUrl;
+        }
+        if (audioEl.paused) {
+            audioEl.play().catch(e => console.warn('[TakeNotes v3] Playback error:', e));
+        } else {
+            audioEl.pause();
+        }
     }
 
     function renderV3Feedback() {
         const feedback = document.getElementById('notes-pte-feedback');
         if (!feedback || !v3LastResult) return;
 
+        // Feedback audio preview
+        const audioPreview = document.getElementById('notes-v3-audio-preview');
+        const fbAudio = document.getElementById('notes-v3-feedback-audio');
+        if (audioPreview && fbAudio) {
+            if (recordingBlobUrl) {
+                fbAudio.src = recordingBlobUrl;
+                audioPreview.style.display = 'flex';
+            } else {
+                audioPreview.style.display = 'none';
+            }
+        }
+
+        // Spoken transcript preview
+        const spokenWrap = document.getElementById('notes-v3-spoken-transcript');
+        const spokenText = document.getElementById('notes-v3-spoken-text');
+        if (spokenWrap && spokenText) {
+            if (v3LastResult.spokenTranscript) {
+                spokenText.textContent = v3LastResult.spokenTranscript;
+                spokenWrap.style.display = 'block';
+            } else {
+                spokenWrap.style.display = 'none';
+            }
+        }
+
         const matchedNotes = document.getElementById('notes-v3-matched-notes');
         if (matchedNotes) {
             const userNotes = v3LastUserNotes || '';
-            const matchedSet = new Set((v3LastResult.matchedWords || []).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')));
+            const matchedSet = new Set((v3LastResult.notesMatchedWords || v3LastResult.matchedWords || []).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')));
             const tokens = userNotes.split(/(\s+)/);
             const html = tokens.map(tok => {
                 const cleanTok = tok.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -1520,15 +2078,26 @@
 
         const countEl = document.getElementById('notes-v3-match-count');
         if (countEl) {
-            countEl.textContent = v3LastResult.matchedWords?.length || 0;
+            const displayCount = (v3LastResult.effectiveMatchedWords?.length != null)
+                ? v3LastResult.effectiveMatchedWords.length
+                : (v3LastResult.spokenTranscript ? (v3LastResult.matchedWords?.length || 0) : (v3LastResult.notesMatchedWords?.length || 0));
+            countEl.textContent = displayCount;
         }
 
         const matchDetails = document.getElementById('notes-v3-match-details');
         if (matchDetails) {
-            const matchLen = v3LastResult.matchedWords?.length || 0;
+            const spokenMatches = v3LastResult.matchedWords?.length || 0;
+            const notesMatches = v3LastResult.notesMatchedWords?.length || 0;
             const totalWords = v3LastResult.transcriptWordCount || 1;
-            const pct = Math.min(100, Math.round((matchLen / totalWords) * 100));
-            matchDetails.innerHTML = `<p><strong>Coverage:</strong> ${pct}% of key lecture terms identified</p>`;
+            const spokenPct = Math.min(100, Math.round((spokenMatches / totalWords) * 100));
+            const notesPct = Math.min(100, Math.round((notesMatches / totalWords) * 100));
+            const spokenLine = v3LastResult.spokenTranscript
+                ? `<p><strong>Spoken Content Coverage:</strong> ${spokenPct}% (${spokenMatches} key lecture terms identified)</p>`
+                : `<p><strong>Spoken Content Coverage:</strong> <em>No spoken words detected (audio only or silent)</em></p>`;
+            matchDetails.innerHTML = `
+                ${spokenLine}
+                <p><strong>Written Notes Match:</strong> ${notesPct}% (${notesMatches} terms recorded)</p>
+            `;
         }
 
         const transcriptEl = document.getElementById('notes-v3-transcript-display');
@@ -1642,7 +2211,15 @@
         const modePanel = document.getElementById('mode-notes');
         if (modePanel) modePanel.classList.remove('notes-pte-v3');
         closeIntroVideoModal();
+        stopAllV3Timers();
+        stopSpeechRecognition();
+        if (activeRecorder) {
+            try { activeRecorder.cancel(); } catch (_) {}
+            activeRecorder = null;
+        }
+        stopMediaStream();
         pteAudioBox?.reset?.();
+        pteRecorderWidget?.reset?.();
         v3Phase = 'loading';
         const inst = document.getElementById('notes-pte-instruction');
         if (inst) inst.remove();
@@ -1650,7 +2227,19 @@
         if (st) st.remove();
         const fb = document.getElementById('notes-pte-feedback');
         if (fb) fb.remove();
+        const userAudio = document.getElementById('notes-v3-student-audio');
+        if (userAudio) userAudio.remove();
+        if (recordingBlobUrl) {
+            URL.revokeObjectURL(recordingBlobUrl);
+            recordingBlobUrl = null;
+        }
+        recordingBlob = null;
+        dspPromise = null;
+        transcriptText = '';
+        recordedChunks = [];
+        mediaRecorder = null;
         pteAudioBox = null;
+        pteRecorderWidget = null;
     }
 
     function syncPteShell() {
@@ -1740,7 +2329,17 @@
         openIntroVideoModal,
         closeIntroVideoModal,
         hasGuidingVideo: () => !!(currentEntry?.videoUrl && currentEntry.videoUrl.trim().length > 0),
-        getCurrentFilter: () => currentFilter
+        getCurrentFilter: () => currentFilter,
+        startV3Prep,
+        startV3Recording,
+        stopV3Recording,
+        cancelRecording,
+        retryV3Recording,
+        finishRecordingForNext,
+        toggleRecordingPlayback,
+        getRecordingBlob: () => recordingBlob,
+        getTranscriptText: () => transcriptText,
+        getDspPromise: () => dspPromise
     };
 
     // Deep-link support: listen for PracticeRouter question navigation events

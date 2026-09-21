@@ -482,9 +482,14 @@
     v3: {
       title: 'Retell Lecture',
       cardBodySelector: '#notes-practice-area',
-      progressSteps: ['Listen', 'Feedback'],
-      phaseToStep: { loading: 0, listen: 0, complete: 0, feedback: 1 },
-      statusText: { listen: 'Listen and take notes.', complete: 'Audio ended. Review your notes and get feedback.' },
+      progressSteps: ['Listen', 'Record', 'Feedback'],
+      phaseToStep: { loading: 0, listen: 0, prep: 1, recording: 1, complete: 1, feedback: 2 },
+      statusText: {
+        listen: 'Listen and take notes.',
+        prep: 'Prepare to retell the lecture in 10 seconds.',
+        recording: 'Retell what you have heard from the lecture.',
+        complete: 'Audio ended. Review your notes and get feedback.'
+      },
       getPhase: () => window.TakeNotesMode?.getPtePhase?.() || 'loading',
       onMount: () => window.TakeNotesMode?.mountPteShell?.(),
       onSync: () => window.TakeNotesMode?.syncPteShell?.(),
@@ -523,11 +528,17 @@
           }
         ],
         actions: [
+          { sourceId: 'notes-record-btn', label: 'Start recording', variant: 'primary', phases: ['prep'] },
+          { sourceId: 'notes-cancel-btn', label: 'Cancel', variant: 'ghost', phases: ['recording'] },
+          { sourceId: 'notes-stop-btn', label: 'Finish recording', variant: 'stop', phases: ['recording'] },
+          { sourceId: 'notes-retry-btn', label: 'Record again', variant: 'ghost', phases: ['complete'] },
+          { sourceId: 'notes-rec-play-btn', label: 'Play', phases: ['complete'] },
           { sourceId: 'notes-submit-btn', label: 'Get feedback', variant: 'primary', phases: ['complete'] },
-          { sourceId: 'notes-retry-btn', label: 'Try again', variant: 'ghost', phases: ['feedback'] }
+          { sourceId: 'notes-redo-btn', label: 'Try again', variant: 'ghost', phases: ['feedback'] }
         ]
       },
       next: {
+        onConfirmFromRecording: () => window.TakeNotesMode?.finishRecordingForNext?.(),
         goNext: () => window.TakeNotesMode?.advanceQuestion?.()
       },
       attempts: {

@@ -101,20 +101,92 @@ async function run() {
       // 4. Type notes while in listen phase
       await page.locator('#notes-user-input').fill('solar system gas giants planets jupiter saturn');
 
-      // 5. Wait for audio to end -> transitions to complete phase
+      // 5. Wait for audio to end -> transitions to prep phase (countdown before 40s recording)
       await page.waitForFunction(() => {
-        return window.TakeNotesMode?.getPtePhase?.() === 'complete';
+        return window.TakeNotesMode?.getPtePhase?.() === 'prep';
       }, null, { timeout: 15000 });
 
-      // In complete phase:
-      // Single primary dock action: Get feedback (#notes-submit-btn)
-      assert.equal(await page.locator('#notes-submit-btn').isVisible(), true, 'Get feedback button visible in complete dock');
+      // In prep phase:
+      // Start recording action (#notes-record-btn) is visible in dock
+      assert.equal(await page.locator('#notes-record-btn').isVisible(), true, 'Start recording visible in prep dock');
+      assert.equal(await page.locator('#notes-pte-rec-host').isVisible(), true, 'recorder widget host visible in prep');
+      const prepCountdown = await page.locator('#notes-pte-rec-host .pte-rec[data-state="countdown"]').count();
+      assert.equal(prepCountdown, 1, 'recorder countdown active in prep');
+      assert.equal(await page.locator('#notes-user-input').inputValue(), 'solar system gas giants planets jupiter saturn', 'notes text preserved during prep');
+
+      // 6. Test cancel during recording: click Start recording, then Cancel
+      await page.locator('#notes-record-btn').click();
+      await page.waitForFunction(() => {
+        return window.TakeNotesMode?.getPtePhase?.() === 'recording';
+      }, null, { timeout: 5000 });
+      assert.equal(await page.locator('#notes-cancel-btn').isVisible(), true, 'Cancel button visible in recording dock');
+      assert.equal(await page.locator('#notes-stop-btn').isVisible(), true, 'Finish recording button visible in recording dock');
+
+      // Click Cancel -> returns to prep phase
+      await page.locator('#notes-cancel-btn').click();
+      await page.waitForFunction(() => {
+        return window.TakeNotesMode?.getPtePhase?.() === 'prep';
+      }, null, { timeout: 5000 });
+      assert.equal(await page.locator('#notes-record-btn').isVisible(), true, 'Back to prep: Start recording button visible');
+
+      // 7. Start recording again and advance
+      await page.locator('#notes-record-btn').click();
+      await page.waitForFunction(() => {
+        return window.TakeNotesMode?.getPtePhase?.() === 'recording';
+      }, null, { timeout: 5000 });
+
+      // Recorder widget should display recording state with waveform and clock
+      const recWidgetState = await page.evaluate(() => {
+        const rec = document.querySelector('#notes-pte-rec-host .pte-rec');
+        const wave = rec?.querySelector('.pte-rec__wave');
+        const elapsed = rec?.querySelector('.pte-rec__elapsed');
+        return {
+          state: rec?.dataset.state,
+          hasWave: !!wave,
+          elapsedText: elapsed?.textContent || ''
+        };
+      });
+      assert.equal(recWidgetState.state, 'recording', 'widget in recording state');
+      assert.equal(recWidgetState.hasWave, true, 'waveform element exists');
+
+      // Wait briefly for recording timer to tick, then finish recording
+      await page.waitForTimeout(300);
+      await page.locator('#notes-stop-btn').click();
+      await page.waitForFunction(() => {
+        return window.TakeNotesMode?.getPtePhase?.() === 'complete';
+      }, null, { timeout: 8000 });
+
+      // 8. In complete phase:
+      // Dock has: Record again (#notes-retry-btn), Play (#notes-rec-play-btn), Get feedback (#notes-submit-btn)
+      assert.equal(await page.locator('#notes-retry-btn').isVisible(), true, 'Record again visible in complete dock');
+      assert.equal(await page.locator('#notes-rec-play-btn').isVisible(), true, 'Play button visible in complete dock');
+      assert.equal(await page.locator('#notes-submit-btn').isVisible(), true, 'Get feedback visible in complete dock');
       assert.equal(await page.locator('#notes-pte-feedback').isVisible(), false, 'feedback hidden before submit');
+
+      // Test "Record again" (#notes-retry-btn) returns to prep
+      await page.locator('#notes-retry-btn').click();
+      await page.waitForFunction(() => {
+        return window.TakeNotesMode?.getPtePhase?.() === 'prep';
+      }, null, { timeout: 5000 });
+      // Record again and stop to return to complete
+      await page.locator('#notes-record-btn').click();
+      await page.waitForFunction(() => {
+        return window.TakeNotesMode?.getPtePhase?.() === 'recording';
+      }, null, { timeout: 5000 });
+      await page.waitForTimeout(200);
+      await page.locator('#notes-stop-btn').click();
+      await page.waitForFunction(() => {
+        return window.TakeNotesMode?.getPtePhase?.() === 'complete';
+      }, null, { timeout: 8000 });
+
+      // Test Play button in complete phase
+      await page.locator('#notes-rec-play-btn').click();
+      await page.waitForTimeout(100);
 
       // Notes area remains editable and retains user text
       assert.equal(await page.locator('#notes-user-input').inputValue(), 'solar system gas giants planets jupiter saturn', 'notes text preserved');
 
-      // 6. Click Get feedback -> transitions to feedback phase
+      // 9. Click Get feedback -> transitions to feedback phase
       await page.locator('#notes-submit-btn').click();
       await page.waitForFunction(() => {
         return window.TakeNotesMode?.getPtePhase?.() === 'feedback';
@@ -122,15 +194,20 @@ async function run() {
 
       // Feedback phase layout:
       assert.equal(await page.locator('#notes-pte-feedback').isVisible(), true, 'feedback container visible');
-      assert.equal(await page.locator('#notes-retry-btn').isVisible(), true, 'Try again visible in dock');
+      assert.equal(await page.locator('#notes-redo-btn').isVisible(), true, 'Try again visible in dock');
       assert.equal(await page.locator('#pte-next-notes').isVisible(), true, 'Next question button visible in dock');
 
-      // Left column: matched notes
+      // Left column: audio listen-back and matched notes
+      assert.equal(await page.locator('#notes-v3-audio-preview').isVisible(), true, 'student recording audio preview visible');
       assert.equal(await page.locator('#notes-v3-matched-notes').isVisible(), true, 'matched notes visible on left');
 
       // Right column: two tabs "Notes match" and "Lecture transcript"
       assert.equal(await page.locator('[data-v3-tab="notes-match"]').isVisible(), true, 'Notes match tab visible');
       assert.equal(await page.locator('[data-v3-tab="transcript"]').isVisible(), true, 'Lecture transcript tab visible');
+
+      // Check coverage stats in match panel
+      const matchDetailsText = await page.locator('#notes-v3-match-details').innerText();
+      assert.match(matchDetailsText, /Spoken Content Coverage|Written Notes Match/, 'dual coverage stats displayed');
 
       // Switch to transcript tab
       await page.locator('[data-v3-tab="transcript"]').click();
@@ -140,11 +217,58 @@ async function run() {
       await page.locator('[data-v3-tab="notes-match"]').click();
       assert.equal(await page.locator('#notes-v3-match-panel').isVisible(), true, 'Match panel visible');
 
-      // 7. Try again resets practice
-      await page.locator('#notes-retry-btn').click();
+      // 10. Try again (#notes-redo-btn) resets practice
+      await page.locator('#notes-redo-btn').click();
       await page.waitForFunction(() => {
         const ph = window.TakeNotesMode?.getPtePhase?.();
-        return ph === 'listen' || ph === 'complete';
+        return ph === 'listen' || ph === 'prep';
+      }, null, { timeout: 8000 });
+
+      // 11. Edge case: Permission denial handling
+      console.log(`[PTE Retell Lecture v3@${vp.name}] Testing microphone permission denial recovery...`);
+      await page.evaluate(() => {
+        navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException('Permission denied', 'NotAllowedError'));
+        if (window.TakeNotesMode?.startV3Prep) window.TakeNotesMode.startV3Prep();
+      });
+      await page.waitForFunction(() => window.TakeNotesMode?.getPtePhase?.() === 'prep');
+      await page.locator('#notes-record-btn').click();
+      await page.waitForFunction(() => {
+        return window.TakeNotesMode?.getPtePhase?.() === 'complete';
+      }, null, { timeout: 5000 });
+      assert.equal(await page.locator('#notes-submit-btn').isVisible(), true, 'Get feedback visible after mic denial');
+      assert.equal(await page.locator('#notes-retry-btn').isVisible(), true, 'Record again visible after mic denial');
+
+      // 12. Edge case: Recognition rejection / empty transcript content scoring fallback
+      console.log(`[PTE Retell Lecture v3@${vp.name}] Testing silent/empty transcript scoring fallback to notes...`);
+      await page.locator('#notes-user-input').fill('solar system planets');
+      await page.locator('#notes-submit-btn').click();
+      await page.waitForFunction(() => window.TakeNotesMode?.getPtePhase?.() === 'feedback', null, { timeout: 5000 });
+      const feedbackCount = await page.locator('#notes-v3-match-count').innerText();
+      assert.ok(Number(feedbackCount) > 0, `Match count falls back to notes match count (got ${feedbackCount})`);
+      const details = await page.locator('#notes-v3-match-details').innerText();
+      assert.match(details, /Written Notes Match/, 'Written notes match rendered');
+
+      // 13. Edge case: Navigation while recording active
+      console.log(`[PTE Retell Lecture v3@${vp.name}] Testing navigation during active recording...`);
+      await page.evaluate(() => {
+        navigator.mediaDevices.getUserMedia = async () => ({ getTracks: () => [{ stop() {} }] });
+      });
+      await page.locator('#notes-redo-btn').click();
+      await page.waitForFunction(() => {
+        const ph = window.TakeNotesMode?.getPtePhase?.();
+        return ph === 'listen' || ph === 'prep';
+      }, null, { timeout: 8000 });
+      if (await page.evaluate(() => window.TakeNotesMode?.getPtePhase?.() === 'listen')) {
+        await page.waitForFunction(() => window.TakeNotesMode?.getPtePhase?.() === 'prep', null, { timeout: 15000 });
+      }
+      await page.locator('#notes-record-btn').click();
+      await page.waitForFunction(() => window.TakeNotesMode?.getPtePhase?.() === 'recording', null, { timeout: 5000 });
+      await page.evaluate(() => {
+        window.TakeNotesMode?.advanceQuestion?.();
+      });
+      await page.waitForFunction(() => {
+        const ph = window.TakeNotesMode?.getPtePhase?.();
+        return ph === 'listen' || ph === 'prep';
       }, null, { timeout: 8000 });
 
       // 8. Mobile horizontal overflow check

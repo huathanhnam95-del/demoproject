@@ -393,6 +393,9 @@
       }
 
       mediaStream = stream;
+      if (typeof options.onStream === 'function') {
+        try { options.onStream(stream); } catch (_) {}
+      }
       recordedChunks = [];
       const mimeType = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported
         ? (['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find((mt) => MediaRecorder.isTypeSupported(mt)) || '')
@@ -489,7 +492,8 @@
       start,
       stop,
       cancel,
-      getState: () => state
+      getState: () => state,
+      getStream: () => mediaStream
     });
   }
 

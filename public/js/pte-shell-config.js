@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  const RELEASE_DEFAULT = false;
+  const RELEASE_DEFAULT = true;
   const ENABLED_MODES = ['read-aloud', 'speak', 'describe-image', 'asq', 'rts', 'sgd', 'notes'];
   let requested = null;
   try { requested = new URL(window.location.href).searchParams.get('pteShell'); } catch (_) {}

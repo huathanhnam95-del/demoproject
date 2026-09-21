@@ -36,7 +36,7 @@ Apply its ownership and preservation requirements to all workflows below: use on
 ## Active State
 
 - **Status**: Active Development
-- **Phase**: Release V2.0.13
+- **Phase**: Release V2.0.14
 
 ## Instructions
 
@@ -175,7 +175,7 @@ These workflows add product thinking, automated QA, and release automation:
 
 - **Versioning Rule**: ALWAYS name commits and pushes with explicit version tags.
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V2.0.14`
+- **Next Version**: `V2.0.15`
 
 - **Session Tagging Protocol (`(R)` & `(D)`)**: The single authority is [.agent/rules/session_tagging.md](.agent/rules/session_tagging.md). Ready tasks are automatically `(R)` with a verified shared readiness record. PAR discovers the eligible batch across supported hosts and registry records. Only complete, live-verified releases become `(D)`; failures and partial releases remain accurately recorded. All title mutations require verified native IDs.
 

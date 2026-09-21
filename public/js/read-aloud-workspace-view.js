@@ -61,90 +61,163 @@
       this.active = true;
     }
 
+    isV3Active() {
+      const panel = this.panel || (typeof document !== 'undefined' && document.getElementById('mode-read-aloud'));
+      if (panel) {
+        if (panel.classList.contains('ra-pte-v3')) return true;
+        if (this.mode && this.mode.pteView) return true;
+        if (this.mode && this.mode.pteView === null) {
+          return false;
+        }
+      }
+      if (typeof this.mode?.isPteShellEnabled === 'function') {
+        return Boolean(this.mode.isPteShellEnabled());
+      }
+      const scope = typeof window !== 'undefined' && window.PracticeScopeManager?.getScope
+        ? window.PracticeScopeManager.getScope()
+        : 'pte';
+      return Boolean(typeof window !== 'undefined' && window.PteShellConfig?.isModeEnabled?.('read-aloud', scope));
+    }
+
     ensureLayoutHosts() {
       const workbench = this.panel.querySelector('.ra-workbench');
       if (!workbench) return;
+      const isV3 = this.isV3Active();
 
-      // 1. Heading Host
+      // 1. Heading Host — do not create or show when v3 is active
       let heading = document.getElementById('ra-workspace-heading');
-      if (!heading) {
-        heading = document.createElement('div');
-        heading.id = 'ra-workspace-heading';
-        heading.className = 'ra-workspace-header';
-        heading.innerHTML = `
-          <div class="ra-workspace-title-group">
-            <span class="ra-workspace-qid" id="ra-workspace-qid-display">Question</span>
-            <span class="ra-workspace-mode-label">Read Aloud</span>
-          </div>
-          <div class="ra-workspace-order-summary" id="ra-workspace-order-summary"></div>
-        `;
-        workbench.insertBefore(heading, workbench.firstChild);
+      if (isV3) {
+        if (heading) {
+          heading.style.display = 'none';
+        }
+        this.headingEl = null;
+      } else {
+        if (!heading) {
+          heading = document.createElement('div');
+          heading.id = 'ra-workspace-heading';
+          heading.className = 'ra-workspace-header';
+          heading.innerHTML = `
+            <div class="ra-workspace-title-group">
+              <span class="ra-workspace-qid" id="ra-workspace-qid-display">Question</span>
+              <span class="ra-workspace-mode-label">Read Aloud</span>
+            </div>
+            <div class="ra-workspace-order-summary" id="ra-workspace-order-summary"></div>
+          `;
+          workbench.insertBefore(heading, workbench.firstChild);
+        } else {
+          heading.style.display = '';
+        }
+        this.headingEl = heading;
       }
-      this.headingEl = heading;
 
-      // 2. Steps Host
+      // 2. Steps Host — do not create or show when v3 is active
       let stepsHost = document.getElementById('ra-workspace-steps-host');
-      if (!stepsHost) {
-        stepsHost = document.createElement('div');
-        stepsHost.id = 'ra-workspace-steps-host';
-        heading.after(stepsHost);
+      if (isV3) {
+        if (stepsHost) {
+          stepsHost.style.display = 'none';
+        }
+        this.stepsHostEl = null;
+      } else {
+        if (!stepsHost) {
+          stepsHost = document.createElement('div');
+          stepsHost.id = 'ra-workspace-steps-host';
+          if (heading && heading.parentNode) {
+            heading.after(stepsHost);
+          } else {
+            workbench.prepend(stepsHost);
+          }
+        } else {
+          stepsHost.style.display = '';
+        }
+        this.stepsHostEl = stepsHost;
       }
-      this.stepsHostEl = stepsHost;
 
-      // 3. Stage Instruction
+      // 3. Stage Instruction — keep in DOM but visually hidden (.pte-sr-only) under v3
       let instruction = document.getElementById('ra-workspace-instruction');
       if (!instruction) {
         instruction = document.createElement('div');
         instruction.id = 'ra-workspace-instruction';
         instruction.setAttribute('aria-live', 'polite');
-        stepsHost.after(instruction);
+        if (stepsHost && stepsHost.parentNode) {
+          stepsHost.after(instruction);
+        } else if (heading && heading.parentNode) {
+          heading.after(instruction);
+        } else {
+          workbench.prepend(instruction);
+        }
+      }
+      if (isV3) {
+        instruction.classList.add('pte-sr-only');
+        instruction.style.removeProperty('display');
+      } else {
+        instruction.classList.remove('pte-sr-only');
       }
       this.instructionEl = instruction;
 
-      // 4. Coach Host (Speaking Tips)
+      // 4. Coach Host (Speaking Tips) — do not create or show when v3 is active
       let coachHost = document.getElementById('ra-workspace-coach-host');
-      if (!coachHost) {
-        coachHost = document.createElement('div');
-        coachHost.id = 'ra-workspace-coach-host';
-        coachHost.className = 'ra-tips-container';
-        coachHost.innerHTML = `
-          <div class="ra-tips-header">
-            <span class="ra-tips-title">
-              <span>💡 Speaking tips</span>
-              <span class="ra-tips-count-badge" id="ra-workspace-tips-count">0</span>
-            </span>
-            <div class="ra-tips-actions">
-              <button type="button" class="ra-tips-btn" id="ra-workspace-toggle-all-tips">View all tips</button>
+      if (isV3) {
+        if (coachHost) {
+          coachHost.style.display = 'none';
+        }
+        this.coachHostEl = null;
+      } else {
+        if (!coachHost) {
+          coachHost = document.createElement('div');
+          coachHost.id = 'ra-workspace-coach-host';
+          coachHost.className = 'ra-tips-container';
+          coachHost.innerHTML = `
+            <div class="ra-tips-header">
+              <span class="ra-tips-title">
+                <span>💡 Speaking tips</span>
+                <span class="ra-tips-count-badge" id="ra-workspace-tips-count">0</span>
+              </span>
+              <div class="ra-tips-actions">
+                <button type="button" class="ra-tips-btn" id="ra-workspace-toggle-all-tips">View all tips</button>
+              </div>
             </div>
-          </div>
-          <div class="ra-tips-preview-content" id="ra-workspace-tips-preview">
-            <span id="ra-workspace-tip-text">Read smoothly through the passage.</span>
-          </div>
-        `;
-        const stage = this.panel.querySelector('.ra-stage');
-        if (stage) {
-          stage.appendChild(coachHost);
+            <div class="ra-tips-preview-content" id="ra-workspace-tips-preview">
+              <span id="ra-workspace-tip-text">Read smoothly through the passage.</span>
+            </div>
+          `;
+          const stage = this.panel.querySelector('.ra-stage');
+          if (stage) {
+            stage.appendChild(coachHost);
+          }
+        } else {
+          coachHost.style.display = '';
+        }
+        this.coachHostEl = coachHost;
+
+        // Bind toggle all tips (legacy mode only)
+        const toggleAllTipsBtn = document.getElementById('ra-workspace-toggle-all-tips');
+        if (toggleAllTipsBtn && !toggleAllTipsBtn.dataset.bound) {
+          toggleAllTipsBtn.dataset.bound = 'true';
+          toggleAllTipsBtn.addEventListener('click', () => {
+            this.tipsExpanded = !this.tipsExpanded;
+            toggleAllTipsBtn.textContent = this.tipsExpanded ? 'Hide tips' : 'View all tips';
+            const coachBox = document.getElementById('ra-connected-speech-box');
+            if (coachBox) {
+              coachBox.style.display = this.tipsExpanded ? 'block' : 'none';
+            }
+          });
         }
       }
-      this.coachHostEl = coachHost;
 
-      // Bind toggle all tips
-      const toggleAllTipsBtn = document.getElementById('ra-workspace-toggle-all-tips');
-      if (toggleAllTipsBtn && !toggleAllTipsBtn.dataset.bound) {
-        toggleAllTipsBtn.dataset.bound = 'true';
-        toggleAllTipsBtn.addEventListener('click', () => {
-          this.tipsExpanded = !this.tipsExpanded;
-          toggleAllTipsBtn.textContent = this.tipsExpanded ? 'Hide tips' : 'View all tips';
-          const coachBox = document.getElementById('ra-connected-speech-box');
-          if (coachBox) {
-            coachBox.style.display = this.tipsExpanded ? 'block' : 'none';
-          }
-        });
+      // #ra-status-message → visually hidden too under v3
+      const statusMessage = document.getElementById('ra-status-message');
+      if (statusMessage) {
+        if (isV3) {
+          statusMessage.classList.add('pte-sr-only');
+        } else {
+          statusMessage.classList.remove('pte-sr-only');
+        }
       }
     }
 
     render(model, snapshot) {
       if (!this.active) this.mount();
+      this.ensureLayoutHosts();
 
       // 1. Update Question ID and Order Summary in Header
       const qidEl = document.getElementById('ra-workspace-qid-display');
@@ -197,6 +270,7 @@
       for (const id of ACTION_IDS) {
         const button = document.getElementById(id);
         if (!button) continue;
+        if (this.isV3Active() && button.hasAttribute('data-pte-phases')) continue;
 
         const action = shown.get(id);
 
@@ -235,19 +309,36 @@
     renderSpeakingTipsSummary() {
       const countBadge = document.getElementById('ra-workspace-tips-count');
       const previewText = document.getElementById('ra-workspace-tip-text');
-      if (!countBadge || !previewText) return;
+      const items = Array.isArray(this.mode?.currentGuideExplanationItems)
+        ? this.mode.currentGuideExplanationItems
+        : [];
 
-      const items = this.mode?.currentGuideExplanationItems || [];
-      countBadge.textContent = String(items.length);
+      if (countBadge) {
+        countBadge.textContent = String(items.length);
+      }
 
-      if (items.length > 0) {
-        const selectedId = this.mode?.selectedGuideItemId;
-        const activeItem = items.find(i => i.id === selectedId) || items[0];
-        const wordOrTarget = activeItem.label || activeItem.word || activeItem.target || activeItem.title || '';
-        const tipMsg = activeItem.simpleExplanation || activeItem.explanation || activeItem.tip || activeItem.message || '';
-        previewText.textContent = wordOrTarget && tipMsg ? `"${wordOrTarget}" — ${tipMsg}` : (tipMsg || wordOrTarget || 'Focus on smooth phrasing and natural linking.');
-      } else {
-        previewText.textContent = 'Read smoothly through the passage with natural phrasing.';
+      if (previewText) {
+        if (items.length > 0) {
+          const selectedId = this.mode?.selectedGuideItemId;
+          const activeItem = items.find(i => i.id === selectedId) || items[0];
+          const wordOrTarget = activeItem.label || activeItem.word || activeItem.target || activeItem.title || '';
+          const tipMsg = activeItem.simpleExplanation || activeItem.explanation || activeItem.tip || activeItem.message || '';
+          previewText.textContent = wordOrTarget && tipMsg ? `"${wordOrTarget}" — ${tipMsg}` : (tipMsg || wordOrTarget || 'Focus on smooth phrasing and natural linking.');
+        } else {
+          previewText.textContent = 'Read smoothly through the passage with natural phrasing.';
+        }
+      }
+
+      // Wire up Coach button count in v3 dock
+      const coachBtn = document.getElementById('ra-pte-coach-btn');
+      if (coachBtn) {
+        const count = typeof this.mode?.getPtePhase === 'function' && this.mode.getPtePhase() === 'feedback'
+          ? (this.mode?.lastAssessmentPayload?.connectedSpeech?.events?.length ?? 0)
+          : items.length;
+        coachBtn.textContent = `Coach · ${count}`;
+        if (typeof this.mode?.pteCoachOpen === 'boolean') {
+          coachBtn.setAttribute('aria-pressed', String(this.mode.pteCoachOpen));
+        }
       }
     }
 

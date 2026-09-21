@@ -3751,11 +3751,17 @@ class ReadAloudMode {
       view.moved.push({ node, anchor }); parent.append(node);
     };
     panel.classList.add('ra-pte-v3');
+    this.workspaceView?.ensureLayoutHosts?.();
     view.instruction = create('p', 'pte-instr', 'ra-pte-instruction', stage);
     const recorderCenter = create('div', 'pte-center', null, stage);
     const recorder = create('div', '', 'ra-pte-recorder', recorderCenter);
     stage.prepend(view.instruction, recorderCenter);
-    const announcement = create('p', 'pte-sr-only', 'ra-workspace-instruction', stage);
+    let announcement = document.getElementById('ra-workspace-instruction');
+    if (!announcement) {
+      announcement = create('p', 'pte-sr-only', 'ra-workspace-instruction', stage);
+    } else {
+      announcement.classList.add('pte-sr-only');
+    }
     announcement.setAttribute('role', 'status');
     view.announcement = announcement;
     this.pteRecorder = window.PteRecorderWidget.create(recorder, { totalSeconds: this.recordSeconds });
@@ -3805,8 +3811,15 @@ class ReadAloudMode {
     view.created.reverse().forEach(node => node.remove());
     view.panel.classList.remove('ra-pte-v3'); view.split.classList.remove('pte-fb');
     document.getElementById('ra-prompt-stage')?.classList.remove('pte-passage');
+    const announcement = document.getElementById('ra-workspace-instruction');
+    if (announcement) announcement.classList.remove('pte-sr-only');
+    const statusMsg = document.getElementById('ra-status-message');
+    if (statusMsg) statusMsg.classList.remove('pte-sr-only');
     delete view.panel.dataset.ptePhase; delete view.panel.dataset.pteCoach;
     this.pteView = null;
+    this.workspaceView?.ensureLayoutHosts?.();
+    this.updateLegacyUIForState?.();
+    if (this.workspaceView?.active) this.workspaceView.renderSpeakingTipsSummary();
   }
 
   selectPteFeedbackTab(tab) {
@@ -3864,6 +3877,14 @@ class ReadAloudMode {
       tab.setAttribute('aria-selected', String(this.pteFeedbackTab === key)); tab.tabIndex = this.pteFeedbackTab === key ? 0 : -1;
     }
     document.getElementById('ra-pte-tab-coach').textContent = `Coach tips · ${this.lastAssessmentPayload?.connectedSpeech?.events?.length || 0}`;
+    const coachBtn = document.getElementById('ra-pte-coach-btn');
+    if (coachBtn) {
+      const count = feedback
+        ? (this.lastAssessmentPayload?.connectedSpeech?.events?.length ?? 0)
+        : (this.currentGuideExplanationItems?.length ?? 0);
+      coachBtn.textContent = `Coach · ${count}`;
+      coachBtn.setAttribute('aria-pressed', String(!!this.pteCoachOpen));
+    }
     if (feedback) this.renderPteFeedback();
     if (document.getElementById('pte-next-read-aloud')) window.SpeakingPracticeController?.setPhase('read-aloud', phase);
   }
@@ -5136,6 +5157,7 @@ class ReadAloudMode {
     if (list) list.innerHTML = '';
     if (meta) meta.textContent = 'Preview';
     if (summary) summary.textContent = '';
+    this.syncPteShell();
   }
 
   /**
@@ -5438,6 +5460,7 @@ class ReadAloudMode {
     this.bindGuideRailHover(list);
     this.syncGuideSelectionState();
     this.scrollSelectedGuideCardIntoView();
+    this.syncPteShell();
   }
 
   renderRecognizedTranscript(words = [], recognizedText = '', events = [], metrics = {}) {
@@ -5964,6 +5987,7 @@ class ReadAloudMode {
     this.bindSpeechCoachAccordions(list);
     this.bindSpeechCoachInteractions(list);
     this.updateSpeechCoachModeHints(selectedModes);
+    this.syncPteShell();
     return { visible: true, reason: 'visible', revision };
   }
 

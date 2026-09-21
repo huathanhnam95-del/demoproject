@@ -1668,9 +1668,15 @@
   function adoptV3Dock(config, state) {
     const dock = config.v3.dock || {};
     (dock.helpers || []).forEach(helper => {
-      const button = v3Element('button', 'pte-btn pte-btn--helper', helper.label);
+      const count = helper.count?.();
+      const label = `${helper.label}${count == null ? '' : ` · ${count}`}`;
+      const button = v3Element('button', 'pte-btn pte-btn--helper', label);
       button.id = helper.id; button.dataset.ptePhases = (helper.phases || []).join(' ');
-      button.addEventListener('click', () => helper.onClick?.());
+      if (helper.pressed) button.setAttribute('aria-pressed', String(!!helper.pressed()));
+      button.addEventListener('click', () => {
+        helper.onClick?.();
+        if (helper.pressed) button.setAttribute('aria-pressed', String(!!helper.pressed()));
+      });
       button._pteHelper = helper; state.v3DOM.actions.append(button);
     });
     (dock.actions || []).forEach(action => {

@@ -63,7 +63,8 @@ async function createHarness() {
     async open({ width = 1440, height = 900, flag = 'v3' } = {}) {
       const page = await browser.newPage({ viewport: { width, height } });
       await page.addInitScript(initScript);
-      await page.goto(`${baseURL}/?pteShell=${flag}`, { waitUntil: 'domcontentloaded' });
+      const url = flag ? `${baseURL}/?pteShell=${flag}` : `${baseURL}/`;
+      await page.goto(url, { waitUntil: 'domcontentloaded' });
       await dismissOverlays(page);
       return page;
     },

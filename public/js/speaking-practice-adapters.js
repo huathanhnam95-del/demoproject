@@ -843,7 +843,14 @@
       ],
       dock: {
         helpers: [{ id: 'ra-pte-coach-btn', label: 'Coach', phases: ['prep', 'complete', 'feedback'],
-          count: () => window.ReadAloudMode?.currentGuideExplanationItems?.length || window.ReadAloudMode?.lastAssessmentPayload?.connectedSpeech?.events?.length || 0,
+          count: () => {
+            const mode = window.ReadAloudMode;
+            if (!mode) return 0;
+            if (typeof mode.getPtePhase === 'function' && mode.getPtePhase() === 'feedback') {
+              return mode.lastAssessmentPayload?.connectedSpeech?.events?.length ?? 0;
+            }
+            return mode.currentGuideExplanationItems?.length ?? 0;
+          },
           pressed: () => !!window.ReadAloudMode?.pteCoachOpen,
           onClick: () => window.ReadAloudMode?.setCoachOpen(!window.ReadAloudMode.pteCoachOpen) }],
         actions: [

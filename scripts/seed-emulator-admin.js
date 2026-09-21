@@ -248,6 +248,27 @@ async function seedFirestoreAdminProfile({ uid, email, displayName }) {
 
 async function seedProjectsWorkforceAccess({ uid }) {
   const workforceDocUrl = `${FS_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/crmWorkforceAccounts/${uid}`;
+  const existing = await fetch(workforceDocUrl, {
+    method: 'GET',
+    headers: { 'Authorization': 'Bearer owner' }
+  });
+  if (existing.ok) {
+    const { fields } = await existing.json();
+    // Match the Projects workforce gate; unrelated grants, roles, audit fields
+    // and revisions belong to the existing record and must never be reseeded.
+    const active = String(fields?.status?.stringValue || '').trim().toLowerCase() === 'active';
+    const granted = fields?.moduleGrants?.mapValue?.fields?.projects?.booleanValue === true;
+    const synced = !fields?.authSync
+      || fields.authSync.mapValue?.fields?.state?.stringValue === 'succeeded';
+    if (!active || !granted || !synced) {
+      throw new Error(`Existing crmWorkforceAccounts/${uid} does not allow Projects access. Review its status, Projects grant, and auth sync in the local workforce administration flow, then rerun this script. The workforce record was not changed.`);
+    }
+    return;
+  }
+  if (existing.status !== 404) {
+    throw new Error(`Projects workforce read failed (${existing.status}). Check the Firestore emulator and retry; no workforce write was attempted.`);
+  }
+
   const firestoreDoc = {
     fields: {
       uid: { stringValue: uid },
@@ -273,7 +294,8 @@ async function seedProjectsWorkforceAccess({ uid }) {
     }
   };
 
-  const fsRes = await fetch(workforceDocUrl, {
+  // A record created after our read must win, even if its fields differ.
+  const fsRes = await fetch(`${workforceDocUrl}?currentDocument.exists=false`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -283,8 +305,10 @@ async function seedProjectsWorkforceAccess({ uid }) {
   });
 
   if (!fsRes.ok) {
-    const errBody = await fsRes.text();
-    throw new Error(`Projects workforce PATCH ${fsRes.status}: ${errBody}`);
+    if ([409, 412].includes(fsRes.status)) {
+      throw new Error('Projects workforce creation conflicted with another write. Rerun this script to check the existing record; it was not overwritten.');
+    }
+    throw new Error(`Projects workforce creation failed (${fsRes.status}). Check the Firestore emulator and retry.`);
   }
 }
 
@@ -365,7 +389,11 @@ async function main() {
   console.log('You can now log in at https://localhost:8443');
 }
 
-main().catch((err) => {
-  console.error('ERROR: Seed failed:', err?.message || err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error('ERROR: Seed failed:', err?.message || err);
+    process.exit(1);
+  });
+}
+
+module.exports = { seedProjectsWorkforceAccess };

@@ -21,6 +21,26 @@
     let loadEntriesPromise = null;
     let pickerOpen = false;
 
+    // PTE Speaking Shell v3 state
+    let v3Active = false;
+    let v3Phase = 'loading'; // 'listen' | 'prep' | 'recording' | 'complete' | 'feedback'
+    let questionGen = 0;
+    let attemptGen = 0;
+    let v3Timer = null;
+    let v3RecordRAF = null;
+    let pteAudioBox = null;
+    let pteRecorderWidget = null;
+    let v3PrepStartTime = 0;
+    let v3RecordStartTime = 0;
+    let v3RecordedDurationSec = 0;
+    let v3LastAiScoreData = null;
+    let v3ActiveTab = 'ai'; // 'ai' | 'sample'
+    let v3ActiveSampleTab = 'full'; // 'full' | 'simplified'
+    let origAiScoreBtnParent = null;
+    let origAiScoreBtnSibling = null;
+    let origAiScoreHintParent = null;
+    let origAiScoreHintSibling = null;
+
     // Timer state (drift-free via performance.now)
     let audioCountdownStart = null;
     let audioCountdownRAF = null;
@@ -57,6 +77,10 @@
 
     /* ──────────────────────────── HELPERS ──────────────────────────── */
 
+    function isV3() {
+        return !!(v3Active || window.PteShellConfig?.isModeEnabled?.('rts', 'pte'));
+    }
+
     function show(e) { if (e) e.style.display = ''; }
     function hide(e) { if (e) e.style.display = 'none'; }
     function setTranscriptDisplay(value) {
@@ -66,6 +90,14 @@
         el.rtsTranscript.classList.toggle('rts-no-transcript', !text);
     }
     function getTranscriptForScoring() {
+        if (isV3()) {
+            const v3Tr = document.getElementById('rts-v3-transcript');
+            if (v3Tr) {
+                const text = String(v3Tr.textContent || '').trim();
+                if (text && text !== 'No transcript detected.') return text;
+            }
+            return String(transcriptText || '').trim();
+        }
         if (el.rtsTranscript) {
             const text = String(el.rtsTranscript.textContent || '').trim();
             return text === 'No transcript detected.' ? '' : text;
@@ -145,6 +177,7 @@
 
     function reset() {
         stopAllTimers();
+        stopAllV3Timers();
         stopRecording(true);
         currentStep = 'idle';
         transcriptText = '';
@@ -161,6 +194,14 @@
                 el.rtsRecordingPlayback.load();
             } catch (_) { /* ignore */ }
         }
+        const v3Playback = document.getElementById('rts-v3-playback');
+        if (v3Playback) {
+            try {
+                v3Playback.pause();
+                v3Playback.removeAttribute('src');
+                v3Playback.load();
+            } catch (_) { /* ignore */ }
+        }
         // Stop audio player
         if (el.rtsAudioPlayer) {
             try {
@@ -169,24 +210,38 @@
             } catch (_) { /* ignore */ }
         }
         setTranscriptDisplay('');
+        const v3Tr = document.getElementById('rts-v3-transcript');
+        if (v3Tr) v3Tr.textContent = 'No transcript detected.';
         if (el.rtsRecordTimer) el.rtsRecordTimer.classList.remove('rts-timer-warning');
         if (el.rtsRecordStatus) el.rtsRecordStatus.classList.remove('rts-recording-active');
         // Reset AI scoring state
         isAiScoring = false;
         hasAiScoreResult = false;
+        v3LastAiScoreData = null;
         if (el.rtsResultsContainer) el.rtsResultsContainer.innerHTML = '';
+        const v3Results = document.getElementById('rts-v3-results-container');
+        if (v3Results) { v3Results.innerHTML = ''; v3Results.style.display = 'none'; }
+        const v3Empty = document.getElementById('rts-v3-ai-empty');
+        if (v3Empty) v3Empty.style.display = '';
         if (el.rtsAiScoreBtn) {
             el.rtsAiScoreBtn.disabled = false;
             el.rtsAiScoreBtn.style.display = '';
             el.rtsAiScoreBtn.textContent = 'Submit to AI Scoring';
         }
         if (el.rtsAiScoreHint) { el.rtsAiScoreHint.style.display = 'none'; el.rtsAiScoreHint.innerHTML = ''; }
-        hide(el.rtsPracticeArea);
-        hide(el.rtsStepAudio);
-        hide(el.rtsStepPrep);
-        hide(el.rtsStepRecord);
-        hide(el.rtsStepResults);
+        if (!isV3()) {
+            hide(el.rtsPracticeArea);
+            hide(el.rtsStepAudio);
+            hide(el.rtsStepPrep);
+            hide(el.rtsStepRecord);
+            hide(el.rtsStepResults);
+        }
         updateProgressBreadcrumb('idle');
+    }
+
+    function stopAllV3Timers() {
+        if (v3Timer) { cancelAnimationFrame(v3Timer); v3Timer = null; }
+        if (v3RecordRAF) { cancelAnimationFrame(v3RecordRAF); v3RecordRAF = null; }
     }
 
     function stopAllTimers() {
@@ -305,12 +360,24 @@
         }
 
         // Show start button
-        show(el.playRtsBtn);
+        if (!isV3()) {
+            show(el.playRtsBtn);
+        } else {
+            hide(el.playRtsBtn);
+            show(el.rtsPracticeArea);
+        }
         window.SpeakingPracticeController?.sync?.('rts');
 
         // Update URL with current question ID
         if (window.PracticeRouter && currentEntry?.id) {
             window.PracticeRouter.replaceRoute('rts', currentEntry.id);
+        }
+
+        if (isV3()) {
+            ensureV3Elements();
+            const promptEl = document.getElementById('rts-pte-prompt-text');
+            if (promptEl) promptEl.textContent = currentEntry.answer || currentEntry.prompt || '';
+            startV3QuestionFlow();
         }
     }
 
@@ -361,11 +428,15 @@
         if (el.playRtsBtn) el.playRtsBtn.addEventListener('click', startFlow);
 
         // Stop recording
-        if (el.rtsStopBtn) el.rtsStopBtn.addEventListener('click', () => stopRecording(false));
+        if (el.rtsStopBtn) el.rtsStopBtn.addEventListener('click', () => {
+            if (isV3()) stopV3Recording();
+            else stopRecording(false);
+        });
 
         // Results buttons
         if (el.rtsRetryBtn) el.rtsRetryBtn.addEventListener('click', () => {
-            if (currentEntry) loadQuestion(currentEntryIndex);
+            if (isV3()) startV3Prep();
+            else if (currentEntry) loadQuestion(currentEntryIndex);
         });
         if (el.rtsNextQuestionBtn) el.rtsNextQuestionBtn.addEventListener('click', () => {
             if (currentEntryIndex < entries.length - 1) {
@@ -375,6 +446,31 @@
 
         // AI scoring
         if (el.rtsAiScoreBtn) el.rtsAiScoreBtn.addEventListener('click', submitToAiScoring);
+
+        // v3 action buttons
+        const recBtn = document.getElementById('rts-record-btn');
+        if (recBtn) recBtn.addEventListener('click', () => {
+            if (isV3()) startV3Recording();
+            else startRecording();
+        });
+
+        const cancelBtn = document.getElementById('rts-cancel-btn');
+        if (cancelBtn) cancelBtn.addEventListener('click', () => {
+            if (isV3()) cancelRecording();
+        });
+
+        const playBtn = document.getElementById('rts-play-btn');
+        if (playBtn) playBtn.addEventListener('click', toggleUserAudioPlayback);
+
+        const submitBtn = document.getElementById('rts-submit-btn');
+        if (submitBtn) submitBtn.addEventListener('click', () => {
+            if (isV3()) submitForFeedback();
+        });
+
+        const redoBtn = document.getElementById('rts-redo-btn');
+        if (redoBtn) redoBtn.addEventListener('click', () => {
+            if (isV3()) startV3Prep();
+        });
 
         // Audio ended → transition to Prep
         if (el.rtsAudioPlayer) {
@@ -538,7 +634,7 @@
         }
 
         // Start MediaRecorder
-        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        const mimeType = (typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))
             ? 'audio/webm;codecs=opus' : 'audio/webm';
         mediaRecorder = new MediaRecorder(stream, { mimeType });
         mediaRecorder.ondataavailable = (e) => {
@@ -800,6 +896,10 @@
 
     async function getScoreRTSCallable() {
         if (scoreRTSFn) return scoreRTSFn;
+        if (typeof window.__mockScoreRTSFn === 'function') {
+            scoreRTSFn = window.__mockScoreRTSFn;
+            return scoreRTSFn;
+        }
         if (window.__FIREBASE_INTERNAL__ && window.__FIREBASE_INTERNAL__.functions) {
             const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
             scoreRTSFn = httpsCallable(window.__FIREBASE_INTERNAL__.functions, 'scoreRTS');
@@ -958,6 +1058,21 @@
 
         // Init sample tabs
         initSampleResponseTabs();
+
+        v3LastAiScoreData = data;
+        const v3Results = document.getElementById('rts-v3-results-container');
+        if (v3Results) {
+            v3Results.innerHTML = el.rtsResultsContainer.innerHTML;
+            const emptyEl = document.getElementById('rts-v3-ai-empty');
+            if (emptyEl) emptyEl.style.display = 'none';
+            v3Results.style.display = '';
+        }
+        if (data.sampleResponse) {
+            const sampleFull = document.getElementById('rts-v3-sample-full');
+            const sampleSimp = document.getElementById('rts-v3-sample-simplified');
+            if (sampleFull && data.sampleResponse.full) sampleFull.innerHTML = escapeHtml(String(data.sampleResponse.full));
+            if (sampleSimp && data.sampleResponse.simplified) sampleSimp.innerHTML = escapeHtml(String(data.sampleResponse.simplified));
+        }
     }
 
     function buildAnalysisHtml(analysis) {
@@ -1026,27 +1141,754 @@
         });
     }
 
+    /* ──────────────────────────── V3 SHELL INTEGRATION ──────────────────────────── */
+
+    function toggleUserAudioPlayback() {
+        const audioEl = (isV3() ? document.getElementById('rts-v3-playback') : el.rtsRecordingPlayback) || el.rtsRecordingPlayback;
+        if (!audioEl) return;
+        const playBtn = document.getElementById('rts-play-btn');
+        if (audioEl.paused) {
+            audioEl.play().then(() => {
+                if (playBtn) playBtn.textContent = 'Pause';
+            }).catch(() => {});
+        } else {
+            audioEl.pause();
+            if (playBtn) playBtn.textContent = 'Play';
+        }
+    }
+
+    function ensureV3Elements() {
+        const area = document.getElementById('rts-practice-area');
+        if (!area) return;
+
+        if (!document.getElementById('rts-pte-instruction')) {
+            const instr = document.createElement('div');
+            instr.id = 'rts-pte-instruction';
+            instr.className = 'rts-pte-instruction';
+            instr.textContent = 'Listen to and read a description of a situation. You will have 10 seconds to think about the situation and prepare your response. You will then hear a beep and have 40 seconds to speak your response.';
+            area.insertBefore(instr, area.firstChild);
+        }
+
+        let stage = document.getElementById('rts-pte-stage');
+        if (!stage) {
+            stage = document.createElement('div');
+            stage.id = 'rts-pte-stage';
+            stage.className = 'rts-pte-stage';
+
+            const promptText = document.createElement('div');
+            promptText.id = 'rts-pte-prompt-text';
+            promptText.className = 'rts-pte-prompt-text';
+
+            const audioHost = document.createElement('div');
+            audioHost.id = 'rts-pte-audio-host';
+
+            const recHost = document.createElement('div');
+            recHost.id = 'rts-pte-rec-host';
+
+            stage.append(promptText, audioHost, recHost);
+            area.appendChild(stage);
+        }
+
+        const promptText = document.getElementById('rts-pte-prompt-text');
+        if (promptText && currentEntry) {
+            promptText.textContent = currentEntry.answer || currentEntry.prompt || '';
+        }
+
+        let feedback = document.getElementById('rts-pte-feedback');
+        if (!feedback) {
+            feedback = document.createElement('div');
+            feedback.id = 'rts-pte-feedback';
+            feedback.className = 'rts-pte-feedback';
+            feedback.hidden = true;
+            feedback.style.display = 'none';
+
+            feedback.innerHTML = `
+                <div class="rts-fb-grid">
+                    <div class="rts-fb-left">
+                        <h4 class="rts-fb-heading">Your Recording</h4>
+                        <audio id="rts-v3-playback" controls aria-label="Student recording" style="width: 100%;"></audio>
+                        <h4 class="rts-fb-heading" style="margin-top: 12px;">Your Transcript</h4>
+                        <div id="rts-v3-transcript" class="rts-v3-transcript" style="font-size: 1rem; line-height: 1.6; padding: 12px; background: var(--bg-secondary, #f8fafc); border-radius: 8px; border: 1px solid var(--border-light, #e2e8f0);">No transcript detected.</div>
+                    </div>
+                    <div class="rts-fb-right">
+                        <div class="rts-v3-fb-tabs" role="tablist">
+                            <button type="button" class="rts-v3-fb-tab active" data-v3-tab="ai" role="tab" aria-selected="true">AI Score</button>
+                            <button type="button" class="rts-v3-fb-tab" data-v3-tab="sample" role="tab" aria-selected="false">Sample Answers</button>
+                        </div>
+                        <div id="rts-v3-ai-panel" class="rts-v3-fb-panel">
+                            <div id="rts-v3-ai-empty" class="rts-ai-empty">
+                                <div class="rts-ai-empty-title">Not scored yet</div>
+                                <div class="rts-ai-empty-desc">Submit your response to AI scoring for detailed feedback and analysis.</div>
+                                <div id="rts-v3-ai-btn-host" style="display: flex; flex-direction: column; align-items: center; gap: 8px;"></div>
+                            </div>
+                            <div id="rts-v3-results-container" style="display: none;"></div>
+                        </div>
+                        <div id="rts-v3-sample-panel" class="rts-v3-fb-panel" style="display: none;">
+                            <div class="rts-sample-tabs" style="display: flex; border-bottom: 1px solid var(--border-light, #e2e8f0); margin-bottom: 12px;">
+                                <button type="button" class="rts-v3-fb-tab active" data-v3-sample-tab="full" style="flex: 1; text-align: center;">📝 Full Sample</button>
+                                <button type="button" class="rts-v3-fb-tab" data-v3-sample-tab="simplified" style="flex: 1; text-align: center;">📖 Simplified</button>
+                            </div>
+                            <div id="rts-v3-sample-full" style="padding: 12px; line-height: 1.6; font-size: 0.95rem;">No sample answer available.</div>
+                            <div id="rts-v3-sample-simplified" style="display: none; padding: 12px; line-height: 1.6; font-size: 0.95rem;">No simplified sample answer available.</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            area.appendChild(feedback);
+
+            // Wire tab switching
+            const aiTabBtn = feedback.querySelector('[data-v3-tab="ai"]');
+            const sampleTabBtn = feedback.querySelector('[data-v3-tab="sample"]');
+            const aiPanel = feedback.querySelector('#rts-v3-ai-panel');
+            const samplePanel = feedback.querySelector('#rts-v3-sample-panel');
+
+            aiTabBtn?.addEventListener('click', () => {
+                v3ActiveTab = 'ai';
+                aiTabBtn.classList.add('active');
+                aiTabBtn.setAttribute('aria-selected', 'true');
+                sampleTabBtn?.classList.remove('active');
+                sampleTabBtn?.setAttribute('aria-selected', 'false');
+                if (aiPanel) aiPanel.style.display = '';
+                if (samplePanel) samplePanel.style.display = 'none';
+            });
+
+            sampleTabBtn?.addEventListener('click', () => {
+                v3ActiveTab = 'sample';
+                sampleTabBtn.classList.add('active');
+                sampleTabBtn.setAttribute('aria-selected', 'true');
+                aiTabBtn?.classList.remove('active');
+                aiTabBtn?.setAttribute('aria-selected', 'false');
+                if (aiPanel) aiPanel.style.display = 'none';
+                if (samplePanel) samplePanel.style.display = '';
+            });
+
+            const fullSampleBtn = feedback.querySelector('[data-v3-sample-tab="full"]');
+            const simpSampleBtn = feedback.querySelector('[data-v3-sample-tab="simplified"]');
+            const fullPane = feedback.querySelector('#rts-v3-sample-full');
+            const simpPane = feedback.querySelector('#rts-v3-sample-simplified');
+
+            fullSampleBtn?.addEventListener('click', () => {
+                v3ActiveSampleTab = 'full';
+                fullSampleBtn.classList.add('active');
+                simpSampleBtn?.classList.remove('active');
+                if (fullPane) fullPane.style.display = '';
+                if (simpPane) simpPane.style.display = 'none';
+            });
+
+            simpSampleBtn?.addEventListener('click', () => {
+                v3ActiveSampleTab = 'simplified';
+                simpSampleBtn.classList.add('active');
+                fullSampleBtn?.classList.remove('active');
+                if (fullPane) fullPane.style.display = 'none';
+                if (simpPane) simpPane.style.display = '';
+            });
+
+            // Wire playback events on rts-v3-playback
+            const v3Playback = feedback.querySelector('#rts-v3-playback');
+            if (v3Playback) {
+                const syncPlayBtn = () => {
+                    const playBtn = document.getElementById('rts-play-btn');
+                    if (playBtn) playBtn.textContent = v3Playback.paused ? 'Play' : 'Pause';
+                };
+                v3Playback.addEventListener('play', syncPlayBtn);
+                v3Playback.addEventListener('pause', syncPlayBtn);
+                v3Playback.addEventListener('ended', syncPlayBtn);
+            }
+        }
+
+        // Host AI score button & hint inside v3
+        const aiHost = document.getElementById('rts-v3-ai-btn-host');
+        if (aiHost && el.rtsAiScoreBtn && !aiHost.contains(el.rtsAiScoreBtn)) {
+            if (!origAiScoreBtnParent) {
+                origAiScoreBtnParent = el.rtsAiScoreBtn.parentNode;
+                origAiScoreBtnSibling = el.rtsAiScoreBtn.nextSibling;
+            }
+            aiHost.appendChild(el.rtsAiScoreBtn);
+        }
+        if (aiHost && el.rtsAiScoreHint && !aiHost.contains(el.rtsAiScoreHint)) {
+            if (!origAiScoreHintParent) {
+                origAiScoreHintParent = el.rtsAiScoreHint.parentNode;
+                origAiScoreHintSibling = el.rtsAiScoreHint.nextSibling;
+            }
+            aiHost.appendChild(el.rtsAiScoreHint);
+        }
+
+        const audioHost = document.getElementById('rts-pte-audio-host');
+        if (audioHost && !pteAudioBox && el.rtsAudioPlayer && window.PteAudioBox) {
+            pteAudioBox = window.PteAudioBox.create(audioHost, { audio: el.rtsAudioPlayer });
+        }
+
+        const recHost = document.getElementById('rts-pte-rec-host');
+        if (recHost && !pteRecorderWidget && window.PteRecorderWidget) {
+            pteRecorderWidget = window.PteRecorderWidget.create(recHost, { totalSeconds: RECORD_SECONDS });
+        }
+
+        ['rts-record-btn', 'rts-cancel-btn', 'rts-play-btn', 'rts-submit-btn', 'rts-redo-btn'].forEach(id => {
+            const b = document.getElementById(id);
+            if (b) b.style.display = '';
+        });
+    }
+
+    function mountPteShell() {
+        v3Active = true;
+        const modePanel = document.getElementById('mode-rts');
+        if (modePanel) modePanel.classList.add('rts-pte-v3');
+        ensureV3Elements();
+        if (currentEntry) {
+            const promptEl = document.getElementById('rts-pte-prompt-text');
+            if (promptEl) promptEl.textContent = currentEntry.answer || currentEntry.prompt || '';
+            queueMicrotask(() => {
+                if (v3Active && currentEntry) {
+                    startV3QuestionFlow();
+                }
+            });
+        }
+        syncPteV3UI();
+    }
+
+    function unmountPteShell() {
+        v3Active = false;
+        const modePanel = document.getElementById('mode-rts');
+        if (modePanel) modePanel.classList.remove('rts-pte-v3');
+        stopAllV3Timers();
+        if (pteAudioBox) {
+            pteAudioBox.destroy();
+            pteAudioBox = null;
+        }
+        if (pteRecorderWidget) {
+            pteRecorderWidget.destroy();
+            pteRecorderWidget = null;
+        }
+
+        // Restore AI score button & hint
+        if (el.rtsAiScoreBtn && origAiScoreBtnParent) {
+            if (origAiScoreBtnSibling && origAiScoreBtnParent.contains(origAiScoreBtnSibling)) {
+                origAiScoreBtnParent.insertBefore(el.rtsAiScoreBtn, origAiScoreBtnSibling);
+            } else {
+                origAiScoreBtnParent.appendChild(el.rtsAiScoreBtn);
+            }
+        }
+        if (el.rtsAiScoreHint && origAiScoreHintParent) {
+            if (origAiScoreHintSibling && origAiScoreHintParent.contains(origAiScoreHintSibling)) {
+                origAiScoreHintParent.insertBefore(el.rtsAiScoreHint, origAiScoreHintSibling);
+            } else {
+                origAiScoreHintParent.appendChild(el.rtsAiScoreHint);
+            }
+        }
+
+        document.getElementById('rts-pte-instruction')?.remove();
+        document.getElementById('rts-pte-stage')?.remove();
+        document.getElementById('rts-pte-feedback')?.remove();
+        reset();
+    }
+
+    function syncPteShell() {
+        if (!v3Active) return;
+        window.SpeakingPracticeController?.setPhase?.('rts', v3Phase);
+        syncPteV3UI();
+    }
+
+    function syncPteV3UI() {
+        if (!isV3()) return;
+        const stage = document.getElementById('rts-pte-stage');
+        const feedback = document.getElementById('rts-pte-feedback');
+        const practiceArea = document.getElementById('rts-practice-area');
+        if (practiceArea) practiceArea.style.display = 'block';
+
+        if (v3Phase === 'feedback') {
+            if (stage) { stage.hidden = true; stage.style.display = 'none'; }
+            if (feedback) { feedback.hidden = false; feedback.style.display = 'flex'; }
+            renderV3Feedback();
+        } else {
+            if (stage) { stage.hidden = false; stage.style.display = 'flex'; }
+            if (feedback) { feedback.hidden = true; feedback.style.display = 'none'; }
+        }
+    }
+
+    async function startV3QuestionFlow() {
+        if (!v3Active || !currentEntry) return;
+        stopAllTimers();
+        stopAllV3Timers();
+        stopSpeechRecognition();
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            try { mediaRecorder.stop(); } catch (_) {}
+        }
+        mediaRecorder = null;
+        if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
+        recordingBlob = null;
+        dspPromise = null;
+
+        const qGen = ++questionGen;
+        const aGen = ++attemptGen;
+        v3Phase = 'listen';
+        syncPteShell();
+
+        const recHost = document.getElementById('rts-pte-rec-host');
+        if (recHost) recHost.style.display = 'none';
+        pteRecorderWidget?.reset?.();
+
+        ensureV3Elements();
+        pteAudioBox?.reset?.();
+
+        const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
+        const cdSec = scale < 1 ? 1 : AUDIO_COUNTDOWN_SECONDS;
+
+        try {
+            if (pteAudioBox) {
+                await pteAudioBox.countdown(cdSec);
+            }
+        } catch (err) {
+            if (err?.name === 'AbortError' || qGen !== questionGen || aGen !== attemptGen) return;
+        }
+        if (qGen !== questionGen || aGen !== attemptGen || !v3Active) {
+            return;
+        }
+
+        try {
+            if (pteAudioBox) {
+                await pteAudioBox.play();
+            }
+        } catch (err) {
+            if (err?.name === 'AbortError' || qGen !== questionGen || aGen !== attemptGen) return;
+            console.warn('[RTS v3] Prompt audio play blocked or error:', err);
+        }
+        if (qGen !== questionGen || aGen !== attemptGen || !v3Active) {
+            return;
+        }
+
+        startV3Prep();
+    }
+
+    function startV3Prep() {
+        if (!v3Active || !currentEntry) return;
+        stopAllTimers();
+        stopAllV3Timers();
+
+        const qGen = questionGen;
+        const aGen = ++attemptGen;
+        v3Phase = 'prep';
+        syncPteShell();
+
+        const recHost = document.getElementById('rts-pte-rec-host');
+        if (recHost) recHost.style.display = '';
+
+        const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
+        const effectivePrepScale = scale < 1 ? 1 : scale;
+        const prepDuration = scale < 1 ? 1 : PREP_SECONDS;
+
+        v3PrepStartTime = performance.now();
+        pteRecorderWidget?.showCountdown(prepDuration);
+
+        const tickPrep = () => {
+            if (qGen !== questionGen || aGen !== attemptGen || v3Phase !== 'prep' || !v3Active) return;
+            const elapsed = ((performance.now() - v3PrepStartTime) / 1000) / effectivePrepScale;
+            const remaining = Math.max(0, prepDuration - elapsed);
+            pteRecorderWidget?.tick(remaining);
+            if (elapsed >= prepDuration) {
+                startV3Recording();
+                return;
+            }
+            v3Timer = requestAnimationFrame(tickPrep);
+        };
+        v3Timer = requestAnimationFrame(tickPrep);
+    }
+
+    async function startV3Recording() {
+        stopAllTimers();
+        stopAllV3Timers();
+
+        const qGen = questionGen;
+        const aGen = ++attemptGen;
+        v3Phase = 'recording';
+        syncPteShell();
+
+        const recHost = document.getElementById('rts-pte-rec-host');
+        if (recHost) recHost.style.display = '';
+
+        recordingSessionToken++;
+        const myToken = recordingSessionToken;
+        recordedChunks = [];
+        transcriptText = '';
+        v3RecordedDurationSec = 0;
+        if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
+        recordingBlob = null;
+        dspPromise = null;
+
+        let stream;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (err) {
+            console.error('[RTS v3] Mic access denied:', err);
+            return;
+        }
+
+        if (qGen !== questionGen || aGen !== attemptGen || v3Phase !== 'recording' || !v3Active || myToken !== recordingSessionToken) {
+            stream.getTracks().forEach(t => t.stop());
+            return;
+        }
+
+        pteRecorderWidget?.showRecording(RECORD_SECONDS);
+        pteRecorderWidget?.attachStream(stream);
+
+        const mimeType = (typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))
+            ? 'audio/webm;codecs=opus' : 'audio/webm';
+        const recorder = new MediaRecorder(stream, { mimeType });
+        mediaRecorder = recorder;
+        recorder.ondataavailable = (e) => {
+            if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+        recorder.onstop = () => {
+            stream.getTracks().forEach(t => t.stop());
+            if (qGen !== questionGen || aGen !== attemptGen || myToken !== recordingSessionToken) return;
+            onV3RecordingComplete();
+        };
+        recorder.start(250);
+
+        startSpeechRecognition(myToken);
+
+        v3RecordStartTime = performance.now();
+        const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
+        const effectiveRecScale = scale < 1 ? 0.3 : scale;
+
+        const tickRec = () => {
+            if (qGen !== questionGen || aGen !== attemptGen || v3Phase !== 'recording' || !v3Active || myToken !== recordingSessionToken) return;
+            const elapsed = ((performance.now() - v3RecordStartTime) / 1000) / effectiveRecScale;
+            v3RecordedDurationSec = elapsed;
+            pteRecorderWidget?.setElapsed(elapsed);
+            if (elapsed >= RECORD_SECONDS) {
+                stopV3Recording();
+                return;
+            }
+            v3RecordRAF = requestAnimationFrame(tickRec);
+        };
+        v3RecordRAF = requestAnimationFrame(tickRec);
+    }
+
+    function cancelRecording() {
+        if (v3Phase !== 'recording') return;
+        stopAllTimers();
+        stopAllV3Timers();
+        stopSpeechRecognition();
+        recordingSessionToken++;
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            try { mediaRecorder.stop(); } catch (_) {}
+        }
+        mediaRecorder = null;
+        recordedChunks = [];
+        recordingBlob = null;
+        dspPromise = null;
+        startV3Prep();
+    }
+
+    function stopV3Recording() {
+        if (v3Phase !== 'recording') return;
+        stopAllTimers();
+        stopAllV3Timers();
+        stopSpeechRecognition();
+        v3Phase = 'complete';
+        syncPteShell();
+        pteRecorderWidget?.showComplete();
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            try { mediaRecorder.stop(); } catch (_) {}
+        }
+    }
+
+    function onV3RecordingComplete() {
+        if (recordedChunks.length === 0) {
+            recordingBlob = null;
+            dspPromise = Promise.resolve(null);
+            return;
+        }
+        const blob = new Blob(recordedChunks, { type: recordedChunks[0].type || 'audio/webm' });
+        recordingBlob = blob;
+        recordingBlobUrl = URL.createObjectURL(blob);
+
+        const currentToken = recordingSessionToken;
+        dspPromise = (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function')
+            ? window.AudioDspPipeline.enhance(blob).then((result) => {
+                if (currentToken !== recordingSessionToken) return blob;
+                if (result && result.wavBlob) {
+                    if (recordingBlobUrl) URL.revokeObjectURL(recordingBlobUrl);
+                    recordingBlob = result.wavBlob;
+                    recordingBlobUrl = result.audioUrl || URL.createObjectURL(result.wavBlob);
+                    const v3Playback = document.getElementById('rts-v3-playback');
+                    if (v3Playback) v3Playback.src = recordingBlobUrl;
+                    return result.wavBlob;
+                }
+                return blob;
+            }).catch((err) => {
+                console.warn('[RTS] AudioDspPipeline enhancement failed, keeping raw audio:', err);
+                return blob;
+            })
+            : Promise.resolve(blob);
+    }
+
+    async function submitForFeedback() {
+        if (v3Phase !== 'complete') return;
+        const qGen = questionGen;
+        const aGen = attemptGen;
+
+        v3Phase = 'feedback';
+        syncPteShell();
+
+        archiveAttemptId = null;
+        archiveSavePromise = null;
+        const currentToken = recordingSessionToken;
+
+        rememberArchiveSave((async () => {
+            const finalBlob = dspPromise ? await dspPromise.catch(() => recordingBlob) : recordingBlob;
+            if (currentToken !== recordingSessionToken || qGen !== questionGen || aGen !== attemptGen) return null;
+            return window.PTEAttemptArchive?.saveAttempt?.({
+                practiceMode: 'rts',
+                promptSnapshot: {
+                    promptId: currentEntry?.id || null,
+                    title: currentEntry?.title || '',
+                    text: currentEntry?.answer || currentEntry?.prompt || '',
+                    sourceAssetPaths: [currentEntry?.audioPath || currentEntry?.audio || currentEntry?.mediaPath].filter(Boolean),
+                    data: currentEntry || null
+                },
+                responseSnapshot: {
+                    transcript: transcriptText || ''
+                },
+                answerSnapshot: {
+                    sampleResponse: currentEntry?.sampleResponse || currentEntry?.sampleResponses || null
+                },
+                resultSnapshot: {
+                    submitted: true,
+                    hasAudio: !!finalBlob
+                },
+                scoringSource: 'client',
+                media: finalBlob ? [{
+                    slot: 'student',
+                    label: 'Student response',
+                    blob: finalBlob,
+                    contentType: finalBlob.type || 'audio/webm'
+                }] : []
+            });
+        })());
+
+        renderV3Feedback();
+    }
+
+    function renderV3Feedback() {
+        const feedback = document.getElementById('rts-pte-feedback');
+        if (!feedback) return;
+
+        const v3Playback = document.getElementById('rts-v3-playback');
+        if (v3Playback) {
+            if (recordingBlobUrl) {
+                v3Playback.src = recordingBlobUrl;
+            } else if (recordingBlob) {
+                recordingBlobUrl = URL.createObjectURL(recordingBlob);
+                v3Playback.src = recordingBlobUrl;
+            } else {
+                v3Playback.removeAttribute('src');
+            }
+        }
+
+        const v3Transcript = document.getElementById('rts-v3-transcript');
+        if (v3Transcript) {
+            const text = String(transcriptText || '').trim();
+            v3Transcript.textContent = text || 'No transcript detected.';
+            v3Transcript.classList.toggle('rts-no-transcript', !text);
+        }
+
+        // Sample answers
+        const sampleFull = document.getElementById('rts-v3-sample-full');
+        const sampleSimp = document.getElementById('rts-v3-sample-simplified');
+        const sampleResponse = v3LastAiScoreData?.sampleResponse || currentEntry?.sampleResponse || currentEntry?.sampleResponses || null;
+        if (sampleResponse && (sampleResponse.full || sampleResponse.simplified)) {
+            if (sampleFull) sampleFull.innerHTML = escapeHtml(String(sampleResponse.full || 'No full sample available.'));
+            if (sampleSimp) sampleSimp.innerHTML = escapeHtml(String(sampleResponse.simplified || 'No simplified sample available.'));
+        } else {
+            if (sampleFull) sampleFull.textContent = 'Sample answers will be available once AI scoring is complete.';
+            if (sampleSimp) sampleSimp.textContent = 'Sample answers will be available once AI scoring is complete.';
+        }
+
+        // AI Score state
+        const emptyEl = document.getElementById('rts-v3-ai-empty');
+        const resultsEl = document.getElementById('rts-v3-results-container');
+        if (hasAiScoreResult && v3LastAiScoreData) {
+            if (emptyEl) emptyEl.style.display = 'none';
+            if (resultsEl) {
+                resultsEl.style.display = '';
+                renderV3AiScoreResults(v3LastAiScoreData);
+            }
+        } else {
+            if (emptyEl) emptyEl.style.display = '';
+            if (resultsEl) {
+                resultsEl.style.display = 'none';
+                resultsEl.innerHTML = '';
+            }
+            updateAiScoreButtonState();
+        }
+    }
+
+    function renderV3AiScoreResults(data) {
+        const container = document.getElementById('rts-v3-results-container');
+        if (!container) return;
+
+        const overall = data.overall || {};
+        const total = Number(overall.total || 0);
+        const maxTotal = Number(overall.maxTotal || 6);
+        const percent = Number.isFinite(Number(overall.percent)) ? Number(overall.percent) : (maxTotal > 0 ? Math.round((total / maxTotal) * 100) : 0);
+
+        const scores = data.scores && typeof data.scores === 'object' ? data.scores : {};
+        const content = scores.content || {};
+
+        const detailParts = [];
+        const rationale = content.rationale || '';
+        if (rationale) detailParts.push(String(rationale));
+        const fixTips = Array.isArray(content.fixTips) ? content.fixTips : [];
+        if (fixTips.length > 0) detailParts.push('Fix: ' + fixTips.slice(0, 3).join(' | '));
+        const evidence = Array.isArray(content.evidence) ? content.evidence : [];
+        if (evidence.length > 0) detailParts.push('Evidence: ' + evidence.slice(0, 2).join('; '));
+
+        const breakdownHtml = renderScoreRow('Content', {
+            score: Number.isFinite(Number(content.score)) ? Number(content.score) : -1,
+            detail: detailParts.join(' ')
+        }, 6);
+
+        const analysis = data.responseAnalysis || {};
+        const analysisHtml = buildAnalysisHtml(analysis);
+
+        const teacherAdvice = String(data?.teacherAdvice || data?.teacherAdviceChat || '').trim();
+        const teacherAdviceHtml = teacherAdvice ? `
+            <details class="essay-basic-feedback" style="margin-top: 16px;">
+                <summary>💡 Teacher Advice</summary>
+                <div class="essay-basic-feedback-body" style="white-space: pre-line; line-height: 1.7; padding: 12px 16px;">${escapeHtml(teacherAdvice)}</div>
+            </details>
+        ` : '';
+
+        container.innerHTML = `
+            <div class="essay-results-summary">
+                <div class="essay-results-score-circle">
+                    <span class="essay-score-number">${total}</span>
+                    <span class="essay-score-divider">/</span>
+                    <span class="essay-score-total">${maxTotal}</span>
+                </div>
+                <div class="essay-results-percentage">${percent}%</div>
+            </div>
+            <div class="essay-results-breakdown">
+                ${breakdownHtml}
+            </div>
+            ${analysisHtml}
+            ${teacherAdviceHtml}
+        `;
+    }
+
+    async function finishRecordingForNext() {
+        stopAllTimers();
+        stopAllV3Timers();
+        const qGen = questionGen;
+        const aGen = ++attemptGen;
+        stopSpeechRecognition();
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            try { mediaRecorder.stop(); } catch (_) {}
+        }
+        mediaRecorder = null;
+        const finalBlob = dspPromise ? await dspPromise.catch(() => recordingBlob) : recordingBlob;
+        if (qGen !== questionGen || aGen !== attemptGen) return;
+        if (currentEntry) {
+            try {
+                await window.PTEAttemptArchive?.saveAttempt?.({
+                    practiceMode: 'rts',
+                    promptSnapshot: {
+                        promptId: currentEntry.id || null,
+                        title: currentEntry.title || '',
+                        text: currentEntry.answer || currentEntry.prompt || '',
+                        sourceAssetPaths: [currentEntry.audioPath || currentEntry.audio || currentEntry.mediaPath].filter(Boolean),
+                        data: currentEntry
+                    },
+                    responseSnapshot: { transcript: transcriptText || '' },
+                    answerSnapshot: { sampleResponse: currentEntry.sampleResponse || null },
+                    resultSnapshot: { submitted: true, score: null },
+                    scoringSource: 'client',
+                    media: finalBlob ? [{
+                        slot: 'student',
+                        label: 'Student response',
+                        blob: finalBlob,
+                        contentType: finalBlob.type || 'audio/webm'
+                    }] : []
+                });
+            } catch (_) {}
+        }
+        advanceQuestion();
+    }
+
+    function advanceQuestion() {
+        if (!entries || entries.length === 0) return;
+        const nextIndex = (currentEntryIndex + 1) % entries.length;
+        loadQuestion(nextIndex);
+    }
+
     /* ──────────────────────────── LIFECYCLE ──────────────────────────── */
 
     function onEnter() {
         init();
-        // If we have entries, ensure current question is loaded
         if (entries.length > 0 && !currentEntry) {
             loadQuestion(0);
         } else if (currentEntry && window.PracticeRouter) {
             window.PracticeRouter.replaceRoute('rts', currentEntry.id);
         }
         renderPicker();
+        if (isV3()) {
+            ensureV3Elements();
+            if (currentEntry) {
+                queueMicrotask(() => {
+                    if (v3Active && currentEntry) startV3QuestionFlow();
+                });
+            }
+        }
     }
 
     function onExit() {
         reset();
         closePicker();
+        if (isV3()) {
+            stopAllV3Timers();
+            if (pteAudioBox) {
+                pteAudioBox.destroy();
+                pteAudioBox = null;
+            }
+            if (pteRecorderWidget) {
+                pteRecorderWidget.destroy();
+                pteRecorderWidget = null;
+            }
+        }
     }
 
     /* ──────────────────────────── EXPORT ──────────────────────────── */
 
-    window.RTSMode = { onEnter, onExit, getItems, getCurrentId, select };
+    window.RTSMode = {
+        onEnter,
+        onExit,
+        getItems,
+        getCurrentId: () => (currentEntry ? String(currentEntry.id) : null),
+        select,
+        // v3 methods
+        mountPteShell,
+        unmountPteShell,
+        syncPteShell,
+        getPtePhase: () => v3Phase,
+        startV3Recording,
+        stopV3Recording,
+        cancelRecording,
+        retryRecording: startV3Prep,
+        toggleUserAudioPlayback,
+        submitForFeedback,
+        finishRecordingForNext,
+        advanceQuestion
+    };
+
+    Object.defineProperty(window.RTSMode, 'isRecording', {
+        get: () => (isV3() ? v3Phase === 'recording' : currentStep === 'recording'),
+        configurable: true
+    });
+    Object.defineProperty(window.RTSMode, 'currentId', {
+        get: () => (currentEntry ? String(currentEntry.id) : null),
+        configurable: true
+    });
 
     // Deep-link support: listen for PracticeRouter question navigation events
     window.addEventListener('practice-route-question', (event) => {

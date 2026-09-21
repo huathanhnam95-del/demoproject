@@ -176,6 +176,49 @@
   // retaining its mode-owned step flow, timers, scoring, and result controls.
   controller.register({
     modeId: 'rts',
+    shell: 'v3',
+    v3: {
+      title: 'Respond to a Situation',
+      cardBodySelector: '#rts-practice-area',
+      progressSteps: ['Listen', 'Prep', 'Record', 'Feedback'],
+      phaseToStep: { loading: 0, listen: 0, prep: 1, recording: 2, complete: 2, feedback: 3 },
+      statusText: { recording: 'Respond to the situation.' },
+      getPhase: () => window.RTSMode?.getPtePhase?.() || 'loading',
+      onMount: () => window.RTSMode?.mountPteShell?.(),
+      onSync: () => window.RTSMode?.syncPteShell?.(),
+      onUnmount: () => window.RTSMode?.unmountPteShell?.(),
+      filters: [],
+      dock: {
+        actions: [
+          { sourceId: 'rts-record-btn', label: 'Start recording', variant: 'primary', phases: ['prep'] },
+          { sourceId: 'rts-cancel-btn', label: 'Cancel', variant: 'ghost', phases: ['recording'] },
+          { sourceId: 'rts-stop-btn', label: 'Finish recording', variant: 'stop', phases: ['recording'] },
+          { sourceId: 'rts-retry-btn', label: 'Record again', variant: 'ghost', phases: ['complete'] },
+          { sourceId: 'rts-play-btn', label: 'Play', phases: ['complete'] },
+          { sourceId: 'rts-submit-btn', label: 'Get feedback', variant: 'primary', phases: ['complete'] },
+          { sourceId: 'rts-redo-btn', label: 'Try again', variant: 'ghost', phases: ['feedback'] }
+        ]
+      },
+      next: {
+        onConfirmFromRecording: () => window.RTSMode?.finishRecordingForNext?.(),
+        goNext: () => window.RTSMode?.advanceQuestion?.()
+      },
+      attempts: {
+        practiceMode: 'rts',
+        modeLabel: 'Respond to a Situation',
+        getPromptId: () => window.RTSMode?.getCurrentId?.() || null,
+        formatScores: (attempt) => {
+          const res = attempt.resultSnapshot;
+          if (res?.overall?.total != null) {
+            return [`${res.overall.total}/${res.overall.maxTotal || 6}`];
+          }
+          if (res?.score != null) {
+            return [String(res.score)];
+          }
+          return ['—'];
+        }
+      }
+    },
     enabledScopes: ['pte'],
     panelId: 'mode-rts',
     steps: ['Audio', 'Prep', 'Record', 'Results'],

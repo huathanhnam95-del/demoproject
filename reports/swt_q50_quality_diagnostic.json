@@ -1,0 +1,189 @@
+{
+  "qwen": {
+    "modelName": "PTE Academic Summarize Written Text (SWT) Pedagogical Answer Breakdown System",
+    "verdictOnQuality": "UNACCEPTABLE",
+    "passageCoverageAnalysis": {
+      "wasCoverageSufficient": false,
+      "omittedPillars": [
+        "The prevalence of hiring bias against overqualified workers and its rationalization (e.g., perceived mismatch leading to dissatisfaction)",
+        "The legal permissibility of rejecting overqualified workers (contrasting with other forms of discrimination)",
+        "The global surplus of overqualified workers, especially in developing economies, due to rising education levels",
+        "The specific mechanism of empowerment/autonomy as a solution to dissatisfaction, with empirical support from Berrin Erdogan and Talya N. Bauer"
+      ],
+      "recommendedCorePointCount": 4,
+      "optimalCorePoints": [
+        {
+          "id": "core-1",
+          "label": "Overqualified workers can be valuable hires due to better performance and lower turnover",
+          "paragraph": 1
+        },
+        {
+          "id": "core-2",
+          "label": "Hiring bias against overqualified workers is common but legally permissible",
+          "paragraph": 2
+        },
+        {
+          "id": "core-3",
+          "label": "Overqualified workers may experience dissatisfaction due to perceived mismatch between their qualifications and job requirements",
+          "paragraph": 2
+        },
+        {
+          "id": "core-4",
+          "label": "Empowerment and autonomy can mitigate dissatisfaction among overqualified workers, as demonstrated by research",
+          "paragraph": 3
+        }
+      ]
+    },
+    "highlightDegradationAnalysis": {
+      "rootCause": "The highlight extraction algorithm is overly simplistic, relying on greedy prefix slicing or keyword matching rather than semantic clause or predicate extraction. This results in fragmented, context-poor phrases that fail to capture the full meaning of the core points.",
+      "pedagogicalImpact": "Such degraded highlights mislead learners by presenting incomplete or incoherent fragments as representative of the core points. This undermines the pedagogical value of the breakdown, as students are not shown how to identify and articulate full, meaningful ideas from the text.",
+      "correctedVersionAHighlights": [
+        {
+          "pointId": "core-1",
+          "phrase": "overqualified workers can be valuable hires due to better performance and lower turnover"
+        },
+        {
+          "pointId": "core-2",
+          "phrase": "hiring bias against overqualified workers is common but legally permissible"
+        },
+        {
+          "pointId": "core-3",
+          "phrase": "empowerment and autonomy can mitigate dissatisfaction among overqualified workers"
+        }
+      ]
+    },
+    "auditCommitteeBlindspot": {
+      "whyAuditorsPassedIt": "The audit committee likely relied on a shallow rubric that prioritized the presence of core points over their completeness and thematic coverage. They may have also underestimated the importance of highlight quality, assuming that any mention of the core point label was sufficient.",
+      "rubricFlaw": "The rubric did not enforce semantic completeness in highlights or require a proportional coverage of the passage’s thematic pillars. It also failed to account for the complexity of the passage, leading to an underestimation of the required number of core points and the quality of highlight extraction."
+    },
+    "concreteRemediations": {
+      "generationPromptChanges": "Prompt engineering should be revised to explicitly require paragraph-by-paragraph thematic mapping, ensuring that each core point is tied to a specific paragraph and captures its central argument. Prompts should also emphasize the need for full, semantically rich phrases rather than keyword fragments.",
+      "algorithmChanges": "The highlight extraction algorithm must be updated to use semantic parsing techniques that identify full clauses or predicates, rather than relying on keyword matching or greedy slicing. This will ensure that highlights are meaningful and representative of the core points.",
+      "auditRubricChanges": "The audit rubric must be revised to include mandatory checks for: (1) semantic completeness of highlights, (2) proportional coverage of the passage’s thematic pillars, and (3) a minimum number of core points based on passage length and complexity. This will ensure that summaries are both comprehensive and pedagogically useful."
+    }
+  },
+  "deepseek": {
+    "modelName": "PTE Academic Summarize Written Text (SWT) Model",
+    "verdictOnQuality": "SUBSTANDARD",
+    "passageCoverageAnalysis": {
+      "wasCoverageSufficient": false,
+      "omittedPillars": [
+        "Hiring bias and legal implications",
+        "Macroeconomic surplus in developing economies",
+        "Specific mechanisms of empowerment"
+      ],
+      "recommendedCorePointCount": 4,
+      "optimalCorePoints": [
+        {
+          "id": "core-1",
+          "label": "Overqualified workers can be valuable hires",
+          "paragraph": 1
+        },
+        {
+          "id": "core-2",
+          "label": "Hiring bias against overqualified candidates",
+          "paragraph": 2
+        },
+        {
+          "id": "core-3",
+          "label": "Empowerment reduces dissatisfaction",
+          "paragraph": 3
+        },
+        {
+          "id": "core-4",
+          "label": "Macroeconomic surplus in developing economies",
+          "paragraph": 3
+        }
+      ]
+    },
+    "highlightDegradationAnalysis": {
+      "rootCause": "The highlights were extracted as minimal fragments rather than meaningful phrases, leading to grammatical incoherence and loss of context.",
+      "pedagogicalImpact": "This undermines learning by not providing clear, complete examples of key points, making it harder for students to grasp the main ideas.",
+      "correctedVersionAHighlights": [
+        {
+          "pointId": "core-1",
+          "phrase": "Overqualified workers tend to perform better and stay longer"
+        },
+        {
+          "pointId": "core-2",
+          "phrase": "Hiring bias leads to rejecting overqualified candidates despite their benefits"
+        },
+        {
+          "pointId": "core-3",
+          "phrase": "Empowerment reduces dissatisfaction by granting autonomy"
+        }
+      ]
+    },
+    "auditCommitteeBlindspot": {
+      "whyAuditorsPassedIt": "The committee focused on the presence of core points without ensuring their completeness or thematic coverage.",
+      "rubricFlaw": "The rubric lacked criteria for assessing the sufficiency of passage coverage and the semantic integrity of highlights."
+    },
+    "concreteRemediations": {
+      "generationPromptChanges": "Implement paragraph-by-paragraph thematic mapping to ensure comprehensive coverage of all key arguments.",
+      "algorithmChanges": "Modify the highlight extraction to focus on extracting full clauses or meaningful phrases rather than minimal fragments.",
+      "auditRubricChanges": "Add mandatory checks for semantic completeness of highlights and a passage coverage ratio to ensure all major themes are included."
+    }
+  },
+  "gemma": {
+    "modelName": "GPT-4o (Forensic Audit Mode)",
+    "verdictOnQuality": "UNACCEPTABLE",
+    "passageCoverageAnalysis": {
+      "wasCoverageSufficient": false,
+      "omittedPillars": [
+        "The pervasive nature of hiring bias and the legal distinction from age/gender discrimination.",
+        "The global/macroeconomic context (developing economies and the surplus of over-educated workers).",
+        "The specific causal link between lack of autonomy and the intention to quit."
+      ],
+      "recommendedCorePointCount": 4,
+      "optimalCorePoints": [
+        {
+          "id": "core-1",
+          "label": "Overqualified workers perform well and stay longer despite common hiring prejudices.",
+          "paragraph": 1
+        },
+        {
+          "id": "core-2",
+          "label": "The prevalence of bias against overqualified candidates and its legal status.",
+          "paragraph": 2
+        },
+        {
+          "id": "core-3",
+          "label": "The global surplus of over-educated workers in developing economies.",
+          "paragraph": 3
+        },
+        {
+          "id": "core-4",
+          "label": "The specific role of autonomy/empowerment in mitigating dissatisfaction and turnover.",
+          "paragraph": 3
+        }
+      ]
+    },
+    "highlightDegradationAnalysis": {
+      "rootCause": "The system utilized a 'greedy prefix' or 'minimalist' extraction logic that prioritized grammatical anchors over semantic units, resulting in fragments that lack independent meaning.",
+      "pedagogicalImpact": "Fragmented highlights (e.g., 'overqualified workers are') provide zero utility for students. They fail to teach the student which part of the sentence contains the 'meat' of the point, making it impossible to identify the core argument from the supporting detail.",
+      "correctedVersionAHighlights": [
+        {
+          "pointId": "core-1",
+          "phrase": "overqualified workers tend to perform better than other employees"
+        },
+        {
+          "pointId": "core-2",
+          "phrase": "prejudice against too-good employees is pervasive"
+        },
+        {
+          "pointId": "core-3",
+          "phrase": "overqualified workers’ feelings of dissatisfaction can be dissipated by giving them autonomy"
+        }
+      ]
+    },
+    "auditCommitteeBlindspot": {
+      "whyAuditorsPassedIt": "The auditors likely performed a 'surface-level' check—verifying that the summary was grammatically correct and contained the keywords 'overqualified', 'dissatisfaction', and 'empowerment'—without verifying if the highlights actually mapped to the full scope of the source text.",
+      "rubricFlaw": "The rubric lacked a 'Semantic Completeness' requirement for highlights. It failed to penalize 'grammatical fragments' and did not mandate a 'Coverage Ratio' check (ensuring that each paragraph of the source text contributes at least one distinct core point)."
+    },
+    "concreteRemediations": {
+      "generationPromptChanges": "Implement a 'Paragraph-to-Point' mapping instruction: 'Identify at least one distinct thematic pillar per paragraph. Ensure core points are full clauses, not phrases.'",
+      "algorithmChanges": "Replace 'shortest_match' or 'prefix_match' with a 'Semantic Unit' requirement. The algorithm must select the smallest complete clause that conveys the full meaning of the core point.",
+      "auditRubricChanges": "1. Mandatory 'Coverage Check': Does the summary reflect all three paragraphs? 2. 'Highlight Integrity': Are highlights at least 5 words long and contain a subject and a predicate? 3. 'Redundancy Check': Ensure points are not just overlapping fragments of the same sentence."
+    }
+  }
+}

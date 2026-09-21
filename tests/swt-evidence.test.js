@@ -476,6 +476,43 @@ ctrlResilient.setupSampleSummary();
 assert.strictEqual(ctrlResilient.tabSample.hidden, true, '34a: tabSample must be hidden on unsupported raw data');
 assert.strictEqual(ctrlResilient.activeKind, 'core', '34b: activeKind must fallback to core when no sample versions exist');
 assert.strictEqual(ctrlResilient.sampleVersions.length, 0, '34c: sampleVersions must be empty');
+
+// 34d. setupSampleSummary() with 2-version object format
+ctrlResilient.analysis = {
+  sampleSummary: {
+    versionA: { text: 'Summary A text', pointHighlights: [] },
+    versionB: { text: 'Summary B text', pointHighlights: [], paraphrasingGuide: [] }
+  }
+};
+ctrlResilient.setupSampleSummary();
+assert.strictEqual(ctrlResilient.sampleVersions.length, 2, '34d: Must produce exactly 2 versions');
+assert.strictEqual(ctrlResilient.sampleVersions[0].label, 'Version A (Simple)', '34e: First tab must be Version A (Simple)');
+assert.strictEqual(ctrlResilient.sampleVersions[1].label, 'Version B (Advanced)', '34f: Second tab must be Version B (Advanced)');
+
+// 34g. setupSampleSummary() with string map format
+ctrlResilient.analysis = {
+  sampleSummary: {
+    versionA: 'String summary A',
+    versionB: 'String summary B'
+  }
+};
+ctrlResilient.setupSampleSummary();
+assert.strictEqual(ctrlResilient.sampleVersions.length, 2, '34g: String map must produce 2 versions');
+assert.strictEqual(ctrlResilient.sampleVersions[0].label, 'Version A (Simple)', '34h: String map first tab must be Version A (Simple)');
+assert.strictEqual(ctrlResilient.sampleVersions[1].label, 'Version B (Advanced)', '34i: String map second tab must be Version B (Advanced)');
+
+// 34j. setupSampleSummary() with array format
+ctrlResilient.analysis = {
+  sampleSummary: [
+    { text: 'Array summary A' },
+    { text: 'Array summary B' }
+  ]
+};
+ctrlResilient.setupSampleSummary();
+assert.strictEqual(ctrlResilient.sampleVersions.length, 2, '34j: Array must produce 2 versions');
+assert.strictEqual(ctrlResilient.sampleVersions[0].label, 'Version A (Simple)', '34k: Array first tab must be Version A (Simple)');
+assert.strictEqual(ctrlResilient.sampleVersions[1].label, 'Version B (Advanced)', '34l: Array second tab must be Version B (Advanced)');
+
 ctrlResilient.destroy();
 
 // 35. renderParaphrasingGuide behavior, rendering fidelity, and resilience
@@ -549,17 +586,17 @@ assert.ok(badgesB[0].className.includes('swt-paraphrase-badge--structure'), '35f
 assert.ok(badgesB[1].className.includes('swt-paraphrase-badge--synonym'), '35g: Second badge should have synonym class');
 assert.strictEqual(badgesB[0].textContent, 'Voice Shift', '35h: Badge text matches technique');
 
-// 35c. Version C with 4 items
-const guideItemsC = [
-  { original: 'c1', paraphrased: 'cp1', type: 'synonym', technique: 'Idiom', note: 'Note C1' },
-  { original: 'c2', paraphrased: 'cp2', type: 'structure', technique: 'Gerund', note: 'Note C2' },
-  { original: 'c3', paraphrased: 'cp3', type: 'synonym', technique: 'Register', note: 'Note C3' },
-  { original: 'c4', paraphrased: 'cp4', type: 'structure', technique: 'Appositive', note: 'Note C4' }
+// 35c. Secondary Version B sample with 4 items
+const guideItemsB2 = [
+  { original: 'c1', paraphrased: 'cp1', type: 'synonym', technique: 'Idiom', note: 'Note 1' },
+  { original: 'c2', paraphrased: 'cp2', type: 'structure', technique: 'Gerund', note: 'Note 2' },
+  { original: 'c3', paraphrased: 'cp3', type: 'synonym', technique: 'Register', note: 'Note 3' },
+  { original: 'c4', paraphrased: 'cp4', type: 'structure', technique: 'Appositive', note: 'Note 4' }
 ];
-ctrlGuide.renderParaphrasingGuide({ id: 'versionC', text: 'Summary C', paraphrasingGuide: guideItemsC });
-assert.strictEqual(ctrlGuide.paraphraseGuide.hidden, false, '35i: Guide must be visible for Version C');
-const renderedItemsC = ctrlGuide.paraphraseGuide.querySelectorAll('.swt-paraphrase-item');
-assert.strictEqual(renderedItemsC.length, 4, '35j: Version C must render exactly 4 guide items');
+ctrlGuide.renderParaphrasingGuide({ id: 'versionB', text: 'Summary B variation', paraphrasingGuide: guideItemsB2 });
+assert.strictEqual(ctrlGuide.paraphraseGuide.hidden, false, '35i: Guide must be visible for secondary Version B');
+const renderedItemsB2 = ctrlGuide.paraphraseGuide.querySelectorAll('.swt-paraphrase-item');
+assert.strictEqual(renderedItemsB2.length, 4, '35j: Secondary Version B must render exactly 4 guide items');
 
 // 35d. Resilience with invalid/malformed inputs
 ctrlGuide.renderParaphrasingGuide({ id: 'bad1', paraphrasingGuide: 'not an array' });

@@ -421,29 +421,50 @@
           }];
         }
       } else if (Array.isArray(raw)) {
-        versions = raw.map((item, idx) => ({
-          id: item.id || `version-${idx + 1}`,
-          label: item.label || item.title || `Version ${idx + 1}`,
-          tagline: item.tagline || item.description || '',
-          text: (item.text || item.summary || String(item)).trim(),
-          pointHighlights: Array.isArray(item.pointHighlights) ? item.pointHighlights : (Array.isArray(item.highlights) ? item.highlights : []),
-          paraphrasingGuide: Array.isArray(item.paraphrasingGuide) ? item.paraphrasingGuide.filter(g => g && typeof g === 'object') : []
-        })).filter(v => v.text);
+        versions = raw.map((item, idx) => {
+          const rawObj = (item && typeof item === 'object') ? item : { text: String(item) };
+          const key = rawObj.id || `version${idx === 0 ? 'A' : idx === 1 ? 'B' : idx + 1}`;
+          let defaultLabel;
+          if (/^version_?a$/i.test(key) || idx === 0) {
+            defaultLabel = 'Version A (Simple)';
+          } else if (/^version_?b$/i.test(key) || idx === 1) {
+            defaultLabel = 'Version B (Advanced)';
+          } else if (/^version/i.test(key)) {
+            defaultLabel = key.replace(/^version_?([A-Za-z0-9])/i, (_, c) => `Version ${c.toUpperCase()}`);
+          } else {
+            defaultLabel = `Version ${idx + 1}`;
+          }
+          return {
+            id: rawObj.id || (idx === 0 ? 'versionA' : idx === 1 ? 'versionB' : `version-${idx + 1}`),
+            label: rawObj.label || rawObj.title || defaultLabel,
+            tagline: rawObj.tagline || rawObj.description || '',
+            text: (rawObj.text || rawObj.summary || String(item)).trim(),
+            pointHighlights: Array.isArray(rawObj.pointHighlights) ? rawObj.pointHighlights : (Array.isArray(rawObj.highlights) ? rawObj.highlights : []),
+            paraphrasingGuide: Array.isArray(rawObj.paraphrasingGuide) ? rawObj.paraphrasingGuide.filter(g => g && typeof g === 'object') : []
+          };
+        }).filter(v => v.text);
       } else if (typeof raw === 'object') {
         versions = Object.entries(raw).map(([key, val], idx) => {
+          let defaultLabel;
+          if (/^version_?a$/i.test(key) || idx === 0) {
+            defaultLabel = 'Version A (Simple)';
+          } else if (/^version_?b$/i.test(key) || idx === 1) {
+            defaultLabel = 'Version B (Advanced)';
+          } else if (/^version/i.test(key)) {
+            defaultLabel = key.replace(/^version_?([A-Za-z0-9])/i, (_, c) => `Version ${c.toUpperCase()}`);
+          } else {
+            defaultLabel = `Version ${idx + 1}`;
+          }
           if (typeof val === 'string') {
             return {
               id: key,
-              label: key.replace(/^version([A-Za-z0-9])/i, 'Version $1').trim(),
+              label: defaultLabel,
               tagline: '',
               text: val.trim(),
               pointHighlights: [],
               paraphrasingGuide: []
             };
           }
-          const defaultLabel = /^version/i.test(key)
-            ? key.replace(/^version_?([A-Za-z0-9])/i, (_, c) => `Version ${c.toUpperCase()}`)
-            : `Version ${idx + 1}`;
           return {
             id: val.id || key,
             label: val.label || val.title || defaultLabel,

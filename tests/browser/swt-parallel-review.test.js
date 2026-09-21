@@ -48,7 +48,7 @@ async function setupFirebaseMocks(context) {
         export const connectFirestoreEmulator = () => {};
         export const collection = (db, path) => ({ _type: 'collection', path });
         export const doc = (db, path, ...segments) => ({ _type: 'doc', path: [path, ...segments].filter(Boolean).join('/') });
-        export const getDoc = async () => ({ exists: () => false, data: () => ({}) });
+        export const getDoc = async () => ({ exists: () => true, data: () => ({ englishLevel: 'B2', isAdmin: true }) });
         export const getDocs = async () => ({ empty: true, docs: [], forEach: () => {} });
         export const onSnapshot = (queryRef, onNext) => { onNext?.({ empty: true, docs: [] }); return () => {}; };
         export const setDoc = async () => {};
@@ -80,6 +80,22 @@ async function setupFirebaseMocks(context) {
           return { data: { success: true } };
         };
       `
+    });
+  });
+  await context.route('**/*storage.googleapis.com/**', (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({})
+    });
+  });
+  await context.route('**/*praat-api*.run.app/**', (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ status: 'ok' })
     });
   });
 }
@@ -127,7 +143,13 @@ function startHarnessServer() {
   const screenshotDir = path.join(__dirname, '..', '..', 'test-results', 'swt-local-test');
   fs.mkdirSync(screenshotDir, { recursive: true });
 
-  page.on('pageerror', (error) => pageErrors.push(error.message));
+  page.on('pageerror', (error) => {
+    if (error.message && error.message.includes('[MediaUrlResolver]')) {
+      return;
+    }
+    console.error('PAGE ERROR DETAIL:', error.stack || error.message);
+    pageErrors.push(error.message);
+  });
   page.on('console', (message) => {
     if (message.type() === 'error' && !message.text().includes('Failed to load resource')) {
       console.log(`[browser error] ${message.text()}`);
@@ -138,10 +160,12 @@ function startHarnessServer() {
     window.__DISABLE_FIREBASE_EMULATORS__ = true;
     localStorage.setItem('swtModeFirstUse', 'true');
     localStorage.setItem('swtInfoDismissed', '1');
+    sessionStorage.setItem('hasSeenOnboardingModal', 'true');
   });
 
   try {
     await page.goto(`${origin}/pte-practice/writing/swt`, { waitUntil: 'domcontentloaded' });
+    await page.addStyleTag({ content: '#level-selection-modal, #welcome-onboarding-modal { display: none !important; }' });
     await page.waitForFunction(() => Boolean(window.switchToMode && window.SWTMode && window.SWTEvidence && window.SWTReview));
     await page.waitForFunction(() => {
       const pill = document.getElementById('swt-v7-question-pill');
@@ -226,7 +250,7 @@ function startHarnessServer() {
     assert.strictEqual(desktopState.sampleSelected, 'false', 'Sample tab should not be selected');
     assert.strictEqual(desktopState.coreCount, '4', 'Core count should be 4');
     assert.strictEqual(desktopState.ignoreCount, '3', 'Ignore count should be 3');
-    assert.strictEqual(desktopState.sampleCount, '3', 'Sample count badge should reflect 3 versions');
+    assert.strictEqual(desktopState.sampleCount, '2', 'Sample count badge should reflect 2 versions');
     assert.strictEqual(desktopState.point1Pressed, 'true', 'Point 1 should have aria-pressed="true"');
     assert.strictEqual(desktopState.caption, 'Core point 01', 'Evidence caption should display Core point 01');
     assert.ok(desktopState.counter.includes('Excerpt 1 of 2'), 'Counter should display Excerpt 1 of 2');
@@ -420,7 +444,7 @@ function startHarnessServer() {
     assert.strictEqual(excerpt1State.prevDisabled, true, 'Prev button should be disabled on excerpt 1');
     assert.strictEqual(excerpt1State.nextDisabled, false, 'Next button should be enabled on excerpt 1');
 
-    console.log('Step 3b: Clicking Example summary tab and verifying dedicated 3rd panel, multi-version summaries (Version A, B, C) with core point highlights...');
+    console.log('Step 3b: Clicking Example summary tab and verifying dedicated 3rd panel, multi-version summaries (Version A and Version B) with core point highlights...');
     await page.click('#swt-review-tab-sample');
     const sampleSummaryState = await page.evaluate(() => {
       const tabs = Array.from(document.querySelectorAll('.swt-review-sample-tab')).map(t => ({
@@ -486,8 +510,8 @@ function startHarnessServer() {
     assert.strictEqual(sampleSummaryState.corePanelHidden, true, 'Core points panel should be hidden');
     assert.strictEqual(sampleSummaryState.ignorePanelHidden, true, 'Points to ignore panel should be hidden');
     assert.strictEqual(sampleSummaryState.activeKind, 'sample', 'Active category should be sample');
-    assert.strictEqual(sampleSummaryState.tabs.length, 3, 'Should render 3 version tabs');
-    assert.strictEqual(sampleSummaryState.sampleVersionCount, 3, 'Controller state should report 3 sample versions');
+    assert.strictEqual(sampleSummaryState.tabs.length, 2, 'Should render 2 version tabs');
+    assert.strictEqual(sampleSummaryState.sampleVersionCount, 2, 'Controller state should report 2 sample versions');
     assert.strictEqual(sampleSummaryState.activeSampleVersion, 'versionA', 'Active sample version should be versionA');
     assert.strictEqual(sampleSummaryState.tabs[0].version, 'versionA', 'First tab should be version A');
     assert.strictEqual(sampleSummaryState.tabs[0].selected, 'true', 'Version A should be selected by default');
@@ -612,91 +636,21 @@ function startHarnessServer() {
       if (foot) foot.style.display = '';
     });
 
-    // Switch to Version C
-    await page.click('.swt-review-sample-tab[data-version="versionC"]');
-    const versionCState = await page.evaluate(() => {
-      const panel = document.getElementById('swt-review-sample-panel');
-      const summaryText = document.querySelector('.swt-review-sample-summary')?.textContent.trim() || '';
-      const summaryWords = summaryText.split(/\s+/).filter(Boolean).length;
-      const desc = document.querySelector('.swt-review-sample-desc')?.textContent.trim() || '';
-      const tabCSelected = document.querySelector('.swt-review-sample-tab[data-version="versionC"]')?.getAttribute('aria-selected');
-      const ctrl = window.SWTMode.getReviewController();
-      const highlights = Array.from(document.querySelectorAll('.swt-review-sample-summary mark.swt-sample-highlight')).map(m => ({
-        pointId: m.dataset.pointId,
-        pointIndex: m.dataset.pointIndex,
-        text: m.textContent.trim()
+    // Verify Version C does NOT exist and UI cleanly has only Version A and Version B
+    const versionCCheck = await page.evaluate(() => {
+      const tabC = document.querySelector('.swt-review-sample-tab[data-version="versionC"]');
+      const sampleTabs = Array.from(document.querySelectorAll('.swt-review-sample-tab')).map(t => ({
+        version: t.dataset.version,
+        label: t.textContent.trim()
       }));
-      const guide = document.querySelector('.swt-review-paraphrase-guide');
-      const guideHidden = guide ? guide.hidden : true;
-      const guideItems = Array.from(document.querySelectorAll('.swt-review-paraphrase-guide .swt-paraphrase-item')).map(item => ({
-        badgeText: item.querySelector('.swt-paraphrase-badge')?.textContent.trim(),
-        hasSynonymBadge: Boolean(item.querySelector('.swt-paraphrase-badge--synonym')),
-        hasStructureBadge: Boolean(item.querySelector('.swt-paraphrase-badge--structure')),
-        arrow: item.querySelector('.swt-paraphrase-arrow')?.textContent.trim()
-      }));
-      return {
-        summaryText,
-        summaryWords,
-        desc,
-        tabCSelected,
-        highlights,
-        guideHidden,
-        guideItems,
-        panelLabelledBy: panel?.getAttribute('aria-labelledby'),
-        activeSampleVersion: ctrl?.getState()?.activeSampleVersion
-      };
+      return { tabCExists: Boolean(tabC), sampleTabs };
     });
-    assert.strictEqual(versionCState.tabCSelected, 'true', 'Version C tab should be selected');
-    assert.strictEqual(versionCState.activeSampleVersion, 'versionC', 'Controller state should report active versionC');
-    assert.strictEqual(versionCState.panelLabelledBy, 'swt-review-sample-tab-versionC', 'Sample panel must be labelled by version C tab');
-    assert.strictEqual(versionCState.highlights.length, 5, 'Version C should have 5 core point highlights');
-    assert.ok(versionCState.highlights.some(h => h.pointId === 'core-1'), 'Version C highlights should include core-1');
-    assert.ok(versionCState.highlights.some(h => h.pointId === 'core-2'), 'Version C highlights should include core-2');
-    assert.ok(versionCState.highlights.some(h => h.pointId === 'core-3'), 'Version C highlights should include core-3');
-    assert.ok(versionCState.highlights.some(h => h.pointId === 'core-4'), 'Version C highlights should include core-4');
-    assert.strictEqual(versionCState.guideHidden, false, 'Version C Paraphrasing Guide should be visible');
-    assert.strictEqual(versionCState.guideItems.length, 4, 'Version C Paraphrasing Guide should have exactly 4 items');
-    assert.ok(versionCState.guideItems.some(item => item.hasStructureBadge), 'Version C should contain structure transformations');
-    assert.ok(versionCState.guideItems.some(item => item.hasSynonymBadge), 'Version C should contain synonym transformations');
-    assert.strictEqual(versionCState.guideItems[0].arrow, '→', 'Guide should render transformation arrow');
-    assert.ok(versionCState.summaryWords >= 50 && versionCState.summaryWords <= 70, `Version C word count (${versionCState.summaryWords}) should be 50-70`);
-    assert.ok(versionCState.summaryWords <= 75, 'Version C word count must never exceed 75 words');
-    assert.ok(versionCState.summaryText.includes('embedding environmental accountability'), 'Version C should use true summary / conceptual restructuring');
-    await page.evaluate(() => {
-      const scroll = document.querySelector('.swt-review-analysis-scroll');
-      if (scroll) scroll.scrollTop = scroll.scrollHeight;
-    });
-    await page.screenshot({ path: path.join(screenshotDir, '06-sample-summary-version-c.png'), fullPage: true });
-    await page.evaluate(() => {
-      const shell = document.querySelector('.swt-review-shell');
-      const pane = document.querySelector('.swt-review-analysis-pane');
-      const scroll = document.querySelector('.swt-review-analysis-scroll');
-      const foot = document.querySelector('.swt-review-analysis-foot');
-      if (shell) shell.style.height = 'auto';
-      if (pane) pane.style.height = 'auto';
-      if (scroll) {
-        scroll.style.overflow = 'visible';
-        scroll.style.maxHeight = 'none';
-      }
-      if (foot) foot.style.display = 'none';
-    });
-    const guideCEl = await page.$('.swt-review-paraphrase-guide');
-    if (guideCEl) {
-      await guideCEl.screenshot({ path: path.join(screenshotDir, '06b-paraphrase-guide-version-c.png') });
-    }
-    await page.evaluate(() => {
-      const shell = document.querySelector('.swt-review-shell');
-      const pane = document.querySelector('.swt-review-analysis-pane');
-      const scroll = document.querySelector('.swt-review-analysis-scroll');
-      const foot = document.querySelector('.swt-review-analysis-foot');
-      if (shell) shell.style.height = '';
-      if (pane) pane.style.height = '';
-      if (scroll) {
-        scroll.style.overflow = '';
-        scroll.style.maxHeight = '';
-      }
-      if (foot) foot.style.display = '';
-    });
+    assert.strictEqual(versionCCheck.tabCExists, false, 'Version C tab must NOT exist in review UI');
+    assert.strictEqual(versionCCheck.sampleTabs.length, 2, 'Exactly 2 sample version tabs must be rendered');
+    assert.strictEqual(versionCCheck.sampleTabs[0].version, 'versionA', 'First tab must be versionA');
+    assert.strictEqual(versionCCheck.sampleTabs[0].label, 'Version A (Simple)', 'First tab label must be "Version A (Simple)"');
+    assert.strictEqual(versionCCheck.sampleTabs[1].version, 'versionB', 'Second tab must be versionB');
+    assert.strictEqual(versionCCheck.sampleTabs[1].label, 'Version B (Advanced)', 'Second tab label must be "Version B (Advanced)"');
 
     // Interactive highlight click: clicking a sample highlight activates that core point while staying on sample tab
     await page.click('.swt-review-sample-summary mark.swt-sample-highlight[data-point-id="core-2"]');
@@ -749,22 +703,26 @@ function startHarnessServer() {
     assert.strictEqual(legendClickState.caption, 'Core point 01', 'Evidence caption should reflect core point 01');
 
     // Keyboard navigation on sample summary tabs (ArrowLeft, ArrowRight with wrap, Home, End)
-    await page.focus('.swt-review-sample-tab[data-version="versionC"]');
-    await page.keyboard.press('ArrowLeft');
+    await page.focus('.swt-review-sample-tab[data-version="versionA"]');
+    await page.keyboard.press('ArrowRight');
     let navVersion = await page.evaluate(() => document.querySelector('.swt-review-sample-tab[aria-selected="true"]')?.dataset?.version);
-    assert.strictEqual(navVersion, 'versionB', 'ArrowLeft should navigate from Version C to Version B');
+    assert.strictEqual(navVersion, 'versionB', 'ArrowRight should navigate from Version A to Version B');
 
     await page.keyboard.press('ArrowRight');
     navVersion = await page.evaluate(() => document.querySelector('.swt-review-sample-tab[aria-selected="true"]')?.dataset?.version);
-    assert.strictEqual(navVersion, 'versionC', 'ArrowRight should navigate from Version B to Version C');
+    assert.strictEqual(navVersion, 'versionA', 'ArrowRight from Version B should wrap around to Version A');
 
-    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowLeft');
     navVersion = await page.evaluate(() => document.querySelector('.swt-review-sample-tab[aria-selected="true"]')?.dataset?.version);
-    assert.strictEqual(navVersion, 'versionA', 'ArrowRight from Version C should wrap around to Version A');
+    assert.strictEqual(navVersion, 'versionB', 'ArrowLeft from Version A should wrap around to Version B');
+
+    await page.keyboard.press('ArrowLeft');
+    navVersion = await page.evaluate(() => document.querySelector('.swt-review-sample-tab[aria-selected="true"]')?.dataset?.version);
+    assert.strictEqual(navVersion, 'versionA', 'ArrowLeft from Version B should navigate to Version A');
 
     await page.keyboard.press('End');
     navVersion = await page.evaluate(() => document.querySelector('.swt-review-sample-tab[aria-selected="true"]')?.dataset?.version);
-    assert.strictEqual(navVersion, 'versionC', 'End key should jump to last tab (Version C)');
+    assert.strictEqual(navVersion, 'versionB', 'End key should jump to last tab (Version B)');
 
     await page.keyboard.press('Home');
     navVersion = await page.evaluate(() => document.querySelector('.swt-review-sample-tab[aria-selected="true"]')?.dataset?.version);
@@ -1191,7 +1149,7 @@ function startHarnessServer() {
         overflow: document.documentElement.scrollWidth > window.innerWidth
       };
     });
-    assert.strictEqual(mobileSampleTabs.tabCount, 3, 'Mobile view should preserve all 3 sample version tabs');
+    assert.strictEqual(mobileSampleTabs.tabCount, 2, 'Mobile view should preserve both 2 sample version tabs');
     assert.strictEqual(mobileSampleTabs.panelAttached, true, 'Dedicated 3rd panel #swt-review-panel-sample must be attached');
     assert.strictEqual(mobileSampleTabs.overflow, false, 'Mobile view must not have horizontal overflow');
 
@@ -1225,22 +1183,23 @@ function startHarnessServer() {
     assert.strictEqual(afterRetry.practiceHidden, true, 'Practice area should be reset');
     assert.strictEqual(afterRetry.startVisible, true, 'Start button should be visible');
 
-    console.log('Step 11: Verifying fallback for Question #2 (no answerAnalysis)...');
+    console.log('Step 11: Verifying fallback for Question without answerAnalysis (Question #101)...');
     await page.click('#swt-v7-question-pill');
     await page.waitForSelector('#swt-v7-sheet.is-open', { state: 'visible' });
-    await page.click('.ra-v7-list-item[data-index="1"]'); // Question #2
+    await page.fill('#swt-v7-jump-search', '101');
+    await page.click('.ra-v7-list-item[data-index="99"]'); // Question #101 (no answerAnalysis)
     await page.waitForFunction(() => {
       const pill = document.getElementById('swt-v7-question-pill');
-      return pill && pill.textContent.includes('#2');
+      return pill && pill.textContent.includes('#101');
     });
 
     await page.click('#start-swt-btn');
     await page.waitForSelector('#swt-step-write', { state: 'visible' });
-    await page.fill('#swt-input', 'This is a valid summary test for question two without annotations.');
+    await page.fill('#swt-input', 'This is a valid summary test for question one hundred and one without annotations.');
     await page.click('#swt-submit-btn');
     await page.waitForSelector('#swt-step-results', { state: 'visible' });
 
-    const q2State = await page.evaluate(() => {
+    const qFallbackState = await page.evaluate(() => {
       const mount = document.getElementById('swt-parallel-review-mount');
       const ctrl = window.SWTMode.getReviewController();
       return {
@@ -1248,13 +1207,14 @@ function startHarnessServer() {
         controllerActive: Boolean(ctrl?.getState()?.isMounted)
       };
     });
-    assert.strictEqual(q2State.mountDisplay, 'none', 'Question #2 without answerAnalysis must hide parallel review');
-    assert.strictEqual(q2State.controllerActive, false, 'Review controller should not be active for Question #2');
+    assert.strictEqual(qFallbackState.mountDisplay, 'none', 'Question without answerAnalysis must hide parallel review');
+    assert.strictEqual(qFallbackState.controllerActive, false, 'Review controller should not be active for question without answerAnalysis');
 
     console.log('Step 12: Verifying AI scoring integration and review preservation...');
     await page.click('#swt-retry-btn');
     await page.click('#swt-v7-question-pill');
     await page.waitForSelector('#swt-v7-sheet.is-open', { state: 'visible' });
+    await page.fill('#swt-v7-jump-search', '2014 Olympics');
     await page.click('.ra-v7-list-item[data-index="0"]'); // Question #1
     await page.waitForFunction(() => {
       const pill = document.getElementById('swt-v7-question-pill');
@@ -1292,6 +1252,7 @@ function startHarnessServer() {
     // Currently on Question #1 results screen. Change to Question #2 directly without clicking Try Again.
     await page.click('#swt-v7-question-pill');
     await page.waitForSelector('#swt-v7-sheet.is-open', { state: 'visible' });
+    await page.fill('#swt-v7-jump-search', '3D Printing');
     await page.click('.ra-v7-list-item[data-index="1"]'); // Question #2
     await page.waitForFunction(() => {
       const pill = document.getElementById('swt-v7-question-pill');

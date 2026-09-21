@@ -2251,4 +2251,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1256,2026-09-21,PTE speaking shell v3 Phase 9 cross-mode QA and documentation,Done,2026-09-21
 1257,2026-09-21,Batch generate and audit answers for all remaining SWT questions using 3 local LLMs,In Progress,
 1258,2026-09-21,Audit PTE Speaking shell v3 implementation against mockups and write fix handoff plan,Done,2026-09-21
-1259,2026-09-21,Enable PTE speaking shell v3 by default on production and resolve remaining UI items,In Progress,
+1259,2026-09-21,Enable PTE speaking shell v3 by default on production and resolve remaining UI items,Done,2026-09-21

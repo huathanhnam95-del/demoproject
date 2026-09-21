@@ -209,11 +209,12 @@
         getPromptId: () => window.RTSMode?.getCurrentId?.() || null,
         formatScores: (attempt) => {
           const res = attempt.resultSnapshot;
-          if (res?.overall?.total != null) {
+          if (res?.overall?.total != null && Number.isFinite(Number(res.overall.total))) {
             return [`${res.overall.total}/${res.overall.maxTotal || 6}`];
           }
-          if (res?.score != null) {
-            return [String(res.score)];
+          const rawScore = res?.score ?? attempt.score;
+          if (rawScore != null && Number.isFinite(Number(rawScore))) {
+            return [`${rawScore}/6`];
           }
           return ['—'];
         }

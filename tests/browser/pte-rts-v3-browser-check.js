@@ -125,7 +125,11 @@ async function run() {
       assert.equal(await page.locator('#rts-step-record').isVisible(), false, 'legacy record step hidden in v3');
       assert.equal(await page.locator('#rts-step-results').isVisible(), false, 'legacy results step hidden in v3');
       assert.equal(await page.locator('#rts-pte-instruction').isVisible(), true, 'PTE instruction visible');
-      assert.match(await page.locator('#rts-pte-instruction').innerText(), /description of a situation/);
+      assert.equal(
+        await page.locator('#rts-pte-instruction').innerText(),
+        'Listen to and read a description of a situation. You will have 10 seconds to think about your answer. Then you will hear a beep. You will have 40 seconds to answer the question. Please answer as completely as you can.',
+        'Instruction text matches Appendix A canonical copy'
+      );
 
       // RTS has NO Filters button
       assert.equal(await page.locator('[data-pte-filter]').count(), 0, 'no filter buttons in RTS');
@@ -166,7 +170,7 @@ async function run() {
       await page.locator('#rts-record-btn').click();
       await page.waitForFunction(() => window.RTSMode?.getPtePhase?.() === 'recording', null, { timeout: 5000 });
 
-      // Next during recording triggers confirmation dialog
+      // Next during recording triggers confirmation dialog - test Stay here
       await page.locator('#pte-next-rts').click();
       await page.waitForFunction(() => document.querySelector('.pte-dialog'));
       assert.match(await page.locator('.pte-dialog').innerText(), /Go to the next question\?/, 'Confirmation dialog on Next in recording');
@@ -240,20 +244,49 @@ async function run() {
       assert.equal(await page.locator('#rts-v3-sample-simplified').isVisible(), true, 'Simplified sample visible');
       assert.match(await page.locator('#rts-v3-sample-simplified').innerText(), /keep the study area tidy/, 'Simplified text visible');
 
-      // 9. Mobile horizontal overflow check
-      if (vp.width === 390) {
-        const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
-        assert.equal(overflow, true, 'mobile viewport has no horizontal overflow');
+      // 9. Retry attempt cleans slate: Attempt 2 must start unscored
+      await page.locator('#rts-redo-btn').click();
+      await page.waitForFunction(() => {
+        const ph = window.RTSMode?.getPtePhase?.();
+        return ph === 'prep' || ph === 'recording';
+      }, null, { timeout: 8000 });
+      if (await page.evaluate(() => window.RTSMode?.getPtePhase?.()) === 'prep') {
+        await page.locator('#rts-record-btn').click();
       }
+      await page.waitForFunction(() => window.RTSMode?.getPtePhase?.() === 'recording', null, { timeout: 5000 });
+      await page.locator('#rts-stop-btn').click();
+      await page.waitForFunction(() => window.RTSMode?.getPtePhase?.() === 'complete', null, { timeout: 5000 });
+      await page.locator('#rts-submit-btn').click();
+      await page.waitForFunction(() => window.RTSMode?.getPtePhase?.() === 'feedback', null, { timeout: 8000 });
+      assert.equal(await page.locator('#rts-v3-ai-empty').isVisible(), true, 'Attempt 2 feedback starts in unscored empty state');
+      assert.equal(await page.locator('#rts-v3-results-container').isVisible(), false, 'Attempt 2 has results container hidden');
 
-      // 10. Next question advances directly without confirmation
+      // 10. Confirming Next during recording advances by exactly 1 question (not 2)
+      await page.locator('#rts-redo-btn').click();
+      await page.waitForFunction(() => {
+        const ph = window.RTSMode?.getPtePhase?.();
+        return ph === 'prep' || ph === 'recording';
+      }, null, { timeout: 8000 });
+      if (await page.evaluate(() => window.RTSMode?.getPtePhase?.()) === 'prep') {
+        await page.locator('#rts-record-btn').click();
+      }
+      await page.waitForFunction(() => window.RTSMode?.getPtePhase?.() === 'recording', null, { timeout: 5000 });
+
+      // Click Next while recording, confirm "Next question"
       await page.locator('#pte-next-rts').click();
+      await page.waitForFunction(() => document.querySelector('.pte-dialog'));
+      await page.locator('.pte-dialog button:has-text("Next question")').click();
       await page.waitForFunction(() => {
         const id = window.RTSMode?.getCurrentId?.();
         return id === '2';
       }, null, { timeout: 8000 });
+      assert.equal(await page.evaluate(() => window.RTSMode?.getCurrentId?.()), '2', 'Confirmed Next from recording advanced exactly to Question 2 (did not skip to 3)');
 
-      assert.equal(await page.evaluate(() => window.RTSMode?.getCurrentId?.()), '2', 'advanced to question 2');
+      // 11. Mobile horizontal overflow check
+      if (vp.width === 390) {
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+        assert.equal(overflow, true, 'mobile viewport has no horizontal overflow');
+      }
 
       // Screenshot for evidence
       await page.screenshot({ path: path.join(evidence, `rts-v3-${vp.name}.png`), fullPage: true });

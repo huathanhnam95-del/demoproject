@@ -270,6 +270,114 @@
     legacyContainerSelector: '#mode-rts > .question-selector'
   });
 
+  // Wave 1: Summarize Group Discussion.
+  controller.register({
+    modeId: 'sgd',
+    shell: 'v3',
+    v3: {
+      title: 'Summarize Group Discussion',
+      cardBodySelector: '#sgd-practice-area',
+      progressSteps: ['Listen', 'Prep', 'Record', 'Feedback'],
+      phaseToStep: { loading: 0, listen: 0, prep: 1, recording: 2, complete: 2, feedback: 3 },
+      statusText: { recording: 'Summarize the group discussion.' },
+      getPhase: () => window.SGDMode?.getPtePhase?.() || 'loading',
+      onMount: () => window.SGDMode?.mountPteShell?.(),
+      onSync: () => window.SGDMode?.syncPteShell?.(),
+      onUnmount: () => window.SGDMode?.unmountPteShell?.(),
+      filters: [],
+      dock: {
+        actions: [
+          { sourceId: 'sgd-record-btn', label: 'Start recording', variant: 'primary', phases: ['prep'] },
+          { sourceId: 'sgd-cancel-btn', label: 'Cancel', variant: 'ghost', phases: ['recording'] },
+          { sourceId: 'sgd-stop-btn', label: 'Finish recording', variant: 'stop', phases: ['recording'] },
+          { sourceId: 'sgd-retry-btn', label: 'Record again', variant: 'ghost', phases: ['complete'] },
+          { sourceId: 'sgd-play-user-btn', label: 'Play', phases: ['complete'] },
+          { sourceId: 'sgd-submit-btn', label: 'Get feedback', variant: 'primary', phases: ['complete'] },
+          { sourceId: 'sgd-redo-btn', label: 'Try again', variant: 'ghost', phases: ['feedback'] }
+        ]
+      },
+      next: {
+        onConfirmFromRecording: () => window.SGDMode?.finishRecordingForNext?.(),
+        goNext: () => window.SGDMode?.advanceQuestion?.()
+      },
+      attempts: {
+        practiceMode: 'sgd',
+        modeLabel: 'Summarize Group Discussion',
+        getPromptId: () => window.SGDMode?.getCurrentId?.() || null,
+        formatScores: (attempt) => {
+          const res = attempt.resultSnapshot;
+          if (res?.overall?.accuracy != null && Number.isFinite(Number(res.overall.accuracy))) {
+            return [`${Math.round(res.overall.accuracy * 100)}%`];
+          }
+          if (res?.score != null && Number.isFinite(Number(res.score))) {
+            return [`${res.score}%`];
+          }
+          return ['—'];
+        }
+      }
+    },
+    enabledScopes: ['pte'],
+    panelId: 'mode-sgd',
+    steps: ['Listen', 'Record', 'Results'],
+    getStepIndex: () => activeBreadcrumbIndex('sgd-step-progress', '.sgd-progress-step'),
+    layout: {
+      mediaHost: (state) => panelHost(state, '#sgd-start-controls'),
+      attemptHost: (state) => phaseHost(state, {
+        0: '#sgd-listen-action-host',
+        1: '#sgd-action-host',
+        2: '#sgd-results-action-host'
+      }, '#sgd-listen-action-host'),
+      progressHost
+    },
+    picker: {
+      getItems: () => window.SGDMode?.getItems?.() ?? [],
+      getCurrentId: () => window.SGDMode?.getCurrentId?.() ?? null,
+      select: (id) => { try { window.SGDMode?.select?.(id); } catch (e) { console.error('[SPC Adapters] select error:', e); } },
+      previous: () => {
+        try {
+          const items = window.SGDMode?.getItems?.() ?? [];
+          const currentId = String(window.SGDMode?.getCurrentId?.() ?? '');
+          const index = items.findIndex((item) => String(item.id) === currentId);
+          if (index > 0) window.SGDMode?.select?.(items[index - 1].id);
+        } catch (e) {
+          console.error('[SPC Adapters] previous error:', e);
+        }
+      },
+      next: () => {
+        try {
+          const items = window.SGDMode?.getItems?.() ?? [];
+          const currentId = String(window.SGDMode?.getCurrentId?.() ?? '');
+          const index = items.findIndex((item) => String(item.id) === currentId);
+          if (index >= 0 && index < items.length - 1) window.SGDMode?.select?.(items[index + 1].id);
+        } catch (e) {
+          console.error('[SPC Adapters] next error:', e);
+        }
+      },
+      sourceSelectId: 'question-select-sgd',
+      previousButtonId: 'back-btn-sgd',
+      nextButtonId: 'next-btn-sgd'
+    },
+    controls: [
+      { sourceId: 'play-sgd-btn', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
+      { sourceId: 'sgd-next-step-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'primary', visibilityScopeId: 'sgd-step-listen' },
+      { sourceId: 'sgd-record-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'record', visibilityScopeId: 'sgd-step-record' },
+      { sourceId: 'sgd-stop-btn', slot: 'attempt', level: 'basic', order: 2, actionRole: 'stop', visibilityScopeId: 'sgd-step-record' },
+      { sourceId: 'sgd-submit-btn', slot: 'attempt', level: 'basic', order: 3, actionRole: 'primary', visibilityScopeId: 'sgd-step-record' },
+      { sourceId: 'sgd-retry-btn', slot: 'attempt', level: 'basic', order: 4, actionRole: 'retry', visibilityScopeId: 'sgd-step-results' },
+      { sourceId: 'recommended-btn-sgd', slot: 'advanced-action', level: 'advanced', order: 1, actionRole: 'support' },
+      { sourceId: 'difficulty-filter-container-sgd', slot: 'advanced-setting', level: 'advanced', order: 1 }
+    ],
+    legacyContainerSelector: '#mode-sgd > .question-selector',
+    advancedSettings: [
+      {
+        key: 'difficulty',
+        sourceId: 'difficulty-filter-container-sgd',
+        isActive: () => isFilterActive('difficulty-filter-label-sgd', 'Recommended'),
+        summaryLabel: 'Difficulty filter'
+      }
+    ]
+  });
+
   // Wave 2: Describe Image. Filters and recommendations live in Advanced;
   // step/result actions remain lifecycle controls in the shared shell.
   controller.register({
@@ -412,52 +520,6 @@
         sourceId: 'status-filter-container-notes',
         isActive: () => isFilterActive('status-filter-label-notes', 'Filter by Status'),
         summaryLabel: 'Status filter'
-      }
-    ]
-  });
-
-  // Wave 3A: Summarize Group Discussion. The multi-step practice flow stays
-  // mode-owned; the shared shell adopts the question picker and lifecycle
-  // controls that are safe to surface across its recording/results steps.
-  controller.register({
-    modeId: 'sgd',
-    enabledScopes: ['pte'],
-    panelId: 'mode-sgd',
-    // Three phases, matching #sgd-step-progress. The previous list declared a
-    // 'Prep' step that the mode never enters.
-    steps: ['Listen', 'Record', 'Results'],
-    getStepIndex: () => activeBreadcrumbIndex('sgd-step-progress', '.sgd-progress-step'),
-    layout: {
-      mediaHost: (state) => panelHost(state, '#sgd-start-controls'),
-      attemptHost: (state) => phaseHost(state, {
-        0: '#sgd-listen-action-host',
-        1: '#sgd-action-host',
-        2: '#sgd-results-action-host'
-      }, '#sgd-listen-action-host'),
-      progressHost
-    },
-    picker: {
-      sourceSelectId: 'question-select-sgd',
-      previousButtonId: 'back-btn-sgd',
-      nextButtonId: 'next-btn-sgd'
-    },
-    controls: [
-      { sourceId: 'play-sgd-btn', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
-      { sourceId: 'sgd-next-step-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'primary', visibilityScopeId: 'sgd-step-listen' },
-      { sourceId: 'sgd-record-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'record', visibilityScopeId: 'sgd-step-record' },
-      { sourceId: 'sgd-stop-btn', slot: 'attempt', level: 'basic', order: 2, actionRole: 'stop', visibilityScopeId: 'sgd-step-record' },
-      { sourceId: 'sgd-submit-btn', slot: 'attempt', level: 'basic', order: 3, actionRole: 'primary', visibilityScopeId: 'sgd-step-record' },
-      { sourceId: 'sgd-retry-btn', slot: 'attempt', level: 'basic', order: 4, actionRole: 'retry', visibilityScopeId: 'sgd-step-results' },
-      { sourceId: 'recommended-btn-sgd', slot: 'advanced-action', level: 'advanced', order: 1, actionRole: 'support' },
-      { sourceId: 'difficulty-filter-container-sgd', slot: 'advanced-setting', level: 'advanced', order: 1 }
-    ],
-    legacyContainerSelector: '#mode-sgd > .question-selector',
-    advancedSettings: [
-      {
-        key: 'difficulty',
-        sourceId: 'difficulty-filter-container-sgd',
-        isActive: () => isFilterActive('difficulty-filter-label-sgd', 'Recommended'),
-        summaryLabel: 'Difficulty filter'
       }
     ]
   });

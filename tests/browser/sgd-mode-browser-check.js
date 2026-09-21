@@ -268,7 +268,9 @@ async function waitForActivePanel(page, panelId) {
 
     await page.click('.spc-settings-btn');
     await page.waitForSelector('#spc-settings-sheet-sgd.is-active', { timeout: 5000 });
-    await page.click('#spc-settings-sheet-sgd #difficulty-filter-btn-sgd');
+    if (await page.locator('#spc-settings-sheet-sgd #difficulty-filter-btn-sgd').isVisible()) {
+      await page.click('#spc-settings-sheet-sgd #difficulty-filter-btn-sgd');
+    }
     await page.click('#spc-settings-sheet-sgd #difficulty-filter-menu-sgd .filter-option[data-value="2"]');
     const selectedDifficulty = await page.evaluate(() => ({
       current: window.DifficultyFilter?.getCurrentDifficulty?.('sgd'),

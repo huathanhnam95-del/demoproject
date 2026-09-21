@@ -308,7 +308,7 @@ body[data-practice-layout="fluid-v1"] .spc-shell-grid {
 /* Actions row: timers on the left, attempt buttons on the right. */
 .spc-row--actions {
   justify-content: space-between;
-  column-gap: 16px;
+  column-gap: 12px;
 }
 
 .spc-row--actions .spc-slot-media,
@@ -329,6 +329,78 @@ body[data-practice-layout="fluid-v1"] .spc-shell-grid {
    attempt controls should not pay for a border and 40px of height. */
 .spc-footer:not(:has(.spc-slot-media > *)):not(:has(.spc-slot-attempt > *)) {
   display: none;
+}
+
+/* Shared modes opt into authored task-local hosts. Their action rail is part of
+   the task flow, so the old viewport-sticky footer becomes a zero-height
+   compatibility fallback rather than a second toolbar. */
+[data-practice-workspace] .spc-footer {
+  position: static;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  z-index: auto;
+}
+
+[data-practice-workspace] .spc-footer > .spc-row--actions {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
+[data-practice-workspace] .spc-footer:not(:has(.spc-slot-media > *)):not(:has(.spc-slot-attempt > *)) {
+  display: none;
+  height: 0;
+  min-height: 0;
+}
+
+[data-practice-workspace] [data-practice-action-host] > .spc-slot-attempt,
+[data-practice-workspace] [data-practice-media-host] > .spc-slot-media {
+  width: 100%;
+  max-width: none;
+}
+
+[data-practice-workspace] [data-practice-action-host] > .spc-slot-attempt:not(:empty),
+[data-practice-workspace] [data-practice-media-host] > .spc-slot-media:not(:empty) {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+[data-practice-workspace] [data-practice-action-host] > .spc-slot-attempt:not(:empty) {
+  justify-content: flex-start;
+  margin-top: 12px;
+}
+
+[data-practice-workspace] [data-practice-media-host] > .spc-slot-media:not(:empty) {
+  justify-content: flex-start;
+  margin-top: 10px;
+}
+
+[data-practice-workspace] .spc-slot-media:empty,
+[data-practice-workspace] .spc-slot-attempt:empty {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  [data-practice-workspace] .spc-controller,
+  [data-practice-workspace] .spc-row,
+  [data-practice-workspace] .spc-steps,
+  [data-practice-workspace] .spc-steps__list {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  [data-practice-workspace] .spc-controller {
+    overflow-x: hidden;
+  }
+
+  [data-practice-workspace] .spc-steps__list {
+    width: 100%;
+    overflow: hidden;
+  }
 }
 
 /* Advanced row: visibility controlled via data attribute (see §8) */
@@ -1203,11 +1275,9 @@ body[data-practice-layout="fluid-v1"] .spc-shell-grid {
    13. RFIB-aligned navigation and adopted action recipes
    -------------------------------------------------------------------------- */
 
-/* A flat sticky bar, not a card. As a bordered, shadowed, rounded panel it read
-   as a widget floating over the page rather than the page's own chrome, and its
-   12px inline padding pushed every row 12px off the grid the content below sits
-   on — the visible half of the alignment problem. Horizontal rhythm now comes
-   from .spc-shell-grid alone. */
+/* A flat compatibility rail, not a card. When a mode declares an in-flow task
+   host, syncLayout moves the existing slots there and this rail collapses; the
+   fallback keeps the original controller behavior for unconfigured adapters. */
 .spc-controller {
   background: #fff;
   border: none;

@@ -42,6 +42,7 @@
    * @param {boolean} [options.bindPlayButton=true] false when the mode owns the click
    * @param {boolean} [options.updatePlayLabel=true] false leaves the button label alone
    * @param {() => (boolean|void)} [options.onBeforePlay] return false to block playback
+   * @param {(error: unknown) => void} [options.onPlaybackError] called when audio.play() rejects
    * @returns {Object|null} controller, or null when there is no audio element
    */
   function attach(options = {}) {
@@ -109,7 +110,9 @@
       if (audio.paused) {
         if (typeof options.onBeforePlay === 'function' && options.onBeforePlay() === false) return;
         if (els.volume) audio.volume = Number(els.volume.value);
-        audio.play().catch(() => { /* autoplay/permission rejection is surfaced by the mode */ });
+        audio.play().catch((error) => {
+          if (typeof options.onPlaybackError === 'function') options.onPlaybackError(error);
+        });
         return;
       }
       audio.pause();

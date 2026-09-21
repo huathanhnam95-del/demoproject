@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 const assert = require('assert');
-const { chromium } = require('playwright');
+const { launchPracticeChrome } = require('./helpers/launch-practice-chrome');
 const express = require('express');
 const path = require('path');
 
@@ -15,7 +15,7 @@ async function waitForPageReady(page) {
 
 (async () => {
   const server = app.listen(0);
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchPracticeChrome({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   await context.addInitScript(() => {
     window.localStorage.setItem('userStatus', 'guest');
@@ -40,13 +40,15 @@ async function waitForPageReady(page) {
     const initialState = await page.evaluate(() => ({
       controllerCount: document.querySelectorAll('#mode-notes .spc-controller').length,
       legacySelectorHidden: getComputedStyle(document.querySelector('#mode-notes > .question-selector')).display === 'none',
-      playVisible: getComputedStyle(document.getElementById('play-notes-btn')).display !== 'none',
+      startVisible: getComputedStyle(document.getElementById('notes-start-btn')).display !== 'none',
+      compatibilityPlayHidden: getComputedStyle(document.getElementById('play-notes-btn')).display === 'none',
       submitVisible: getComputedStyle(document.getElementById('notes-submit-btn')).display !== 'none',
       retryVisible: getComputedStyle(document.getElementById('notes-retry-btn')).display !== 'none'
     }));
     assert.strictEqual(initialState.controllerCount, 1, 'RL should have exactly one active controller');
     assert.strictEqual(initialState.legacySelectorHidden, true, 'RL legacy selector should be hidden after controller adoption');
-    assert.strictEqual(initialState.playVisible, true, 'RL should show Play before practice starts');
+    assert.strictEqual(initialState.startVisible, true, 'RL should show Start before practice starts');
+    assert.strictEqual(initialState.compatibilityPlayHidden, true, 'RL compatibility Play alias should stay hidden');
     assert.strictEqual(initialState.submitVisible, false, 'RL should hide Submit before the audio step');
     assert.strictEqual(initialState.retryVisible, false, 'RL should hide Retry before results exist');
 

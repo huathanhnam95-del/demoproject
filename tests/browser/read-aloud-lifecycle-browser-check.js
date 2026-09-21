@@ -7,7 +7,7 @@
  *   Record -> Stop -> RECORDED -> playback -> Check -> RESULTS -> Retry/Next
  */
 const assert = require('assert');
-const { chromium } = require('playwright');
+const { launchPracticeChrome } = require('./helpers/launch-practice-chrome');
 
 const baseUrl = process.env.BROWSER_TEST_BASE_URL || 'https://localhost:8443';
 
@@ -75,7 +75,7 @@ async function waitForReadAloudState(page, state) {
 }
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchPracticeChrome({ headless: true });
   const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1440, height: 1200 } });
   await context.addInitScript(() => {
     localStorage.setItem('userStatus', 'guest');
@@ -216,17 +216,19 @@ async function waitForReadAloudState(page, state) {
 
     const playbackControl = await page.evaluate(() => {
       const audio = document.getElementById('ra-user-recording-audio');
+      const customPlayer = document.getElementById('ra-real-audio-player-wrapper');
+      const customPlay = document.getElementById('ra-custom-play-btn');
       return {
-        visible: !!audio && getComputedStyle(audio).display !== 'none',
-        controls: !!audio?.controls,
+        visible: !!customPlayer && getComputedStyle(customPlayer).display !== 'none',
+        controls: !!customPlay && getComputedStyle(customPlay).display !== 'none',
         src: audio?.src || '',
         recordingUrl: window.ReadAloudMode?.userRecordingUrl || ''
       };
     });
-    assert.strictEqual(playbackControl.visible, true, 'Native recording playback control is visible');
-    assert.strictEqual(playbackControl.controls, true, 'Native recording playback controls are enabled');
-    assert.ok(playbackControl.src, 'Native recording playback has a blob URL');
-    assert.strictEqual(playbackControl.recordingUrl, playbackControl.src, 'Playback control is wired to captured audio');
+    assert.strictEqual(playbackControl.visible, true, 'Recording playback surface is visible');
+    assert.strictEqual(playbackControl.controls, true, 'Recording playback control is enabled');
+    assert.ok(playbackControl.src, 'Recorded playback engine has a blob URL');
+    assert.strictEqual(playbackControl.recordingUrl, playbackControl.src, 'Playback engine is wired to captured audio');
 
     await page.locator('#ra-check-btn').click();
     try {

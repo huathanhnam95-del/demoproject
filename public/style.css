@@ -10807,6 +10807,191 @@ body.spc-focus .main-header h1 {
 }
 
 /* ============================================
+   PRACTICE WORKSPACE ALIGNMENT (shared speaking modes)
+   ============================================ */
+[data-practice-workspace] {
+  width: 100%;
+  max-width: 1180px;
+  margin-inline: auto;
+  padding-inline: 24px;
+  box-sizing: border-box;
+}
+
+[data-practice-workspace] .question-selector,
+[data-practice-workspace] .question-total,
+[data-practice-workspace] #rts-practice-area,
+[data-practice-workspace] #di-practice-area {
+  width: 100%;
+  max-width: none !important;
+  margin-inline: 0 !important;
+  box-sizing: border-box;
+}
+
+[data-practice-workspace] .notes-step {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding-inline: 0;
+}
+
+[data-practice-workspace] .practice-action-host,
+[data-practice-workspace] [data-practice-action-host] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+[data-practice-workspace] [data-practice-action-host] {
+  min-height: 0;
+}
+
+#mode-type .unified-controls[data-practice-action-host],
+#mode-speak #speak-action-host,
+#mode-asq [data-practice-action-host="answer"],
+#mode-rts [data-practice-action-host],
+#mode-describe-image [data-practice-action-host],
+#mode-sgd [data-practice-action-host],
+#mode-read-aloud [data-practice-action-host] {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+#mode-speak #speak-action-host {
+  margin: 12px 0 4px;
+}
+
+#mode-speak #speak-action-host:empty,
+#mode-notes .notes-compat-controls:empty {
+  display: none;
+}
+
+#mode-read-aloud .ra-zone-actions-source {
+  display: contents;
+}
+
+#mode-notes .notes-entry-status {
+  margin: 12px 0 0;
+  color: var(--text-secondary, #64748b);
+  font-size: var(--text-sm, 14px);
+  line-height: 1.5;
+}
+
+#mode-notes .notes-entry-status.is-error,
+#mode-notes .notes-entry-status.is-local-ready {
+  color: #92400e;
+}
+
+#mode-notes #notes-retry-entries-btn,
+#mode-notes #notes-retry-audio-btn {
+  min-height: 44px;
+  margin-top: 10px;
+}
+
+#mode-notes .notes-audio-status.is-ready {
+  color: #166534;
+  background: rgba(22, 163, 74, 0.08);
+  border-color: rgba(22, 163, 74, 0.18);
+}
+
+#mode-notes .notes-audio-status.is-playback-error {
+  color: #9a3412;
+  background: rgba(234, 88, 12, 0.08);
+  border-color: rgba(234, 88, 12, 0.2);
+}
+
+#mode-notes .notes-compat-controls,
+#mode-notes #notes-in-card-submit-btn,
+#mode-notes #notes-in-card-retry-btn {
+  display: none !important;
+}
+
+#mode-asq > div[style*="max-width: 900px"] {
+  max-width: none !important;
+  padding-inline: 0 !important;
+}
+
+/* Standalone listening players align with their surrounding task columns. */
+#mode-hcs .practice-audio-player,
+#mode-hiw .practice-audio-player,
+#mode-lmcma .practice-audio-player,
+#mode-lmcsa .practice-audio-player,
+#mode-smw .practice-audio-player,
+#mode-sst .practice-audio-player {
+  max-width: none;
+  margin-inline: 0;
+}
+
+@media (max-width: 767px) {
+  [data-practice-workspace] {
+    padding-inline: 14px;
+  }
+
+  [data-practice-workspace] .question-nav-row,
+  [data-practice-workspace] .question-filters-row {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  [data-practice-workspace] .question-select,
+  [data-practice-workspace] select,
+  [data-practice-workspace] textarea,
+  [data-practice-workspace] input {
+    max-width: 100%;
+  }
+
+  [data-practice-workspace] [data-practice-action-host] > .spc-slot-attempt:not(:empty),
+  [data-practice-workspace] [data-practice-media-host] > .spc-slot-media:not(:empty) {
+    align-items: stretch;
+  }
+
+  [data-practice-workspace] [data-practice-action-host] > .spc-slot-attempt:not(:empty) > *,
+  [data-practice-workspace] #speak-action-host > *,
+  [data-practice-workspace] #notes-retry-entries-btn,
+  [data-practice-workspace] #notes-retry-audio-btn {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* The six standalone listening pickers keep their v7 behavior, but the
+     question pill may yield width on 320px screens instead of forcing a
+     horizontal scroller. Navigation targets remain keyboard/touch usable. */
+  #mode-hcs .ra-v7-picker-inner,
+  #mode-hiw .ra-v7-picker-inner,
+  #mode-lmcma .ra-v7-picker-inner,
+  #mode-lmcsa .ra-v7-picker-inner,
+  #mode-smw .ra-v7-picker-inner,
+  #mode-sst .ra-v7-picker-inner {
+    max-width: 100%;
+    min-width: 0;
+    padding-inline: 0;
+  }
+
+  #mode-hcs .ra-v7-nav,
+  #mode-hiw .ra-v7-nav,
+  #mode-lmcma .ra-v7-nav,
+  #mode-lmcsa .ra-v7-nav,
+  #mode-smw .ra-v7-nav,
+  #mode-sst .ra-v7-nav {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  #mode-hcs .ra-v7-question-pill,
+  #mode-hiw .ra-v7-question-pill,
+  #mode-lmcma .ra-v7-question-pill,
+  #mode-lmcsa .ra-v7-question-pill,
+  #mode-smw .ra-v7-question-pill,
+  #mode-sst .ra-v7-question-pill {
+    min-width: 0;
+    max-width: none;
+    flex: 1 1 auto;
+  }
+}
+
+/* ============================================
    MOBILE LAYOUT FIXES (< 768px only)
    Desktop layout remains unchanged
    ============================================ */
@@ -23443,5 +23628,60 @@ h1, h2, h3, .panel-title, .dashboard-title {
 @media (max-width: 640px) {
   #mode-describe-image {
     padding-bottom: 220px;
+  }
+}
+
+/* Final mobile guard for standalone listening pickers. These rules live at
+   the end because the legacy practice-mode and v7 picker sheets load after the
+   main stylesheet. */
+@media (max-width: 640px) {
+  #mode-hcs .pm-container,
+  #mode-hiw .hiw-container,
+  #mode-lmcma .lmcma-container,
+  #mode-lmcsa .lmcsa-container,
+  #mode-smw .smw-container,
+  #mode-sst .sst-container {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  #mode-hcs .ra-v7-picker-inner,
+  #mode-hiw .ra-v7-picker-inner,
+  #mode-lmcma .ra-v7-picker-inner,
+  #mode-lmcsa .ra-v7-picker-inner,
+  #mode-smw .ra-v7-picker-inner,
+  #mode-sst .ra-v7-picker-inner {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding-inline: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #mode-hcs .ra-v7-nav,
+  #mode-hiw .ra-v7-nav,
+  #mode-lmcma .ra-v7-nav,
+  #mode-lmcsa .ra-v7-nav,
+  #mode-smw .ra-v7-nav,
+  #mode-sst .ra-v7-nav {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #mode-hcs .ra-v7-question-pill,
+  #mode-hiw .ra-v7-question-pill,
+  #mode-lmcma .ra-v7-question-pill,
+  #mode-lmcsa .ra-v7-question-pill,
+  #mode-smw .ra-v7-question-pill,
+  #mode-sst .ra-v7-question-pill {
+    min-width: 0 !important;
+    max-width: none !important;
+    flex: 1 1 auto !important;
   }
 }

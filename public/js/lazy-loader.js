@@ -100,7 +100,13 @@
 
     const existingScript = findExistingScript(absoluteUrl);
     if (existingScript) {
-      if (existingScript.dataset.belFailed === 'true') {
+      const isKnownLoaded = existingScript.dataset.belLoaded === 'true'
+        || existingScript.readyState === 'loaded'
+        || existingScript.readyState === 'complete';
+      if (existingScript.dataset.belFailed === 'true' || !isKnownLoaded) {
+        // Blocking preload tags may have emitted their error before this
+        // loader attached listeners. Retry through the controlled path
+        // instead of waiting forever for an event that already happened.
         try { existingScript.remove(); } catch { /* ignore */ }
       } else if (isKnownScriptExportReady(absoluteUrl)) {
         existingScript.dataset.belLoaded = 'true';
@@ -203,12 +209,21 @@
       loadedModes.add('notes');
       return;
     }
-    await Promise.all([
-      ensureCompromiseLoaded(),
-      ensureXlsxLoaded()
-    ]);
+    // Retell Lecture can load its controller and cloud entries without either
+    // optional enhancement library. Do not hold the dashboard transition on
+    // CDN scripts that may already have failed in the index page; the Notes
+    // module has plain-text comparison and bounded Firestore/local fallbacks.
     await loadScript('take-notes-mode.js');
     loadedModes.add('notes');
+
+    // Warm optional dependencies in the background for scoring/fallback paths.
+    // Their availability must not determine whether the mode can be opened.
+    void ensureCompromiseLoaded().catch((error) => {
+      console.warn('[LazyLoader] Optional Retell Lecture NLP dependency unavailable:', error?.message || error);
+    });
+    void ensureXlsxLoaded().catch((error) => {
+      console.warn('[LazyLoader] Optional Retell Lecture workbook dependency unavailable:', error?.message || error);
+    });
   }
 
   async function ensureRfibModeLoaded() {

@@ -3,7 +3,7 @@ const assert = require('assert');
 const express = require('express');
 const http = require('http');
 const path = require('path');
-const { chromium } = require('playwright');
+const { launchPracticeChrome } = require('./helpers/launch-practice-chrome');
 
 const CORRUPTION_MARKERS = ['Ã°', 'Ã¢', 'â†', 'âœ', 'ðŸ'];
 
@@ -220,7 +220,7 @@ async function checkSkillFilter(page, skill, expectedVisibleIds, expectedModeId)
 
 (async () => {
   const { server, origin } = await startHarnessServer();
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchPracticeChrome({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1200 } });
   await setupFirebaseMocks(context);
   const page = await context.newPage();

@@ -205,7 +205,7 @@
     return { assistCalibMult, assistCount };
   }
 
-  async function useActiveSkillForAttempt(skillId, mode, contentId) {
+  async function useActiveSkillForAttempt(skillId, mode, contentId, options = {}) {
     const normalizedContentId = normalizeAttemptContentId(contentId);
     if (!window.auth || !window.auth.currentUser) {
       // Guidance handled by UI via handleLockedSkillClick
@@ -224,6 +224,10 @@
       contentId: normalizedContentId,
       skillId
     });
+
+    // Optional lifecycle ownership prevents a departed skill request from
+    // registering assist usage or showing errors against the next attempt.
+    if (options.shouldApply && !options.shouldApply()) return { success: false, error: 'stale_attempt' };
 
     if (!result?.success) {
       if (result?.error === 'skill_locked') {
@@ -2148,7 +2152,48 @@
       return;
     }
 
+    // Retell Lecture should expose a truthful loading shell while its optional
+    // cloud/local dependencies resolve. The panel remains switchable and the
+    // final state is still committed only after the bounded loader completes.
+    const earlyNotesPanel = mode === 'notes' ? document.getElementById('mode-notes') : null;
+    if (earlyNotesPanel) {
+      earlyNotesPanel.classList.add('active');
+      earlyNotesPanel.style.display = 'block';
+      earlyNotesPanel.dataset.modePreparing = 'true';
+      const earlyStatus = earlyNotesPanel.querySelector('#notes-entry-status');
+      if (earlyStatus) {
+        earlyStatus.hidden = false;
+        earlyStatus.dataset.notesStatus = 'loading';
+        earlyStatus.textContent = 'Loading Retell Lecture questions…';
+      }
+      document.querySelectorAll('.mode-panel').forEach((panel) => {
+        if (panel !== earlyNotesPanel) {
+          panel.classList.remove('active');
+          panel.style.display = 'none';
+        }
+      });
+      document.querySelector('.dashboard-modern-container')?.style.setProperty('display', 'none');
+    }
+
     const assetsReady = await ensureModeAssets(mode);
+    if (!assetsReady) {
+      if (!isCurrentTransition()) return false;
+      if (mode === 'notes') {
+        const failedNotesPanel = document.getElementById('mode-notes');
+        failedNotesPanel?.classList.remove('active', 'stage-fade-blur-in', 'stage-fade-blur-out');
+        if (failedNotesPanel) {
+          failedNotesPanel.style.display = 'none';
+          delete failedNotesPanel.dataset.modePreparing;
+        }
+        const dashboard = document.querySelector('.dashboard-modern-container');
+        if (dashboard) {
+          dashboard.style.display = 'block';
+          dashboard.classList.remove('stage-fade-blur-in', 'stage-fade-blur-out');
+        }
+        updateCurrentModeIndicator('');
+      }
+      return false;
+    }
     if (!isCurrentTransition()) return false;
     if (!assetsReady) return false;
 
@@ -2196,7 +2241,7 @@
         || (document.querySelector('.mode-panel.active') !== modePanel ? document.querySelector('.mode-panel.active') : null)
         || (document.querySelector('.dashboard-modern-container')?.style.display !== 'none' ? document.querySelector('.dashboard-modern-container') : null);
 
-      const deferSelectedPanelReveal = speakingModes.includes(mode);
+      const deferSelectedPanelReveal = speakingModes.includes(mode) && mode !== 'notes';
 
       if (deferSelectedPanelReveal) {
         modePanel.dataset.modePreparing = 'true';
@@ -5352,7 +5397,7 @@
 
       // Initialize Take Notes mode
       if (window.TakeNotesMode) {
-        window.TakeNotesMode.loadEntries();
+        await window.TakeNotesMode.onEnter?.();
       }
 
       // Start Tutorial if needed
@@ -8482,6 +8527,10 @@
 
   // Speak mode check function
   const performCheckSpeak = async (userAnswer, scoreElement) => {
+    const v3Token = repeatSentenceV3.active ? repeatSentenceV3.generation : null;
+    const v3Attempt = v3Token !== null ? repeatSentenceV3.attempt : null;
+    const isCurrent = () => v3Token === null || (repeatSentenceV3.active
+      && v3Token === repeatSentenceV3.generation && v3Attempt === repeatSentenceV3.attempt);
     const totalWords = getCorrectWordCount("speak");
     if (!userAnswer.trim()) {
       result.innerHTML = `<span class="errors">Please provide your answer before checking.</span>`;
@@ -8490,15 +8539,18 @@
     }
 
     if (repeatSentenceStopPromise) {
-      await repeatSentenceStopPromise;
-      repeatSentenceStopPromise = null;
+      const pendingStop = repeatSentenceStopPromise;
+      await pendingStop;
+      if (!isCurrent()) return;
+      if (repeatSentenceStopPromise === pendingStop) repeatSentenceStopPromise = null;
     }
 
     // Call Azure Pronunciation Assessment if student audio was recorded
-    if (window.repeatSentenceWavBlob && correctSentenceSpeak) {
+    const assessmentBlob = v3Attempt ? v3Attempt.blob : window.repeatSentenceWavBlob;
+    if (assessmentBlob && correctSentenceSpeak) {
       try {
         const formData = new FormData();
-        formData.append('audio', window.repeatSentenceWavBlob, 'recording.wav');
+        formData.append('audio', assessmentBlob, 'recording.wav');
         formData.append('referenceText', correctSentenceSpeak);
         if (typeof currentSpeakQuestionId !== 'undefined' && currentSpeakQuestionId) {
           formData.append('questionId', String(currentSpeakQuestionId));
@@ -8508,6 +8560,7 @@
           body: formData
         });
         const assessData = await assessRes.json().catch(() => null);
+        if (!isCurrent()) return;
         if (assessRes.ok && assessData && assessData.success && Array.isArray(assessData.words) && assessData.words.length > 0) {
           window.lastRepeatSentenceAssessment = assessData;
         }
@@ -8516,6 +8569,7 @@
       }
     }
 
+    if (!isCurrent()) return;
     const diff = diffWords(userAnswer, correctSentenceSpeak);
     const hasErrors = diff.some((p) => p.type !== "match");
     const { matches: scoreValue, f1: wordAccuracy } = getWordDiffMetrics(diff);
@@ -8543,7 +8597,7 @@
     // Show pronunciation practice and breakdown mode for speak mode
     const missedWords = getMissedWords(diff);
     renderPronunciationPractice(missedWords);
-    renderBreakdownMode();
+    if (!repeatSentenceV3.active) renderBreakdownMode();
 
     // Store diff for sentence generation (Speak mode)
     lastDiffSpeak = diff;
@@ -8568,7 +8622,7 @@
     result.innerHTML = `<div class="errors">Playing correction animation...</div>`;
 
     lastAnimationMode = true; // Speak mode
-    playAnimation(lastSteps, () => {
+    const renderFeedback = () => {
       let acousticTokensHtml = '';
       if (window.lastRepeatSentenceAssessment && Array.isArray(window.lastRepeatSentenceAssessment.words) && window.lastRepeatSentenceAssessment.words.length > 0) {
         const tokenSpans = window.lastRepeatSentenceAssessment.words.map((w) => {
@@ -8662,7 +8716,7 @@
       });
 
       // Replay original audio if there are errors (points not max)
-      if (hasErrors && scoreValue < totalWords) {
+      if (!repeatSentenceV3.active && hasErrors && scoreValue < totalWords) {
         audio.currentTime = 0;
         audio.play();
       }
@@ -8673,7 +8727,7 @@
       // Persist per-question progress (progress bar + dropdown tier)
       recordPracticeAttempt(currentSpeakQuestionId, !hasErrors, 'speak');
 
-      window.PTEAttemptArchive?.saveTextAttempt?.('speak', {
+      if (!repeatSentenceV3.active) window.PTEAttemptArchive?.saveTextAttempt?.('speak', {
         id: currentSpeakQuestionId,
         text: correctSentenceSpeak,
         source: 'repeat-sentence'
@@ -8726,13 +8780,28 @@
               <button id="second-take-no" class="modern-btn modern-btn--retry">Skip</button>
             </div>`;
           document.body.appendChild(secondTakeOverlay);
+          const secondTakeOwner = repeatSentenceV3.active ? repeatSentenceV3.captureAttemptOwner() : null;
+          const ownsSecondTake = () => repeatSentenceV3.ownsAttempt(secondTakeOwner) && repeatSentenceV3.phase === 'feedback';
 
           document.getElementById('second-take-no').addEventListener('click', () => {
             secondTakeOverlay.remove();
           });
           document.getElementById('second-take-yes').addEventListener('click', async () => {
             secondTakeOverlay.remove();
-            const skillResult = await useActiveSkillForAttempt('second_take', 'speak', currentSpeakQuestionId);
+            if (secondTakeOwner && !ownsSecondTake()) return;
+            let skillResult;
+            try {
+              skillResult = await useActiveSkillForAttempt('second_take', 'speak', currentSpeakQuestionId,
+                secondTakeOwner ? { shouldApply: ownsSecondTake } : {});
+              if (secondTakeOwner) {
+                if (ownsSecondTake() && skillResult?.success) await repeatSentenceV3.retry();
+                return;
+              }
+            } catch (error) {
+              if (secondTakeOwner) repeatSentenceV3.fail(error, secondTakeOwner);
+              else console.warn('[RepeatSentence] Second Take failed:', error);
+              return;
+            }
             if (skillResult?.success) {
               // Reset speak mode to allow re-recording
               if (recordBtn) { recordBtn.style.display = 'inline-block'; recordBtn.textContent = 'Start Recording'; }
@@ -8742,10 +8811,18 @@
               if (playBtnSpeak) playBtnSpeak.style.display = '';
               window.SpeakingPracticeController?.sync?.('speak');
             }
-          });
+          }, { once: true });
         }
       }
-    }, true);
+    };
+    if (v3Token !== null) {
+      renderFeedback();
+      animationPanel.style.display = 'none';
+      if (!result.querySelector('.result-text')) {
+        const text = document.createElement('div'); text.className = 'result-text'; text.innerHTML = renderDiff(diff); result.prepend(text);
+      }
+      await repeatSentenceV3.feedback({ score: scoreValue, maxScore: totalWords, correct: !hasErrors, wordAccuracy, diff }, missedWords);
+    } else playAnimation(lastSteps, renderFeedback, true);
   };
 
   let lastDiffType = [];
@@ -8772,7 +8849,15 @@
     }
   };
 
-  const loadQuestion = async (mode, questionId) => {
+  const loadQuestion = async (mode, questionId, navigationApproved = false) => {
+    if (mode === 'speak' && repeatSentenceV3.active) {
+      const generation = repeatSentenceV3.generation;
+      if (!navigationApproved && !await repeatSentenceV3.beforeNavigate()) return false;
+      if (!repeatSentenceV3.active || generation !== repeatSentenceV3.generation) return false;
+      repeatSentenceV3.stopShadow();
+      repeatSentenceV3.generation++; clearInterval(repeatSentenceV3.timer); repeatSentenceV3.audioBox.reset();
+      repeatSentenceV3.setPhase('loading');
+    }
     const requestId = beginModeLoadRequest(mode);
     const database = mode === "type" ? typeDatabase : speakDatabase;
     const question = database.find(item => item.id === questionId);
@@ -8959,6 +9044,8 @@
 
     // Sync SpeakingPracticeController to immediately reflect reset UI state (e.g. 3-step indicator reset to Step 1)
     window.SpeakingPracticeController?.sync?.(mode);
+
+    if (mode === 'speak' && repeatSentenceV3.active) repeatSentenceV3.begin();
 
     // Load mastery status for this question (logged-in users only)
     // Pass the mode so mastery status is shown for the correct mode
@@ -9458,6 +9545,9 @@
     if (questionId && await loadQuestion("speak", questionId)) {
       currentSpeakQuestionId = questionId;
       currentQuestionIdSpeak.textContent = questionId;
+    } else if (repeatSentenceV3.active) {
+      e.target.value = String(currentSpeakQuestionId);
+      window.SpeakingPracticeController?.sync?.('speak');
     }
     refreshRecommendationUI('speak');
   });
@@ -9561,6 +9651,7 @@
 
   if (backBtnSpeak) {
     backBtnSpeak.addEventListener("click", () => {
+      if (repeatSentenceV3.active) { repeatSentenceV3.navigate('back').catch(error => repeatSentenceV3.fail(error)); return; }
       stopAllAudioAndAnimations();
       navigateQuestion('speak', 'back');
     });
@@ -9568,6 +9659,7 @@
 
   if (nextBtnSpeak) {
     nextBtnSpeak.addEventListener("click", () => {
+      if (repeatSentenceV3.active) { repeatSentenceV3.navigate('next').catch(error => repeatSentenceV3.fail(error)); return; }
       stopAllAudioAndAnimations();
       navigateQuestion('speak', 'next');
     });
@@ -10040,8 +10132,425 @@
 
 
 
+  // Repeat Sentence owns v3 timing and presentation; the shared widgets own no mode state.
+  const repeatSentenceV3 = {
+    active: false, phase: 'loading', generation: 0, timer: null, busy: null, retryOperation: null,
+    departureCleanup: null, shadowEpoch: 0, shadowTitleTimer: null, shadowUtterance: null, origins: [],
+    replaysLeft() {
+      const limit = window.DifficultyManager?.getCurrentSettings('speak')?.maxReplays ?? 5;
+      return Math.max(0, limit - (window.speakReplayCount || 0));
+    },
+    move(node, host) {
+      if (!node) return;
+      const anchor = document.createComment('Repeat Sentence v3 restore');
+      node.before(anchor); this.origins.push({ node, anchor, style: node.getAttribute('style'), hidden: node.hidden });
+      host.append(node);
+    },
+    mount() {
+      if (this.active) return;
+      this.active = true; this.phase = 'loading';
+      modeSpeak.classList.add('speak-pte-v3');
+      const host = document.getElementById('speak-practice-area');
+      const view = document.createElement('div'); view.id = 'speak-pte-view';
+      view.innerHTML = `<p class="pte-instr">You will hear a sentence. Please repeat the sentence exactly as you hear it. You will hear the sentence only once.</p>
+        <div id="speak-pte-audio" class="pte-center"></div><div id="speak-pte-recorder" class="pte-center" hidden></div>
+        <div class="pte-fb" id="speak-pte-feedback" hidden><div class="pte-fb__left">
+          <h3 class="speak-pte-caption">THE SENTENCE</h3><div id="speak-pte-sentence"></div>
+          <p class="speak-pte-legend">Good ≥80 · Unclear 60–79 · Needs practice &lt;60 · Click a word to hear yourself say it.</p>
+          <div id="speak-pte-correction"><b>Correction</b></div><div id="speak-pte-animation"></div>
+          <div class="pte-listen"><div role="group" aria-label="Listen back"><button type="button" id="speak-pte-yours" class="pte-btn" aria-pressed="true">Your recording</button><button type="button" id="speak-pte-original" class="pte-btn" aria-pressed="false">Original sentence</button></div><audio id="speak-pte-playback" controls aria-label="Listen back"></audio></div>
+        </div><div class="pte-fb__right"><div class="pte-tabs" role="tablist" aria-label="Feedback">
+          <button type="button" id="speak-pte-results-tab" role="tab" aria-selected="true" aria-controls="speak-pte-results">Your results</button>
+          <button type="button" id="speak-pte-practice-tab" role="tab" aria-selected="false" tabindex="-1" aria-controls="speak-pte-practice">Practise missed words</button>
+        </div><div id="speak-pte-results" role="tabpanel" aria-labelledby="speak-pte-results-tab"><div class="pte-stats"></div><h3>What to practise next</h3><div id="speak-pte-fixes"></div></div>
+        <div id="speak-pte-practice" role="tabpanel" aria-labelledby="speak-pte-practice-tab" hidden></div></div></div>
+        <button type="button" id="speak-pte-stop">Finish recording</button><button type="button" id="speak-pte-cancel">Cancel</button><button type="button" id="speak-pte-play">Play</button>`;
+      host.prepend(view); this.view = view;
+      this.audioBox = window.PteAudioBox.create(document.getElementById('speak-pte-audio'), { audio });
+      this.recorder = window.PteRecorderWidget.create(document.getElementById('speak-pte-recorder'), { totalSeconds: 15 });
+      this.move(result, document.getElementById('speak-pte-sentence'));
+      this.move(animationPanel, document.getElementById('speak-pte-animation'));
+      [replayBtn, document.getElementById('breakdown-beginning'), document.getElementById('breakdown-end')].forEach(node => this.move(node, document.getElementById('speak-pte-correction')));
+      this.move(document.getElementById('pronunciation-practice'), document.getElementById('speak-pte-practice'));
+      this.move(document.getElementById('breakdown-mode'), document.getElementById('speak-pte-animation'));
+      this.move(document.getElementById('same-vocab-speak'), document.getElementById('speak-pte-practice'));
+      this.buttonLabels = [[replayBtn, 'Replay animation'], [breakdownBeginningBtn, 'From the beginning'], [breakdownEndBtn, 'From the end']]
+        .map(([node, label]) => { const previous = node.textContent; node.textContent = label; return { node, previous }; });
+      document.getElementById('speak-pte-stop').onclick = () => {
+        const owner = this.captureAttemptOwner();
+        this.stop().catch(error => this.fail(error, owner));
+      };
+      document.getElementById('speak-pte-cancel').onclick = () => this.retry(true).catch(error => this.fail(error));
+      document.getElementById('speak-pte-play').onclick = () => this.playback.play().catch(error => this.fail(error));
+      this.playback = document.getElementById('speak-pte-playback');
+      ['yours', 'original'].forEach(kind => document.getElementById(`speak-pte-${kind}`).onclick = () => this.selectPlayback(kind));
+      this.selectPlayback('yours');
+      const selectTab = kind => ['results', 'practice'].forEach(item => {
+        const selected = item === kind, button = document.getElementById(`speak-pte-${item}-tab`);
+        button.setAttribute('aria-selected', String(selected)); button.tabIndex = selected ? 0 : -1;
+        document.getElementById(`speak-pte-${item}`).hidden = !selected;
+      });
+      ['results', 'practice'].forEach(kind => {
+        const button = document.getElementById(`speak-pte-${kind}-tab`);
+        button.onclick = () => selectTab(kind);
+        button.onkeydown = event => {
+          if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+          event.preventDefault(); const next = event.key === 'Home' ? 'results' : event.key === 'End' ? 'practice' : kind === 'results' ? 'practice' : 'results';
+          selectTab(next); document.getElementById(`speak-pte-${next}-tab`).focus();
+        };
+      });
+      // The shell adopts dock controls after onMount returns.
+      const mountGeneration = this.generation;
+      queueMicrotask(async () => {
+        if (!this.active || mountGeneration !== this.generation) return;
+        // The shared dock can open its no-skip dialog without calling the mode's
+        // navigation hook. Stop Shadow before that shared handler takes over.
+        document.getElementById('pte-next-speak')?.addEventListener('click', () => this.stopShadow(), { capture: true });
+        await Promise.allSettled([this.departureCleanup, this.retryOperation?.promise, this.busy]);
+        if (this.active && mountGeneration === this.generation) this.begin();
+      });
+    },
+    unmount() {
+      if (!this.active) return;
+      this.stopShadow(); this.stopPlayback();
+      this.buttonLabels?.forEach(({ node, previous }) => { node.textContent = previous; });
+      this.active = false; this.generation++; clearInterval(this.timer); this.audioBox?.destroy(); this.recorder?.destroy();
+      // Capture helpers publish the WAV and decoded buffer after DSP. Keep their
+      // entire lifecycle owned until it drains, including an in-flight start.
+      const pending = [this.departureCleanup, this.retryOperation?.promise, this.busy, repeatSentenceStopPromise];
+      const cleanup = (async () => {
+        await Promise.allSettled(pending);
+        await stopRepeatSentenceRecording();
+        if (repeatSentenceStopPromise) await repeatSentenceStopPromise;
+        if (this.departureCleanup === cleanup) {
+          window.repeatSentenceWavBlob = null; window.repeatSentenceAudioBuffer = null;
+          window.lastRepeatSentenceAssessment = null; repeatSentenceStopPromise = null;
+        }
+      })().finally(() => { if (this.departureCleanup === cleanup) this.departureCleanup = null; });
+      this.departureCleanup = cleanup;
+      cleanup.catch(error => console.warn('[RepeatSentence] Departure cleanup failed:', error));
+      this.origins.reverse().forEach(({ node, anchor, style, hidden }) => {
+        anchor.replaceWith(node); if (style === null) node.removeAttribute('style'); else node.setAttribute('style', style); node.hidden = hidden;
+      });
+      this.origins = []; this.view?.remove(); modeSpeak.classList.remove('speak-pte-v3'); delete modeSpeak.dataset.ptePhase;
+    },
+    stopPlayback() {
+      if (!this.playback) return;
+      this.playback.pause(); this.playback.currentTime = 0;
+    },
+    selectPlayback(kind) {
+      this.playback.pause();
+      this.playback.src = kind === 'yours' ? this.recordingUrl || '' : audio.currentSrc || audio.querySelector('source')?.src || '';
+      this.playback.setAttribute('aria-label', kind === 'yours' ? 'Your recording' : 'Original sentence');
+      ['yours', 'original'].forEach(item => document.getElementById(`speak-pte-${item}`).setAttribute('aria-pressed', String(item === kind)));
+    },
+    stopShadow() {
+      this.shadowEpoch++; clearTimeout(this.shadowTitleTimer);
+      if (this.shadowUtterance || window.isShadowModeActive) window.speechSynthesis?.cancel();
+      this.shadowUtterance = null; window.isShadowModeActive = false;
+      shadowModeBtn.classList.remove('active'); shadowModeBtn.setAttribute('aria-pressed', 'false'); shadowModeBtn.title = 'Shadow Mode';
+    },
+    async toggleShadow() {
+      if (!this.active || this.phase !== 'prep' || this.busy || this.retryOperation || this.departureCleanup) return;
+      if (window.isShadowModeActive) { this.stopShadow(); return; }
+      const owner = { epoch: ++this.shadowEpoch, generation: this.generation, question: currentSpeakQuestionId, phase: this.phase };
+      const isCurrent = () => this.active && this.shadowEpoch === owner.epoch && this.generation === owner.generation
+        && currentSpeakQuestionId === owner.question && this.phase === owner.phase && !this.busy && !this.retryOperation;
+      try {
+        const result = window.useActiveSkillForAttempt
+          ? await window.useActiveSkillForAttempt('shadow_mode', 'speak', owner.question) : { success: true };
+        if (!isCurrent() || !result?.success) return;
+        window.isShadowModeActive = true; shadowModeBtn.classList.add('active'); this.sync();
+        window.speechSynthesis?.cancel();
+        const utterance = new SpeechSynthesisUtterance(correctSentenceSpeak); utterance.rate = 0.6;
+        this.shadowUtterance = utterance;
+        utterance.onend = () => {
+          if (!isCurrent() || this.shadowUtterance !== utterance) return;
+          shadowModeBtn.title = 'Shadow Mode — Done!';
+          this.shadowTitleTimer = setTimeout(() => { if (isCurrent()) shadowModeBtn.title = 'Shadow Mode'; }, 2000);
+        };
+        window.speechSynthesis?.speak(utterance); shadowModeBtn.title = 'Shadowing... speak along!';
+      } catch (error) { if (isCurrent()) { this.stopShadow(); this.fail(error); } }
+    },
+    setPhase(phase) {
+      if (!this.active) return;
+      this.phase = phase; modeSpeak.dataset.ptePhase = phase;
+      window.SpeakingPracticeController?.setPhase('speak', phase); this.sync();
+    },
+    sync() {
+      if (!this.active) return;
+      const replay = document.getElementById('speak-pte-replay');
+      if (replay) replay.disabled = this.replaysLeft() === 0 || !!this.replaying;
+      shadowModeBtn?.setAttribute('aria-pressed', String(!!window.isShadowModeActive));
+      retryBtnSpeak.textContent = this.phase === 'feedback' ? 'Try again' : 'Record again';
+      recordBtn.textContent = 'Start recording';
+      document.getElementById('speak-pte-audio').hidden = this.phase === 'feedback';
+      document.getElementById('speak-pte-recorder').hidden = ['listen', 'loading', 'feedback'].includes(this.phase);
+      document.getElementById('speak-pte-feedback').hidden = this.phase !== 'feedback';
+      checkBtnSpeak.disabled = !!this.busy || !!this.retryOperation;
+    },
+    captureAttemptOwner() {
+      return { generation: this.generation, attempt: this.attempt, questionId: currentSpeakQuestionId };
+    },
+    ownsAttempt(owner) {
+      return this.active && this.generation === owner.generation && this.attempt === owner.attempt
+        && currentSpeakQuestionId === owner.questionId;
+    },
+    clearAttemptErrors() {
+      window.SpeakingPracticeController?.setSaveError('speak', '');
+      window.SpeakingPracticeController?.setNextError('speak', '');
+    },
+    fail(error, owner = null) {
+      if (!this.active || (owner && !this.ownsAttempt(owner)) || error?.name === 'AbortError') return;
+      if (this.attempt?.blob && !this.attempt.saved) {
+        window.SpeakingPracticeController?.setSaveError('speak', 'This attempt could not be saved. Try Next again to retry.');
+        return;
+      }
+      const status = modeSpeak.querySelector('.pte-dock__status');
+      if (status) status.textContent = error?.message || 'This attempt could not be completed. Try again.';
+    },
+    async begin() {
+      this.stopShadow(); this.stopPlayback();
+      const token = ++this.generation; clearInterval(this.timer); this.audioBox.reset(); this.replaying = false;
+      if (this.departureCleanup) await this.departureCleanup;
+      if (!this.active || token !== this.generation) return;
+      this.clearAttemptErrors();
+      this.attempt = null; this.setPhase('listen');
+      try {
+        await this.audioBox.countdown(3);
+        if (!this.active || token !== this.generation) return;
+        window.questionStartTime ||= Date.now();
+        await this.audioBox.play();
+        if (this.active && token === this.generation) this.prepare();
+      } catch (error) { this.fail(error); }
+    },
+    prepare() {
+      clearInterval(this.timer); let remaining = 3;
+      this.recorder.showCountdown(remaining); this.setPhase('prep');
+      this.timer = setInterval(() => {
+        remaining--; this.recorder.tick(remaining);
+        if (remaining <= 0) { clearInterval(this.timer); this.start(); }
+      }, 1000);
+    },
+    async replay() {
+      if (!this.active || !['prep', 'complete'].includes(this.phase) || this.replaysLeft() <= 0 || this.replaying) return;
+      const token = this.generation, phase = this.phase;
+      clearInterval(this.timer); this.replaying = true; window.speakReplayCount = (window.speakReplayCount || 0) + 1;
+      this.setPhase(phase);
+      try { await this.audioBox.replay(); }
+      catch (error) { this.fail(error); }
+      finally {
+        if (this.active && token === this.generation) {
+          this.replaying = false;
+          if (phase === 'prep' && this.phase === 'prep') this.prepare(); else this.sync();
+        }
+      }
+    },
+    async start() {
+      if (!this.active || this.phase !== 'prep' || this.busy || this.retryOperation || this.departureCleanup) return;
+      this.stopShadow();
+      // Invalidate replay completion before cancelling its audio promise. It must
+      // not restart a prep timer after this recording has taken ownership.
+      const token = ++this.generation;
+      clearInterval(this.timer); this.audioBox.reset(); this.audioBox.setCompleted(); this.replaying = false;
+      const operation = (async () => {
+        try {
+          await startRepeatSentenceRecording();
+          if (!this.active || token !== this.generation) { await stopRepeatSentenceRecording(); return; }
+          if (!isRecording || !repeatSentenceMediaStream) throw new Error('Microphone recording could not start. Allow microphone access and try again.');
+          this.attempt = { id: `rs-${Date.now()}-${Math.random().toString(36).slice(2)}`, promptId: currentSpeakQuestionId, text: correctSentenceSpeak, started: Date.now() };
+          const owner = this.captureAttemptOwner();
+          this.recorder.showRecording(15); this.recorder.attachStream(repeatSentenceMediaStream); this.setPhase('recording');
+          this.timer = setInterval(() => {
+            const elapsed = (Date.now() - this.attempt.started) / 1000; this.recorder.setElapsed(elapsed);
+            if (elapsed >= 15) this.stop().catch(error => this.fail(error, owner));
+          }, 100);
+        } catch (error) {
+          await stopRepeatSentenceRecording();
+          if (this.active && token === this.generation) this.fail(error);
+        } finally { if (this.busy === operation) { this.busy = null; this.sync(); } }
+      })();
+      this.busy = operation; this.sync();
+      return operation;
+    },
+    async save(resultSnapshot = null) {
+      const owner = this.captureAttemptOwner(), attempt = owner.attempt;
+      if (!attempt || !this.ownsAttempt(owner)) return false;
+      if (resultSnapshot) attempt.resultSnapshot = resultSnapshot;
+      resultSnapshot = attempt.resultSnapshot || null;
+      const input = { practiceMode: 'speak', attemptId: attempt.id,
+        idempotencyKey: `${attempt.id}-${resultSnapshot ? 'feedback' : 'capture'}`,
+        promptSnapshot: { promptId: attempt.promptId, text: attempt.text },
+        responseSnapshot: { text: attempt.transcript || '' }, resultSnapshot,
+        media: attempt.blob ? [{ slot: 'student', label: 'Your recording', blob: attempt.blob }] : [],
+        scoringSource: resultSnapshot ? 'client' : null };
+      if (!window.PTEAttemptArchive?.saveAttempt) throw new Error('Attempt saving is unavailable. Please try again.');
+      const patchesExisting = !!(attempt.archiveId && resultSnapshot);
+      let saved;
+      try { saved = patchesExisting
+        ? await window.PTEAttemptArchive.patchAttempt(attempt.archiveId, input)
+        : attempt.saved && attempt.guest ? { skipped: true, reason: 'guest' }
+          : await window.PTEAttemptArchive.saveAttempt(input, { shouldPublish: () => this.ownsAttempt(owner) }); }
+      catch (error) {
+        if (!this.ownsAttempt(owner)) return false;
+        window.SpeakingPracticeController?.setSaveError('speak', 'This attempt could not be saved. Try Next again to retry.'); throw error;
+      }
+      // Persistence may finish after departure or Retry. It may retain its
+      // server-side record, but cannot publish into another attempt's UI/history.
+      if (!this.ownsAttempt(owner)) return false;
+      if (saved?.skipped && saved.reason !== 'guest') throw new Error('This attempt could not be saved. Please try again.');
+      attempt.saved = true; attempt.guest = !!saved?.skipped;
+      if (!attempt.guest) attempt.archiveId = saved?.attemptId || attempt.id;
+      window.SpeakingPracticeController?.setSaveError('speak', '');
+      if (saved?.skipped) window.PteAttemptHistory?.recordLocal({ ...input, promptId: attempt.promptId,
+        audio: { studentUrl: attempt.url, durationMs: attempt.durationMs } });
+      // Native saveAttempt already publishes. Only the patch path needs the
+      // mode to invalidate and announce its newly assessed result.
+      if (patchesExisting && !saved?.skipped) {
+        window.PTEAttemptArchive.invalidateHistoryCache?.();
+        window.dispatchEvent(new CustomEvent('pte-attempt-archive:saved', { detail: { attemptId: attempt.archiveId, practiceMode: 'speak', promptId: attempt.promptId } }));
+      }
+      return true;
+    },
+    async stop() {
+      if (this.retryOperation) { await this.retryOperation.promise; return false; }
+      if (this.busy) return this.busy;
+      if (this.phase !== 'recording') return;
+      clearInterval(this.timer); const owner = this.captureAttemptOwner();
+      const operation = (async () => {
+        await stopRepeatSentenceRecording();
+        if (!this.ownsAttempt(owner)) return false;
+        const attempt = owner.attempt;
+        attempt.transcript = transcription; attempt.blob = window.repeatSentenceWavBlob;
+        attempt.durationMs = Date.now() - attempt.started;
+        if (attempt.blob) attempt.url = URL.createObjectURL(attempt.blob);
+        this.recordingUrl = attempt.url; this.selectPlayback('yours');
+        this.recorder.showComplete(); this.setPhase('complete');
+        return this.save();
+      })();
+      this.busy = operation;
+      try { return await operation; }
+      catch (error) { if (this.ownsAttempt(owner)) throw error; return false; }
+      finally {
+        if (this.busy === operation) { this.busy = null; if (this.ownsAttempt(owner)) this.sync(); }
+      }
+    },
+    retry(discard = false) {
+      if (this.retryOperation) return this.retryOperation.promise;
+      if (!this.active) return Promise.resolve(false);
+      this.stopShadow();
+      // Cancel owns the old capture until its DSP/save work drains. Repeated
+      // clicks join that operation instead of exposing a new prep countdown.
+      const operation = { generation: ++this.generation, attempt: this.attempt, questionId: currentSpeakQuestionId, pending: this.busy };
+      this.retryOperation = operation;
+      const isCurrent = () => this.active && this.retryOperation === operation
+        && this.ownsAttempt(operation);
+      clearInterval(this.timer); this.audioBox.reset(); this.stopPlayback();
+      operation.promise = (async () => {
+        if (operation.pending) await operation.pending.catch(() => {});
+        if (!isCurrent()) return false;
+        if (isRecording) {
+          await stopRepeatSentenceRecording();
+          if (!isCurrent()) return false;
+        }
+        if (!discard && operation.attempt && !operation.attempt.saved) {
+          await this.save();
+          if (!isCurrent()) return false;
+        }
+        this.clearAttemptErrors();
+        this.attempt = null; resetScaffolding(); transcription = ''; window.repeatSentenceWavBlob = null; window.lastRepeatSentenceAssessment = null;
+        startAttemptContext('speak', currentSpeakQuestionId); this.prepare();
+        return true;
+      })().catch(error => {
+        if (isCurrent()) this.fail(error, operation);
+        return false;
+      }).finally(() => {
+        if (this.retryOperation !== operation) return;
+        this.retryOperation = null;
+        if (this.active && this.generation === operation.generation && currentSpeakQuestionId === operation.questionId) this.sync();
+      });
+      this.sync();
+      return operation.promise;
+    },
+    async feedback(scores, missedWords) {
+      const assessment = window.lastRepeatSentenceAssessment;
+      const stats = modeSpeak.querySelector('.pte-stats'); stats.replaceChildren();
+      const tiles = [['Points', `${scores.score}/${scores.maxScore}`],
+        ['Pronunciation', assessment?.pronScore ?? assessment?.pronunciationScore],
+        ['Fluency', assessment?.fluencyScore], ['Completeness', assessment?.completenessScore]];
+      tiles.forEach(([label, value]) => {
+        if (value == null || (label !== 'Points' && !Number.isFinite(value))) return;
+        const tile = document.createElement('div'), title = document.createElement('small'), number = document.createElement('strong');
+        title.textContent = label; number.textContent = label === 'Points' ? value : `${Math.round(value)}%`;
+        tile.append(title, number); stats.append(tile);
+      });
+      const fixes = document.getElementById('speak-pte-fixes'); fixes.replaceChildren();
+      const words = assessment?.words || [];
+      const targets = [...new Set([...missedWords, ...words.filter(w => w.accuracyScore < 80).map(w => w.word)])].slice(0, 4);
+      if (!targets.length) fixes.textContent = 'All words matched. Try another sentence to keep practising.';
+      targets.forEach(word => {
+        const row = document.createElement('div'); row.className = 'speak-pte-fix';
+        const label = document.createElement('p'); label.textContent = `Practise “${word}” in the sentence.`; row.append(label);
+        const acoustic = words.find(w => w.word.toLowerCase() === word.toLowerCase());
+        if (acoustic?.startMs != null && acoustic?.endMs != null) {
+          const you = document.createElement('button'); you.type = 'button'; you.className = 'pte-btn'; you.textContent = '▶ You';
+          you.onclick = () => window.PronunciationTooltip?.playAudioSegment(window.repeatSentenceAudioBuffer, acoustic.startMs, acoustic.endMs, you); row.append(you);
+        }
+        const model = document.createElement('button'); model.type = 'button'; model.className = 'pte-btn'; model.textContent = '▶ Model';
+        model.onclick = () => { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(word)); }; row.append(model); fixes.append(row);
+      });
+      if (!missedWords.length) {
+        const practice = document.getElementById('pronunciation-practice');
+        practice.style.display = 'block'; document.getElementById('pronunciation-words').textContent = 'No missed words in this attempt.';
+      }
+      this.setPhase('feedback');
+      if (this.attempt) this.attempt.saved = false;
+      await this.save({ ...scores, pronScore: assessment?.pronScore ?? assessment?.pronunciationScore,
+        fluencyScore: assessment?.fluencyScore, completenessScore: assessment?.completenessScore, words: assessment?.words });
+    },
+    async beforeNavigate(approved = false) {
+      this.stopShadow(); this.stopPlayback();
+      const token = this.generation, attempt = this.attempt;
+      const isCurrent = () => this.active && token === this.generation && attempt === this.attempt;
+      if (this.departureCleanup) { await this.departureCleanup; return false; }
+      if (this.retryOperation) { await this.retryOperation.promise; return false; }
+      if (this.busy) await this.busy;
+      if (!isCurrent()) return false;
+      if (!approved && this.phase === 'prep') {
+        await window.SpeakingPracticeController.openDialog('speak', 'noskip'); return false;
+      }
+      if (!approved && ['listen', 'recording', 'complete'].includes(this.phase)) {
+        if (!await window.SpeakingPracticeController.openDialog('speak', 'confirm')) return false;
+        if (!isCurrent()) return false;
+        if (this.phase === 'prep') { await window.SpeakingPracticeController.openDialog('speak', 'noskip'); return false; }
+      }
+      if (this.phase === 'recording') await this.stop();
+      if (!isCurrent()) return false;
+      if (this.attempt && !this.attempt.saved) await this.save();
+      return isCurrent();
+    },
+    async navigate(direction, approved = false) {
+      if (this.navigating) return false;
+      this.navigating = true;
+      const token = this.generation;
+      try {
+        if (!await this.beforeNavigate(approved) || !this.active || token !== this.generation) return false;
+        const options = [...questionSelectSpeak.options];
+        if (!options.length) return false;
+        const index = options.findIndex(option => String(option.value) === String(currentSpeakQuestionId));
+        const target = options[(index + (direction === 'next' ? 1 : -1) + options.length) % options.length].value;
+        const loaded = await loadQuestion('speak', Number(target), true);
+        if (loaded) { questionSelectSpeak.value = target; window.SpeakingPracticeController?.sync?.('speak'); }
+        return loaded;
+      } finally { this.navigating = false; }
+    },
+    next() { return this.navigate('next', true); }
+  };
+  window.RepeatSentenceV3 = repeatSentenceV3;
+
   // Speak mode
   playBtnSpeak.addEventListener("click", () => {
+    if (repeatSentenceV3.active) { repeatSentenceV3.replay(); return; }
     // ============================================
     // REPLAY LIMIT CHECK (Smart Difficulty)
     // ============================================
@@ -10123,6 +10632,7 @@
         handleLockedSkillClick('shadow_mode');
         return;
       }
+      if (repeatSentenceV3.active) return repeatSentenceV3.toggleShadow();
 
       const nextState = !window.isShadowModeActive;
       if (nextState) {
@@ -10131,6 +10641,7 @@
       }
 
       window.isShadowModeActive = nextState;
+      if (repeatSentenceV3.active) repeatSentenceV3.sync();
       shadowModeBtn.classList.toggle("active", window.isShadowModeActive);
 
       if (window.isShadowModeActive && correctSentenceSpeak) {
@@ -10184,15 +10695,10 @@
     }
   };
 
-  recordBtn.addEventListener("click", async () => {
-    if (!recognition) return;
-
-    // Ensure microphone access is granted
-    await ensureMicrophoneAccess();
-
-    if (isRecording) {
+  async function stopRepeatSentenceRecording() {
+    if (!recognition || (!isRecording && repeatSentenceMediaRecorder?.state !== 'recording')) return;
       // Tutorial Mode Check: Prevent stopping if no speech is detected
-      if (window.isTutorialActive && document.getElementById('tab-speak').classList.contains('active')) {
+      if (!repeatSentenceV3.active && window.isTutorialActive && document.getElementById('tab-speak').classList.contains('active')) {
         const currentText = transcriptionText ? transcriptionText.textContent.trim() : "";
         // Check for empty or default states (meaning no transcription yet)
         const invalidStates = ["Listening...", "Starting...", "Click 'Start Recording' and speak...", ""];
@@ -10204,6 +10710,7 @@
       }
 
       // Stop recording
+      isRecording = false;
       try {
         recognition.stop();
       } catch (e) {
@@ -10218,7 +10725,13 @@
       // New flow: Show check button when recording stops
       if (checkBtnSpeak) checkBtnSpeak.style.display = "inline-block";
       window.SpeakingPracticeController?.sync?.('speak');
-    } else {
+  }
+
+  async function startRepeatSentenceRecording() {
+    // Also protect a legacy-scope start following departure from v3.
+    if (repeatSentenceV3.departureCleanup) await repeatSentenceV3.departureCleanup;
+    if (!recognition || isRecording) return;
+    await ensureMicrophoneAccess();
       // Start recording
       // First, make sure any previous recognition is stopped
       try {
@@ -10271,10 +10784,30 @@
           recordingStatus.textContent = `Error: ${e.message || "Failed to start"}`;
         }
       }
-    }
+  }
+
+  recordBtn.addEventListener("click", async () => {
+    if (repeatSentenceV3.active) return repeatSentenceV3.start();
+    if (isRecording) await stopRepeatSentenceRecording();
+    else await startRepeatSentenceRecording();
   });
 
   checkBtnSpeak.addEventListener("click", () => {
+    if (repeatSentenceV3.active) {
+      if (repeatSentenceV3.phase !== 'complete' || repeatSentenceV3.busy) return;
+      if (!transcription.trim()) { repeatSentenceV3.fail(new Error('No speech was detected. Record again before getting feedback.')); return; }
+      const owner = repeatSentenceV3.captureAttemptOwner();
+      const operation = performCheckSpeak(transcription.trim(), scoreSpeak);
+      repeatSentenceV3.busy = operation;
+      repeatSentenceV3.sync();
+      operation.catch(error => repeatSentenceV3.fail(error, owner)).finally(() => {
+        if (repeatSentenceV3.busy === operation) {
+          repeatSentenceV3.busy = null;
+          if (repeatSentenceV3.ownsAttempt(owner)) repeatSentenceV3.sync();
+        }
+      });
+      return;
+    }
     if (isRecording && recognition) {
       recognition.stop();
       stopRepeatSentenceAudioCapture();
@@ -10297,6 +10830,7 @@
 
   if (retryBtnSpeak) {
     retryBtnSpeak.addEventListener("click", () => {
+      if (repeatSentenceV3.active) { repeatSentenceV3.retry().catch(error => repeatSentenceV3.fail(error)); return; }
       window.repeatSentenceWavBlob = null;
       window.repeatSentenceAudioBuffer = null;
       window.lastRepeatSentenceAssessment = null;
@@ -10335,6 +10869,10 @@
   }
 
   replayBtn.addEventListener("click", () => {
+    if (repeatSentenceV3.active) {
+      if (lastSteps.length) { animationPanel.style.display = 'block'; playAnimation(lastSteps, () => { animationPanel.style.display = 'none'; }, lastAnimationMode); }
+      return;
+    }
     if (lastSteps.length) playAnimation(lastSteps, () => { }, lastAnimationMode);
   });
 

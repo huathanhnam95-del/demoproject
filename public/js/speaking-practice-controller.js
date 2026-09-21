@@ -14,6 +14,12 @@
 (function () {
   'use strict';
 
+  function resolveNextAction(phase) {
+    return phase === 'prep' ? 'noskip' : ['listen', 'recording', 'complete'].includes(phase) ? 'confirm' : 'direct';
+  }
+  if (typeof module === 'object' && module.exports) module.exports = { resolveNextAction };
+  if (typeof window === 'undefined') return;
+
   /* ═══════════════════════════ CONSTANTS ═══════════════════════════ */
 
   const STORAGE_KEY = 'bel:speaking-controller:view:v1';
@@ -390,7 +396,7 @@
     wireNavButton(nextBtn, picker, 'nextButtonId', 'next', controllerState, 'srcNextBtn', 'srcNextOriginalDisplay');
 
     // Optional Random ON/OFF toggle
-    if (picker.orderModes && typeof picker.orderModes.set === 'function') {
+    if (!controllerState.isV3 && picker.orderModes && typeof picker.orderModes.set === 'function') {
       const orderToggle = controllerState.dom.orderToggle;
       controllerState.dom.pickerNav.appendChild(orderToggle);
       orderToggle.addEventListener('click', () => {
@@ -505,7 +511,10 @@
 
     // Listen to source select changes
     if (sourceSelect) {
-      const onSelectChange = () => updatePillDisplay(config, controllerState);
+      const onSelectChange = () => {
+        updatePillDisplay(config, controllerState);
+        if (controllerState.isV3) controllerState.history?.sync();
+      };
       sourceSelect.addEventListener('change', onSelectChange);
       controllerState.selectChangeHandler = onSelectChange;
     }
@@ -563,6 +572,7 @@
         console.error('[SPC] picker.select() error:', e);
       }
     }
+    if (controllerState.isV3) controllerState.history?.sync();
   }
 
   function updatePillDisplay(config, controllerState) {
@@ -811,9 +821,8 @@
     row1.appendChild(slotSteps);
     row1.appendChild(toggle);
 
-    // Row 2: Actions (media + attempt). Lives in the sticky footer below, not in
-    // the header — the primary action belongs at the end of the flow, under the
-    // content it acts on.
+    // Row 2: Actions (media + attempt). This remains the reversible compatibility
+    // rail; migrated modes can move its existing slots into authored task hosts.
     const row2 = document.createElement('div');
     row2.className = 'spc-row spc-row--actions spc-shell-grid';
 
@@ -861,6 +870,130 @@
       slotSteps, slotMedia, slotAttempt, slotAdvAction, slotAdvSetting,
       activeChip
     };
+  }
+
+  /* ═══════════════════════════ TASK-LOCAL LAYOUT ═══════════════════════════ */
+
+  function isValidLayoutHost(controllerState, host, slot) {
+    return !!(
+      host &&
+      host.nodeType === 1 &&
+      controllerState?.panel?.contains(host) &&
+      host !== slot &&
+      !host.contains(slot) &&
+      !slot?.contains(host) &&
+      host !== controllerState.dom.controller &&
+      !controllerState.dom.controller.contains(host) &&
+      !host.contains(controllerState.dom.controller)
+    );
+  }
+
+  function resolveLayoutHost(controllerState, hostResolver, slot, name) {
+    if (!hostResolver || !controllerState?.panel) return null;
+
+    let host = null;
+    try {
+      host = typeof hostResolver === 'function'
+        ? hostResolver(controllerState)
+        : controllerState.panel.querySelector(hostResolver);
+    } catch (error) {
+      console.warn(`[SPC] layout ${name} resolver failed for ${controllerState.modeId}:`, error);
+      return null;
+    }
+
+    const isCurrentParent = host === slot?.parentNode &&
+      host?.nodeType === 1 &&
+      controllerState.panel?.contains(host) &&
+      host !== controllerState.dom.controller &&
+      !controllerState.dom.controller.contains(host) &&
+      !host.contains(controllerState.dom.controller) &&
+      !slot?.contains(host);
+    if (!isValidLayoutHost(controllerState, host, slot) && !isCurrentParent) {
+      if (host) console.warn(`[SPC] Invalid layout host for ${controllerState.modeId}:${name}`);
+      return null;
+    }
+
+    return host;
+  }
+
+  function rememberSlotOrigin(controllerState, slot) {
+    if (!slot) return;
+    controllerState.layoutPlacement ||= { origins: new Map(), current: new Map() };
+    if (controllerState.layoutPlacement.origins.has(slot)) return;
+    controllerState.layoutPlacement.origins.set(slot, {
+      parent: slot.parentNode,
+      nextSibling: slot.nextSibling
+    });
+  }
+
+  function moveLayoutSlot(controllerState, slot, host, name) {
+    if (!slot) return;
+    rememberSlotOrigin(controllerState, slot);
+    const placement = controllerState.layoutPlacement;
+    const origin = placement.origins.get(slot);
+    const currentHost = placement.current.get(name);
+
+    if (host && slot.parentNode !== host) {
+      host.appendChild(slot);
+      placement.current.set(name, host);
+      return;
+    }
+
+    if (!host && origin?.parent && slot.parentNode !== origin.parent) {
+      const nextSibling = origin.nextSibling?.parentNode === origin.parent
+        ? origin.nextSibling
+        : null;
+      origin.parent.insertBefore(slot, nextSibling);
+      placement.current.delete(name);
+      return;
+    }
+
+    if (host && currentHost !== host) {
+      placement.current.set(name, host);
+    }
+  }
+
+  function syncLayoutPlacement(controllerState) {
+    const layout = controllerState?.config?.layout;
+    if (!layout) return;
+
+    const mediaSlot = controllerState.dom?.slotMedia;
+    const attemptSlot = controllerState.dom?.slotAttempt;
+    const mediaHost = resolveLayoutHost(controllerState, layout.mediaHost, mediaSlot, 'media');
+    const attemptHost = resolveLayoutHost(controllerState, layout.attemptHost, attemptSlot, 'attempt');
+
+    moveLayoutSlot(controllerState, mediaSlot, mediaHost, 'media');
+    moveLayoutSlot(controllerState, attemptSlot, attemptHost, 'attempt');
+  }
+
+  function syncControlPlacement(controllerState) {
+    syncLayoutPlacement(controllerState);
+  }
+
+  function restoreLayoutPlacement(controllerState) {
+    const placement = controllerState?.layoutPlacement;
+    if (!placement) return;
+
+    for (const [slot, origin] of placement.origins || []) {
+      if (!slot || !origin?.parent || slot.parentNode === origin.parent) continue;
+      const nextSibling = origin.nextSibling?.parentNode === origin.parent
+        ? origin.nextSibling
+        : null;
+      origin.parent.insertBefore(slot, nextSibling);
+    }
+    placement.current?.clear?.();
+  }
+
+  function scheduleLayoutSync(modeId, state) {
+    const delays = [0, 250, 750, 1500];
+    state.layoutSyncTimers = delays.map((delay) => setTimeout(() => {
+      if (activeControllers.get(modeId) === state) syncController(modeId);
+    }, delay));
+  }
+
+  function cancelLayoutSync(state) {
+    (state?.layoutSyncTimers || []).forEach((timerId) => clearTimeout(timerId));
+    if (state) state.layoutSyncTimers = [];
   }
 
   /* ═══════════════════════════ DOM ADOPTION ═══════════════════════════ */
@@ -1460,12 +1593,252 @@
     if (!state) return;
 
     updatePillDisplay(state.config, state);
+    if (state.isV3) {
+      setPhase(modeId, state.config.v3.getPhase?.() || state.phase);
+      state.history?.sync();
+      state.config.v3.onSync?.();
+      return;
+    }
     updateActiveChip(state);
     syncStepPreview(state);
     syncOrderToggle(state);
+    syncControlPlacement(state);
   }
 
   /* ═══════════════════════════ PUBLIC API ═══════════════════════════ */
+
+  function isV3(config, scope) {
+    return config.shell === 'v3' && window.PteShellConfig?.isModeEnabled(config.modeId, scope);
+  }
+
+  function v3Element(tag, className, label) {
+    const el = document.createElement(tag); el.className = className;
+    if (label !== undefined) el.textContent = label;
+    if (tag === 'button') el.type = 'button';
+    return el;
+  }
+
+  // Preserve actual child nodes (including listeners), attributes and insertion points.
+  function rememberV3(state, node, moveTo) {
+    const record = { node, attributes: [...node.attributes].map(a => [a.name, a.value]) };
+    if (moveTo) {
+      record.anchor = document.createComment('pte-v3-origin');
+      node.before(record.anchor); moveTo.append(node);
+    }
+    state.v3Records.push(record); return record;
+  }
+
+  function buildV3Shell(config, state) {
+    const body = state.panel.querySelector(config.v3.cardBodySelector) || document.querySelector(config.v3.cardBodySelector);
+    if (!body || !state.panel.contains(body)) throw new Error('PTE v3 card body must be inside its mode panel');
+    state.v3Records = []; state.phase = 'loading';
+    const bar = state.dom.controller;
+    bar.className = 'pte-modebar';
+    const back = v3Element('button', 'pte-btn pte-btn--icon', '‹');
+    back.setAttribute('aria-label', 'Back to dashboard');
+    back.addEventListener('click', () => document.getElementById('back-to-dashboard-btn')?.click());
+    const title = v3Element('div', 'pte-modebar__title', config.v3.title);
+    title.append(v3Element('small', '', config.v3.skillLabel || 'Speaking'));
+    const filters = v3Element('button', 'pte-btn', 'Filters');
+    filters.hidden = !(config.v3.filters?.length);
+    const more = v3Element('button', 'pte-btn pte-btn--icon', '⋯');
+    more.setAttribute('aria-label', 'More');
+    [filters, more].forEach(button => { button.setAttribute('aria-expanded', 'false'); button.setAttribute('aria-haspopup', 'dialog'); });
+    bar.replaceChildren(back, title, state.dom.pickerNav, filters, more);
+    state.panel.prepend(bar);
+    state.menuButtons = { filters, more };
+    filters.addEventListener('click', () => openV3Menu('filters', state));
+    more.addEventListener('click', () => openV3Menu('more', state));
+    const badge = document.getElementById('difficulty-badge');
+    if (badge) rememberV3(state, badge, bar);
+    const card = v3Element('div', 'pte-card'); body.before(card);
+    const progress = v3Element('div', 'pte-progress');
+    (config.v3.progressSteps || ['Prepare', 'Record', 'Feedback']).forEach(label => progress.append(v3Element('span', '', label)));
+    card.append(progress); rememberV3(state, body, card); body.classList.add('pte-card__body');
+    const dock = v3Element('div', 'pte-dock');
+    const status = v3Element('div', 'pte-dock__status', ''); status.setAttribute('aria-live', 'polite');
+    const actions = v3Element('div', 'pte-dock__actions'); dock.append(status, actions); card.append(dock);
+    const attempts = v3Element('section', 'pte-attempts'); card.after(attempts);
+    state.v3DOM = { bar, card, progress, dock, status, actions, attempts };
+    // Only shell-owned chrome is hidden here; mode-specific duplication belongs to its phase.
+    document.querySelectorAll('.main-header').forEach(node => { rememberV3(state, node); node.hidden = true; node.style.display = 'none'; });
+    document.body.classList.add('pte-shell-v3');
+  }
+
+  function adoptV3Dock(config, state) {
+    const dock = config.v3.dock || {};
+    (dock.helpers || []).forEach(helper => {
+      const button = v3Element('button', 'pte-btn pte-btn--helper', helper.label);
+      button.id = helper.id; button.dataset.ptePhases = (helper.phases || []).join(' ');
+      button.addEventListener('click', () => helper.onClick?.());
+      button._pteHelper = helper; state.v3DOM.actions.append(button);
+    });
+    (dock.actions || []).forEach(action => {
+      const button = document.getElementById(action.sourceId);
+      if (!button) return;
+      if (button.tagName === 'BUTTON' && !button.hasAttribute('type')) {
+        button.type = 'button';
+        button.setAttribute('type', 'button');
+      }
+      const record = rememberV3(state, button, state.v3DOM.actions);
+      if (action.label) {
+        record.children = [...button.childNodes]; button.textContent = action.label;
+      }
+      button.classList.add('pte-btn', `pte-btn--${action.variant || 'secondary'}`);
+      button.dataset.ptePhases = (action.phases || []).join(' ');
+    });
+    const next = v3Element('button', 'pte-btn pte-btn--ghost', 'Next →'); next.id = `pte-next-${state.modeId}`;
+    next.addEventListener('click', () => handleV3Next(state));
+    state.v3DOM.actions.append(next); state.v3DOM.next = next;
+  }
+
+  function setPhase(modeId, phase) {
+    const state = activeControllers.get(modeId);
+    if (!state?.isV3) return;
+    const valid = ['loading', 'listen', 'prep', 'recording', 'complete', 'feedback'];
+    if (!valid.includes(phase)) return;
+    if (state.phase !== phase) state.nextError = '';
+    state.phase = phase;
+    const { card, progress, actions, status, next } = state.v3DOM;
+    card.dataset.ptePhase = phase; card.classList.toggle('pte-card--wide', phase === 'feedback');
+    const index = (state.config.v3.phaseToStep || { loading: 0, listen: 0, prep: 0, recording: 1, complete: 1, feedback: 2 })[phase] ?? 0;
+    [...progress.children].forEach((step, i) => {
+      step.classList.toggle('is-now', i === index); step.classList.toggle('is-done', i < index);
+      if (i === index) step.setAttribute('aria-current', 'step'); else step.removeAttribute('aria-current');
+    });
+    actions.querySelectorAll('[data-pte-phases]').forEach(button => {
+      button.hidden = !button.dataset.ptePhases.split(' ').includes(phase) || (phase === 'recording' && !!button._pteHelper);
+      const helper = button._pteHelper;
+      if (helper) {
+        const count = helper.count?.();
+        button.textContent = `${helper.label}${count == null ? '' : ` · ${count}`}`;
+        if (helper.pressed) button.setAttribute('aria-pressed', String(!!helper.pressed()));
+      }
+    });
+    const defaults = { listen: 'Listen carefully. The recorder appears when the audio ends.', prep: 'Recording starts automatically when the countdown ends.', complete: 'Recording saved. Listen back or get feedback.', feedback: 'Saved to Previous attempts below.' };
+    status.textContent = state.nextError || state.saveError || (state.config.v3.statusText?.[phase] ?? defaults[phase] ?? '');
+    next.textContent = phase === 'feedback' ? 'Next question →' : 'Next →';
+    next.classList.toggle('pte-btn--primary', phase === 'feedback'); next.classList.toggle('pte-btn--ghost', phase !== 'feedback');
+    next.disabled = phase === 'loading' || !!state.nextPending;
+  }
+
+  function openV3Dialog(kind, state) {
+    state.closeDialog?.(false);
+    const opener = state.nextPending ? state.v3DOM.next : document.activeElement;
+    const overlay = v3Element('div', 'pte-dialog-overlay');
+    const panel = v3Element('div', 'pte-dialog'); panel.setAttribute('role', 'alertdialog'); panel.setAttribute('aria-modal', 'true');
+    const title = v3Element('h2', '', kind === 'noskip' ? 'Cannot skip' : 'Go to the next question?');
+    title.id = `pte-dialog-title-${state.modeId}`; panel.setAttribute('aria-labelledby', title.id);
+    const bodies = {
+      listen: "You haven't answered this question yet. It will be marked as skipped.",
+      recording: 'Your recording will stop and this attempt will be saved without feedback.',
+      complete: 'This attempt is saved. You can get feedback on it later from Previous attempts at the bottom of the page.'
+    };
+    const body = v3Element('p', '', kind === 'noskip' ? "The recording is about to begin. As in the test, you can't move to the next question during the countdown." : bodies[state.phase] || bodies.complete);
+    body.id = `pte-dialog-body-${state.modeId}`; panel.setAttribute('aria-describedby', body.id);
+    const actions = v3Element('div', 'pte-dialog__actions');
+    const yes = v3Element('button', 'pte-btn pte-btn--primary', kind === 'noskip' ? 'OK' : 'Next question');
+    panel.append(title, body, actions); overlay.append(panel); document.body.append(overlay); lockScroll();
+    return new Promise(resolve => {
+      let closed = false;
+      const close = result => {
+        if (closed) return; closed = true; overlay.remove(); unlockScroll();
+        state.closeDialog = null;
+        resolve(result);
+        queueMicrotask(() => { if (opener?.isConnected && !state.closeDialog) opener.focus(); });
+      };
+      state.closeDialog = close;
+      if (kind !== 'noskip') {
+        const stay = v3Element('button', 'pte-btn', 'Stay here'); stay.addEventListener('click', () => close(false)); actions.append(stay);
+      }
+      actions.append(yes); yes.addEventListener('click', () => close(kind !== 'noskip'));
+      overlay.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); close(false); } else if (e.key === 'Tab') trapFocus(panel, e); });
+      actions.firstElementChild.focus();
+    });
+  }
+
+  async function handleV3Next(state) {
+    if (state.nextPending || state.phase === 'loading') return;
+    state.nextPending = true; setPhase(state.modeId, state.phase);
+    try {
+      const action = resolveNextAction(state.phase);
+      if (action === 'noskip') { await openV3Dialog('noskip', state); return; }
+      if (action === 'confirm' && !await openV3Dialog('confirm', state)) return;
+      if (activeControllers.get(state.modeId) !== state || state.phase === 'loading') return;
+      // Timers keep running inside dialogs; evaluate the phase again before leaving.
+      if (state.phase === 'prep') { await openV3Dialog('noskip', state); return; }
+      if (state.phase === 'recording') {
+        if (typeof state.config.v3.next?.onConfirmFromRecording !== 'function') throw new Error('Recording must be saved before moving on.');
+        // An explicit cancellation ends this Next action; legacy callbacks may return undefined.
+        if (await state.config.v3.next.onConfirmFromRecording() === false) return;
+      }
+      if (activeControllers.get(state.modeId) === state) {
+        const result = await state.config.v3.next?.goNext?.();
+        if (result !== false) state.nextError = '';
+      }
+    } catch (error) {
+      state.nextError = error.message || 'Could not move to the next question.';
+    } finally {
+      state.nextPending = false;
+      if (activeControllers.get(state.modeId) === state) setPhase(state.modeId, state.phase);
+    }
+  }
+
+  function openV3Menu(kind, state) {
+    if (kind === 'picker') { syncPickerSheet(state.config, state); state.pickerSheet?.open(); return; }
+    const wasOpen = state.openMenuKind === kind; state.closeMenu?.(); if (wasOpen) return;
+    const trigger = state.menuButtons[kind];
+    const menu = v3Element('div', 'pte-popover'); menu.setAttribute('role', 'dialog'); menu.setAttribute('aria-label', kind === 'filters' ? 'Filters' : 'More');
+    const close = () => {
+      menu.remove(); trigger.setAttribute('aria-expanded', 'false');
+      document.removeEventListener('pointerdown', outside, true); document.removeEventListener('keydown', keydown, true);
+      state.closeMenu = null; state.openMenuKind = null;
+    };
+    const outside = event => { if (!menu.contains(event.target) && !trigger.contains(event.target)) close(); };
+    const keydown = event => { if (event.key === 'Escape') { event.preventDefault(); close(); trigger.focus(); } };
+    if (kind === 'filters') {
+      (state.config.v3.filters || []).forEach(group => {
+        const field = v3Element('fieldset', 'pte-filter'); field.append(v3Element('legend', '', group.label));
+        (group.options || []).forEach(option => {
+          const value = typeof option === 'object' ? option.value : option;
+          const button = v3Element('button', 'pte-btn', option.label || String(option));
+          button.dataset.filterValue = String(value);
+          button.setAttribute('aria-pressed', String(group.get?.() === value));
+          button.addEventListener('click', () => {
+            group.set(value);
+            // A mode may reject a locked choice; reflect the accepted state.
+            [...field.querySelectorAll('button')].forEach(item => item.setAttribute('aria-pressed', String(item.dataset.filterValue === String(group.get?.()))));
+            syncController(state.modeId);
+          }); field.append(button);
+        }); menu.append(field);
+      });
+    } else {
+      const items = [{ label: 'Focus mode', description: 'Hide the page header while you practise', onSelect: () => {
+        document.body.classList.toggle('pte-focus');
+      } }, { label: `How ${state.config.v3.title} works`, description: 'Timing, scoring and tips', onSelect: () => document.getElementById('mode-tutorial-btn')?.click() }, ...(state.config.v3.moreItems || [])];
+      items.forEach(item => {
+        const button = v3Element('button', 'pte-menu-item', item.label);
+        if (item.description) button.append(v3Element('small', '', item.description));
+        button.addEventListener('click', () => { close(); trigger.focus(); item.onSelect?.(); }); menu.append(button);
+      });
+    }
+    state.v3DOM.bar.append(menu); state.closeMenu = close; state.openMenuKind = kind;
+    trigger.setAttribute('aria-expanded', 'true'); document.addEventListener('pointerdown', outside, true); document.addEventListener('keydown', keydown, true);
+    menu.querySelector('button')?.focus();
+  }
+
+  function unmountV3(state) {
+    state.closeDialog?.(false); state.closeMenu?.(); state.history?.destroy();
+    [...state.v3Records].reverse().forEach(record => {
+      if (record.children) record.node.replaceChildren(...record.children);
+      [...record.node.attributes].forEach(attribute => record.node.removeAttribute(attribute.name));
+      record.attributes.forEach(([name, value]) => record.node.setAttribute(name, value));
+      if (record.anchor?.parentNode) record.anchor.replaceWith(record.node);
+    });
+    state.config.v3.onUnmount?.();
+    state.v3DOM.card.remove(); state.v3DOM.attempts.remove();
+    if (![...activeControllers.values()].some(other => other !== state && other.isV3)) document.body.classList.remove('pte-shell-v3', 'pte-focus');
+  }
 
   function register(config) {
     if (!config || !config.modeId) {
@@ -1493,8 +1866,11 @@
     // If already active, just sync
     if (activeControllers.has(modeId)) {
       const activeState = activeControllers.get(modeId);
+      if (activeState.isV3 !== !!isV3(config, scope)) {
+        unmount(modeId); return activate(modeId, opts);
+      }
       activeState.scope = scope;
-      applyView(activeState);
+      if (!activeState.isV3) applyView(activeState);
       syncController(modeId);
       return;
     }
@@ -1541,17 +1917,33 @@
       pickerSearchInput: null,
       selectChangeHandler: null,
       legacyPickerContainer: null,
-      legacyPickerOriginalDisplay: ''
+      legacyPickerOriginalDisplay: '',
+      layoutPlacement: { origins: new Map(), current: new Map() },
+      layoutSyncTimers: []
     };
+
+    state.isV3 = !!isV3(config, scope);
 
     activeControllers.set(modeId, state);
 
+    if (state.isV3) {
+      buildV3Shell(config, state);
+      hideLegacyPicker(config, state);
+      buildPicker(config, state);
+      config.v3.onMount?.();
+      adoptV3Dock(config, state);
+      if (config.v3.attempts) state.history = window.PteAttemptHistory?.mount(state.v3DOM.attempts, config.v3.attempts);
+      setPhase(modeId, config.v3.getPhase?.() || 'loading');
+      config.v3.onSync?.();
+      return;
+    }
+
     hideLegacyPicker(config, state);
 
-    // Header at the top, action footer at the bottom, steps inside the header's
-    // primary row. The step indicator still precedes the primary action in reading
-    // order — the reader meets the phase before the button for it — but it no
-    // longer costs a row of its own.
+    // Header at the top, steps inside the header's primary row, and a reversible
+    // action rail retained for adapters without a valid task-local host. The step
+    // indicator still precedes the primary action in reading order — the reader
+    // meets the phase before the button for it — without costing a row of its own.
     panel.insertBefore(dom.controller, panel.firstChild);
     if (steps?.element) {
       const customStepsHost = typeof config.stepsHost === 'function' ? config.stepsHost(state) : null;
@@ -1589,6 +1981,16 @@
     // Adopt controls
     adoptControls(config, state);
 
+    // Move controller slots into the authored task flow only after adoption has
+    // recorded every source anchor. This keeps re-entry idempotent and allows
+    // unmount to restore both slots and controls safely.
+    syncLayoutPlacement(state);
+    // Mode-owned state machines may finish their first phase transition just
+    // after activation. Recheck on a bounded schedule; the active identity
+    // guard keeps a late callback from touching an unmounted panel.
+    scheduleLayoutSync(modeId, state);
+    publishFooterHeight();
+
     // Wire toggle
     wireViewToggle(state);
 
@@ -1609,6 +2011,8 @@
     const state = activeControllers.get(modeId);
     if (!state) return;
 
+    if (state.isV3) unmountV3(state);
+
     // Close sheets
     if (state.pickerSheet) {
       state.pickerSheet.destroy();
@@ -1623,6 +2027,8 @@
     }
 
     // Restore adopted controls
+    cancelLayoutSync(state);
+    restoreLayoutPlacement(state);
     restoreControls(state);
 
     if (state.legacyPickerContainer) {
@@ -1712,7 +2118,26 @@
     setViewToggleDisabled: setViewToggleDisabled,
     unmount: unmount,
     isV2Active: isV2Active,
-    createSheet: createSheet
+    createSheet: createSheet,
+    setPhase: setPhase,
+    setNextError: (modeId, message) => {
+      const state = activeControllers.get(modeId);
+      if (!state?.isV3) return;
+      state.nextError = String(message || '');
+      setPhase(modeId, state.phase);
+    },
+    setSaveError: (modeId, message) => {
+      const state = activeControllers.get(modeId);
+      if (!state?.isV3) return;
+      // A phase change is not proof of saving; the mode clears this on recovery or invalidation.
+      state.saveError = String(message || '');
+      setPhase(modeId, state.phase);
+    },
+    getPhase: modeId => activeControllers.get(modeId)?.phase || null,
+    openDialog: (modeId, kind) => {
+      const state = activeControllers.get(modeId);
+      return state?.isV3 ? openV3Dialog(kind, state) : Promise.resolve(false);
+    }
   };
 
 })();

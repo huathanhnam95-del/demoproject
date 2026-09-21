@@ -149,8 +149,15 @@ function log(phase, msg) {
 
   await page.addInitScript(() => {
     window.__DISABLE_FIREBASE_EMULATORS__ = true;
+    sessionStorage.removeItem('guestMode');
+    sessionStorage.setItem('onboardingDismissed', 'true');
+    sessionStorage.setItem('hasSeenEntryModal', 'true');
     localStorage.setItem('rtsModeFirstUse', 'true');
     localStorage.setItem('rtsInfoDismissed', '1');
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('entry-modal')?.remove();
+      document.querySelector('.entry-modal')?.remove();
+    });
 
     window.__mockRTSScoreResult = {
       success: true,

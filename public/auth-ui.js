@@ -1879,8 +1879,8 @@ function setupSessionTracking() {
  */
 async function checkFirstVisit() {
   // Check if guest mode was already chosen in this session
-  const guestModeStored = sessionStorage.getItem('guestMode');
-  if (guestModeStored === 'true') {
+  const guestModeStored = sessionStorage.getItem('guestMode') === 'true' || localStorage.getItem('userStatus') === 'guest';
+  if (guestModeStored) {
     isGuestMode = true;
     updateAccountPanelState();
     return; // Don't show entry modal if guest mode already chosen

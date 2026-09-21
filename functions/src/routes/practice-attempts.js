@@ -1319,6 +1319,9 @@ module.exports = function createPracticeAttemptsRouter(deps) {
             if (Object.prototype.hasOwnProperty.call(req.body || {}, 'responseSnapshot') || Object.prototype.hasOwnProperty.call(req.body || {}, 'response')) {
                 patch.responseSnapshot = sanitizeArchiveSnapshot(req.body.responseSnapshot || req.body.response, { rootName: 'responseSnapshot' });
             }
+            if (Object.prototype.hasOwnProperty.call(req.body || {}, 'answerSnapshot') || Object.prototype.hasOwnProperty.call(req.body || {}, 'answer')) {
+                patch.answerSnapshot = sanitizeArchiveSnapshot(req.body.answerSnapshot || req.body.answer, { rootName: 'answerSnapshot' });
+            }
             if (Object.keys(patch).length <= 1) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'No patchable archive fields provided.');
             }
@@ -1326,7 +1329,7 @@ module.exports = function createPracticeAttemptsRouter(deps) {
             const mergedSnapshots = {
                 promptSnapshot: attempt.promptSnapshot || null,
                 responseSnapshot: Object.prototype.hasOwnProperty.call(patch, 'responseSnapshot') ? patch.responseSnapshot : (attempt.responseSnapshot || null),
-                answerSnapshot: attempt.answerSnapshot || null,
+                answerSnapshot: Object.prototype.hasOwnProperty.call(patch, 'answerSnapshot') ? patch.answerSnapshot : (attempt.answerSnapshot || null),
                 resultSnapshot: Object.prototype.hasOwnProperty.call(patch, 'resultSnapshot') ? patch.resultSnapshot : (attempt.resultSnapshot || null),
                 timingSnapshot: attempt.timingSnapshot || null,
                 scoringSnapshot: Object.prototype.hasOwnProperty.call(patch, 'scoringSnapshot') ? patch.scoringSnapshot : (attempt.scoringSnapshot || null)
@@ -1345,6 +1348,7 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                     }
                 }
                 if (Object.prototype.hasOwnProperty.call(patch, 'responseSnapshot')) patch.responseSnapshot = mergedSnapshots.responseSnapshot;
+                if (Object.prototype.hasOwnProperty.call(patch, 'answerSnapshot')) patch.answerSnapshot = mergedSnapshots.answerSnapshot;
                 if (Object.prototype.hasOwnProperty.call(patch, 'resultSnapshot')) patch.resultSnapshot = mergedSnapshots.resultSnapshot;
                 if (Object.prototype.hasOwnProperty.call(patch, 'scoringSnapshot')) patch.scoringSnapshot = mergedSnapshots.scoringSnapshot;
                 

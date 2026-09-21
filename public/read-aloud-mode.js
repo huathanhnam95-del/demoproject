@@ -44,6 +44,7 @@ class ReadAloudMode {
     this.prepTutorialHold = null; // pause/resume listeners while a tutorial overlay is open
     this.pendingBlob = null;
     this.pendingSession = null;
+    this.pendingPteNextOwnership = null;
     this.database = [];
     this.currentTranscript = '';
     this.hasLoadedDatabase = false;
@@ -90,6 +91,7 @@ class ReadAloudMode {
     this.pendingFontHydration = null;
     this.connectedSpeechPanelMode = 'hidden';
     this.currentGuideExplanationItems = [];
+    this.currentGuideInteractionItems = new Map();
     this.selectedGuideItemId = null;
     this.currentGuideHasVisibleAssimilation = false;
     // The toggle wrote 'ra-speech-coach-visible' but nothing ever read it, so
@@ -150,6 +152,8 @@ class ReadAloudMode {
     this.promptLifecycleToken = 0;
     this.recordingRequestId = 0;
     this.hasAssessmentResult = false;
+    this.lastAssessmentPayload = null;
+    this.lastAssessmentSession = null;
     // Status line the results panel was rendered with. Kept so a later
     // updateUIForState() cannot replace a scoring error with 'Analysis complete.'
     this.assessmentStatusMessage = '';
@@ -240,6 +244,7 @@ class ReadAloudMode {
    * untouched, so switching to Advanced restores whatever they had picked.
    */
   getActiveConnectedSpeechModes() {
+    if (this.isPteShellEnabled()) return [...(this.connectedSpeechModes || [])];
     if (this.connectedSpeechModes && this.connectedSpeechModes.size > 0) {
       return [...this.connectedSpeechModes];
     }
@@ -1125,6 +1130,11 @@ class ReadAloudMode {
     this.refreshFilterControls();
     this.announceLinkingStatus('Prompt guides reset.');
     this.observePromptStage();
+    if (this.isPteShellEnabled()) {
+      const beginnerModes = this.getSimpleTierModes();
+      this.connectedSpeechModes = new Set(beginnerModes);
+      this.sessionConnectedSpeechModes = new Set(beginnerModes);
+    }
 
     if (window.ReadAloudWorkspaceConfig?.enabled && window.ReadAloudWorkspaceView) {
       this.workspaceView = window.ReadAloudWorkspaceView.createView(this);
@@ -2229,6 +2239,7 @@ class ReadAloudMode {
 
   /** Create the Settings sheet using SPC's createSheet infrastructure */
   initSettingsSheet() {
+    if (this.isPteShellEnabled()) return;
     if (this.settingsSheet) return;
     if (!window.SpeakingPracticeController?.createSheet) {
       console.warn('[RA] SPC.createSheet not ready — retrying initSettingsSheet');
@@ -2303,13 +2314,10 @@ class ReadAloudMode {
       const btn = e.target.closest('[data-diff]');
       if (!btn) return;
       const diff = btn.dataset.diff;
-      this.difficultyFilter = diff;
+      this.setDifficultyFilter(diff);
       diffSection.querySelectorAll('.read-aloud-filter-btn').forEach(b => {
         b.classList.toggle('active', b.dataset.diff === diff);
       });
-      const filtered = this.getFilteredDatabase();
-      const preferredRow = this.getPreferredFilteredPromptRow(filtered, { preferLastPrompt: true });
-      this.syncQuestionPickerOptions(filtered, preferredRow);
     });
     panelsContainer.appendChild(targetPanel);
 
@@ -2642,7 +2650,12 @@ class ReadAloudMode {
         ? window.ReadAloudLinking.buildAccessibleSummary(filteredAnalysis, familyOptions)
         : '';
       summary.textContent = summaryText;
-      this.renderPromptGuideExplanations(filteredAnalysis);
+      // Results own the Coach rail once assessment has completed. A late
+      // ResizeObserver/font hydration pass must not replace assessed feedback
+      // with the prompt's Preview cards.
+      if (this.state !== 'RESULTS') {
+        this.renderPromptGuideExplanations(filteredAnalysis);
+      }
 
       const promptWidth = Math.min(window.innerWidth || 0, promptStage.getBoundingClientRect().width || 0);
       const useFallback = promptWidth < (window.ReadAloudLinking.DESKTOP_MIN_WIDTH || 560);
@@ -2815,10 +2828,19 @@ class ReadAloudMode {
   }
 
   invalidateRecordingSession() {
+    this.pendingPteNextOwnership = null;
+    window.SpeakingPracticeController?.setSaveError?.('read-aloud', '');
+    const invalidatedSessions = new Set([
+      this.currentRecordingSession,
+      this.pendingSession
+    ].filter(Boolean));
     this.recordingRequestId += 1;
-    if (this.currentRecordingSession) {
-      this.currentRecordingSession.disposition = 'discard';
-    }
+    invalidatedSessions.forEach((session) => {
+      session.disposition = 'discard';
+      session.assessmentAbortController?.abort();
+      session.assessmentAbortController = null;
+    });
+    this.isSubmitInFlight = false;
   }
 
   isSameRecordingSession(session) {
@@ -2940,6 +2962,13 @@ class ReadAloudMode {
   resetAssessmentDisplay() {
     this.hasAssessmentResult = false;
     this.assessmentStatusMessage = '';
+    this.lastAssessmentPayload = null;
+    this.lastAssessmentSession = null;
+    if (this.pteView) {
+      delete this.pteView.payload;
+      this.pteView.stats?.replaceChildren();
+      this.pteView.fixes?.replaceChildren();
+    }
     const resultBox = document.getElementById('ra-result-box');
     const accuracyElement = document.getElementById('ra-accuracy-value');
     const feedbackElement = document.getElementById('ra-transcript-feedback');
@@ -3000,11 +3029,14 @@ class ReadAloudMode {
       retryBtn.disabled = true;
     }
     try {
-      const success = await this.submitToAzure(this.pendingBlob, this.pendingSession);
-      if (!this.shouldApplyAssessment(session)) {
-        return;
-      }
+      const recordingSession = this.pendingSession;
+      const success = await this.submitToAzure(this.pendingBlob, recordingSession);
+      if (!this.shouldApplyAssessment(recordingSession)) return;
       if (success) {
+        // Retain this validated session for Next after releasing the assessment input.
+        if (this.isPteShellEnabled()) {
+          this.pendingPteNextOwnership = this.createPteNextOwnership(recordingSession);
+        }
         this.pendingBlob = null;
         this.pendingSession = null;
         this.state = 'RESULTS';
@@ -3035,6 +3067,8 @@ class ReadAloudMode {
   }
 
   retryCurrentPrompt() {
+    this.invalidateRecordingSession();
+    if (this.isPteShellEnabled()) { this.pendingBlob = null; this.pendingSession = null; }
     this.invalidateSpeechCoachResultRender();
     this.stopTimer();
     this.state = 'PREP';
@@ -3667,13 +3701,214 @@ class ReadAloudMode {
 
   applyRecordingCaptureFailure(recordingSession, message) {
     if (!this.shouldApplyAssessment(recordingSession)) return;
-    const accuracyElement = document.getElementById('ra-accuracy-value');
-    this.showAssessmentDisplay();
+    this.renderAssessmentFailure(message, 'We could not prepare this recording for scoring.');
+  }
+
+  renderAssessmentFailure(message, detail = 'We could not score this attempt.') {
+    this.lastAssessmentPayload = null;
+    this.lastAssessmentSession = null;
+    if (this.pteView) delete this.pteView.payload;
     this.setAssessmentStatusMessage(message);
+    const accuracyElement = document.getElementById('ra-accuracy-value');
+    const feedbackElement = document.getElementById('ra-transcript-feedback');
     if (accuracyElement) accuracyElement.textContent = '--';
+    if (feedbackElement) {
+      feedbackElement.innerHTML = `<p style="line-height: 1.6; font-size: 1rem; padding: 10px; border: 1px solid #f3d1d1; border-radius: 8px; background: #fff7f7; color: #b42318;">${detail}</p>`;
+    }
+    this.clearConnectedSpeechResults();
+    this.showAssessmentDisplay();
+  }
+
+  isPteShellEnabled() {
+    return !!window.PteShellConfig?.isModeEnabled('read-aloud', window.PracticeScopeManager?.getScope?.() || 'pte');
+  }
+
+  getPtePhase() {
+    return ({ PREP: 'prep', REQUESTING_MIC: 'recording', RECORDING: 'recording', STOPPING_RECORDING: 'recording', RECORDED: 'complete', RESULTS: 'feedback' })[this.state] || 'loading';
+  }
+
+  setDifficultyFilter(value) {
+    if (!['all', '1', '2', '3'].includes(String(value))) return;
+    this.difficultyFilter = String(value);
+    const filtered = this.getFilteredDatabase();
+    this.syncQuestionPickerOptions(filtered, this.getPreferredFilteredPromptRow(filtered, { preferLastPrompt: true }));
+  }
+
+  mountPteShell() {
+    if (this.pteView || !this.isPteShellEnabled()) return;
+    const panel = document.getElementById('mode-read-aloud');
+    const stage = panel.querySelector('.ra-stage');
+    const split = panel.querySelector('.ra-split');
+    const coach = document.getElementById('ra-connected-speech-box');
+    const view = this.pteView = { panel, stage, split, coach, moved: [], created: [], phase: null, payload: null };
+    const create = (tag, className, id, parent) => {
+      const node = document.createElement(tag); node.className = className; if (id) node.id = id;
+      parent.append(node); view.created.push(node); return node;
+    };
+    const move = (node, parent) => {
+      if (!node) return;
+      const anchor = document.createComment('Read Aloud v3 origin'); node.before(anchor);
+      view.moved.push({ node, anchor }); parent.append(node);
+    };
+    panel.classList.add('ra-pte-v3');
+    view.instruction = create('p', 'pte-instr', 'ra-pte-instruction', stage);
+    const recorderCenter = create('div', 'pte-center', null, stage);
+    const recorder = create('div', '', 'ra-pte-recorder', recorderCenter);
+    stage.prepend(view.instruction, recorderCenter);
+    const announcement = create('p', 'pte-sr-only', 'ra-workspace-instruction', stage);
+    announcement.setAttribute('role', 'status');
+    view.announcement = announcement;
+    this.pteRecorder = window.PteRecorderWidget.create(recorder, { totalSeconds: this.recordSeconds });
+    document.getElementById('ra-prompt-stage').classList.add('pte-passage');
+    view.right = create('div', 'pte-fb__right', 'ra-pte-right', split);
+    view.tabs = create('div', 'pte-tabs', 'ra-pte-feedback-tabs', view.right);
+    view.tabs.setAttribute('role', 'tablist'); view.tabs.setAttribute('aria-label', 'Feedback');
+    for (const [key, label] of [['results', 'Your results'], ['coach', 'Coach tips']]) {
+      const button = create('button', 'pte-btn', `ra-pte-tab-${key}`, view.tabs);
+      button.type = 'button'; button.textContent = label; button.setAttribute('role', 'tab');
+      button.setAttribute('aria-controls', key === 'results' ? 'ra-pte-results' : 'ra-connected-speech-box');
+      button.addEventListener('click', () => this.selectPteFeedbackTab(key));
+      button.addEventListener('keydown', event => {
+        if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+          event.preventDefault();
+          const next = event.key === 'Home' ? 'results' : event.key === 'End' ? 'coach' : key === 'results' ? 'coach' : 'results';
+          this.selectPteFeedbackTab(next); document.getElementById(`ra-pte-tab-${next}`).focus();
+        }
+      });
+    }
+    view.results = create('section', '', 'ra-pte-results', view.right);
+    view.results.setAttribute('role', 'tabpanel'); view.results.setAttribute('aria-labelledby', 'ra-pte-tab-results');
+    view.stats = create('div', 'pte-stats', null, view.results);
+    const heading = create('div', 'ra-pte-next-heading', null, view.results);
+    const title = create('strong', '', null, heading); title.textContent = 'What to practise next';
+    move(document.getElementById('ra-show-advanced-container'), heading);
+    view.fixes = create('div', 'pte-practice-next pte-fixes', null, view.results);
+    move(coach, view.right);
+    move(document.getElementById('ra-prompt-guides-group'), coach.querySelector('.ra-rail-header'));
+    move(document.getElementById('ra-audio-player'), stage);
+    const cancel = create('button', 'pte-btn', 'ra-pte-cancel-btn', panel);
+    cancel.type = 'button'; cancel.textContent = 'Cancel'; cancel.addEventListener('click', () => this.cancelRecording());
+    try { this.pteCoachOpen = localStorage.getItem('bel:ra:coach-open:v1') === 'true'; } catch (_) { this.pteCoachOpen = false; }
+    this.pteFeedbackTab = 'results';
+    view.keydown = event => { if (event.key === 'Escape') this.hideSoundChangeTooltip(); };
+    document.addEventListener('keydown', view.keydown);
+    this.renderPromptForCurrentView();
+    this.syncPteShell();
+    window.dispatchEvent(new Event('resize'));
+  }
+
+  unmountPteShell() {
+    const view = this.pteView; if (!view) return;
+    this.pteRecorder?.destroy(); this.pteRecorder = null;
+    this.hideSoundChangeTooltip(); document.removeEventListener('keydown', view.keydown);
+    view.moved.reverse().forEach(({ node, anchor }) => anchor.replaceWith(node));
+    view.created.reverse().forEach(node => node.remove());
+    view.panel.classList.remove('ra-pte-v3'); view.split.classList.remove('pte-fb');
+    document.getElementById('ra-prompt-stage')?.classList.remove('pte-passage');
+    delete view.panel.dataset.ptePhase; delete view.panel.dataset.pteCoach;
+    this.pteView = null;
+  }
+
+  selectPteFeedbackTab(tab) {
+    this.pteFeedbackTab = tab;
+    if (tab === 'coach' && !this.speechCoachVisible) this.toggleSpeechCoachVisibility();
+    this.syncPteShell();
+    window.dispatchEvent(new Event('resize'));
+  }
+
+  setCoachOpen(open) {
+    this.pteCoachOpen = !!open;
+    try { localStorage.setItem('bel:ra:coach-open:v1', String(this.pteCoachOpen)); } catch (_) { /* local preferences may be unavailable */ }
+    if (this.speechCoachVisible !== this.pteCoachOpen) this.toggleSpeechCoachVisibility();
+    if (this.state === 'RESULTS') this.pteFeedbackTab = 'coach';
+    this.syncPteShell();
+    window.dispatchEvent(new Event('resize'));
+  }
+
+  syncPteShell() {
+    const view = this.pteView; if (!view) return;
+    const phase = this.getPtePhase();
+    const feedback = phase === 'feedback';
+    if (phase !== view.phase) {
+      this.hideSoundChangeTooltip();
+      if (phase === 'prep') this.pteRecorder.showCountdown(this.prepSeconds);
+      else if (phase === 'recording') this.pteRecorder.showRecording(this.recordSeconds);
+      else if (phase === 'complete' || feedback) this.pteRecorder.showComplete();
+      if (feedback) this.pteFeedbackTab = 'results';
+      view.phase = phase;
+    }
+    if (this.state === 'RECORDING' && this.audioStream && view.stream !== this.audioStream) {
+      this.pteRecorder.attachStream(this.audioStream); view.stream = this.audioStream;
+    }
+    view.panel.dataset.ptePhase = phase;
+    view.panel.dataset.pteCoach = this.pteCoachOpen ? 'open' : 'closed';
+    view.split.classList.toggle('pte-fb', feedback);
+    view.instruction.textContent = `Look at the text below. In ${this.prepSeconds} seconds, you must read this text aloud as naturally and clearly as possible. You have ${this.recordSeconds} seconds to read aloud.`;
+    const status = document.getElementById('ra-status-message');
+    if (status) { status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); }
+    const message = feedback ? this.assessmentStatusMessage || 'Getting feedback.' : this.getBasicPhaseInstruction();
+    if (view.announcement.textContent !== message) view.announcement.textContent = message;
+    const labels = { 'ra-record-btn': 'Start recording', 'ra-stop-btn': 'Finish recording', 'ra-retry-btn': feedback ? 'Try again' : 'Record again', 'ra-play-recording-btn': 'Play', 'ra-check-btn': 'Get feedback' };
+    Object.entries(labels).forEach(([id, label]) => {
+      const button = document.getElementById(id);
+      if (!button?.hasAttribute('data-pte-phases')) return;
+      button.textContent = label;
+      button.style.display = '';
+    });
+    const stop = document.getElementById('ra-stop-btn'); if (stop) stop.disabled = this.state !== 'RECORDING';
+    view.tabs.hidden = !feedback; view.results.hidden = !feedback || this.pteFeedbackTab !== 'results';
+    view.right.hidden = !feedback && (phase === 'recording' || !this.pteCoachOpen);
+    view.coach.classList.toggle('ra-pte-coach-hidden', phase === 'recording' || (feedback ? this.pteFeedbackTab !== 'coach' : !this.pteCoachOpen));
+    for (const key of ['results', 'coach']) {
+      const tab = document.getElementById(`ra-pte-tab-${key}`);
+      tab.setAttribute('aria-selected', String(this.pteFeedbackTab === key)); tab.tabIndex = this.pteFeedbackTab === key ? 0 : -1;
+    }
+    document.getElementById('ra-pte-tab-coach').textContent = `Coach tips · ${this.lastAssessmentPayload?.connectedSpeech?.events?.length || 0}`;
+    if (feedback) this.renderPteFeedback();
+    if (document.getElementById('pte-next-read-aloud')) window.SpeakingPracticeController?.setPhase('read-aloud', phase);
+  }
+
+  renderPteFeedback() {
+    const view = this.pteView, payload = this.lastAssessmentPayload;
+    if (!view || view.payload === payload) return;
+    view.payload = payload; view.stats.replaceChildren(); view.fixes.replaceChildren();
+    const node = (tag, text) => { const el = document.createElement(tag); el.textContent = text; return el; };
+    for (const [label, key] of [['Accuracy', 'accuracyScore'], ['Fluency', 'fluencyScore'], ['Completeness', 'completenessScore'], ['Overall', 'pronScore']]) {
+      const cell = node('div', ''); cell.append(node('small', label), node('strong', Number.isFinite(payload?.[key]) ? `${payload[key]}%` : '—')); view.stats.append(cell);
+    }
+    if (!payload) { view.fixes.append(node('p', this.assessmentStatusMessage || 'Getting feedback…')); return; }
+    const words = (payload.words || []).filter(word => Number.isFinite(word.accuracyScore) && word.accuracyScore < 60);
+    const events = payload.connectedSpeech?.events || [];
+    const rows = [...words.map(word => ({ label: word.word, detail: `Needs practice (${word.accuracyScore}%)`, startMs: word.startMs, endMs: word.endMs, kind: 'error' })),
+      ...events.filter(event => ['uncertain', 'not_detected'].includes(event.status)).map(event => ({ ...event, label: event.phrase, detail: event.feedbackText || event.tip || 'Practise this phrase.', kind: 'uncertain' })),
+      ...events.filter(event => event.status === 'detected').slice(0, 1).map(event => ({ ...event, label: event.phrase, detail: 'Good. Keep linking it.', kind: 'success' }))].slice(0, 4);
+    if (!rows.length) view.fixes.append(node('p', 'Read the scored transcript and use Coach tips to review your pronunciation.'));
+    rows.forEach(item => {
+      const row = node('div', ''); row.className = `ra-pte-fix ra-pte-fix--${item.kind}`;
+      const copy = node('div', ''); copy.append(node('strong', item.label || 'Speech Coach'), node('p', item.detail));
+      const actions = node('div', ''); actions.className = 'ra-pte-fix-actions';
+      const you = node('button', '▶ You'); you.className = 'pte-btn'; you.type = 'button';
+      const start = item.startMs ?? Number(item.startSec) * 1000, end = item.endMs ?? Number(item.endSec) * 1000;
+      you.disabled = !Number.isFinite(start) || !Number.isFinite(end) || end <= start;
+      you.addEventListener('click', () => this.playRecordedWordSegment(start, end, you)); actions.append(you);
+      const model = node('button', '▶ Model'); model.className = 'pte-btn'; model.type = 'button';
+      model.addEventListener('click', () => {
+        const original = [...document.querySelectorAll('#ra-connected-speech-list .sc-model-play-btn')].find(button => button.dataset.eventId === item.eventId);
+        if (original && !original.disabled) this.playSpeechCoachModelAudio(original);
+        else this.speakGuidePhrase(item.label);
+      }); actions.append(model);
+      row.append(node('span', item.kind === 'error' ? '!' : item.kind === 'success' ? '✓' : '?'), copy, actions); view.fixes.append(row);
+    });
+    const advanced = document.getElementById('ra-show-advanced-container'); if (advanced) advanced.style.display = '';
+    const button = document.getElementById('ra-show-advanced-btn'); if (button) button.textContent = 'Show advanced analysis ›';
   }
 
   updateUIForState() {
+    this.updateLegacyUIForState();
+    this.syncPteShell();
+  }
+
+  updateLegacyUIForState() {
     // Single choke point for every state transition — keep the shared step
     // indicator in step with the state machine from here.
     window.SpeakingPracticeController?.sync?.('read-aloud');
@@ -4003,6 +4238,8 @@ class ReadAloudMode {
 
       const recordedChunks = [];
       const activeRecorder = new window.MediaRecorder(stream);
+      let resolveCapture;
+      recordingSession.capturePromise = new Promise(resolve => { resolveCapture = resolve; });
       activeRecorder.addEventListener('dataavailable', (event) => {
         if (event.data?.size) recordedChunks.push(event.data);
       });
@@ -4015,21 +4252,48 @@ class ReadAloudMode {
           this.mediaRecorder = null;
         }
         if (!shouldSubmit) {
+          resolveCapture();
           return;
         }
         if (recordedChunks.length === 0) {
           this.applyRecordingCaptureFailure(recordingSession, 'We couldn’t capture that recording. Please try again.');
+          resolveCapture();
           return;
         }
         const rawBlob = new Blob(recordedChunks, { type: activeRecorder.mimeType || 'audio/webm' });
         recordingSession.rawBlob = rawBlob;
         recordingSession.durationMs = recordingSession.startedAt ? Math.max(200, Date.now() - recordingSession.startedAt) : 1000;
-        this.setRecordedAudio(rawBlob);
+        let playbackBlob = rawBlob;
+        if (this.isPteShellEnabled()) {
+          try {
+            let preparedAudioBuffer = null;
+            playbackBlob = await this.prepareWavBlob(rawBlob, (audioBuffer) => {
+              preparedAudioBuffer = audioBuffer;
+            });
+            if (recordingSession.id !== this.recordingRequestId || !this.shouldApplyAssessment(recordingSession)) { resolveCapture(); return; }
+            recordingSession.wavBlob = playbackBlob;
+            recordingSession.assessmentAudioBuffer = preparedAudioBuffer;
+            recordingSession.durationMs = Math.round((preparedAudioBuffer?.duration || 0) * 1000) || recordingSession.durationMs;
+            this.assessmentAudioBuffer = preparedAudioBuffer;
+          } catch (error) {
+            if (recordingSession.id !== this.recordingRequestId) { resolveCapture(); return; }
+            this.applyRecordingCaptureFailure(recordingSession, 'We couldn’t prepare that recording. Please try again.');
+            resolveCapture(); return;
+          }
+        }
+        this.setRecordedAudio(playbackBlob, { preserveAssessmentBuffer: this.isPteShellEnabled() });
 
         this.pendingBlob = rawBlob;
         this.pendingSession = recordingSession;
         this.state = 'RECORDED';
         this.updateUIForState();
+        resolveCapture();
+        if (this.isPteShellEnabled()) {
+          this.savePteCapture(recordingSession).catch(error => {
+            if (!this.shouldApplyAssessment(recordingSession)) return;
+            window.SpeakingPracticeController?.setSaveError?.('read-aloud', `Recording captured, but saving failed: ${error.message}`);
+          });
+        }
       });
       activeRecorder.start();
       if (!this.isSameRecordingSession(recordingSession)) {
@@ -4085,6 +4349,10 @@ class ReadAloudMode {
   }
 
   updateTimerDisplay(elementId, seconds) {
+    if (this.pteRecorder) {
+      if (elementId === 'ra-prep-time' && this.state === 'PREP') this.pteRecorder.tick(seconds);
+      if (elementId === 'ra-record-time' && this.state === 'RECORDING') this.pteRecorder.setElapsed(this.recordSeconds - seconds);
+    }
     const el = document.getElementById(elementId);
     if (!el) return;
     const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -4137,20 +4405,168 @@ class ReadAloudMode {
     this.stopReferenceAudioPlayback();
   }
 
+  cancelRecording() {
+    if (!['REQUESTING_MIC', 'RECORDING', 'STOPPING_RECORDING'].includes(this.state)) return;
+    this.cleanup();
+    this.pendingBlob = null; this.pendingSession = null;
+    this.retryCurrentPrompt();
+  }
+
+  async finishPteRecordingForNext() {
+    if (this.state === 'REQUESTING_MIC') throw new Error('Wait for microphone access or cancel the recording.');
+    const session = this.currentRecordingSession || this.pendingSession;
+    if (!session) throw new Error('There is no recording to save yet.');
+    const ownership = this.createPteNextOwnership(session);
+    this.pendingPteNextOwnership = ownership;
+    this.stopRecordingManually();
+    await session.capturePromise;
+    if (!this.shouldApplyPteNextOwnership(ownership)) return false;
+    if (!session.wavBlob) throw new Error('The recording could not be captured. Please try again.');
+    return this.savePteNextCapture(ownership);
+  }
+
+  async advancePtePrompt() {
+    if (!this.pendingPteNextOwnership && !this.pendingSession) return false;
+    const ownership = this.pendingPteNextOwnership || this.createPteNextOwnership(this.pendingSession);
+    if (!this.shouldApplyPteNextOwnership(ownership)) return false;
+    // Keep the same validated token retryable if saving fails. Invalidation clears it.
+    this.pendingPteNextOwnership = ownership;
+    if (!await this.savePteNextCapture(ownership)) return false;
+    this.pendingPteNextOwnership = null;
+    return this.loadNextPrompt({ force: true });
+  }
+
+  async savePteNextCapture(ownership) {
+    try {
+      await this.savePteCapture(ownership.session);
+      if (!this.shouldApplyPteNextOwnership(ownership)) return false;
+      if (ownership.session.assessedArchiveInput
+        && !await this.savePteAssessedArchive(ownership.session)) return false;
+    } catch (error) {
+      if (!this.shouldApplyPteNextOwnership(ownership)) return false;
+      throw error;
+    }
+    return this.shouldApplyPteNextOwnership(ownership);
+  }
+
+  createPteNextOwnership(session = null) {
+    return {
+      session,
+      promptToken: this.promptLifecycleToken,
+      questionId: this.currentQuestionId,
+      referenceText: this.currentPromptPlainText
+    };
+  }
+
+  shouldApplyPteNextOwnership(ownership) {
+    if (!ownership || !this.isActive
+      || ownership.promptToken !== this.promptLifecycleToken
+      || ownership.questionId !== this.currentQuestionId
+      || ownership.referenceText !== this.currentPromptPlainText) {
+      return false;
+    }
+    if (!ownership.session) return false;
+    return this.shouldApplyAssessment(ownership.session)
+      && (this.pendingSession === ownership.session || this.currentRecordingSession === ownership.session
+        || (this.state === 'RESULTS' && this.lastAssessmentSession === ownership.session));
+  }
+
+  savePteCapture(session) {
+    if (session.archivePromise) return session.archivePromise;
+    session.archivePromise = (async () => {
+      const blob = session.wavBlob;
+      if (!blob) throw new Error('Finish recording before moving on.');
+      const input = {
+        practiceMode: 'read-aloud',
+        attemptId: session.archiveCandidateId ||= `att_ra_${Date.now()}_${session.id}`,
+        promptSnapshot: { promptId: session.questionId, text: session.referenceText, source: 'read-aloud' },
+        responseSnapshot: { referenceText: session.referenceText },
+        scoringSnapshot: { source: 'none', success: false, status: 'unassessed' },
+        media: [{ slot: 'student', label: 'Student read aloud', blob, contentType: blob.type, durationMs: session.durationMs }]
+      };
+      if (!window.PTEAttemptArchive?.saveAttempt) throw new Error('Attempt saving is unavailable. Please try again.');
+      const saved = await window.PTEAttemptArchive.saveAttempt(input);
+      if (saved?.skipped && saved.reason !== 'guest') throw new Error('This attempt could not be saved.');
+      if (!this.shouldApplyAssessment(session)) return saved;
+      if (saved?.skipped) {
+        if (!window.PteAttemptHistory?.recordLocal) throw new Error('Attempt history is unavailable. Please try again.');
+        session.localAttemptId ||= `ra-${Date.now()}-${session.id}`;
+        session.historyAudioUrl ||= URL.createObjectURL(blob);
+        window.PteAttemptHistory.recordLocal({ ...input, media: undefined, attemptId: session.localAttemptId, promptId: session.questionId,
+          audio: { studentUrl: session.historyAudioUrl, durationMs: session.durationMs } });
+      } else session.archiveAttemptId = saved?.attemptId || input.attemptId;
+      window.SpeakingPracticeController?.setSaveError?.('read-aloud', '');
+      return saved;
+    })().catch(error => { session.archivePromise = null; throw error; });
+    return session.archivePromise;
+  }
+
+  async savePteAssessedArchive(session) {
+    const input = session.assessedArchiveInput;
+    const isCurrent = () => !!input && this.shouldApplyAssessment(session)
+      && session.questionId === this.currentQuestionId && session.assessedArchiveInput === input;
+    if (!isCurrent()) return false;
+    if (session.savedAssessedArchiveInput === input) return true;
+    if (session.assessedArchiveOperation?.input === input) return session.assessedArchiveOperation.promise;
+
+    const operation = { input };
+    session.assessedArchiveOperation = operation;
+    operation.promise = (async () => {
+      try {
+        await this.savePteCapture(session);
+        if (!isCurrent()) return false;
+        if (session.archiveAttemptId) {
+          const result = await window.PTEAttemptArchive.patchAttempt(session.archiveAttemptId, input);
+          if (!isCurrent()) return false;
+          if (result?.skipped) throw new Error('Assessment saving is unavailable. Please try again.');
+        } else {
+          if (!window.PteAttemptHistory?.recordLocal) throw new Error('Attempt history is unavailable. Please try again.');
+          window.PteAttemptHistory.recordLocal({ ...input, media: undefined, attemptId: session.localAttemptId,
+            promptId: session.questionId, audio: { studentUrl: session.historyAudioUrl, durationMs: session.durationMs } });
+        }
+        if (!isCurrent()) return false;
+        session.savedAssessedArchiveInput = input;
+        window.SpeakingPracticeController?.setNextError?.('read-aloud', '');
+        if (session.archiveAttemptId) {
+          window.PTEAttemptArchive.invalidateHistoryCache();
+          window.dispatchEvent(new CustomEvent('pte-attempt-archive:saved', {
+            detail: { attemptId: session.archiveAttemptId, practiceMode: 'read-aloud', promptId: session.questionId }
+          }));
+        }
+        return true;
+      } catch (error) {
+        if (!isCurrent()) return false;
+        window.SpeakingPracticeController?.setNextError?.('read-aloud', error.message || 'Assessment saving failed. Please try again.');
+        throw error;
+      } finally {
+        if (session.assessedArchiveOperation === operation) session.assessedArchiveOperation = null;
+      }
+    })();
+    return operation.promise;
+  }
+
   async submitToAzure(rawBlob, recordingSession) {
+    if (!this.shouldApplyAssessment(recordingSession)) return false;
     if (this.isSubmitInFlight) return false;
     this.isSubmitInFlight = true;
+    const assessmentAbortController = typeof AbortController === 'function'
+      ? new AbortController()
+      : null;
+    recordingSession.assessmentAbortController = assessmentAbortController;
     const statusMsg = document.getElementById('ra-status-message');
     try {
-      if (!this.shouldApplyAssessment(recordingSession)) return false;
       if (statusMsg) statusMsg.textContent = 'Formatting audio...';
-      const wavBlob = await this.prepareWavBlob(rawBlob);
+      let preparedAudioBuffer = null;
+      const wavBlob = await this.prepareWavBlob(rawBlob, (audioBuffer) => {
+        preparedAudioBuffer = audioBuffer;
+      });
+      if (!this.shouldApplyAssessment(recordingSession)) return false;
       recordingSession.wavBlob = wavBlob;
-      recordingSession.assessmentAudioBuffer = this.assessmentAudioBuffer;
-      if (this.assessmentAudioBuffer && !this.userRecordingUrl) {
+      recordingSession.assessmentAudioBuffer = preparedAudioBuffer;
+      this.assessmentAudioBuffer = preparedAudioBuffer;
+      if (preparedAudioBuffer) {
         this.setRecordedAudio(wavBlob, { preserveAssessmentBuffer: true });
       }
-      if (!this.shouldApplyAssessment(recordingSession)) return false;
 
       if (statusMsg) statusMsg.textContent = 'Analyzing pronunciation...';
       const formData = new FormData();
@@ -4167,7 +4583,8 @@ class ReadAloudMode {
 
       const response = await fetch('/api/read-aloud/assess', {
         method: 'POST',
-        body: formData
+        body: formData,
+        ...(assessmentAbortController ? { signal: assessmentAbortController.signal } : {})
       });
 
       const payload = await response.json().catch(() => null);
@@ -4187,15 +4604,12 @@ class ReadAloudMode {
         throw error;
       }
 
-      await this.processAzureResults(payload, recordingSession);
+      const result = await this.processAzureResults(payload, recordingSession);
       this.assessmentOutcome = { kind: 'success' };
-      return true;
+      return result;
     } catch (err) {
-      console.error('Azure assessment error:', err);
       if (!this.shouldApplyAssessment(recordingSession)) return false;
-      const accuracyElement = document.getElementById('ra-accuracy-value');
-      const feedbackElement = document.getElementById('ra-transcript-feedback');
-      this.showAssessmentDisplay();
+      console.error('Azure assessment error:', err);
       let failureStatus;
       if (err?.code === 'INVALID_AUDIO' && err?.reason === 'too_long') {
         failureStatus = 'That recording was too long to score. Keep it under 40 seconds and try again.';
@@ -4212,43 +4626,38 @@ class ReadAloudMode {
       } else {
         failureStatus = 'Assessment failed. Please try again.';
       }
-      this.setAssessmentStatusMessage(failureStatus);
-      const isRetryable = !(
-        err?.code === 'INVALID_AUDIO' &&
-        (err?.reason === 'no_speech' || err?.reason === 'too_short' || err?.reason === 'clipped' || err?.reason === 'too_long')
-      );
       this.assessmentOutcome = {
         kind: 'error',
-        retryable: isRetryable,
+        retryable: !(
+          err?.code === 'INVALID_AUDIO' &&
+          (err?.reason === 'no_speech' || err?.reason === 'too_short' || err?.reason === 'clipped' || err?.reason === 'too_long')
+        ),
         message: failureStatus
       };
-      if (accuracyElement) accuracyElement.textContent = '--';
-      if (feedbackElement) {
-        const fallbackText = err?.code === 'INVALID_AUDIO' && err?.reason === 'too_long'
-          ? 'That recording was too long for the current scorer. Try keeping it under 40 seconds.'
-          : err?.code === 'INVALID_AUDIO' && err?.reason === 'no_speech'
-            ? 'We did not detect any speech in your recording. Please ensure your microphone is working.'
-            : err?.code === 'INVALID_AUDIO' && err?.reason === 'too_short'
-              ? 'Your recording was too short. Please try to speak clearly and fully.'
-              : err?.code === 'INVALID_AUDIO' && err?.reason === 'clipped'
-                ? 'Your audio signal was clipped or too loud. Try adjusting your input volume.'
-                : err?.code === 'AZURE_ASSESSMENT_FAILED' && err?.reason === 'scores_unavailable'
-                  ? 'Your speech was transcribed, but pronunciation scores were not returned for this attempt.'
-                  : 'We could not score this attempt.';
-        feedbackElement.innerHTML = `<p style="line-height: 1.6; font-size: 1rem; padding: 10px; border: 1px solid #f3d1d1; border-radius: 8px; background: #fff7f7; color: #b42318;">${fallbackText}</p>`;
-      }
-      this.clearConnectedSpeechResults();
+      const fallbackText = err?.code === 'INVALID_AUDIO' && err?.reason === 'too_long'
+        ? 'That recording was too long for the current scorer. Try keeping it under 40 seconds.'
+        : err?.code === 'INVALID_AUDIO' && err?.reason === 'no_speech'
+          ? 'We did not detect any speech in your recording. Please ensure your microphone is working.'
+          : err?.code === 'INVALID_AUDIO' && err?.reason === 'too_short'
+            ? 'Your recording was too short. Please try to speak clearly and fully.'
+            : err?.code === 'INVALID_AUDIO' && err?.reason === 'clipped'
+              ? 'Your audio signal was clipped or too loud. Try adjusting your input volume.'
+              : err?.code === 'AZURE_ASSESSMENT_FAILED' && err?.reason === 'scores_unavailable'
+                ? 'Your speech was transcribed, but pronunciation scores were not returned for this attempt.'
+                : 'We could not score this attempt.';
+      this.renderAssessmentFailure(failureStatus, fallbackText);
       return false;
     } finally {
-      this.isSubmitInFlight = false;
+      if (recordingSession.assessmentAbortController === assessmentAbortController) {
+        recordingSession.assessmentAbortController = null;
+      }
+      if (recordingSession.id === this.recordingRequestId) {
+        this.isSubmitInFlight = false;
+      }
     }
   }
 
-  async prepareWavBlob(blob) {
-    // A new assessment must never reuse a buffer from a prior recording if
-    // decoding or quality validation fails.
-    this.assessmentAudioBuffer = null;
-
+  async prepareWavBlob(blob, captureAudioBuffer = null) {
     if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
       const result = await window.AudioDspPipeline.enhance(blob, {
         targetSampleRate: 16000,
@@ -4271,7 +4680,7 @@ class ReadAloudMode {
         throw error;
       }
 
-      this.assessmentAudioBuffer = result.audioBuffer;
+      if (typeof captureAudioBuffer === 'function') captureAudioBuffer(result.audioBuffer);
       return result.wavBlob;
     }
 
@@ -4354,7 +4763,7 @@ class ReadAloudMode {
       throw error;
     }
 
-    this.assessmentAudioBuffer = trimmed;
+    if (typeof captureAudioBuffer === 'function') captureAudioBuffer(trimmed);
     return this.audioBufferToWav(trimmed);
   }
 
@@ -4535,6 +4944,7 @@ class ReadAloudMode {
     return !!recordingSession
       && this.isActive
       && recordingSession.disposition === 'submit'
+      && recordingSession.id === this.recordingRequestId
       && recordingSession.promptToken === this.promptLifecycleToken
       && recordingSession.referenceText === this.currentPromptPlainText;
   }
@@ -4558,7 +4968,7 @@ class ReadAloudMode {
   }
 
   async processAzureResults(payload, recordingSession) {
-    if (!this.shouldApplyAssessment(recordingSession)) return;
+    if (!this.shouldApplyAssessment(recordingSession)) return false;
     const accuracyElement = document.getElementById('ra-accuracy-value');
     const feedbackElement = document.getElementById('ra-transcript-feedback');
     const assessmentModes = this.getAssessmentConnectedSpeechModes({}, recordingSession);
@@ -4597,23 +5007,7 @@ class ReadAloudMode {
       showAdvContainer.style.display = isSimpleTier && assessmentModes.size > 0 ? 'block' : 'none';
     }
     if (showAdvBtn && isSimpleTier) showAdvBtn.textContent = '✨ Show detailed analysis';
-    {
-      this.renderPromptForCurrentView();
-      await this.renderConnectedSpeechResults(payload.connectedSpeech, {
-        transcriptText: payload.recognizedText || this.currentPromptPlainText,
-        words: payload.words || [],
-        metrics: {
-          fluencyScore: payload.fluencyScore,
-          completenessScore: payload.completenessScore,
-          pronScore: payload.pronScore
-        },
-        sessionViewMode: sessionView,
-        sessionConnectedSpeechModes: [...assessmentModes],
-        sessionConnectedSpeechLevel: sessionLevel
-      });
-    }
-
-    window.PTEAttemptArchive?.saveAttempt?.({
+    const attemptInput = {
       practiceMode: 'read-aloud',
       promptSnapshot: {
         promptId: recordingSession.questionId || null,
@@ -4651,7 +5045,39 @@ class ReadAloudMode {
         contentType: 'audio/wav',
         clientReportedDurationMs: recordingSession.durationMs || 1000
       }] : []
-    }).catch((error) => console.warn('[PTE Archive] Read Aloud save failed:', error));
+    };
+    if (this.isPteShellEnabled() && recordingSession.wavBlob) {
+      // Retain scored data before Coach metadata can yield to an enabled Next control.
+      recordingSession.assessedArchiveInput = attemptInput;
+    }
+    this.renderPromptForCurrentView();
+    await this.renderConnectedSpeechResults(payload.connectedSpeech, {
+      transcriptText: payload.recognizedText || this.currentPromptPlainText,
+      words: payload.words || [],
+      metrics: {
+        fluencyScore: payload.fluencyScore,
+        completenessScore: payload.completenessScore,
+        pronScore: payload.pronScore
+      },
+      sessionViewMode: sessionView,
+      sessionConnectedSpeechModes: [...assessmentModes],
+      sessionConnectedSpeechLevel: sessionLevel
+    });
+    if (!this.shouldApplyAssessment(recordingSession)) return false;
+    if (this.isPteShellEnabled() && recordingSession.wavBlob) {
+      try {
+        if (!await this.savePteAssessedArchive(recordingSession)) return false;
+      } catch (error) {
+        if (this.shouldApplyAssessment(recordingSession)) {
+          console.warn('[PTE Archive] Read Aloud save failed:', error);
+        }
+      }
+      if (!this.shouldApplyAssessment(recordingSession)) return false;
+      this.syncPteShell();
+    } else {
+      window.PTEAttemptArchive?.saveAttempt?.(attemptInput).catch((error) => console.warn('[PTE Archive] Read Aloud save failed:', error));
+    }
+    return true;
   }
 
   clearConnectedSpeechResults() {
@@ -4696,6 +5122,7 @@ class ReadAloudMode {
     if (invalidate) this.invalidateSpeechCoachResultRender();
     this.connectedSpeechPanelMode = 'hidden';
     this.currentGuideExplanationItems = [];
+    this.currentGuideInteractionItems = new Map();
     this.selectedGuideItemId = null;
     this.currentGuideHasVisibleAssimilation = false;
     this.guideExplanationsExpanded = null;
@@ -4788,7 +5215,27 @@ class ReadAloudMode {
       return;
     }
 
-    const rawItems = window.ReadAloudLinking.buildGuideExplanationItems(analysis);
+    const buildItems = window.ReadAloudLinking.buildGuideExplanationItems;
+    // buildGuideExplanationItems intentionally caps/deduplicates the Coach
+    // drawer. The passage renderer does not: it marks every eligible boundary
+    // and weak-form token. Build each source item in isolation as well so every
+    // rendered target retains complete popover metadata without expanding the
+    // concise drawer summary.
+    const completeItemsById = new Map();
+    const collectCompleteItems = (scopedAnalysis) => {
+      buildItems(scopedAnalysis).forEach((item) => {
+        if (item?.id && !completeItemsById.has(item.id)) completeItemsById.set(item.id, item);
+      });
+    };
+    collectCompleteItems(analysis);
+    (Array.isArray(analysis?.boundaries) ? analysis.boundaries : []).forEach((boundary) => {
+      collectCompleteItems({ ...analysis, boundaries: [boundary], tokenAnnotations: [] });
+    });
+    (Array.isArray(analysis?.tokenAnnotations) ? analysis.tokenAnnotations : []).forEach((annotation) => {
+      collectCompleteItems({ ...analysis, boundaries: [], tokenAnnotations: [annotation] });
+    });
+
+    const rawItems = buildItems(analysis);
     if (!rawItems.length) {
       this.hideConnectedSpeechPanel();
       return;
@@ -4807,19 +5254,28 @@ class ReadAloudMode {
       this.hideConnectedSpeechPanel();
       return;
     }
-    const seen = new Set();
-    const items = [];
-    for (const item of rawItems) {
+    const normalizeAllowedItem = (item) => {
       const itemCategory = this.normalizeConnectedSpeechMode(
         item?.category || item?.layer || item?.subtype || item?.badge || ''
       );
-      if (allowedCategories && allowedCategories.size && !allowedCategories.has(itemCategory)) {
-        continue;
-      }
+      if (allowedCategories && allowedCategories.size && !allowedCategories.has(itemCategory)) return null;
+      return { ...item, category: itemCategory };
+    };
+    this.currentGuideInteractionItems = new Map();
+    completeItemsById.forEach((item, id) => {
+      const normalized = normalizeAllowedItem(item);
+      if (normalized) this.currentGuideInteractionItems.set(id, normalized);
+    });
+
+    const seen = new Set();
+    const items = [];
+    for (const item of rawItems) {
+      const normalized = normalizeAllowedItem(item);
+      if (!normalized) continue;
       const key = `${item.label}|${item.spokenAs}|${item.badge}`;
       if (!seen.has(key)) {
         seen.add(key);
-        items.push({ ...item, category: itemCategory });
+        items.push(normalized);
       }
     }
 
@@ -5449,6 +5905,7 @@ class ReadAloudMode {
 
     this.connectedSpeechPanelMode = 'results';
     this.currentGuideExplanationItems = [];
+    this.currentGuideInteractionItems = new Map();
     this.selectedGuideItemId = null;
     this.currentGuideHasVisibleAssimilation = false;
     box.style.display = '';
@@ -6355,12 +6812,12 @@ class ReadAloudMode {
 
   getSoundChangeTooltipTarget(node) {
     if (!(node instanceof Element)) return null;
-    return node.closest('[data-guide-target][data-sound-change-subtype]');
+    return node.closest(this.pteView ? '[data-guide-target]' : '[data-guide-target][data-sound-change-subtype]');
   }
 
   getSoundChangeTooltipTargets(guideId, stage = document.getElementById('ra-prompt-stage')) {
     if (!guideId || !stage) return [];
-    return Array.from(stage.querySelectorAll('[data-guide-target][data-sound-change-subtype]'))
+    return Array.from(stage.querySelectorAll(this.pteView ? '[data-guide-target]' : '[data-guide-target][data-sound-change-subtype]'))
       .filter((node) => String(node.getAttribute('data-guide-target') || '') === guideId);
   }
 
@@ -6433,6 +6890,14 @@ class ReadAloudMode {
       if (!modelButton.disabled) this.playSpeechCoachModelAudio(modelButton);
       return;
     }
+    const spokenModelButton = event?.type === 'click' && event?.target instanceof Element
+      ? event.target.closest('[data-speak-phrase]')
+      : null;
+    if (spokenModelButton) {
+      event.stopPropagation();
+      if (!spokenModelButton.disabled) this.speakGuidePhrase(spokenModelButton.getAttribute('data-speak-phrase'));
+      return;
+    }
     const target = event?.target instanceof Element
       ? event.target.closest('[data-guide-target]')
       : null;
@@ -6456,6 +6921,12 @@ class ReadAloudMode {
     const guideTarget = String(target.getAttribute('data-guide-target') || '').trim();
     if (!guideTarget) return;
     this.setSelectedGuideItem(guideTarget);
+
+    if (this.pteView && target.closest('#ra-prompt-stage')) {
+      if (this.activeSoundChangeTooltipId === guideTarget && this.soundChangeTooltipPinned) this.hideSoundChangeTooltip();
+      else this.showSoundChangeTooltip(guideTarget, target, { pinned: true });
+      return;
+    }
 
     if (guideTarget.startsWith('boundary-')) {
       const subtype = target.dataset.soundChangeSubtype;
@@ -6678,15 +7149,67 @@ class ReadAloudMode {
     tooltip.setAttribute('aria-hidden', 'false');
   }
 
+  normalizeGuidePopoverIpa(value, word = '') {
+    const phonetics = window.Phonetics;
+    if (!value || typeof phonetics?.normalizeIPA !== 'function') return '';
+    const source = String(value);
+    const tokens = [...source.matchAll(/\/([^/]+)\//g)].map((match) => match[1]);
+    if (!tokens.length) return '';
+    const normalized = tokens
+      .map((token) => phonetics.normalizeIPA(token, word))
+      .filter(Boolean)
+      .map((token) => `/${String(token).replace(/^\/+|\/+$/g, '')}/`);
+    return [...new Set(normalized)].join(' or ');
+  }
+
+  getGuidePopoverIpa(item) {
+    if (!item) return '';
+    const label = String(item.label || '').trim();
+    const weak = this.normalizeGuidePopoverIpa(item.targetIpa || item.spokenAs, label);
+    const strong = this.normalizeGuidePopoverIpa(item.strongAs, label);
+    if (strong && weak) return `Strong ${strong} · Weak ${weak}`;
+    if (weak || strong) return weak || strong;
+
+    if (item.category === 'linking') {
+      const wordIpas = label.split(/\s+/).map((word) => {
+        const clean = word.replace(/[^a-zA-Z']/g, '').toLowerCase();
+        const source = this.sharedLinkingPronunciations.get(clean) || '';
+        return this.normalizeGuidePopoverIpa(source, clean);
+      }).filter(Boolean);
+      if (wordIpas.length) return wordIpas.join(' + ');
+    }
+    return '';
+  }
+
+  buildGuidePopoverListenControl(item) {
+    if (!item) return '';
+    const guideEvent = this.getSpeechCoachGuideEvent(item);
+    const model = guideEvent ? this.getSpeechCoachAudioEntry(guideEvent) : null;
+    const escapeHtml = ReadAloudMode.escapeHtml;
+    if (model?.status === 'ready' && model.file) {
+      return `<button class="sc-model-play-btn sc-audio-btn sc-audio-btn--model" type="button" data-model-src="${escapeHtml(String(model.file))}" aria-label="Listen"><span aria-hidden="true">▶</span><span>Listen</span></button>`;
+    }
+    const phrase = String(item.label || '').trim();
+    if (phrase && window.speechSynthesis) {
+      return `<button class="sc-audio-btn sc-audio-btn--model sc-audio-btn--synth" type="button" data-speak-phrase="${escapeHtml(phrase)}" aria-label="Listen"><span aria-hidden="true">▶</span><span>Listen</span></button>`;
+    }
+    return '';
+  }
+
   showSoundChangeTooltip(guideId, clickedSpan, { pinned = false } = {}) {
     const tooltip = document.getElementById('ra-sound-change-tooltip');
     const stage = document.getElementById('ra-prompt-stage');
     if (!tooltip || !stage) return;
 
     const subtype = clickedSpan?.dataset?.soundChangeSubtype;
-    const copy = subtype && window.ReadAloudLinking
+    let copy = subtype && window.ReadAloudLinking
       ? window.ReadAloudLinking.getSoundChangeCopy(subtype)
       : null;
+    const item = this.pteView && (
+      this.currentGuideInteractionItems?.get(guideId)
+      || this.currentGuideExplanationItems.find(entry => entry.id === guideId)
+    );
+    if (!copy && item) copy = { arrow: item.spokenAs || item.sayItLike || item.badge, explanation: item.explanation };
     if (!copy) {
       this.hideSoundChangeTooltip();
       return;
@@ -6708,6 +7231,23 @@ class ReadAloudMode {
     if (wordsEl) wordsEl.textContent = wordPair;
     if (transformEl) transformEl.textContent = copy.arrow || 'Sound change';
     if (explanationEl) explanationEl.textContent = copy.explanation || '';
+    const badge = tooltip.querySelector('.ra-sound-change-tooltip__badge');
+    if (badge) badge.textContent = item?.badge || 'Sound Change';
+
+    const sayEl = tooltip.querySelector('.ra-sound-change-tooltip__say');
+    const sayValueEl = tooltip.querySelector('.ra-sound-change-tooltip__say-value');
+    const sayItLike = String(item?.sayItLike || copy.sayItLike || '').trim();
+    if (sayValueEl) sayValueEl.textContent = sayItLike;
+    if (sayEl) sayEl.hidden = !sayItLike;
+
+    const ipaEl = tooltip.querySelector('.ra-sound-change-tooltip__ipa');
+    const ipaValueEl = tooltip.querySelector('.ra-sound-change-tooltip__ipa-value');
+    const ipa = this.getGuidePopoverIpa(item || copy);
+    if (ipaValueEl) ipaValueEl.textContent = ipa;
+    if (ipaEl) ipaEl.hidden = !ipa;
+
+    const audioEl = tooltip.querySelector('.ra-sound-change-tooltip__audio');
+    if (audioEl) audioEl.innerHTML = this.buildGuidePopoverListenControl(item);
 
     const closeBtn = tooltip.querySelector('.ra-sound-change-tooltip__close');
     if (closeBtn) {

@@ -6,6 +6,8 @@
 ## 1. Overview
 >
 > Speak Mode checks sentence-level speaking accuracy: the user records speech, the system transcribes it, compares against canonical text, and awards calibrated rewards.
+>
+> In PTE Academic and PTE Core practice, Speak Mode acts as **Repeat Sentence** (`speak`), which is fully supported under the [PTE Speaking Shell v3](pte-speaking-shell-v3.md).
 
 ## 2. Goals (The "Why")
 

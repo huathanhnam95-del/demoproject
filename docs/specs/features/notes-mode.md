@@ -6,6 +6,8 @@
 ## 1. Overview
 >
 > Notes Mode trains comprehension and extraction: users write short notes from a source (lecture/reading/video). Scoring emphasizes coverage of key points and clarity.
+>
+> In PTE Academic practice, Notes Mode acts as **Retell Lecture** (`notes`), which is integrated into the [PTE Speaking Shell v3](pte-speaking-shell-v3.md) (Phase 8A layout & notes editor; Phase 8B 40-second spoken response recording with content coverage scoring).
 
 ## 2. Goals (The "Why")
 

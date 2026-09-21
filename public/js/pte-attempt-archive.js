@@ -207,7 +207,7 @@
     return uploaded;
   }
 
-  async function saveAttempt(input = {}) {
+  async function saveAttempt(input = {}, options = {}) {
     if (!isPteScope()) return { skipped: true, reason: 'non-pte-scope' };
     const media = await hydrateMediaDurations(normalizeMediaInput(input.media || input.mediaBlobs || input.blob));
     let attemptId = cleanString(input.attemptId, 128);
@@ -261,7 +261,19 @@
       method: 'POST',
       body: JSON.stringify(body)
     });
+    // Persistence can complete after a caller leaves its attempt. Check its
+    // optional owner immediately before publishing shared cache/history effects.
+    if (options.shouldPublish && !options.shouldPublish()) return savedAttempt;
     invalidateHistoryCache();
+    if (!savedAttempt?.skipped) {
+      window.dispatchEvent(new CustomEvent('pte-attempt-archive:saved', {
+        detail: {
+          attemptId: savedAttempt?.attemptId || attemptId,
+          practiceMode: input.practiceMode,
+          promptId: getAttemptPromptId(input)
+        }
+      }));
+    }
     return savedAttempt;
   }
 
@@ -274,6 +286,9 @@
     }
     if ('responseSnapshot' in patch || 'response' in patch) {
       body.responseSnapshot = patch.responseSnapshot || patch.response || null;
+    }
+    if ('answerSnapshot' in patch || 'answer' in patch) {
+      body.answerSnapshot = patch.answerSnapshot || patch.answer || null;
     }
     if ('scoringSnapshot' in patch || 'scoring' in patch) {
       body.scoringSnapshot = patch.scoringSnapshot || patch.scoring || null;
@@ -867,14 +882,16 @@
   function summarizeStateResponse(state, extra = {}) {
     const selectedIndices = getSelectedIndices(state);
     const choices = state?.shuffledChoices || state?.choices || state?.options || state?.currentQuestion?.choices || state?.currentQuestion?.options || [];
+    const textVal = cleanString(extra.text ?? state?.text ?? state?.userNotes ?? state?.speechTranscript ?? null, 12000);
     return {
+      text: textVal,
       selectedIndices,
       selectedOptionIds: selectedIndices.map((idx) => choices[idx]?.id ?? choices[idx]?.value ?? idx),
       selectedOptions: selectedIndices.map((idx) => ({
         id: choices[idx]?.id ?? choices[idx]?.value ?? idx,
         text: cleanString(choices[idx]?.text ?? choices[idx]?.label ?? choices[idx], 2000)
       })),
-      userAnswer: extra.userAnswer ?? state?.userAnswer ?? state?.answer ?? null,
+      userAnswer: cleanString(extra.userAnswer ?? state?.userAnswer ?? state?.answer ?? textVal, 12000),
       selectedMappings: extra.selectedMappings || state?.selectedMappings || state?.answers || null,
       order: extra.order || state?.currentOrder || state?.userOrder || null
     };
@@ -895,8 +912,9 @@
       timingSnapshot: extra.timingSnapshot || null,
       scoringSnapshot: extra.scoringSnapshot || null,
       scoringSource: extra.scoringSource || 'client',
-      idempotencyKey: extra.idempotencyKey || null
-    });
+      idempotencyKey: extra.idempotencyKey || null,
+      media: extra.media || extra.mediaBlobs || extra.blob || null
+    }, { shouldPublish: extra.shouldPublish });
   }
 
   async function saveTextAttempt(practiceMode, question, text, result = {}, extra = {}) {
@@ -1877,6 +1895,8 @@
     isPlainObject,
     updateHistoryUI,
     fetchUserAttemptsCached,
+    resolveHistoryQuestionId,
+    getAttemptPromptId,
     openProgressModal,
     closeProgressModal
   };

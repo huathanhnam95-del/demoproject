@@ -3,7 +3,7 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const assert = require('assert');
-const { chromium } = require('playwright');
+const { launchPracticeChrome } = require('./helpers/launch-practice-chrome');
 
 const PUBLIC_DIR = path.resolve(__dirname, '../../public');
 
@@ -58,7 +58,7 @@ async function runBrowserCheck() {
   const { server, port } = await startServer();
   console.log('[Browser Check] Test server running on http://127.0.0.1:' + port);
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchPracticeChrome({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
 
   await context.addInitScript(() => {

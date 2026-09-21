@@ -9,7 +9,13 @@
 (function () {
     'use strict';
 
-    const FIRESTORE_LOAD_TIMEOUT_MS = 8000;
+    const NOTES_ENTRY_DEADLINE_MS = 12_000;
+    const NOTES_FIRESTORE_TIMEOUT_MS = 8_000;
+    const NOTES_WORKBOOK_TIMEOUT_MS = 6_000;
+    const NOTES_AUDIO_DEADLINE_MS = 10_000;
+    const NOTES_AUDIO_HEAD_TIMEOUT_MS = 2_000;
+    const NOTES_FALLBACK_OFFER_DELAY_MS = 1_500;
+    const FIRESTORE_LOAD_TIMEOUT_MS = NOTES_FIRESTORE_TIMEOUT_MS;
 
     // State
     let entries = [];
@@ -24,11 +30,56 @@
     let loadEntriesPromise = null;
     let pendingRouteQuestionId = null;
     let audioLoadToken = 0;
+    let entryGeneration = 0;
+    let entryAbortController = null;
+    let audioAbortController = null;
+    let notesEntryLoadStartedAt = 0;
     let notesRecommendationEngine = null;
     let notesRecommendationIndex = null;
     let recentRecommendedIds = [];
     let notesAttemptStartTime = null;
     let notesPerformanceTracker = null;
+
+    // V3 State
+    let v3Active = false;
+    let v3Phase = 'loading'; // 'loading' | 'listen' | 'prep' | 'recording' | 'complete' | 'feedback'
+    let pteAudioBox = null;
+    let pteRecorderWidget = null;
+    let questionGen = 0;
+    let attemptGen = 0;
+    let recordingSessionToken = 0;
+    let v3ActiveTab = 'notes-match';
+    let v3LastResult = null;
+    let v3LastUserNotes = '';
+    let v3VideoModal = null;
+
+    // V3 Recording State
+    const PREP_SECONDS = 10;
+    const RECORD_SECONDS = 40;
+    let activeRecorder = null;
+    let activeMediaStream = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordingBlob = null;
+    let recordingBlobUrl = null;
+    let dspPromise = null;
+    let speechRecognition = null;
+    let transcriptText = '';
+    let v3PrepStartTime = 0;
+    let v3RecordStartTime = 0;
+    let v3RecordedDurationSec = 0;
+    let v3PrepRAF = null;
+    let v3RecordRAF = null;
+
+    function isV3() {
+        return !!(v3Active || window.PteShellConfig?.isModeEnabled?.('notes', 'pte'));
+    }
+
+    function escapeHtml(str) {
+        const d = document.createElement('div');
+        d.textContent = str || '';
+        return d.innerHTML;
+    }
 
     const REASON_LABELS = {
         level_and_continuity: 'Smart Match',
@@ -96,18 +147,60 @@
         }
 
         setupEventListeners();
-        loadEntries();
         isInitialized = true;
+        renderEntryStatus('idle');
     }
 
     function getAudioPlayer() {
         if (!elements.audioPlayer && window.PracticeAudioPlayer) {
             elements.audioPlayer = window.PracticeAudioPlayer.attach({
                 prefix: 'notes',
-                audioId: 'notes-audio'
+                audioId: 'notes-audio',
+                onPlaybackError: () => setAudioStatus('playback-error', 'Audio playback failed. Retry audio or choose another question.')
             });
         }
         return elements.audioPlayer;
+    }
+
+    function renderEntryStatus(status, message = '') {
+        const statusEl = elements.entryStatus;
+        if (!statusEl) return;
+        statusEl.dataset.notesStatus = status;
+        statusEl.className = `notes-entry-status is-${status}`;
+        statusEl.textContent = message;
+        statusEl.hidden = !message;
+        if (elements.retryEntriesBtn) elements.retryEntriesBtn.hidden = status !== 'error';
+    }
+
+    function setAudioStatus(status, message = '') {
+        if (!elements.audioStatus) return;
+        elements.audioStatus.dataset.notesStatus = status;
+        elements.audioStatus.className = `notes-audio-status is-${status}`;
+        elements.audioStatus.textContent = message;
+        elements.audioStatus.hidden = !message;
+        if (elements.retryAudioBtn) {
+            elements.retryAudioBtn.hidden = !['unavailable', 'playback-error'].includes(status);
+        }
+    }
+
+    function beginEntryGeneration() {
+        entryGeneration += 1;
+        if (entryAbortController) entryAbortController.abort();
+        entryAbortController = new AbortController();
+        notesEntryLoadStartedAt = Date.now();
+        return {
+            generation: entryGeneration,
+            signal: entryAbortController.signal,
+            deadline: notesEntryLoadStartedAt + NOTES_ENTRY_DEADLINE_MS
+        };
+    }
+
+    function isEntryGenerationActive(generation) {
+        return generation === entryGeneration && !entryAbortController?.signal.aborted;
+    }
+
+    function remainingBudget(deadline, cap = Number.POSITIVE_INFINITY) {
+        return Math.max(0, Math.min(cap, deadline - Date.now()));
     }
 
     /**
@@ -123,9 +216,9 @@
         if (elements.stepAudio) elements.stepAudio.style.display = 'none';
         if (elements.stepResults) elements.stepResults.style.display = 'none';
 
-        // Show Ready / Overview Step
+        // Show Ready / Overview Step (legacy only)
         if (elements.stepReady) {
-            elements.stepReady.style.display = 'block';
+            elements.stepReady.style.display = isV3() ? 'none' : 'block';
             if (elements.readyTitle) {
                 elements.readyTitle.textContent = currentEntry
                     ? `#${currentEntry.id} ${currentEntry.title ? currentEntry.title.replace(/^#\d+\s*/, '') : 'Lecture'}`
@@ -155,13 +248,21 @@
         if (elements.youtubePlayer) {
             elements.youtubePlayer.innerHTML = '';
         }
+        closeIntroVideoModal();
 
         // Stop any playing audio
         audioLoadToken += 1;
+        if (audioAbortController) {
+            audioAbortController.abort();
+            audioAbortController = null;
+        }
         if (elements.audio) {
             elements.audio.pause();
             elements.audio.removeAttribute('src');
             elements.audio.load();
+        }
+        if (pteAudioBox) {
+            pteAudioBox.reset();
         }
         const player = getAudioPlayer();
         if (player) {
@@ -169,14 +270,30 @@
             player.setEnabled(true);
         }
         if (elements.audioStatus) {
-            elements.audioStatus.hidden = true;
-            elements.audioStatus.textContent = '';
-            elements.audioStatus.className = 'notes-audio-status';
+            setAudioStatus('idle');
         }
         // Clear user input
         if (elements.userInput) {
             elements.userInput.value = '';
         }
+
+        if (activeRecorder) {
+            try { activeRecorder.cancel(); } catch (_) {}
+            activeRecorder = null;
+        }
+        stopAllV3Timers();
+        stopSpeechRecognition();
+        stopMediaStream();
+        recordingSessionToken++;
+        if (recordingBlobUrl) {
+            URL.revokeObjectURL(recordingBlobUrl);
+            recordingBlobUrl = null;
+        }
+        recordingBlob = null;
+        dspPromise = null;
+        transcriptText = '';
+        recordedChunks = [];
+        pteRecorderWidget?.reset?.();
 
         try {
             window.SpeakingPracticeController?.sync?.('notes');
@@ -193,6 +310,8 @@
         elements.nextBtn = document.getElementById('next-btn-notes');
         elements.questionSelect = document.getElementById('question-select-notes');
         elements.playBtn = document.getElementById('play-notes-btn');
+        elements.entryStatus = document.getElementById('notes-entry-status');
+        elements.retryEntriesBtn = document.getElementById('notes-retry-entries-btn');
         elements.recommendedBtn = document.getElementById('recommended-btn-notes');
         elements.recommendationSummary = document.getElementById('recommendation-summary-notes');
 
@@ -221,6 +340,7 @@
         elements.stepAudio = document.getElementById('notes-step-audio');
         elements.audio = document.getElementById('notes-audio');
         elements.audioStatus = document.getElementById('notes-audio-status');
+        elements.retryAudioBtn = document.getElementById('notes-retry-audio-btn');
         getAudioPlayer();
         elements.userInput = document.getElementById('notes-user-input');
         elements.submitBtn = document.getElementById('notes-submit-btn');
@@ -233,6 +353,12 @@
         elements.matchCount = document.getElementById('notes-match-count');
         elements.retryBtn = document.getElementById('notes-retry-btn');
         elements.inCardRetryBtn = document.getElementById('notes-in-card-retry-btn');
+        [elements.playBtn, elements.inCardSubmitBtn, elements.inCardRetryBtn].forEach((alias) => {
+            if (!alias) return;
+            alias.tabIndex = -1;
+            alias.hidden = true;
+            alias.setAttribute('aria-hidden', 'true');
+        });
     }
 
     /**
@@ -251,6 +377,9 @@
         }
         if (elements.recommendedBtn) {
             elements.recommendedBtn.addEventListener('click', applyRecommendedEntry);
+        }
+        if (elements.retryEntriesBtn) {
+            elements.retryEntriesBtn.addEventListener('click', retryEntryLoading);
         }
 
         // Play and start buttons
@@ -297,14 +426,19 @@
         if (elements.submitBtn) {
             elements.submitBtn.addEventListener('click', submitNotes);
         }
-        if (elements.inCardSubmitBtn) {
-            elements.inCardSubmitBtn.addEventListener('click', submitNotes);
-        }
         if (elements.retryBtn) {
-            elements.retryBtn.addEventListener('click', retryPractice);
+            elements.retryBtn.addEventListener('click', () => {
+                if (isV3() && v3Phase === 'complete') {
+                    retryV3Recording();
+                } else {
+                    retryPractice();
+                }
+            });
         }
-        if (elements.inCardRetryBtn) {
-            elements.inCardRetryBtn.addEventListener('click', retryPractice);
+        if (elements.retryAudioBtn) {
+            elements.retryAudioBtn.addEventListener('click', () => {
+                if (currentEntry) loadAudio(currentEntry.id);
+            });
         }
     }
 
@@ -463,143 +597,201 @@
         selectEntry(targetIndex);
     }
 
-    async function withTimeout(promise, timeoutMs, errorMessage) {
+    async function retryEntryLoading() {
+        const load = beginEntryGeneration();
+        hasLoadedEntries = false;
+        await loadEntries({ ...load, force: true });
+    }
+
+    async function withTimeout(promise, timeoutMs, errorMessage, signal) {
         let timeoutId = null;
+        let abortHandler = null;
         const timeoutPromise = new Promise((_, reject) => {
-            timeoutId = setTimeout(() => {
-                reject(new Error(errorMessage));
-            }, timeoutMs);
+            timeoutId = setTimeout(() => reject(new Error(errorMessage)), Math.max(0, timeoutMs));
+            if (signal) {
+                abortHandler = () => reject(new DOMException('Aborted', 'AbortError'));
+                if (signal.aborted) abortHandler();
+                else signal.addEventListener('abort', abortHandler, { once: true });
+            }
         });
 
         try {
             return await Promise.race([promise, timeoutPromise]);
         } finally {
-            if (timeoutId !== null) {
-                clearTimeout(timeoutId);
-            }
+            if (timeoutId !== null) clearTimeout(timeoutId);
+            if (signal && abortHandler) signal.removeEventListener('abort', abortHandler);
         }
     }
 
+    function sortEntries(items) {
+        return items.filter((entry) => entry.id.length > 0).sort((a, b) => {
+            const idA = parseInt(a.id, 10);
+            const idB = parseInt(b.id, 10);
+            return (isNaN(idA) || isNaN(idB)) ? a.id.localeCompare(b.id) : idA - idB;
+        });
+    }
+
+    function normalizeFirestoreEntries(snapshot) {
+        if (!snapshot || snapshot.empty) return [];
+        return sortEntries(snapshot.docs.map((doc) => {
+            const data = doc.data() || {};
+            let parsedLevel = parseInt(data.level, 10);
+            if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 3) parsedLevel = 1;
+            return {
+                id: String(data.id ?? doc.id ?? '').trim(),
+                title: data.title ? String(data.title).trim() : '',
+                transcript: data.transcript ? String(data.transcript).trim() : '',
+                level: parsedLevel,
+                videoUrl: (data.videoUrl || data.youtubeUrl || data.url)
+                    ? String(data.videoUrl || data.youtubeUrl || data.url).trim() : ''
+            };
+        }));
+    }
+
+    function parseWorkbookEntries(arrayBuffer) {
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        const parsed = [];
+        for (let i = 1; i < data.length; i++) {
+            const row = data[i];
+            if (!row || row[0] === undefined || row[0] === null || String(row[0]).trim() === '') continue;
+            let parsedLevel = parseInt(row[3], 10);
+            if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 3) parsedLevel = 1;
+            parsed.push({
+                id: String(row[0]).trim(),
+                title: row[1] ? String(row[1]).trim() : '',
+                transcript: row[2] ? String(row[2]).trim() : '',
+                level: parsedLevel,
+                videoUrl: row[4] ? String(row[4]).trim() : ''
+            });
+        }
+        return sortEntries(parsed);
+    }
+
+    async function loadFirestoreEntries(deadline, signal) {
+        if (typeof firebase === 'undefined' || !firebase.firestore) return [];
+        const db = firebase.firestore();
+        const snapshot = await withTimeout(
+            db.collection('takeNotesEntries').get(),
+            remainingBudget(deadline, NOTES_FIRESTORE_TIMEOUT_MS),
+            'Firestore request timed out',
+            signal
+        );
+        return normalizeFirestoreEntries(snapshot);
+    }
+
+    async function loadWorkbookEntries(deadline, signal) {
+        const excelPath = '/database/Take%20Notes/RL/RL.xlsx';
+        const response = await withTimeout(
+            fetch(excelPath, { cache: 'no-cache', signal }),
+            remainingBudget(deadline, NOTES_WORKBOOK_TIMEOUT_MS),
+            'Workbook request timed out',
+            signal
+        );
+        if (!response.ok) throw new Error(`Excel file not found (${response.status})`);
+        const arrayBuffer = await withTimeout(
+            response.arrayBuffer(),
+            remainingBudget(deadline, NOTES_WORKBOOK_TIMEOUT_MS),
+            'Workbook request timed out',
+            signal
+        );
+        return parseWorkbookEntries(arrayBuffer);
+    }
+
+    function commitEntries(nextEntries, generation) {
+        if (!isEntryGenerationActive(generation)) return false;
+        entries = sortEntries(nextEntries);
+        hasLoadedEntries = entries.length > 0;
+        if (hasLoadedEntries) {
+            buildRecommendationIndex();
+            applyFilter('all');
+            renderEntryStatus('ready');
+        }
+        return hasLoadedEntries;
+    }
+
     /**
-     * Load entries from Firestore or Excel
+     * Load Firestore and workbook candidates concurrently within one entry
+     * deadline. Firestore wins when it returns usable rows; the local workbook
+     * is offered after a short delay and becomes the bounded fallback.
      */
-    async function loadEntries() {
-        if (!elements.questionSelect) return;
-        if (loadEntriesPromise) {
-            await loadEntriesPromise;
-            if (hasLoadedEntries && entries.length > 0) {
-                applyFilter(currentFilter);
-            }
-            return;
+    async function loadEntries(options = {}) {
+        if (!elements.questionSelect) return false;
+        const generation = options.generation ?? entryGeneration;
+        const signal = options.signal || entryAbortController?.signal;
+        const deadline = options.deadline || (Date.now() + NOTES_ENTRY_DEADLINE_MS);
+
+        if (loadEntriesPromise && loadEntriesPromise.generation === generation) {
+            return loadEntriesPromise.promise;
+        }
+        if (hasLoadedEntries && entries.length > 0 && !options.force) {
+            applyFilter(currentFilter);
+            return true;
         }
 
-        if (hasLoadedEntries && entries.length > 0) {
-            applyFilter(currentFilter);
-            return;
-        }
+        elements.questionSelect.innerHTML = '<option value="">Loading questions...</option>';
+        renderEntryStatus('loading', 'Loading Retell Lecture questions…');
 
         const pendingLoad = (async () => {
-            elements.questionSelect.innerHTML = '<option value="">Loading...</option>';
-
-            try {
-                // Try to load from Firestore first
-                if (typeof firebase !== 'undefined' && firebase.firestore) {
-                    try {
-                        const db = firebase.firestore();
-                        const snapshot = await withTimeout(
-                            db.collection('takeNotesEntries').get(),
-                            FIRESTORE_LOAD_TIMEOUT_MS,
-                            'Firestore request timed out'
-                        );
-
-                        if (!snapshot.empty) {
-                            entries = snapshot.docs.map((doc) => {
-                                const data = doc.data() || {};
-                                let parsedLevel = parseInt(data.level, 10);
-                                if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 3) parsedLevel = 1;
-
-                                return {
-                                    id: String(data.id ?? doc.id ?? '').trim(),
-                                    title: data.title ? String(data.title).trim() : '',
-                                    transcript: data.transcript ? String(data.transcript).trim() : '',
-                                    level: parsedLevel,
-                                    videoUrl: (data.videoUrl || data.youtubeUrl || data.url) ? String(data.videoUrl || data.youtubeUrl || data.url).trim() : ''
-                                };
-                            }).filter((entry) => entry.id.length > 0);
-
-                            // Sort entries numerically by ID
-                            entries.sort((a, b) => {
-                                const idA = parseInt(a.id, 10);
-                                const idB = parseInt(b.id, 10);
-                                return (isNaN(idA) || isNaN(idB)) ? a.id.localeCompare(b.id) : idA - idB;
-                            });
-
-                            buildRecommendationIndex();
-                            applyFilter('all');
-                            hasLoadedEntries = true;
-                            return;
-                        }
-                    } catch (firestoreError) {
-                        console.warn('[TakeNotes] Firestore error, falling back to Excel:', firestoreError.message);
+            let localResult = null;
+            let localOfferTimer = null;
+            const localPromise = loadWorkbookEntries(deadline, signal)
+                .then((items) => {
+                    localResult = { items };
+                    if (items.length > 0 && !hasLoadedEntries && isEntryGenerationActive(generation) &&
+                        Date.now() - notesEntryLoadStartedAt >= NOTES_FALLBACK_OFFER_DELAY_MS) {
+                        renderEntryStatus('local-ready', 'Local questions are ready while the cloud source is still loading.');
                     }
-                }
-
-                // Fallback: Load from Excel (absolute path for deep SPA routes)
-                const excelPath = '/database/Take%20Notes/RL/RL.xlsx';
-
-                const response = await fetch(excelPath);
-                if (!response.ok) {
-                    throw new Error(`Excel file not found (${response.status})`);
-                }
-
-                const arrayBuffer = await response.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-                entries = [];
-                for (let i = 1; i < data.length; i++) {
-                    const row = data[i];
-                    if (row && row[0] !== undefined && row[0] !== null && String(row[0]).trim() !== '') {
-                        let parsedLevel = parseInt(row[3], 10);
-                        if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 3) parsedLevel = 1;
-
-                        entries.push({
-                            id: String(row[0]).trim(),
-                            title: row[1] ? String(row[1]).trim() : '',
-                            transcript: row[2] ? String(row[2]).trim() : '',
-                            level: parsedLevel,
-                            videoUrl: row[4] ? String(row[4]).trim() : ''
-                        });
-                    }
-                }
-
-                // Sort entries numerically by ID
-                entries.sort((a, b) => {
-                    const idA = parseInt(a.id, 10);
-                    const idB = parseInt(b.id, 10);
-                    return (isNaN(idA) || isNaN(idB)) ? a.id.localeCompare(b.id) : idA - idB;
+                    return items;
+                })
+                .catch((error) => {
+                    localResult = { items: [], error };
+                    return [];
                 });
+            localOfferTimer = setTimeout(() => {
+                if (localResult?.items?.length && !hasLoadedEntries && isEntryGenerationActive(generation)) {
+                    renderEntryStatus('local-ready', 'Local questions are ready while the cloud source is still loading.');
+                }
+            }, NOTES_FALLBACK_OFFER_DELAY_MS);
 
-                buildRecommendationIndex();
-                applyFilter('all');
-                hasLoadedEntries = true;
-
+            let remoteEntries = [];
+            try {
+                remoteEntries = await loadFirestoreEntries(deadline, signal);
             } catch (error) {
-                hasLoadedEntries = false;
-                console.error('[TakeNotes] Error loading entries:', error);
-                elements.questionSelect.innerHTML = '<option value="">Error loading</option>';
-                refreshRecommendationUI();
+                console.warn('[TakeNotes] Firestore unavailable; using bounded local fallback:', error.message);
             }
+
+            if (remoteEntries.length > 0) {
+                if (localOfferTimer) clearTimeout(localOfferTimer);
+                void localPromise;
+                return commitEntries(remoteEntries, generation);
+            }
+
+            const localEntries = localResult ? localResult.items : await withTimeout(
+                localPromise,
+                remainingBudget(deadline),
+                'Retell Lecture entry loading timed out',
+                signal
+            );
+            if (localOfferTimer) clearTimeout(localOfferTimer);
+            if (localEntries.length > 0 && commitEntries(localEntries, generation)) return true;
+            throw localResult?.error || new Error('No Retell Lecture questions are available');
         })();
 
-        loadEntriesPromise = pendingLoad;
+        loadEntriesPromise = { generation, promise: pendingLoad };
         try {
-            await pendingLoad;
+            return await pendingLoad;
+        } catch (error) {
+            if (!isEntryGenerationActive(generation)) return false;
+            hasLoadedEntries = false;
+            console.error('[TakeNotes] Error loading entries:', error);
+            elements.questionSelect.innerHTML = '<option value="">Questions unavailable</option>';
+            renderEntryStatus('error', 'Questions are unavailable. Retry loading or check your connection.');
+            refreshRecommendationUI();
+            return false;
         } finally {
-            if (loadEntriesPromise === pendingLoad) {
-                loadEntriesPromise = null;
-            }
+            if (loadEntriesPromise?.promise === pendingLoad) loadEntriesPromise = null;
         }
     }
 
@@ -754,6 +946,14 @@
         reset();
         refreshRecommendationUI();
 
+        if (isV3()) {
+            queueMicrotask(() => {
+                if (isV3() && currentEntry) {
+                    startV3QuestionFlow();
+                }
+            });
+        }
+
         // Update URL with current question ID (replaceState — no history entry per question)
         if (window.PracticeRouter && currentEntry.id) {
             window.PracticeRouter.replaceRoute('notes', currentEntry.id);
@@ -866,6 +1066,10 @@
         const requestToken = ++audioLoadToken;
         const tryExtensions = ['mp3', 'm4a', 'wav', 'aac', 'ogg'];
         const basePath = `/database/Take%20Notes/RL/audio/${encodeURIComponent(audioId)}`;
+        const deadline = Date.now() + NOTES_AUDIO_DEADLINE_MS;
+        if (audioAbortController) audioAbortController.abort();
+        audioAbortController = new AbortController();
+        const signal = audioAbortController.signal;
 
         if (elements.audio) {
             elements.audio.pause();
@@ -877,13 +1081,11 @@
             player.reset();
             player.setEnabled(false);
         }
-        if (elements.audioStatus) {
-            elements.audioStatus.hidden = false;
-            elements.audioStatus.className = 'notes-audio-status is-loading';
-            elements.audioStatus.textContent = `Loading audio for question ${audioId}...`;
-        }
+        isPlayerReady = false;
+        setAudioStatus('loading', `Loading audio for question ${audioId}…`);
 
         for (const ext of tryExtensions) {
+            if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId) || signal.aborted) return;
             const audioPath = `${basePath}.${ext}`;
             let targetUrl = audioPath;
             let exists = false;
@@ -897,44 +1099,75 @@
                 } catch (_) {}
             }
             if (!exists) {
-                exists = await checkFileExists(audioPath);
+                exists = await checkFileExists(audioPath, remainingBudget(deadline, NOTES_AUDIO_HEAD_TIMEOUT_MS), signal);
             }
             if (exists) {
-                if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId)) return;
-                elements.audio.src = targetUrl;
-                elements.audio.load();
-                const activePlayer = getAudioPlayer();
-                if (activePlayer) {
-                    activePlayer.setEnabled(true);
+                if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId) || signal.aborted) return;
+                try {
+                    elements.audio.src = targetUrl;
+                    elements.audio.load();
+                    const ready = await waitForAudioReady(
+                        elements.audio,
+                        remainingBudget(deadline),
+                        signal
+                    );
+                    if (!ready) continue;
+                    if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId) || signal.aborted) return;
+                    const activePlayer = getAudioPlayer();
+                    if (activePlayer) activePlayer.setEnabled(true);
+                    isPlayerReady = true;
+                    setAudioStatus('ready');
+                    return;
+                } catch (error) {
+                    if (signal.aborted || requestToken !== audioLoadToken) return;
                 }
-                if (elements.audioStatus) {
-                    elements.audioStatus.hidden = true;
-                    elements.audioStatus.textContent = '';
-                    elements.audioStatus.className = 'notes-audio-status';
-                }
-                return;
             }
         }
 
-        if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId)) return;
+        if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId) || signal.aborted) return;
         console.warn(`[TakeNotes] No audio file found for ${audioId}`);
         const inactivePlayer = getAudioPlayer();
         if (inactivePlayer) {
             inactivePlayer.setEnabled(false);
         }
-        if (elements.audioStatus) {
-            elements.audioStatus.hidden = false;
-            elements.audioStatus.className = 'notes-audio-status is-unavailable';
-            elements.audioStatus.textContent = `Audio is not available for question ${audioId}. Please choose another question.`;
-        }
+        setAudioStatus('unavailable', `Audio is not available for question ${audioId}. Retry audio or choose another question.`);
+        if (audioAbortController?.signal === signal) audioAbortController = null;
+    }
+
+    async function waitForAudioReady(audio, timeoutMs, signal) {
+        if (!audio || timeoutMs <= 0) return false;
+        if (audio.readyState >= 3) return true;
+        return new Promise((resolve) => {
+            let timer = null;
+            const cleanup = () => {
+                if (timer) clearTimeout(timer);
+                audio.removeEventListener('canplay', onReady);
+                audio.removeEventListener('error', onError);
+                audio.removeEventListener('abort', onError);
+                if (signal) signal.removeEventListener('abort', onAbort);
+            };
+            const onReady = () => { cleanup(); resolve(true); };
+            const onError = () => { cleanup(); resolve(false); };
+            const onAbort = () => { cleanup(); resolve(false); };
+            audio.addEventListener('canplay', onReady, { once: true });
+            audio.addEventListener('error', onError, { once: true });
+            audio.addEventListener('abort', onError, { once: true });
+            if (signal) signal.addEventListener('abort', onAbort, { once: true });
+            timer = setTimeout(onError, timeoutMs);
+        });
     }
 
     /**
      * Check if file exists and has valid audio content-type
      */
-    async function checkFileExists(url) {
+    async function checkFileExists(url, timeoutMs = NOTES_AUDIO_HEAD_TIMEOUT_MS, signal) {
         try {
-            const response = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
+            const response = await withTimeout(
+                fetch(url, { method: 'HEAD', cache: 'no-cache', signal }),
+                timeoutMs,
+                'Audio probe timed out',
+                signal
+            );
             if (!response.ok || response.status !== 200) return false;
             const contentType = response.headers.get('content-type') || '';
             return contentType.startsWith('audio/');
@@ -946,37 +1179,78 @@
     /**
      * Submit notes and show results
      */
-    function submitNotes() {
+    async function submitNotes() {
         if (!currentEntry) return;
+        const qGen = questionGen;
+        const aGen = attemptGen;
+        const currentToken = recordingSessionToken;
+
         const userNotes = elements.userInput ? elements.userInput.value.trim() : '';
-        if (!userNotes) {
+        if (!isV3() && !userNotes) {
             showToast('Please enter some notes before submitting.');
             return;
         }
 
-        // Hide audio step, show results step
-        if (elements.stepReady) elements.stepReady.style.display = 'none';
-        if (elements.stepVideo) elements.stepVideo.style.display = 'none';
-        if (elements.stepAudio) elements.stepAudio.style.display = 'none';
-        if (elements.stepResults) elements.stepResults.style.display = 'block';
+        let finalBlob = recordingBlob;
+        if (dspPromise) {
+            try {
+                finalBlob = await dspPromise;
+            } catch (_) {
+                finalBlob = recordingBlob;
+            }
+        }
+        if (isV3() && (qGen !== questionGen || aGen !== attemptGen || currentToken !== recordingSessionToken || !v3Active)) {
+            return;
+        }
+
+        // Compare notes and spoken transcript with lecture transcript
+        const transcript = currentEntry.transcript || '';
+        const notesResult = compareTexts(transcript, userNotes);
+        const spokenResult = compareTexts(transcript, transcriptText || '');
+
+        const hasSpokenMatches = spokenResult.matchedWords && spokenResult.matchedWords.length > 0;
+        const hasNotesMatches = notesResult.matchedWords && notesResult.matchedWords.length > 0;
+        const effectiveMatchedWords = hasSpokenMatches ? spokenResult.matchedWords : (notesResult.matchedWords || []);
+        const effectiveHighlight = hasSpokenMatches
+            ? spokenResult.highlightedTranscript
+            : (hasNotesMatches ? notesResult.highlightedTranscript : spokenResult.highlightedTranscript);
+        const primaryScore = effectiveMatchedWords.length;
+        const primaryMaxScore = hasSpokenMatches ? spokenResult.transcriptWordCount : notesResult.transcriptWordCount;
+
+        if (isV3()) {
+            v3LastResult = {
+                highlightedTranscript: effectiveHighlight,
+                matchedWords: spokenResult.matchedWords,
+                transcriptWordCount: spokenResult.transcriptWordCount,
+                notesMatchedWords: notesResult.matchedWords,
+                notesWordCount: notesResult.transcriptWordCount,
+                spokenTranscript: transcriptText || '',
+                effectiveMatchedWords: effectiveMatchedWords
+            };
+            v3LastUserNotes = userNotes;
+            v3Phase = 'feedback';
+            syncPteV3UI();
+        } else {
+            if (elements.stepReady) elements.stepReady.style.display = 'none';
+            if (elements.stepVideo) elements.stepVideo.style.display = 'none';
+            if (elements.stepAudio) elements.stepAudio.style.display = 'none';
+            if (elements.stepResults) elements.stepResults.style.display = 'block';
+        }
+
         window.SpeakingPracticeController?.sync?.('notes');
 
-        // Compare notes with transcript
-        const transcript = currentEntry.transcript || '';
-        const { highlightedTranscript, matchedWords, transcriptWordCount } = compareTexts(transcript, userNotes);
-
         // Display results
-        elements.transcriptDisplay.innerHTML = highlightedTranscript;
-        elements.userDisplay.textContent = userNotes;
-        elements.matchCount.textContent = matchedWords.length;
+        if (elements.transcriptDisplay) elements.transcriptDisplay.innerHTML = notesResult.highlightedTranscript;
+        if (elements.userDisplay) elements.userDisplay.textContent = userNotes;
+        if (elements.matchCount) elements.matchCount.textContent = notesResult.matchedWords.length;
 
         const tracker = ensurePerformanceTracker();
         if (tracker) {
-            const safeWordCount = Math.max(1, transcriptWordCount || 0);
-            const accuracy = Math.max(0, Math.min(1, matchedWords.length / safeWordCount));
+            const safeWordCount = Math.max(1, notesResult.transcriptWordCount || 0);
+            const accuracy = Math.max(0, Math.min(1, notesResult.matchedWords.length / safeWordCount));
             const timeTaken = Math.max(2, (Date.now() - (notesAttemptStartTime || Date.now())) / 1000);
             tracker.recordAttempt({
-                correct: matchedWords.length > 0 && matchedWords.length === transcriptWordCount,
+                correct: notesResult.matchedWords.length > 0 && notesResult.matchedWords.length === notesResult.transcriptWordCount,
                 accuracy,
                 attempts: 1,
                 hintUsed: false,
@@ -986,18 +1260,56 @@
         }
 
         // Save progress if user is logged in
-        saveProgress(userNotes, matchedWords, transcriptWordCount);
+        saveProgress(userNotes, notesResult.matchedWords, notesResult.transcriptWordCount);
 
-        window.PTEAttemptArchive?.saveTextAttempt?.('notes', {
-            ...(currentEntry || {}),
-            audioPath: currentEntry?.audioPath || currentEntry?.audio || currentEntry?.file || null,
-            transcript
-        }, userNotes, {
-            score: matchedWords.length,
-            maxScore: transcriptWordCount,
-            matchedWords,
-            transcriptWordCount
-        }, { scoringSource: 'client' }).catch((error) => console.warn('[PTE Archive] Retell Lecture save failed:', error));
+        if (isV3()) {
+            try {
+                await window.PTEAttemptArchive?.saveStateAttempt?.('notes', {
+                    currentQuestion: currentEntry,
+                    userNotes: userNotes,
+                    speechTranscript: transcriptText || '',
+                    userAnswer: userNotes || transcriptText || '',
+                    text: userNotes || transcriptText || ''
+                }, {
+                    score: primaryScore,
+                    maxScore: primaryMaxScore,
+                    matchedWords: effectiveMatchedWords,
+                    spokenMatchedWords: spokenResult.matchedWords,
+                    transcriptWordCount: primaryMaxScore,
+                    notesMatchedWords: notesResult.matchedWords,
+                    speechTranscript: transcriptText || '',
+                    hasAudio: !!finalBlob
+                }, {
+                    scoringSource: 'client',
+                    responseSnapshot: {
+                        text: userNotes || transcriptText || '',
+                        userNotes: userNotes || '',
+                        transcript: transcriptText || '',
+                        speechTranscript: transcriptText || ''
+                    },
+                    shouldPublish: () => qGen === questionGen && aGen === attemptGen && currentToken === recordingSessionToken && v3Active,
+                    media: finalBlob ? [{
+                        slot: 'student',
+                        label: 'Student retell',
+                        blob: finalBlob,
+                        contentType: finalBlob.type || 'audio/webm'
+                    }] : []
+                });
+            } catch (error) {
+                console.warn('[PTE Archive] Retell Lecture save failed:', error);
+            }
+        } else {
+            window.PTEAttemptArchive?.saveTextAttempt?.('notes', {
+                ...(currentEntry || {}),
+                audioPath: currentEntry?.audioPath || currentEntry?.audio || currentEntry?.file || null,
+                transcript
+            }, userNotes, {
+                score: notesResult.matchedWords.length,
+                maxScore: notesResult.transcriptWordCount,
+                matchedWords: notesResult.matchedWords,
+                transcriptWordCount: notesResult.transcriptWordCount
+            }, { scoringSource: 'client' }).catch((error) => console.warn('[PTE Archive] Retell Lecture save failed:', error));
+        }
 
         window.getPracticeVariantHooks?.('notes')?.afterSubmit?.({
             entryId: String(currentEntry?.id || ''),
@@ -1009,6 +1321,12 @@
      * Retry practice - go back to audio step
      */
     function retryPractice() {
+        if (isV3()) {
+            if (elements.userInput) elements.userInput.value = '';
+            notesAttemptStartTime = null;
+            startV3QuestionFlow();
+            return;
+        }
         if (elements.stepResults) elements.stepResults.style.display = 'none';
         if (elements.userInput) elements.userInput.value = '';
         notesAttemptStartTime = null;
@@ -1125,18 +1443,867 @@
         }
     }
 
-    async function onEnter() {
-        init();
-        await loadEntries();
-        if (window.PracticeRouter && currentEntry?.id) {
-            window.PracticeRouter.replaceRoute('notes', currentEntry.id);
+    /* ──────────────────────────── V3 IMPLEMENTATION ──────────────────────────── */
+
+    function stopAllV3Timers() {
+        if (v3PrepRAF) {
+            cancelAnimationFrame(v3PrepRAF);
+            v3PrepRAF = null;
         }
+        if (v3RecordRAF) {
+            cancelAnimationFrame(v3RecordRAF);
+            v3RecordRAF = null;
+        }
+    }
+
+    function stopMediaStream() {
+        if (activeMediaStream) {
+            try {
+                activeMediaStream.getTracks().forEach(t => t.stop());
+            } catch (_) {}
+            activeMediaStream = null;
+        }
+    }
+
+    function startSpeechRecognition(token) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return;
+
+        try {
+            speechRecognition = new SpeechRecognition();
+            speechRecognition.continuous = true;
+            speechRecognition.interimResults = false;
+            speechRecognition.lang = 'en-US';
+            speechRecognition.onresult = (event) => {
+                if (token !== recordingSessionToken) return;
+                let full = '';
+                for (let i = 0; i < event.results.length; i++) {
+                    full += event.results[i][0].transcript + ' ';
+                }
+                transcriptText = full.trim();
+            };
+            speechRecognition.onerror = (event) => {
+                console.warn('[TakeNotes v3] Speech recognition error:', event?.error);
+            };
+            speechRecognition.onend = () => {};
+            speechRecognition.start();
+        } catch (err) {
+            console.warn('[TakeNotes v3] Speech recognition start error:', err);
+        }
+    }
+
+    function stopSpeechRecognition() {
+        if (speechRecognition) {
+            try {
+                speechRecognition.stop();
+            } catch (_) {}
+            speechRecognition = null;
+        }
+    }
+
+    function ensureV3Elements() {
+        if (!elements.practiceArea) cacheElements();
+        if (!elements.practiceArea) return;
+
+        if (elements.practiceArea) elements.practiceArea.style.display = 'block';
+
+        let instruction = document.getElementById('notes-pte-instruction');
+        if (!instruction) {
+            instruction = document.createElement('p');
+            instruction.id = 'notes-pte-instruction';
+            instruction.className = 'notes-pte-instruction';
+            instruction.textContent = 'You will hear a lecture. After listening to the lecture, in 10 seconds, please speak into the microphone and retell what you have just heard from the lecture in your own words. You will have 40 seconds to give your response.';
+            elements.practiceArea.prepend(instruction);
+        }
+
+        let stage = document.getElementById('notes-pte-stage');
+        if (!stage) {
+            stage = document.createElement('div');
+            stage.id = 'notes-pte-stage';
+            stage.className = 'notes-pte-stage';
+
+            // Audio row
+            const audioRow = document.createElement('div');
+            audioRow.className = 'notes-audio-row';
+
+            const lectureIcon = document.createElement('div');
+            lectureIcon.className = 'notes-lecture-icon';
+            lectureIcon.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`;
+            audioRow.appendChild(lectureIcon);
+
+            const audioHost = document.createElement('div');
+            audioHost.id = 'notes-pte-audio-host';
+            audioHost.className = 'notes-pte-audio-host';
+            audioRow.appendChild(audioHost);
+            stage.appendChild(audioRow);
+
+            // Recorder widget host
+            const recHost = document.createElement('div');
+            recHost.id = 'notes-pte-rec-host';
+            recHost.className = 'notes-pte-rec-host';
+            recHost.style.display = 'none';
+            stage.appendChild(recHost);
+
+            // Notes wrapper
+            const notesWrapper = document.createElement('div');
+            notesWrapper.className = 'notes-v3-notes-wrapper';
+
+            const notesHeader = document.createElement('div');
+            notesHeader.className = 'notes-v3-header';
+            notesHeader.innerHTML = `<span class="notes-v3-title">Your notes</span><span id="notes-v3-subtitle" class="notes-v3-subtitle">· type while you listen</span>`;
+            notesWrapper.appendChild(notesHeader);
+
+            if (elements.userInput) {
+                elements.userInput.className = 'notes-v3-textarea';
+                notesWrapper.appendChild(elements.userInput);
+            }
+            stage.appendChild(notesWrapper);
+
+            if (instruction.nextSibling) {
+                elements.practiceArea.insertBefore(stage, instruction.nextSibling);
+            } else {
+                elements.practiceArea.appendChild(stage);
+            }
+        }
+
+        const audioHost = document.getElementById('notes-pte-audio-host');
+        if (audioHost && !pteAudioBox && elements.audio && window.PteAudioBox) {
+            pteAudioBox = window.PteAudioBox.create(audioHost, { audio: elements.audio });
+        }
+
+        const recHost = document.getElementById('notes-pte-rec-host');
+        if (recHost && !pteRecorderWidget && window.PteRecorderWidget) {
+            pteRecorderWidget = window.PteRecorderWidget.create(recHost, { totalSeconds: RECORD_SECONDS });
+        }
+
+        let studentAudio = document.getElementById('notes-v3-student-audio');
+        if (!studentAudio) {
+            studentAudio = document.createElement('audio');
+            studentAudio.id = 'notes-v3-student-audio';
+            studentAudio.preload = 'auto';
+            studentAudio.style.display = 'none';
+            document.body.appendChild(studentAudio);
+        }
+
+        let feedback = document.getElementById('notes-pte-feedback');
+        if (!feedback) {
+            feedback = document.createElement('div');
+            feedback.id = 'notes-pte-feedback';
+            feedback.className = 'notes-pte-feedback pte-fb';
+            feedback.style.display = 'none';
+            feedback.hidden = true;
+
+            const grid = document.createElement('div');
+            grid.className = 'notes-fb-grid';
+
+            // Left column
+            const leftCol = document.createElement('div');
+            leftCol.className = 'notes-fb-left';
+            leftCol.innerHTML = `
+                <div id="notes-v3-audio-preview" class="notes-v3-audio-preview" style="display: none;">
+                    <label class="notes-fb-heading">Your Recording</label>
+                    <audio id="notes-v3-feedback-audio" controls preload="auto"></audio>
+                </div>
+                <div id="notes-v3-spoken-transcript" class="notes-v3-spoken-transcript" style="display: none;">
+                    <h4 class="notes-fb-heading">What you said</h4>
+                    <p id="notes-v3-spoken-text" class="notes-v3-spoken-text"></p>
+                </div>
+                <h4 class="notes-fb-heading">Your Notes</h4>
+                <div id="notes-v3-matched-notes" class="notes-v3-matched-notes"></div>
+            `;
+            grid.appendChild(leftCol);
+
+            // Right column
+            const rightCol = document.createElement('div');
+            rightCol.className = 'notes-fb-right';
+            rightCol.innerHTML = `
+                <div class="notes-v3-fb-tabs">
+                    <button type="button" class="notes-v3-fb-tab active" data-v3-tab="notes-match">Notes match</button>
+                    <button type="button" class="notes-v3-fb-tab" data-v3-tab="transcript">Lecture transcript</button>
+                </div>
+                <div id="notes-v3-match-panel" class="notes-v3-fb-panel">
+                    <div class="notes-results-stats"><span id="notes-v3-match-count">0</span> words matched</div>
+                    <div id="notes-v3-match-details" class="notes-v3-match-details"></div>
+                </div>
+                <div id="notes-v3-transcript-panel" class="notes-v3-fb-panel" style="display: none;">
+                    <div id="notes-v3-transcript-display" class="notes-transcript-display"></div>
+                </div>
+            `;
+            grid.appendChild(rightCol);
+            feedback.appendChild(grid);
+            elements.practiceArea.appendChild(feedback);
+
+            const tabButtons = feedback.querySelectorAll('.notes-v3-fb-tab');
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tab = btn.dataset.v3Tab;
+                    v3ActiveTab = tab;
+                    tabButtons.forEach(b => b.classList.toggle('active', b === btn));
+                    const matchP = document.getElementById('notes-v3-match-panel');
+                    const transP = document.getElementById('notes-v3-transcript-panel');
+                    if (matchP) matchP.style.display = tab === 'notes-match' ? 'flex' : 'none';
+                    if (transP) transP.style.display = tab === 'transcript' ? 'flex' : 'none';
+                });
+            });
+        }
+
+        // Expose and bind dock action buttons
+        ['notes-record-btn', 'notes-cancel-btn', 'notes-stop-btn', 'notes-rec-play-btn', 'notes-submit-btn', 'notes-retry-btn', 'notes-redo-btn'].forEach(id => {
+            const b = document.getElementById(id);
+            if (b) b.style.display = '';
+        });
+
+        const recordBtn = document.getElementById('notes-record-btn');
+        if (recordBtn && !recordBtn.dataset.v3Bound) {
+            recordBtn.dataset.v3Bound = 'true';
+            recordBtn.addEventListener('click', () => {
+                if (v3Phase === 'prep') startV3Recording();
+            });
+        }
+        const cancelBtn = document.getElementById('notes-cancel-btn');
+        if (cancelBtn && !cancelBtn.dataset.v3Bound) {
+            cancelBtn.dataset.v3Bound = 'true';
+            cancelBtn.addEventListener('click', () => {
+                if (v3Phase === 'recording') cancelRecording();
+            });
+        }
+        const stopBtn = document.getElementById('notes-stop-btn');
+        if (stopBtn && !stopBtn.dataset.v3Bound) {
+            stopBtn.dataset.v3Bound = 'true';
+            stopBtn.addEventListener('click', () => {
+                if (v3Phase === 'recording') stopV3Recording();
+            });
+        }
+        const playBtn = document.getElementById('notes-rec-play-btn');
+        if (playBtn && !playBtn.dataset.v3Bound) {
+            playBtn.dataset.v3Bound = 'true';
+            playBtn.addEventListener('click', () => {
+                if (v3Phase === 'complete') toggleRecordingPlayback();
+            });
+        }
+        const redoBtn = document.getElementById('notes-redo-btn');
+        if (redoBtn && !redoBtn.dataset.v3Bound) {
+            redoBtn.dataset.v3Bound = 'true';
+            redoBtn.addEventListener('click', () => {
+                if (v3Phase === 'feedback') retryPractice();
+            });
+        }
+    }
+
+    function syncPteV3UI() {
+        if (!isV3()) return;
+        const stage = document.getElementById('notes-pte-stage');
+        const feedback = document.getElementById('notes-pte-feedback');
+        const recHost = document.getElementById('notes-pte-rec-host');
+        if (elements.practiceArea) elements.practiceArea.style.display = 'block';
+
+        if (v3Phase === 'feedback') {
+            if (stage) { stage.hidden = true; stage.style.display = 'none'; }
+            if (feedback) { feedback.hidden = false; feedback.style.display = 'flex'; }
+            renderV3Feedback();
+        } else {
+            if (stage) { stage.hidden = false; stage.style.display = 'flex'; }
+            if (feedback) { feedback.hidden = true; feedback.style.display = 'none'; }
+            if (recHost) {
+                recHost.style.display = (v3Phase === 'prep' || v3Phase === 'recording' || v3Phase === 'complete') ? '' : 'none';
+            }
+        }
+    }
+
+    async function startV3QuestionFlow() {
+        if (!v3Active || !currentEntry) return;
+        closeIntroVideoModal();
+        stopAllV3Timers();
+        stopSpeechRecognition();
+        if (activeRecorder) {
+            try { activeRecorder.cancel(); } catch (_) {}
+            activeRecorder = null;
+        }
+        stopMediaStream();
+        recordingSessionToken++;
+        if (recordingBlobUrl) {
+            URL.revokeObjectURL(recordingBlobUrl);
+            recordingBlobUrl = null;
+        }
+        recordingBlob = null;
+        dspPromise = null;
+        transcriptText = '';
+        recordedChunks = [];
+        mediaRecorder = null;
+
+        const qGen = ++questionGen;
+        const aGen = ++attemptGen;
+        v3Phase = 'listen';
+        syncPteShell();
+
+        ensureV3Elements();
+        syncPteV3UI();
+
+        if (elements.userInput) {
+            elements.userInput.value = '';
+        }
+        notesAttemptStartTime = null;
+
+        const sub = document.getElementById('notes-v3-subtitle');
+        if (sub) sub.textContent = '· type while you listen';
+
+        loadAudio(currentEntry.id);
+        pteAudioBox?.reset?.();
+        pteRecorderWidget?.reset?.();
+
+        const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
+        const cdSec = scale < 1 ? 1 : 3;
+
+        try {
+            if (pteAudioBox) {
+                await pteAudioBox.countdown(cdSec);
+            }
+        } catch (err) {
+            if (err?.name === 'AbortError' || qGen !== questionGen || aGen !== attemptGen) return;
+        }
+        if (qGen !== questionGen || aGen !== attemptGen || !v3Active) return;
+
+        try {
+            if (pteAudioBox) {
+                await pteAudioBox.play();
+            }
+        } catch (err) {
+            if (err?.name === 'AbortError' || qGen !== questionGen || aGen !== attemptGen) return;
+            console.warn('[TakeNotes v3] Audio play error:', err);
+        }
+        if (qGen !== questionGen || aGen !== attemptGen || !v3Active) return;
+
+        startV3Prep();
+    }
+
+    function startV3Prep() {
+        if (!v3Active || !currentEntry) return;
+        stopAllV3Timers();
+        stopMediaStream();
+
+        const qGen = questionGen;
+        const aGen = ++attemptGen;
+        v3Phase = 'prep';
+        syncPteShell();
+        syncPteV3UI();
+
+        v3RecordedDurationSec = 0;
+        if (recordingBlobUrl) {
+            URL.revokeObjectURL(recordingBlobUrl);
+            recordingBlobUrl = null;
+        }
+        recordingBlob = null;
+        dspPromise = null;
+        transcriptText = '';
+
+        const recHost = document.getElementById('notes-pte-rec-host');
+        if (recHost) recHost.style.display = '';
+
+        const sub = document.getElementById('notes-v3-subtitle');
+        if (sub) sub.textContent = '· prepare your retell';
+
+        const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
+        const effectivePrepScale = scale < 1 ? 1 : scale;
+        const prepDuration = scale < 1 ? 1 : PREP_SECONDS;
+
+        v3PrepStartTime = performance.now();
+        pteRecorderWidget?.showCountdown(prepDuration);
+
+        const tickPrep = () => {
+            if (qGen !== questionGen || aGen !== attemptGen || v3Phase !== 'prep' || !v3Active) return;
+            const elapsed = ((performance.now() - v3PrepStartTime) / 1000) / effectivePrepScale;
+            const remaining = Math.max(0, prepDuration - elapsed);
+            pteRecorderWidget?.tick(remaining);
+            if (elapsed >= prepDuration) {
+                startV3Recording();
+                return;
+            }
+            v3PrepRAF = requestAnimationFrame(tickPrep);
+        };
+        v3PrepRAF = requestAnimationFrame(tickPrep);
+    }
+
+    async function startV3Recording() {
+        stopAllV3Timers();
+
+        const qGen = questionGen;
+        const aGen = ++attemptGen;
+        v3Phase = 'recording';
+        syncPteShell();
+        syncPteV3UI();
+
+        const recHost = document.getElementById('notes-pte-rec-host');
+        if (recHost) recHost.style.display = '';
+
+        const sub = document.getElementById('notes-v3-subtitle');
+        if (sub) sub.textContent = '· look at them while you speak';
+
+        recordingSessionToken++;
+        const myToken = recordingSessionToken;
+        recordedChunks = [];
+        v3RecordedDurationSec = 0;
+        if (recordingBlobUrl) {
+            URL.revokeObjectURL(recordingBlobUrl);
+            recordingBlobUrl = null;
+        }
+        recordingBlob = null;
+        dspPromise = null;
+        transcriptText = '';
+
+        let stream = null;
+        let recorder = null;
+
+        try {
+            if (window.AudioDspPipeline && typeof window.AudioDspPipeline.createRecorder === 'function') {
+                recorder = window.AudioDspPipeline.createRecorder({
+                    onStream: (st) => {
+                        stream = st;
+                        activeMediaStream = st;
+                        pteRecorderWidget?.attachStream(st);
+                    },
+                    onDataAvailable: (chunk) => {
+                        if (chunk && chunk.size > 0) recordedChunks.push(chunk);
+                    }
+                });
+                await recorder.start();
+                activeRecorder = recorder;
+                if (!stream && typeof recorder.getStream === 'function') {
+                    stream = recorder.getStream();
+                    if (stream) {
+                        activeMediaStream = stream;
+                        pteRecorderWidget?.attachStream(stream);
+                    }
+                }
+            } else {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                activeMediaStream = stream;
+                pteRecorderWidget?.attachStream(stream);
+                const mimeType = (typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))
+                    ? 'audio/webm;codecs=opus' : 'audio/webm';
+                const mr = new MediaRecorder(stream, { mimeType });
+                mediaRecorder = mr;
+                mr.ondataavailable = (e) => {
+                    if (e.data.size > 0) recordedChunks.push(e.data);
+                };
+                mr.start(250);
+            }
+        } catch (err) {
+            console.warn('[TakeNotes v3] Microphone access error:', err);
+            if (qGen !== questionGen || aGen !== attemptGen || !v3Active || myToken !== recordingSessionToken) return;
+            showToast('Microphone access was denied or unavailable. You can review your notes and get feedback.');
+            v3Phase = 'complete';
+            syncPteShell();
+            syncPteV3UI();
+            pteRecorderWidget?.showComplete();
+            return;
+        }
+
+        if (qGen !== questionGen || aGen !== attemptGen || v3Phase !== 'recording' || !v3Active || myToken !== recordingSessionToken) {
+            if (recorder) {
+                try { recorder.cancel(); } catch (_) {}
+            }
+            stopMediaStream();
+            return;
+        }
+
+        pteRecorderWidget?.showRecording(RECORD_SECONDS);
+        startSpeechRecognition(myToken);
+
+        v3RecordStartTime = performance.now();
+        const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
+        const effectiveRecScale = scale < 1 ? 0.3 : scale;
+
+        const tickRec = () => {
+            if (qGen !== questionGen || aGen !== attemptGen || v3Phase !== 'recording' || !v3Active || myToken !== recordingSessionToken) return;
+            const elapsed = ((performance.now() - v3RecordStartTime) / 1000) / effectiveRecScale;
+            v3RecordedDurationSec = elapsed;
+            pteRecorderWidget?.setElapsed(elapsed);
+            if (elapsed >= RECORD_SECONDS) {
+                stopV3Recording();
+                return;
+            }
+            v3RecordRAF = requestAnimationFrame(tickRec);
+        };
+        v3RecordRAF = requestAnimationFrame(tickRec);
+    }
+
+    async function stopV3Recording() {
+        if (v3Phase !== 'recording') return;
+        const qGen = questionGen;
+        const aGen = attemptGen;
+        const myToken = recordingSessionToken;
+
+        stopAllV3Timers();
+        stopSpeechRecognition();
+        v3Phase = 'complete';
+        syncPteShell();
+        syncPteV3UI();
+        pteRecorderWidget?.showComplete();
+
+        let stopResult = null;
+        if (activeRecorder) {
+            try {
+                stopResult = await activeRecorder.stop();
+            } catch (err) {
+                console.warn('[TakeNotes v3] recorder.stop() error:', err);
+            }
+            activeRecorder = null;
+        } else if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            try { mediaRecorder.stop(); } catch (_) {}
+        }
+        stopMediaStream();
+
+        if (qGen !== questionGen || aGen !== attemptGen || myToken !== recordingSessionToken || !v3Active) {
+            return;
+        }
+
+        onV3RecordingComplete(stopResult);
+    }
+
+    function onV3RecordingComplete(stopResult) {
+        const currentToken = recordingSessionToken;
+        let blob = stopResult?.wavBlob || stopResult?.rawBlob || null;
+        if (!blob && recordedChunks.length > 0) {
+            blob = new Blob(recordedChunks, { type: 'audio/webm' });
+        }
+
+        recordingBlob = blob;
+        if (blob) {
+            recordingBlobUrl = stopResult?.audioUrl || URL.createObjectURL(blob);
+            const userAudio = document.getElementById('notes-v3-student-audio');
+            if (userAudio) userAudio.src = recordingBlobUrl;
+        }
+
+        if (blob && !stopResult && window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
+            dspPromise = window.AudioDspPipeline.enhance(blob).then((res) => {
+                if (currentToken !== recordingSessionToken) return blob;
+                if (res?.wavBlob) {
+                    if (recordingBlobUrl && !stopResult?.audioUrl) URL.revokeObjectURL(recordingBlobUrl);
+                    recordingBlob = res.wavBlob;
+                    recordingBlobUrl = res.audioUrl || URL.createObjectURL(res.wavBlob);
+                    const userAudio = document.getElementById('notes-v3-student-audio');
+                    if (userAudio) userAudio.src = recordingBlobUrl;
+                    return res.wavBlob;
+                }
+                return blob;
+            }).catch((err) => {
+                console.warn('[TakeNotes v3] DSP enhancement fallback to raw:', err);
+                return blob;
+            });
+        } else {
+            dspPromise = Promise.resolve(blob);
+        }
+    }
+
+    function cancelRecording() {
+        if (v3Phase !== 'recording') return;
+        stopAllV3Timers();
+        stopSpeechRecognition();
+        if (activeRecorder) {
+            try { activeRecorder.cancel(); } catch (_) {}
+            activeRecorder = null;
+        }
+        stopMediaStream();
+        recordingSessionToken++;
+        recordedChunks = [];
+        recordingBlob = null;
+        dspPromise = null;
+        transcriptText = '';
+        startV3Prep();
+    }
+
+    function retryV3Recording() {
+        if (v3Phase !== 'complete') return;
+        stopAllV3Timers();
+        stopMediaStream();
+        recordingSessionToken++;
+        if (recordingBlobUrl) {
+            URL.revokeObjectURL(recordingBlobUrl);
+            recordingBlobUrl = null;
+        }
+        recordingBlob = null;
+        dspPromise = null;
+        transcriptText = '';
+        startV3Prep();
+    }
+
+    function finishRecordingForNext() {
+        if (v3Phase === 'recording') {
+            stopV3Recording();
+        }
+    }
+
+    function toggleRecordingPlayback() {
+        let audioEl = document.getElementById('notes-v3-student-audio');
+        if (!audioEl) return;
+        if (recordingBlobUrl && audioEl.src !== recordingBlobUrl) {
+            audioEl.src = recordingBlobUrl;
+        }
+        if (audioEl.paused) {
+            audioEl.play().catch(e => console.warn('[TakeNotes v3] Playback error:', e));
+        } else {
+            audioEl.pause();
+        }
+    }
+
+    function renderV3Feedback() {
+        const feedback = document.getElementById('notes-pte-feedback');
+        if (!feedback || !v3LastResult) return;
+
+        // Feedback audio preview
+        const audioPreview = document.getElementById('notes-v3-audio-preview');
+        const fbAudio = document.getElementById('notes-v3-feedback-audio');
+        if (audioPreview && fbAudio) {
+            if (recordingBlobUrl) {
+                fbAudio.src = recordingBlobUrl;
+                audioPreview.style.display = 'flex';
+            } else {
+                audioPreview.style.display = 'none';
+            }
+        }
+
+        // Spoken transcript preview
+        const spokenWrap = document.getElementById('notes-v3-spoken-transcript');
+        const spokenText = document.getElementById('notes-v3-spoken-text');
+        if (spokenWrap && spokenText) {
+            if (v3LastResult.spokenTranscript) {
+                spokenText.textContent = v3LastResult.spokenTranscript;
+                spokenWrap.style.display = 'block';
+            } else {
+                spokenWrap.style.display = 'none';
+            }
+        }
+
+        const matchedNotes = document.getElementById('notes-v3-matched-notes');
+        if (matchedNotes) {
+            const userNotes = v3LastUserNotes || '';
+            const matchedSet = new Set((v3LastResult.notesMatchedWords || v3LastResult.matchedWords || []).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')));
+            const tokens = userNotes.split(/(\s+)/);
+            const html = tokens.map(tok => {
+                const cleanTok = tok.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (cleanTok && matchedSet.has(cleanTok)) {
+                    return `<span class="notes-matched">${escapeHtml(tok)}</span>`;
+                }
+                return escapeHtml(tok);
+            }).join('');
+            matchedNotes.innerHTML = html || '<em>No notes entered</em>';
+        }
+
+        const countEl = document.getElementById('notes-v3-match-count');
+        if (countEl) {
+            const displayCount = (v3LastResult.effectiveMatchedWords?.length != null)
+                ? v3LastResult.effectiveMatchedWords.length
+                : (v3LastResult.spokenTranscript ? (v3LastResult.matchedWords?.length || 0) : (v3LastResult.notesMatchedWords?.length || 0));
+            countEl.textContent = displayCount;
+        }
+
+        const matchDetails = document.getElementById('notes-v3-match-details');
+        if (matchDetails) {
+            const spokenMatches = v3LastResult.matchedWords?.length || 0;
+            const notesMatches = v3LastResult.notesMatchedWords?.length || 0;
+            const totalWords = v3LastResult.transcriptWordCount || 1;
+            const spokenPct = Math.min(100, Math.round((spokenMatches / totalWords) * 100));
+            const notesPct = Math.min(100, Math.round((notesMatches / totalWords) * 100));
+            const spokenLine = v3LastResult.spokenTranscript
+                ? `<p><strong>Spoken Content Coverage:</strong> ${spokenPct}% (${spokenMatches} key lecture terms identified)</p>`
+                : `<p><strong>Spoken Content Coverage:</strong> <em>No spoken words detected (audio only or silent)</em></p>`;
+            matchDetails.innerHTML = `
+                ${spokenLine}
+                <p><strong>Written Notes Match:</strong> ${notesPct}% (${notesMatches} terms recorded)</p>
+            `;
+        }
+
+        const transcriptEl = document.getElementById('notes-v3-transcript-display');
+        if (transcriptEl) {
+            transcriptEl.innerHTML = v3LastResult.highlightedTranscript || '';
+        }
+    }
+
+    function openIntroVideoModal() {
+        if (!currentEntry?.videoUrl || currentEntry.videoUrl.trim().length === 0) {
+            showToast('No intro video available for this lecture.');
+            return;
+        }
+        const videoId = extractVideoId(currentEntry.videoUrl);
+        if (!videoId) {
+            showToast('Intro video is not available.');
+            return;
+        }
+
+        closeIntroVideoModal();
+        const opener = document.getElementById('notes-intro-video-btn') || document.activeElement;
+
+        const overlay = document.createElement('div');
+        overlay.id = 'notes-video-modal-overlay';
+        overlay.className = 'pte-dialog-overlay';
+
+        const dialog = document.createElement('div');
+        dialog.id = 'notes-video-dialog';
+        dialog.className = 'pte-dialog notes-video-dialog';
+        dialog.setAttribute('role', 'dialog');
+        dialog.setAttribute('aria-modal', 'true');
+        dialog.setAttribute('aria-labelledby', 'notes-video-modal-title');
+
+        dialog.innerHTML = `
+            <div class="notes-video-dialog-header">
+                <h3 id="notes-video-modal-title">Intro Video · ${escapeHtml(currentEntry.title ? currentEntry.title.replace(/^#\d+\s*/, '') : 'Lecture')}</h3>
+                <button type="button" class="notes-video-dialog-close" aria-label="Close intro video">✕</button>
+            </div>
+            <div class="notes-video-dialog-body">
+                <iframe
+                    width="100%"
+                    height="100%"
+                    src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1"
+                    frameborder="0"
+                    allow="autoplay; encrypted-media"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        `;
+
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        const closeBtn = dialog.querySelector('.notes-video-dialog-close');
+        const closeHandler = () => {
+            closeIntroVideoModal();
+            if (opener && opener.isConnected) opener.focus();
+        };
+        closeBtn.addEventListener('click', closeHandler);
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeHandler();
+        });
+
+        const keyHandler = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                closeHandler();
+            }
+        };
+        overlay.addEventListener('keydown', keyHandler);
+
+        v3VideoModal = {
+            overlay,
+            close: () => {
+                overlay.removeEventListener('keydown', keyHandler);
+                const iframe = overlay.querySelector('iframe');
+                if (iframe) iframe.src = '';
+                overlay.remove();
+                v3VideoModal = null;
+            }
+        };
+
+        closeBtn.focus();
+    }
+
+    function closeIntroVideoModal() {
+        if (v3VideoModal) {
+            v3VideoModal.close();
+            v3VideoModal = null;
+        }
+    }
+
+    function mountPteShell() {
+        v3Active = true;
+        const modePanel = document.getElementById('mode-notes');
+        if (modePanel) modePanel.classList.add('notes-pte-v3');
+        ensureV3Elements();
+        if (currentEntry) {
+            queueMicrotask(() => {
+                if (v3Active && currentEntry) {
+                    startV3QuestionFlow();
+                }
+            });
+        }
+        syncPteV3UI();
+    }
+
+    function unmountPteShell() {
+        v3Active = false;
+        const modePanel = document.getElementById('mode-notes');
+        if (modePanel) modePanel.classList.remove('notes-pte-v3');
+        closeIntroVideoModal();
+        stopAllV3Timers();
+        stopSpeechRecognition();
+        if (activeRecorder) {
+            try { activeRecorder.cancel(); } catch (_) {}
+            activeRecorder = null;
+        }
+        stopMediaStream();
+        pteAudioBox?.reset?.();
+        pteRecorderWidget?.reset?.();
+        v3Phase = 'loading';
+        const inst = document.getElementById('notes-pte-instruction');
+        if (inst) inst.remove();
+        const st = document.getElementById('notes-pte-stage');
+        if (st) st.remove();
+        const fb = document.getElementById('notes-pte-feedback');
+        if (fb) fb.remove();
+        const userAudio = document.getElementById('notes-v3-student-audio');
+        if (userAudio) userAudio.remove();
+        if (recordingBlobUrl) {
+            URL.revokeObjectURL(recordingBlobUrl);
+            recordingBlobUrl = null;
+        }
+        recordingBlob = null;
+        dspPromise = null;
+        transcriptText = '';
+        recordedChunks = [];
+        mediaRecorder = null;
+        pteAudioBox = null;
+        pteRecorderWidget = null;
+    }
+
+    function syncPteShell() {
+        if (!isV3()) return;
         try {
             window.SpeakingPracticeController?.sync?.('notes');
         } catch (_) {}
     }
 
+    function advanceQuestion() {
+        if (!filteredEntries || filteredEntries.length === 0) return;
+        const nextIndex = (currentEntryIndex + 1) % filteredEntries.length;
+        selectEntry(nextIndex);
+    }
+
+    function selectEntryById(id) {
+        const idx = filteredEntries.findIndex(e => String(e.id) === String(id));
+        if (idx >= 0) selectEntry(idx);
+    }
+
+    async function onEnter() {
+        init();
+        if (!isInitialized) return false;
+        if (isV3()) {
+            mountPteShell();
+        }
+        const load = beginEntryGeneration();
+        const loaded = await loadEntries(load);
+        if (!isEntryGenerationActive(load.generation)) return false;
+        if (!loaded && !hasLoadedEntries) return false;
+        if (window.PracticeRouter && currentEntry?.id) {
+            window.PracticeRouter.replaceRoute('notes', currentEntry.id);
+        }
+        if (isV3() && currentEntry) {
+            startV3QuestionFlow();
+        }
+        try {
+            window.SpeakingPracticeController?.sync?.('notes');
+        } catch (_) {}
+        return true;
+    }
+
     function onExit() {
+        entryGeneration += 1;
+        if (entryAbortController) {
+            entryAbortController.abort();
+            entryAbortController = null;
+        }
+        if (isV3()) {
+            unmountPteShell();
+        }
         reset();
     }
 
@@ -1156,11 +2323,36 @@
         loadEntries,
         applyFilters: applyFilter,
         selectEntry,
+        selectEntryById,
         startPractice,
+        retryAudio: () => currentEntry ? loadAudio(currentEntry.id) : Promise.resolve(false),
         submitNotes,
         retryPractice,
         getCurrentEntry: () => currentEntry,
-        getItems: () => filteredEntries
+        getItems: () => filteredEntries,
+        previous: goToPrevious,
+        next: goToNext,
+        // v3 methods
+        mountPteShell,
+        unmountPteShell,
+        syncPteShell,
+        getPtePhase: () => v3Phase,
+        startV3QuestionFlow,
+        advanceQuestion,
+        openIntroVideoModal,
+        closeIntroVideoModal,
+        hasGuidingVideo: () => !!(currentEntry?.videoUrl && currentEntry.videoUrl.trim().length > 0),
+        getCurrentFilter: () => currentFilter,
+        startV3Prep,
+        startV3Recording,
+        stopV3Recording,
+        cancelRecording,
+        retryV3Recording,
+        finishRecordingForNext,
+        toggleRecordingPlayback,
+        getRecordingBlob: () => recordingBlob,
+        getTranscriptText: () => transcriptText,
+        getDspPromise: () => dspPromise
     };
 
     // Deep-link support: listen for PracticeRouter question navigation events

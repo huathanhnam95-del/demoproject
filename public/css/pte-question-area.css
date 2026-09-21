@@ -1,0 +1,56 @@
+.pte-instr { font: 400 15px/1.6 Arial, Helvetica, sans-serif; color: #333; margin: 0 0 24px; }
+.pte-passage { font: 17px/2.15 Arial, Helvetica, sans-serif; color: #222; border: 0; background: transparent; padding: 0; }
+.pte-center { display: flex; justify-content: center; margin: 24px 0; }
+.pte-rec { display: inline-flex; align-items: center; gap: 14px; min-height: 48px; max-width: 100%; font: 14px Arial, Helvetica, sans-serif; color: #6b6b6b; }
+.pte-rec__ring { box-sizing: border-box; flex: 0 0 44px; width: 44px; height: 44px; border: 2px solid #7a7a7a; border-radius: 50%; background: white; display: grid; place-items: center; font: 16px Arial, sans-serif; color: #555; font-variant-numeric: tabular-nums; }
+.pte-rec__ring i { width: 18px; height: 18px; border-radius: 50%; }
+.pte-rec__ring--rec { border: 2.5px solid #f26b6b; }
+.pte-rec__ring--rec i { background: #f04e4e; animation: pte-rec-pulse 1.2s infinite; }
+.pte-rec__ring--done { border: 2.5px solid #2eb82e; }
+.pte-rec__ring--done i { background: #2eb82e; }
+.pte-rec__col { display: flex; flex-direction: column; gap: 5px; }
+.pte-rec__elapsed { font-size: 12.5px; color: #8a8a8a; font-variant-numeric: tabular-nums; }
+.pte-rec__total { font-size: 13px; color: #8a8a8a; font-variant-numeric: tabular-nums; }
+.pte-rec__wave { display: flex; align-items: center; gap: 1px; width: 200px; max-width: 40vw; height: 28px; min-width: 0; }
+.pte-rec__wave i { height: 1px; flex: 1; background: #c9ced6; }
+.pte-rec__wave i.is-recorded { background: #4aa3df; }
+.pte-rec__wave i.is-recent { animation: pte-wave .45s alternate infinite; }
+.pte-rec__line { width: 200px; max-width: 40vw; height: 2px; background: #9aa0a8; }
+.pte-audio { box-sizing: border-box; width: 300px; max-width: 100%; padding: 14px 20px 16px; border: 1px solid #1c4675; border-radius: 2px; background: linear-gradient(#36699f, #28598f); box-shadow: 0 1px 3px rgba(0,0,0,.25); color: white; font: 14px Arial, Helvetica, sans-serif; }
+.pte-audio__status { margin-bottom: 12px; }
+.pte-audio__track { height: 10px; background: #a4bddb; }
+.pte-audio__track i { display: block; width: 0; height: 100%; background: white; }
+.pte-audio__vol { display: flex; justify-content: center; gap: 8px; align-items: center; margin-top: 14px; }
+.pte-audio__vol input { width: 120px; }
+.pte-audio[role="button"] { cursor: pointer; }
+@keyframes pte-rec-pulse { 50% { transform: scale(.82); } }
+@keyframes pte-wave { from { transform: scaleY(.45); } to { transform: scaleY(1.15); } }
+@media (max-width: 600px) { .pte-rec { gap: 8px; } .pte-rec__wave { width: 110px; } }
+@media (prefers-reduced-motion: reduce) { .pte-rec i { animation: none !important; } }
+
+/* The linking SVG measures these exact word boxes; no transformed/scaled text. */
+#mode-read-aloud.ra-pte-v3 .ra-stage .pte-passage {
+  border: 0; border-radius: 0; background: transparent; box-shadow: none; padding: 0; margin: 0; max-width: none;
+}
+#mode-read-aloud.ra-pte-v3 #ra-text-prompt,
+#mode-read-aloud.ra-pte-v3 .ra-merged-recognized-transcript {
+  font: 17px/2.15 Arial, Helvetica, sans-serif; color: #222; letter-spacing: normal;
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+#mode-read-aloud.ra-pte-v3 .ra-merged-transcript-shell {
+  border: 0; border-radius: 0; background: transparent; box-shadow: none; padding: 0;
+}
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip { width: 320px; max-width: calc(100vw - 32px); }
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__say,
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__ipa { display: flex; gap: 6px; align-items: baseline; margin-top: 8px; }
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__say[hidden],
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__ipa[hidden] { display: none; }
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__say > span,
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__ipa > span:first-child { flex: 0 0 auto; font-size: 12px; font-weight: 700; color: #92400e; }
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__ipa-value { font-family: Arial, Helvetica, sans-serif; font-size: 14px; }
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__audio { margin-top: 10px; }
+#mode-read-aloud.ra-pte-v3 .ra-sound-change-tooltip__close { width: auto; height: 32px; padding: 0 8px; font-size: 12px; font-weight: 700; }
+
+#mode-speak.speak-pte-v3 #speak-pte-audio,
+#mode-speak.speak-pte-v3 #speak-pte-recorder { margin: 24px auto; }
+#mode-speak.speak-pte-v3 #speak-pte-sentence .result-text { font: 17px/2.1 Arial, Helvetica, sans-serif; overflow-wrap: anywhere; }

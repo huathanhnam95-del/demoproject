@@ -43,6 +43,24 @@
     let dspPromise = null;
     let recordingSessionToken = 0;
 
+    // PTE Speaking Shell v3 state
+    let v3Active = false;
+    let v3Phase = 'loading'; // 'listen' | 'prep' | 'recording' | 'complete' | 'feedback'
+    let questionGen = 0;
+    let attemptGen = 0;
+    let v3Timer = null;
+    let v3RecordRAF = null;
+    let pteAudioBox = null;
+    let pteRecorderWidget = null;
+    let v3PrepStartTime = 0;
+    let v3RecordStartTime = 0;
+    let v3RecordedDurationSec = 0;
+    let v3ActiveTab = 'stats'; // 'stats' | 'transcript'
+    let v3ActiveSpeakerIndex = 0;
+    let v3LastResult = null;
+    let v3LastNotes = null;
+    let activeMediaStream = null;
+
     // Recommendation engine state
     let sgdRecommendationEngine = null;
     let sgdRecommendationIndex = null;
@@ -58,6 +76,16 @@
     };
 
     /* ──────────────────────────── HELPERS ─────────────────────────── */
+
+    function isV3() {
+        return !!(v3Active || window.PteShellConfig?.isModeEnabled?.('sgd', 'pte'));
+    }
+
+    function escapeHtml(str) {
+        const d = document.createElement('div');
+        d.textContent = str || '';
+        return d.innerHTML;
+    }
 
     function show(element) { if (element) element.style.display = 'block'; }
     function hide(element) { if (element) element.style.display = 'none'; }
@@ -237,10 +265,30 @@
         if (window.PracticeRouter && currentEntry?.id) {
             window.PracticeRouter.replaceRoute('sgd', currentEntry.id);
         }
+        if (isV3()) {
+            ensureV3Elements();
+            if (currentEntry) {
+                queueMicrotask(() => {
+                    if (v3Active && currentEntry) startV3QuestionFlow();
+                });
+            }
+        }
     }
 
     function onExit() {
         reset();
+        if (isV3()) {
+            stopAllV3Timers();
+            stopMediaStream();
+            if (pteAudioBox) {
+                pteAudioBox.destroy();
+                pteAudioBox = null;
+            }
+            if (pteRecorderWidget) {
+                pteRecorderWidget.destroy();
+                pteRecorderWidget = null;
+            }
+        }
     }
 
     /* ──────────────────────────── DOM CACHE ──────────────────────── */
@@ -298,10 +346,32 @@
         // Practice controls
         if (el.nextStepBtn) el.nextStepBtn.addEventListener('click', goToRecordingStep);
         if (el.backToNotesBtn) el.backToNotesBtn.addEventListener('click', goBackToNotes);
-        if (el.recordBtn) el.recordBtn.addEventListener('click', () => startRecordingSession());
-        if (el.stopBtn) el.stopBtn.addEventListener('click', () => stopRecording());
-        if (el.submitBtn) el.submitBtn.addEventListener('click', submitNotes);
-        if (el.retryBtn) el.retryBtn.addEventListener('click', retryPractice);
+        if (el.recordBtn) el.recordBtn.addEventListener('click', () => {
+            if (isV3()) startV3Recording();
+            else startRecordingSession();
+        });
+        if (el.stopBtn) el.stopBtn.addEventListener('click', () => {
+            if (isV3()) stopV3Recording();
+            else stopRecording();
+        });
+        if (el.submitBtn) el.submitBtn.addEventListener('click', () => {
+            if (isV3()) submitForFeedback();
+            else submitNotes();
+        });
+        if (el.retryBtn) el.retryBtn.addEventListener('click', () => {
+            if (isV3()) startV3Prep();
+            else retryPractice();
+        });
+        const cancelBtn = document.getElementById('sgd-cancel-btn');
+        if (cancelBtn) cancelBtn.addEventListener('click', () => {
+            if (isV3()) cancelRecording();
+        });
+        const playUserBtn = document.getElementById('sgd-play-user-btn');
+        if (playUserBtn) playUserBtn.addEventListener('click', toggleUserAudioPlayback);
+        const redoBtn = document.getElementById('sgd-redo-btn');
+        if (redoBtn) redoBtn.addEventListener('click', () => {
+            if (isV3()) startV3Prep();
+        });
         if (el.speakerTabs) el.speakerTabs.addEventListener('click', handleSpeakerTabClick);
     }
 
@@ -705,6 +775,14 @@
         if (window.PracticeRouter && currentEntry.id) {
             window.PracticeRouter.replaceRoute('sgd', currentEntry.id);
         }
+        if (isV3()) {
+            ensureV3Elements();
+            if (currentEntry) {
+                queueMicrotask(() => {
+                    if (v3Active && currentEntry) startV3QuestionFlow();
+                });
+            }
+        }
     }
 
     /* ──────────────────────────── STEP PROGRESS ───────────────────── */
@@ -789,6 +867,49 @@
         speakerNotePanels = [];
         speakerNoteInputs = [];
 
+        if (isV3()) {
+            if (el.speakerTabs) {
+                el.speakerTabs.style.display = 'flex';
+                clearChildren(el.speakerTabs);
+            }
+
+            const tabsFragment = document.createDocumentFragment();
+            const tabList = ['Topic', ...speakerNames];
+
+            tabList.forEach((tabName, idx) => {
+                const tabBtn = document.createElement('button');
+                tabBtn.type = 'button';
+                tabBtn.className = `sgd-speaker-tab ${idx === v3ActiveSpeakerIndex ? 'active' : ''}`;
+                tabBtn.dataset.speakerIndex = String(idx);
+                tabBtn.dataset.speakerName = tabName;
+                tabBtn.textContent = tabName;
+                tabBtn.addEventListener('click', () => switchV3SpeakerTab(idx));
+                tabsFragment.appendChild(tabBtn);
+                speakerTabButtons.push(tabBtn);
+
+                const panel = document.createElement('div');
+                panel.className = `sgd-note-panel ${idx === v3ActiveSpeakerIndex ? 'active' : ''}`;
+                panel.dataset.speakerIndex = String(idx);
+                panel.dataset.speaker = tabName === 'Topic' ? 'topic' : String(idx - 1);
+                panel.style.display = idx === v3ActiveSpeakerIndex ? 'block' : 'none';
+
+                const textarea = document.createElement('textarea');
+                textarea.className = 'sgd-note-input sgd-note-textarea';
+                textarea.dataset.speakerName = tabName;
+                textarea.placeholder = tabName === 'Topic' ? 'Type topic notes here...' : `Type notes for ${tabName}...`;
+                textarea.addEventListener('input', autoGrowTextarea);
+
+                panel.appendChild(textarea);
+                panelsFragment.appendChild(panel);
+                speakerNotePanels.push(panel);
+                speakerNoteInputs.push(textarea);
+            });
+
+            if (el.speakerTabs) el.speakerTabs.appendChild(tabsFragment);
+            el.notePanels.replaceChildren(panelsFragment);
+            return;
+        }
+
         // Hide speaker tabs completely since we show all inputs vertically
         if (el.speakerTabs) el.speakerTabs.style.display = 'none';
 
@@ -872,10 +993,33 @@
         // Obsolete function since tabs are removed
     }
 
+    function switchV3SpeakerTab(index) {
+        v3ActiveSpeakerIndex = index;
+        speakerTabButtons.forEach((btn, idx) => {
+            btn.classList.toggle('active', idx === index);
+        });
+        speakerNotePanels.forEach((panel, idx) => {
+            const isActive = idx === index;
+            panel.classList.toggle('active', isActive);
+            panel.style.display = isActive ? 'block' : 'none';
+            if (isActive) {
+                const ta = panel.querySelector('textarea');
+                if (ta) ta.focus();
+            }
+        });
+    }
+
     function handleSpeakerShortcut(e) {
-        if (!el.stepListen || el.stepListen.style.display === 'none') return;
+        if (!el.stepListen && !isV3()) return;
         if (e.altKey && e.key >= '1' && e.key <= '9') {
             const idx = parseInt(e.key, 10) - 1;
+            if (isV3()) {
+                if (idx < speakerTabButtons.length) {
+                    e.preventDefault();
+                    switchV3SpeakerTab(idx);
+                }
+                return;
+            }
             const speakerCount = speakerNoteInputs.length;
             if (idx < speakerCount) {
                 e.preventDefault();
@@ -1604,6 +1748,662 @@
         startPractice();
     }
 
+    /* ──────────────────────────── PTE SPEAKING SHELL V3 ──────────────────── */
+
+    function ensureV3Elements() {
+        if (!el.practiceArea) cacheElements();
+        if (!el.practiceArea) return;
+
+        show(el.practiceArea);
+
+        let instruction = document.getElementById('sgd-pte-instruction');
+        if (!instruction) {
+            instruction = document.createElement('p');
+            instruction.id = 'sgd-pte-instruction';
+            instruction.className = 'sgd-pte-instruction';
+            instruction.textContent = 'You will hear three people having a discussion. When you hear the beep, summarize the whole discussion. You will have 10 seconds to prepare and 2 minutes to give your response.';
+            el.practiceArea.prepend(instruction);
+        }
+
+        let stage = document.getElementById('sgd-pte-stage');
+        if (!stage) {
+            stage = document.createElement('div');
+            stage.id = 'sgd-pte-stage';
+            stage.className = 'sgd-pte-stage';
+
+            // Audio row
+            const audioRow = document.createElement('div');
+            audioRow.className = 'sgd-audio-row';
+
+            const groupIcon = document.createElement('div');
+            groupIcon.className = 'sgd-group-icon';
+            groupIcon.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`;
+            audioRow.appendChild(groupIcon);
+
+            const audioHost = document.createElement('div');
+            audioHost.id = 'sgd-pte-audio-host';
+            audioHost.className = 'sgd-pte-audio-host';
+            audioRow.appendChild(audioHost);
+            stage.appendChild(audioRow);
+
+            // Recorder host
+            const recHost = document.createElement('div');
+            recHost.id = 'sgd-pte-rec-host';
+            recHost.className = 'sgd-pte-rec-host';
+            recHost.style.display = 'none';
+            stage.appendChild(recHost);
+
+            // Move or place #sgd-speaker-notes
+            const speakerNotes = document.getElementById('sgd-speaker-notes');
+            if (speakerNotes) {
+                let notesHeader = stage.querySelector('.sgd-notes-header');
+                if (!notesHeader) {
+                    notesHeader = document.createElement('div');
+                    notesHeader.className = 'sgd-notes-header';
+                    notesHeader.innerHTML = `<span class="sgd-notes-title">Your notes</span><span id="sgd-notes-subtitle" class="sgd-notes-subtitle">· type while you listen</span>`;
+                    stage.appendChild(notesHeader);
+                }
+                stage.appendChild(speakerNotes);
+            }
+
+            if (instruction.nextSibling) {
+                el.practiceArea.insertBefore(stage, instruction.nextSibling);
+            } else {
+                el.practiceArea.appendChild(stage);
+            }
+        }
+
+        const audioHost = document.getElementById('sgd-pte-audio-host');
+        if (audioHost && !pteAudioBox && el.audio && window.PteAudioBox) {
+            pteAudioBox = window.PteAudioBox.create(audioHost, { audio: el.audio });
+        }
+
+        const recHost = document.getElementById('sgd-pte-rec-host');
+        if (recHost && !pteRecorderWidget && window.PteRecorderWidget) {
+            pteRecorderWidget = window.PteRecorderWidget.create(recHost, { totalSeconds: MAX_RECORDING_SECONDS });
+        }
+
+        let feedback = document.getElementById('sgd-pte-feedback');
+        if (!feedback) {
+            feedback = document.createElement('div');
+            feedback.id = 'sgd-pte-feedback';
+            feedback.className = 'sgd-pte-feedback pte-fb';
+            feedback.style.display = 'none';
+            feedback.hidden = true;
+
+            const grid = document.createElement('div');
+            grid.className = 'sgd-fb-grid';
+
+            // Left column
+            const leftCol = document.createElement('div');
+            leftCol.className = 'sgd-fb-left';
+            leftCol.innerHTML = `
+                <h4 class="sgd-fb-heading">Your Recording</h4>
+                <div id="sgd-v3-playback" class="sgd-v3-playback">
+                    <audio id="sgd-v3-student-audio" controls style="width: 100%;"></audio>
+                </div>
+                <h4 class="sgd-fb-heading">Your Notes</h4>
+                <div id="sgd-v3-notes-review" class="sgd-v3-notes-review"></div>
+            `;
+            grid.appendChild(leftCol);
+
+            // Right column
+            const rightCol = document.createElement('div');
+            rightCol.className = 'sgd-fb-right';
+            rightCol.innerHTML = `
+                <div class="sgd-v3-fb-tabs">
+                    <button type="button" class="sgd-v3-fb-tab active" data-v3-tab="stats">Who said what</button>
+                    <button type="button" class="sgd-v3-fb-tab" data-v3-tab="transcript">Transcript</button>
+                </div>
+                <div id="sgd-v3-stats-panel" class="sgd-v3-fb-panel"></div>
+                <div id="sgd-v3-transcript-panel" class="sgd-v3-fb-panel" style="display: none;"></div>
+            `;
+            grid.appendChild(rightCol);
+
+            feedback.appendChild(grid);
+            el.practiceArea.appendChild(feedback);
+
+            const tabButtons = feedback.querySelectorAll('.sgd-v3-fb-tab');
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tab = btn.dataset.v3Tab;
+                    v3ActiveTab = tab;
+                    tabButtons.forEach(b => b.classList.toggle('active', b === btn));
+                    const statsP = document.getElementById('sgd-v3-stats-panel');
+                    const transP = document.getElementById('sgd-v3-transcript-panel');
+                    if (statsP) statsP.style.display = tab === 'stats' ? 'flex' : 'none';
+                    if (transP) transP.style.display = tab === 'transcript' ? 'flex' : 'none';
+                });
+            });
+        }
+
+        ['sgd-record-btn', 'sgd-cancel-btn', 'sgd-stop-btn', 'sgd-retry-btn', 'sgd-play-user-btn', 'sgd-submit-btn', 'sgd-redo-btn'].forEach(id => {
+            const b = document.getElementById(id);
+            if (b) b.style.display = '';
+        });
+    }
+
+    function mountPteShell() {
+        v3Active = true;
+        const modePanel = document.getElementById('mode-sgd');
+        if (modePanel) modePanel.classList.add('sgd-pte-v3');
+        ensureV3Elements();
+        if (currentEntry) {
+            queueMicrotask(() => {
+                if (v3Active && currentEntry) {
+                    startV3QuestionFlow();
+                }
+            });
+        }
+        syncPteV3UI();
+    }
+
+    function unmountPteShell() {
+        v3Active = false;
+        const modePanel = document.getElementById('mode-sgd');
+        if (modePanel) modePanel.classList.remove('sgd-pte-v3');
+        stopAllV3Timers();
+        stopMediaStream();
+        if (pteAudioBox) {
+            pteAudioBox.destroy();
+            pteAudioBox = null;
+        }
+        if (pteRecorderWidget) {
+            pteRecorderWidget.destroy();
+            pteRecorderWidget = null;
+        }
+
+        const speakerNotes = document.getElementById('sgd-speaker-notes');
+        const stepListen = document.getElementById('sgd-step-listen');
+        if (speakerNotes && stepListen && !stepListen.contains(speakerNotes)) {
+            stepListen.appendChild(speakerNotes);
+        }
+
+        document.getElementById('sgd-pte-instruction')?.remove();
+        document.getElementById('sgd-pte-stage')?.remove();
+        document.getElementById('sgd-pte-feedback')?.remove();
+        reset();
+    }
+
+    function syncPteShell() {
+        if (!v3Active) return;
+        window.SpeakingPracticeController?.setPhase?.('sgd', v3Phase);
+        syncPteV3UI();
+    }
+
+    function syncPteV3UI() {
+        if (!isV3()) return;
+        const stage = document.getElementById('sgd-pte-stage');
+        const feedback = document.getElementById('sgd-pte-feedback');
+        const practiceArea = document.getElementById('sgd-practice-area');
+        if (practiceArea) practiceArea.style.display = 'block';
+
+        if (v3Phase === 'feedback') {
+            if (stage) { stage.hidden = true; stage.style.display = 'none'; }
+            if (feedback) { feedback.hidden = false; feedback.style.display = 'flex'; }
+            renderV3Feedback();
+        } else {
+            if (stage) { stage.hidden = false; stage.style.display = 'flex'; }
+            if (feedback) { feedback.hidden = true; feedback.style.display = 'none'; }
+        }
+    }
+
+    async function startV3QuestionFlow() {
+        if (!v3Active || !currentEntry) return;
+        stopAllTimers();
+        stopAllV3Timers();
+        stopMediaStream();
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            try { mediaRecorder.stop(); } catch (_) {}
+        }
+        mediaRecorder = null;
+        if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
+        recordingBlob = null;
+        dspPromise = null;
+
+        const qGen = ++questionGen;
+        const aGen = ++attemptGen;
+        v3Phase = 'listen';
+        syncPteShell();
+
+        const recHost = document.getElementById('sgd-pte-rec-host');
+        if (recHost) recHost.style.display = 'none';
+        pteRecorderWidget?.reset?.();
+
+        ensureV3Elements();
+        renderSpeakerTabs();
+
+        const sub = document.getElementById('sgd-notes-subtitle');
+        if (sub) sub.textContent = '· type while you listen';
+
+        loadAudio(currentEntry.id);
+        pteAudioBox?.reset?.();
+
+        const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
+        const cdSec = scale < 1 ? 1 : 3;
+
+        try {
+            if (pteAudioBox) {
+                await pteAudioBox.countdown(cdSec);
+            }
+        } catch (err) {
+            if (err?.name === 'AbortError' || qGen !== questionGen || aGen !== attemptGen) return;
+        }
+        if (qGen !== questionGen || aGen !== attemptGen || !v3Active) return;
+
+        try {
+            if (pteAudioBox) {
+                await pteAudioBox.play();
+            }
+        } catch (err) {
+            if (err?.name === 'AbortError' || qGen !== questionGen || aGen !== attemptGen) return;
+            console.warn('[SGD v3] Audio play error:', err);
+        }
+        if (qGen !== questionGen || aGen !== attemptGen || !v3Active) return;
+
+        startV3Prep();
+    }
+
+    function startV3Prep() {
+        if (!v3Active || !currentEntry) return;
+        stopAllTimers();
+        stopAllV3Timers();
+        stopMediaStream();
+
+        const qGen = questionGen;
+        const aGen = ++attemptGen;
+        v3Phase = 'prep';
+        syncPteShell();
+
+        v3RecordedDurationSec = 0;
+        if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
+        recordingBlob = null;
+        dspPromise = null;
+
+        const recHost = document.getElementById('sgd-pte-rec-host');
+        if (recHost) recHost.style.display = '';
+
+        const sub = document.getElementById('sgd-notes-subtitle');
+        if (sub) sub.textContent = '· type while you listen';
+
+        const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
+        const effectivePrepScale = scale < 1 ? 1 : scale;
+        const prepDuration = scale < 1 ? 1 : PREP_SECONDS;
+
+        v3PrepStartTime = performance.now();
+        pteRecorderWidget?.showCountdown(prepDuration);
+
+        const tickPrep = () => {
+            if (qGen !== questionGen || aGen !== attemptGen || v3Phase !== 'prep' || !v3Active) return;
+            const elapsed = ((performance.now() - v3PrepStartTime) / 1000) / effectivePrepScale;
+            const remaining = Math.max(0, prepDuration - elapsed);
+            pteRecorderWidget?.tick(remaining);
+            if (elapsed >= prepDuration) {
+                startV3Recording();
+                return;
+            }
+            v3Timer = requestAnimationFrame(tickPrep);
+        };
+        v3Timer = requestAnimationFrame(tickPrep);
+    }
+
+    async function startV3Recording() {
+        stopAllTimers();
+        stopAllV3Timers();
+
+        const qGen = questionGen;
+        const aGen = ++attemptGen;
+        v3Phase = 'recording';
+        syncPteShell();
+
+        const recHost = document.getElementById('sgd-pte-rec-host');
+        if (recHost) recHost.style.display = '';
+
+        const sub = document.getElementById('sgd-notes-subtitle');
+        if (sub) sub.textContent = '· look at them while you speak';
+
+        recordingSessionToken++;
+        const myToken = recordingSessionToken;
+        recordedChunks = [];
+        v3RecordedDurationSec = 0;
+        if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
+        recordingBlob = null;
+        dspPromise = null;
+
+        let stream;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (err) {
+            console.error('[SGD v3] Mic access error:', err);
+            return;
+        }
+
+        if (qGen !== questionGen || aGen !== attemptGen || v3Phase !== 'recording' || !v3Active || myToken !== recordingSessionToken) {
+            stream.getTracks().forEach(t => t.stop());
+            return;
+        }
+
+        activeMediaStream = stream;
+        pteRecorderWidget?.showRecording(MAX_RECORDING_SECONDS);
+        pteRecorderWidget?.attachStream(stream);
+
+        const mimeType = (typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))
+            ? 'audio/webm;codecs=opus' : 'audio/webm';
+        const recorder = new MediaRecorder(stream, { mimeType });
+        mediaRecorder = recorder;
+        recorder.ondataavailable = (e) => {
+            if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+        recorder.onstop = () => {
+            stopMediaStream();
+            if (qGen !== questionGen || aGen !== attemptGen || myToken !== recordingSessionToken) return;
+            onV3RecordingComplete();
+        };
+        recorder.start(250);
+
+        v3RecordStartTime = performance.now();
+        const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
+        const effectiveRecScale = scale < 1 ? 0.3 : scale;
+
+        const tickRec = () => {
+            if (qGen !== questionGen || aGen !== attemptGen || v3Phase !== 'recording' || !v3Active || myToken !== recordingSessionToken) return;
+            const elapsed = ((performance.now() - v3RecordStartTime) / 1000) / effectiveRecScale;
+            v3RecordedDurationSec = elapsed;
+            pteRecorderWidget?.setElapsed(elapsed);
+            if (elapsed >= MAX_RECORDING_SECONDS) {
+                stopV3Recording();
+                return;
+            }
+            v3RecordRAF = requestAnimationFrame(tickRec);
+        };
+        v3RecordRAF = requestAnimationFrame(tickRec);
+    }
+
+    function cancelRecording() {
+        if (v3Phase !== 'recording') return;
+        stopAllTimers();
+        stopAllV3Timers();
+        stopMediaStream();
+        recordingSessionToken++;
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            try { mediaRecorder.stop(); } catch (_) {}
+        }
+        mediaRecorder = null;
+        recordedChunks = [];
+        recordingBlob = null;
+        dspPromise = null;
+        startV3Prep();
+    }
+
+    function stopV3Recording() {
+        stopAllV3Timers();
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+        }
+    }
+
+    async function onV3RecordingComplete() {
+        const myToken = recordingSessionToken;
+        const blob = recordedChunks.length > 0 ? new Blob(recordedChunks, { type: mediaRecorder?.mimeType || 'audio/webm' }) : null;
+        recordingBlob = blob;
+        if (blob) {
+            recordingBlobUrl = URL.createObjectURL(blob);
+        }
+
+        if (blob && window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
+            dspPromise = window.AudioDspPipeline.enhance(blob).then((res) => {
+                if (myToken !== recordingSessionToken) return blob;
+                if (res?.wavBlob) {
+                    if (recordingBlobUrl) URL.revokeObjectURL(recordingBlobUrl);
+                    recordingBlob = res.wavBlob;
+                    recordingBlobUrl = res.audioUrl || URL.createObjectURL(res.wavBlob);
+                    return res.wavBlob;
+                }
+                return blob;
+            }).catch(() => blob);
+        } else {
+            dspPromise = Promise.resolve(blob);
+        }
+
+        v3Phase = 'complete';
+        syncPteShell();
+    }
+
+    function toggleUserAudioPlayback() {
+        let audioEl = document.getElementById('sgd-v3-student-audio');
+        if (!audioEl) audioEl = el.recordingPlayback;
+        if (!audioEl) return;
+        if (audioEl.src !== recordingBlobUrl && recordingBlobUrl) {
+            audioEl.src = recordingBlobUrl;
+        }
+        if (audioEl.paused) {
+            audioEl.play().catch(e => console.warn('playback failed:', e));
+        } else {
+            audioEl.pause();
+        }
+    }
+
+    async function submitForFeedback() {
+        const qGen = questionGen;
+        const aGen = attemptGen;
+        v3Phase = 'feedback';
+        syncPteShell();
+
+        const userNotes = collectSpeakerNotes();
+        const result = compareTextsBySpeaker(currentEntry?.speakers || {}, userNotes);
+        v3LastResult = result;
+        v3LastNotes = userNotes;
+
+        renderV3Feedback();
+
+        const currentToken = recordingSessionToken;
+        const finalBlob = dspPromise ? await dspPromise.catch(() => recordingBlob) : recordingBlob;
+        if (qGen !== questionGen || aGen !== attemptGen || currentToken !== recordingSessionToken) return;
+
+        try {
+            await window.PTEAttemptArchive?.saveAttempt?.({
+                practiceMode: 'sgd',
+                promptSnapshot: {
+                    promptId: currentEntry?.id || null,
+                    title: currentEntry?.title || '',
+                    text: currentEntry?.narration || '',
+                    sourceAssetPaths: currentEntry?.audio ? [currentEntry.audio] : [],
+                    data: currentEntry
+                },
+                responseSnapshot: {
+                    userNotes,
+                    speakerCount: Object.keys(currentEntry?.speakers || {}).length
+                },
+                answerSnapshot: {
+                    keyPoints: currentEntry?.keyPoints || [],
+                    sampleAnswer: currentEntry?.sampleAnswer || null
+                },
+                resultSnapshot: result,
+                scoringSource: 'client',
+                media: finalBlob ? [{
+                    slot: 'student',
+                    label: 'Student summary',
+                    blob: finalBlob,
+                    contentType: finalBlob.type || 'audio/webm'
+                }] : []
+            });
+        } catch (err) {
+            console.warn('[PTE Archive] SGD v3 save failed:', err);
+        }
+    }
+
+    function renderV3Feedback() {
+        const feedback = document.getElementById('sgd-pte-feedback');
+        if (!feedback || !v3LastResult) return;
+
+        const studentAudio = document.getElementById('sgd-v3-student-audio');
+        if (studentAudio && recordingBlobUrl) {
+            studentAudio.src = recordingBlobUrl;
+        }
+
+        const notesReview = document.getElementById('sgd-v3-notes-review');
+        if (notesReview) {
+            clearChildren(notesReview);
+            const userNotes = v3LastNotes || {};
+            const topicText = userNotes['Topic'] || '';
+            if (topicText) {
+                const topicBox = document.createElement('div');
+                topicBox.className = 'sgd-v3-note-item';
+                topicBox.innerHTML = `<strong>Topic:</strong> <p>${escapeHtml(topicText)}</p>`;
+                notesReview.appendChild(topicBox);
+            }
+
+            Object.entries(currentEntry?.speakers || {}).forEach(([spkName]) => {
+                const text = userNotes[spkName] || '';
+                const spkData = v3LastResult.perSpeaker[spkName];
+                const matchedSet = new Set((spkData?.matched || []).map(m => cleanWord(m)));
+
+                const spkBox = document.createElement('div');
+                spkBox.className = 'sgd-v3-note-item';
+
+                const tokens = (text || '(No notes)').split(/(\s+)/);
+                const highlighted = tokens.map(tok => {
+                    const cw = cleanWord(tok);
+                    if (cw && matchedSet.has(cw)) {
+                        return `<span class="sgd-matched-word">${escapeHtml(tok)}</span>`;
+                    }
+                    return escapeHtml(tok);
+                }).join('');
+
+                spkBox.innerHTML = `<strong>${escapeHtml(spkName)}:</strong> <p>${highlighted}</p>`;
+                notesReview.appendChild(spkBox);
+            });
+        }
+
+        const statsPanel = document.getElementById('sgd-v3-stats-panel');
+        if (statsPanel) {
+            clearChildren(statsPanel);
+            const overallPct = Math.round((v3LastResult.overall?.accuracy || 0) * 100);
+
+            const overallCard = document.createElement('div');
+            overallCard.className = 'notes-results-stats';
+            overallCard.innerHTML = `<span id="sgd-overall-accuracy">${overallPct}</span>% overall accuracy`;
+            statsPanel.appendChild(overallCard);
+
+            const grid = document.createElement('div');
+            grid.className = 'sgd-results-grid';
+            Object.entries(v3LastResult.perSpeaker || {}).forEach(([spkName, data]) => {
+                const pct = Math.round((data.accuracy || 0) * 100);
+                const card = document.createElement('div');
+                card.className = 'sgd-speaker-result';
+                card.innerHTML = `
+                    <div class="sgd-speaker-result-header">
+                        <span class="sgd-speaker-result-name">${escapeHtml(spkName)}</span>
+                        <span class="sgd-speaker-result-score">${pct}%</span>
+                    </div>
+                    <div class="sgd-speaker-result-stats">${data.matched.length} / ${data.total} key words matched</div>
+                `;
+                grid.appendChild(card);
+            });
+            statsPanel.appendChild(grid);
+        }
+
+        const transPanel = document.getElementById('sgd-v3-transcript-panel');
+        if (transPanel) {
+            clearChildren(transPanel);
+            if (currentEntry?.narration) {
+                const narrBox = document.createElement('div');
+                narrBox.className = 'sgd-v3-narr-box';
+                narrBox.innerHTML = `<em>Narration: ${escapeHtml(currentEntry.narration)}</em>`;
+                transPanel.appendChild(narrBox);
+            }
+
+            Object.entries(v3LastResult.perSpeaker || {}).forEach(([spkName, data]) => {
+                const spkBox = document.createElement('div');
+                spkBox.className = 'sgd-v3-trans-item';
+                const parts = data.highlightedTranscriptParts || [];
+                const html = parts.map(p => {
+                    if (p.matched) return `<span class="sgd-matched-word">${escapeHtml(p.text)}</span>`;
+                    return escapeHtml(p.text);
+                }).join('');
+                spkBox.innerHTML = `<strong>${escapeHtml(spkName)}:</strong> <p>${html}</p>`;
+                transPanel.appendChild(spkBox);
+            });
+        }
+    }
+
+    async function finishRecordingForNext() {
+        stopAllTimers();
+        stopAllV3Timers();
+        stopMediaStream();
+        const qGen = questionGen;
+        const aGen = ++attemptGen;
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            try { mediaRecorder.stop(); } catch (_) {}
+        }
+        mediaRecorder = null;
+        const finalBlob = dspPromise ? await dspPromise.catch(() => recordingBlob) : recordingBlob;
+        if (qGen !== questionGen || aGen !== attemptGen) return;
+        if (currentEntry) {
+            const userNotes = collectSpeakerNotes();
+            const result = compareTextsBySpeaker(currentEntry.speakers || {}, userNotes);
+            try {
+                await window.PTEAttemptArchive?.saveAttempt?.({
+                    practiceMode: 'sgd',
+                    promptSnapshot: {
+                        promptId: currentEntry.id || null,
+                        title: currentEntry.title || '',
+                        text: currentEntry.narration || '',
+                        sourceAssetPaths: currentEntry.audio ? [currentEntry.audio] : [],
+                        data: currentEntry
+                    },
+                    responseSnapshot: { userNotes },
+                    answerSnapshot: {
+                        keyPoints: currentEntry.keyPoints || [],
+                        sampleAnswer: currentEntry.sampleAnswer || null
+                    },
+                    resultSnapshot: result,
+                    scoringSource: 'client',
+                    media: finalBlob ? [{
+                        slot: 'student',
+                        label: 'Student summary',
+                        blob: finalBlob,
+                        contentType: finalBlob.type || 'audio/webm'
+                    }] : []
+                });
+            } catch (_) {}
+        }
+    }
+
+    function advanceQuestion() {
+        if (!entries || entries.length === 0) return;
+        const nextIndex = (currentEntryIndex + 1) % entries.length;
+        selectEntry(nextIndex);
+    }
+
+    function stopAllTimers() {
+        if (recordingTimerId) {
+            clearInterval(recordingTimerId);
+            recordingTimerId = null;
+        }
+        stopAllV3Timers();
+    }
+
+    function stopAllV3Timers() {
+        if (v3Timer) {
+            cancelAnimationFrame(v3Timer);
+            v3Timer = null;
+        }
+        if (v3RecordRAF) {
+            cancelAnimationFrame(v3RecordRAF);
+            v3RecordRAF = null;
+        }
+    }
+
+    function stopMediaStream() {
+        if (activeMediaStream) {
+            try {
+                activeMediaStream.getTracks().forEach(t => t.stop());
+            } catch (_) {}
+            activeMediaStream = null;
+        }
+    }
+
     /* ──────────────────────────── BOOTSTRAP ────────────────────────── */
 
     if (document.readyState === 'loading') {
@@ -1612,7 +2412,35 @@
         init();
     }
 
-    window.SGDMode = { init, reset, loadEntries, applyFilters: applyFilter, onEnter, onExit };
+    window.SGDMode = {
+        init,
+        reset,
+        loadEntries,
+        applyFilters: applyFilter,
+        onEnter,
+        onExit,
+        getItems: () => entries,
+        getCurrentId: () => (currentEntry ? String(currentEntry.id) : null),
+        select: (id) => {
+            const idx = filteredEntries.findIndex(e => String(e.id) === String(id));
+            if (idx >= 0) selectEntry(idx);
+        },
+        previous: goToPrevious,
+        next: goToNext,
+        // v3 methods
+        mountPteShell,
+        unmountPteShell,
+        syncPteShell,
+        getPtePhase: () => v3Phase,
+        startV3Recording,
+        stopV3Recording,
+        cancelRecording,
+        retryRecording: startV3Prep,
+        toggleUserAudioPlayback,
+        submitForFeedback,
+        finishRecordingForNext,
+        advanceQuestion
+    };
 
     // Deep-link support: listen for PracticeRouter question navigation events
     window.addEventListener('practice-route-question', (event) => {

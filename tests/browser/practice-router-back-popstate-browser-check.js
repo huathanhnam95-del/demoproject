@@ -1,7 +1,7 @@
 const assert = require('assert');
 const net = require('net');
 const path = require('path');
-const { chromium } = require('playwright');
+const { launchPracticeChrome } = require('./helpers/launch-practice-chrome');
 
 function getFreePort() {
   return new Promise((resolve, reject) => {
@@ -137,7 +137,7 @@ async function clickByScript(page, selector) {
     server.listen(port, '127.0.0.1', resolve);
   });
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchPracticeChrome({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1200 } });
   await setupFirebaseMocks(context);
 
@@ -209,7 +209,8 @@ async function clickByScript(page, selector) {
       select.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
-    await page.waitForFunction(() => /(practice|pte-practice)/.test(window.location.pathname) && window.location.pathname.includes('/read-aloud'), { timeout: 30000 });
+    await page.waitForFunction(() => /\/pte-practice\/|\/practice\//.test(window.location.pathname)
+      && window.location.pathname.includes('/read-aloud'), { timeout: 30000 });
 
     // Reset counters to measure only the browser back interaction.
     await page.evaluate(() => {

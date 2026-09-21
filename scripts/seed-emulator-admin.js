@@ -246,6 +246,48 @@ async function seedFirestoreAdminProfile({ uid, email, displayName }) {
   }
 }
 
+async function seedProjectsWorkforceAccess({ uid }) {
+  const workforceDocUrl = `${FS_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/crmWorkforceAccounts/${uid}`;
+  const firestoreDoc = {
+    fields: {
+      uid: { stringValue: uid },
+      status: { stringValue: 'active' },
+      organizationRole: { stringValue: 'administrator' },
+      isOrganizationAdmin: { booleanValue: true },
+      moduleGrants: {
+        mapValue: {
+          fields: {
+            projects: { booleanValue: true }
+          }
+        }
+      },
+      authSync: {
+        mapValue: {
+          fields: {
+            state: { stringValue: 'succeeded' },
+            reconciled: { booleanValue: true }
+          }
+        }
+      },
+      revision: { integerValue: '1' }
+    }
+  };
+
+  const fsRes = await fetch(workforceDocUrl, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer owner'
+    },
+    body: JSON.stringify(firestoreDoc)
+  });
+
+  if (!fsRes.ok) {
+    const errBody = await fsRes.text();
+    throw new Error(`Projects workforce PATCH ${fsRes.status}: ${errBody}`);
+  }
+}
+
 async function main() {
   const repoRoot = path.resolve(__dirname, '..');
 
@@ -311,6 +353,12 @@ async function main() {
     displayName: ADMIN_DISPLAY
   });
   console.log('OK: Firestore user profile seeded (isAdmin: true)');
+
+  // Projects intentionally requires a separate server-owned workforce grant.
+  // Seed it alongside the local admin profile so the visible localhost module
+  // can read and create projects after an emulator restart.
+  await seedProjectsWorkforceAccess({ uid: fresh.uid });
+  console.log('OK: Projects workforce access seeded');
 
   console.log('');
   console.log('Admin account ready on emulator.');

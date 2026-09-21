@@ -529,6 +529,111 @@ async function exerciseArchiveOwnership(page, width, scenario) {
   assert.equal([...state.trace.local, ...state.trace.events].length, 1, 'save/recovery publishes once');
 }
 
+async function exerciseFilters(page, width) {
+  await page.locator('#record-btn').click();
+  await finishAndAssess(page);
+  await page.clock.install(); await page.clock.pauseAt(new Date());
+  const trigger = page.locator('#mode-speak .pte-modebar').getByRole('button', { name: 'Filters', exact: true });
+  assert.equal(await trigger.isVisible(), true, 'Phase 3.8 exposes Filters');
+  await trigger.click();
+  const menu = page.getByRole('dialog', { name: 'Filters', exact: true });
+  assert.deepEqual(await menu.locator('legend').allTextContents(), ['Question order', 'Status', 'Length', 'Difficulty']);
+  assert.equal(await menu.evaluate(el => {
+    const rect = el.getBoundingClientRect();
+    return rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight;
+  }), true, 'Filters stay within the viewport');
+  const group = name => menu.getByRole('group', { name, exact: true });
+  await group('Question order').getByRole('button', { name: 'Manual', exact: true }).click();
+  assert.equal(await page.locator('#manual-speak').isChecked(), true);
+  assert.equal(await page.evaluate(() => DifficultyManager.getGlobalSettings().autoAdjustEnabled), false);
+  const before = await page.locator('#current-question-id-speak').textContent();
+  assert.equal(await page.locator('#recommended-btn-speak').isDisabled(), false);
+  await group('Question order').getByRole('button', { name: 'Recommended', exact: true }).click();
+  await page.waitForFunction(previous => document.getElementById('current-question-id-speak').textContent !== previous, before);
+  assert.equal(await page.locator('#adaptive-speak').isChecked(), true);
+  assert.equal(await page.evaluate(() => DifficultyManager.getGlobalSettings().autoAdjustEnabled), true);
+  assert.equal(await group('Question order').getByRole('button', { name: 'Recommended', exact: true }).getAttribute('aria-pressed'), 'true');
+  await group('Question order').getByRole('button', { name: 'Manual', exact: true }).click();
+  const status = group('Status');
+  await status.getByRole('button', { name: 'Completed', exact: true }).click();
+  assert.equal(await page.locator('#question-select-speak option').count(), 0, 'existing status handler filters local fixtures');
+  assert.deepEqual(await page.locator('#status-filter-menu-speak .selected').evaluateAll(els => els.map(el => el.dataset.value)), ['completed']);
+  await status.getByRole('button', { name: 'All', exact: true }).click();
+  assert.equal(await page.locator('#question-select-speak option').count(), 3);
+  await page.evaluate(() => {
+    window.__filterLocks = 0;
+    window.shopModule = { ...window.shopModule, showAlertModal: () => { window.__filterLocks++; } };
+    for (const key of ['length', 'difficulty']) document.getElementById(`${key}-filter-container-speak`).style.display = 'none';
+  });
+  await group('Length').getByRole('button', { name: '4-7 words', exact: true }).click();
+  await group('Difficulty').getByRole('button', { name: 'Level 2 (Medium)', exact: true }).click();
+  assert.equal(await page.evaluate(() => window.__filterLocks), 2);
+  assert.equal(await group('Length').getByRole('button', { name: 'All lengths', exact: true }).getAttribute('aria-pressed'), 'true');
+  assert.equal(await group('Difficulty').getByRole('button', { name: 'Recommended', exact: true }).getAttribute('aria-pressed'), 'true');
+  await page.evaluate(() => {
+    for (const key of ['length', 'difficulty']) document.getElementById(`${key}-filter-container-speak`).style.display = 'block';
+    document.querySelector('#length-filter-menu-speak [data-value="4-7"]').dataset.locked = 'false';
+  });
+  await group('Length').getByRole('button', { name: '4-7 words', exact: true }).click();
+  assert.equal(await page.locator('#length-filter-menu-speak .selected').getAttribute('data-value'), '4-7');
+  await group('Length').getByRole('button', { name: 'All lengths', exact: true }).click();
+  await group('Difficulty').getByRole('button', { name: 'Level 2 (Medium)', exact: true }).click();
+  assert.equal(await page.locator('#question-select-speak option').count(), 0, 'existing difficulty handler filters level-one fixtures');
+  assert.equal(await page.locator('#difficulty-filter-menu-speak .selected').getAttribute('data-value'), '2');
+  await group('Difficulty').getByRole('button', { name: 'Recommended', exact: true }).click();
+  assert.equal(await page.locator('#question-select-speak option').count(), 3);
+  await page.screenshot({ path: path.join(evidence, `${width}-filters.png`), fullPage: true });
+  await page.keyboard.press('Escape');
+  assert.equal(await trigger.getAttribute('aria-expanded'), 'false');
+  assert.equal(await trigger.evaluate(el => el === document.activeElement), true);
+  await trigger.click();
+  await page.mouse.click(2, 2);
+  assert.equal(await menu.count(), 0, 'outside click closes Filters');
+  await page.evaluate(() => {
+    window.__resetCalls = []; window.__resetConfirmed = false;
+    window.showCustomConfirm = async (...args) => { window.__resetPrompt = args; return window.__resetConfirmed; };
+    window.authUI.getCurrentUserId = () => 'local-reset-fixture';
+    window.firebaseFirestoreFunctions = { ...window.firebaseFirestoreFunctions,
+      resetProgress: async (...args) => { window.__resetCalls.push(args); return { success: true }; } };
+  });
+  const openReset = async () => {
+    await page.locator('#mode-speak .pte-modebar').getByRole('button', { name: 'More', exact: true }).click();
+    await page.getByRole('dialog', { name: 'More', exact: true }).getByRole('button', { name: /Reset progress/ }).click();
+  };
+  await openReset();
+  assert.equal(await page.evaluate(() => window.__resetCalls.length), 0, 'cancel keeps progress');
+  assert.match(await page.evaluate(() => window.__resetPrompt[0]), /Reset Progress/);
+  await page.evaluate(() => { window.__resetConfirmed = true; });
+  await openReset();
+  await page.waitForFunction(() => window.__resetCalls.length === 1);
+  assert.deepEqual(await page.evaluate(() => window.__resetCalls[0]), ['local-reset-fixture', Number(await page.locator('#current-question-id-speak').textContent()), 'speak']);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+}
+
+async function exerciseHistorySummary(page, width) {
+  await page.clock.install(); await page.clock.pauseAt(new Date());
+  await page.evaluate(() => {
+    const promptId = document.getElementById('current-question-id-speak').textContent;
+    // Same shape as buildAttemptSummary: no resultSnapshot and no maxScore.
+    window.PTEAttemptArchive.fetchUserAttemptsCached = async () => [6, 0, null].map((score, index) => ({
+      attemptId: `summary-${index}`, practiceMode: 'speak', promptId,
+      createdAt: new Date(Date.now() - index * 1000).toISOString(), score,
+      audio: { studentUrl: null, durationMs: 15000 }, responseSummary: 'Local summary fixture'
+    }));
+    window.dispatchEvent(new CustomEvent('auth-state-changed'));
+  });
+  await page.waitForFunction(() => document.querySelectorAll('#mode-speak .pte-attempts__row').length === 3);
+  assert.deepEqual(await page.locator('#mode-speak .pte-attempts__score').allTextContents(), ['Points 6', 'Points 0']);
+  assert.equal(await page.locator('#mode-speak .pte-attempts__row').last().locator('.pte-attempts__score').count(), 0);
+  await page.screenshot({ path: path.join(evidence, `${width}-history-summary.png`), fullPage: true });
+  await page.evaluate(() => {
+    window.PTEAttemptArchive.fetchUserAttemptsCached = async () => null;
+    window.PteAttemptHistory.recordLocal({ attemptId: 'snapshot-fixture', practiceMode: 'speak',
+      promptId: document.getElementById('current-question-id-speak').textContent, resultSnapshot: { score: 0, maxScore: 7 } });
+  });
+  await page.waitForFunction(() => document.querySelector('#mode-speak .pte-attempts__score')?.textContent === 'Points 0/7');
+}
+
 async function run() {
   fs.mkdirSync(evidence, { recursive: true });
   const harness = await createHarness(); const report = [], failures = [];
@@ -543,13 +648,14 @@ async function run() {
     .concat(['success', 'failure', 'reject', 'next', 'retry', 'recording', 'unmount', 'unmount-reject', 'repeated'].map(s => `second-${s}`),
       ['native', 'patch', 'guest'].map(s => `publication-${s}`));
   const scenarios = selectedScenario ? [selectedScenario] : process.argv.includes('--save-only') ? archiveScenarios
+    : process.argv.includes('--spec-only') ? ['spec-filters', 'spec-history']
     : process.argv.includes('--remediation-only') ? remediationScenarios
     : process.argv.includes('--ownership-only') ? ownershipScenarios
     : process.argv.includes('--departure-only') ? ownershipScenarios.filter(s => s.startsWith('departure'))
     : process.argv.includes('--shadow-only') ? ownershipScenarios.filter(s => s.startsWith('shadow'))
     : process.argv.includes('--cancel-race-only') ? ['cancel']
     : process.argv.includes('--listen-back-only') ? ['listen']
-      : process.argv.includes('--replay-start-only') ? ['full'] : ['full', 'cancel', 'listen', ...ownershipScenarios, ...archiveScenarios, ...remediationScenarios];
+      : process.argv.includes('--replay-start-only') ? ['full'] : ['full', 'cancel', 'listen', 'spec-filters', 'spec-history', ...ownershipScenarios, ...archiveScenarios, ...remediationScenarios];
   try {
     for (const scenario of scenarios) for (const width of [1440, 390]) {
       const page = await harness.browser.newPage({ viewport: { width, height: width === 390 ? 844 : 900 } });
@@ -605,6 +711,8 @@ async function run() {
           else if (scenario.startsWith('playback-')) await exercisePlaybackDeparture(page, width, scenario.slice(9));
           else if (scenario.startsWith('second-')) await exerciseSecondTake(page, width, scenario.slice(7));
           else if (scenario.startsWith('publication-')) await exerciseAssessedPublication(page, width, scenario.slice(12));
+          else if (scenario === 'spec-filters') await exerciseFilters(page, width);
+          else if (scenario === 'spec-history') await exerciseHistorySummary(page, width);
           else await exerciseListenBackRetry(page, width);
           assert.deepEqual(errors, [], 'review regressions produce no JavaScript errors');
           report.push({ scenario, width, passed: true });

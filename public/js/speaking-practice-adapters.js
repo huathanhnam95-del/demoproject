@@ -332,6 +332,50 @@
       onUnmount: () => window.RepeatSentenceV3?.unmount(),
       onSync: () => window.RepeatSentenceV3?.sync(),
       statusText: { recording: 'Repeat the sentence.' },
+      filters: [
+        { label: 'Question order',
+          get: () => document.getElementById('adaptive-speak')?.checked ? 'recommended' : 'manual',
+          set: value => {
+            // The recommendation jump is available in manual mode. Run its existing
+            // handler before enabling adaptive selection, which disables that button.
+            if (value === 'recommended') document.getElementById('recommended-btn-speak')?.click();
+            document.getElementById(value === 'recommended' ? 'adaptive-speak' : 'manual-speak')?.click();
+          },
+          options: [{ value: 'recommended', label: 'Recommended' }, { value: 'manual', label: 'Manual' }] },
+        { label: 'Status',
+          get: () => {
+            const options = [...document.querySelectorAll('#status-filter-menu-speak .filter-option')];
+            const selected = options.filter(option => option.classList.contains('selected'));
+            return selected.length === options.length ? 'all' : selected.length === 1 ? selected[0].dataset.value : null;
+          },
+          set: value => {
+            document.querySelectorAll('#status-filter-menu-speak .filter-option').forEach(option => {
+              if (option.classList.contains('selected') !== (value === 'all' || option.dataset.value === value)) option.click();
+            });
+          },
+          options: [{ value: 'all', label: 'All' }, { value: 'not-started', label: 'Not started' },
+            { value: 'in-progress', label: 'In progress' }, { value: 'completed', label: 'Completed' },
+            { value: 'consolidated', label: 'Consolidated' }, { value: 'mastered', label: 'Mastered' }] },
+        ...[
+          { key: 'length', label: 'Length', options: [{ value: 'all', label: 'All lengths' },
+            ...['4-7', '8-9', '10-11', '12-13'].map(value => ({ value, label: `${value} words` }))] },
+          { key: 'difficulty', label: 'Difficulty', options: [{ value: 'all', label: 'Recommended' },
+            { value: '1', label: 'Level 1 (Easy)' }, { value: '2', label: 'Level 2 (Medium)' }, { value: '3', label: 'Level 3 (Hard)' }] }
+        ].map(({ key, label, options }) => ({ label, options,
+          get: () => document.querySelector(`#${key}-filter-menu-speak .filter-option.selected`)?.dataset.value || 'all',
+          set: value => {
+            // Hidden legacy containers indicate a progression lock, even though
+            // the v3 shell exposes the group. Keep that lock in force.
+            if (value !== 'all' && document.getElementById(`${key}-filter-container-speak`)?.style.display === 'none') {
+              window.shopModule?.showAlertModal?.('This feature is locked. Keep practicing to unlock it.', true);
+              return;
+            }
+            document.querySelector(`#${key}-filter-menu-speak .filter-option[data-value="${value}"]`)?.click();
+          }
+        }))
+      ],
+      moreItems: [{ label: 'Reset progress', description: 'Start this question set again',
+        onSelect: () => document.getElementById('reset-progress-speak-btn')?.click() }],
       dock: {
         helpers: [{ id: 'speak-pte-replay', label: 'Replay', phases: ['prep', 'complete'],
           count: () => window.RepeatSentenceV3?.replaysLeft(), onClick: () => window.RepeatSentenceV3?.replay() }],
@@ -352,8 +396,11 @@
       attempts: {
         practiceMode: 'speak', modeLabel: 'Repeat Sentence',
         getPromptId: () => document.getElementById('current-question-id-speak')?.textContent,
-        formatScores: attempt => Number.isFinite(attempt.resultSnapshot?.score)
-          ? [`Points ${attempt.resultSnapshot.score}/${attempt.resultSnapshot.maxScore}`] : []
+        formatScores: attempt => {
+          const score = attempt.resultSnapshot?.score ?? attempt.score;
+          const maxScore = attempt.resultSnapshot?.maxScore;
+          return Number.isFinite(score) ? [`Points ${score}${Number.isFinite(maxScore) ? `/${maxScore}` : ''}`] : [];
+        }
       }
     },
     enabledScopes: ['pte', 'english'],

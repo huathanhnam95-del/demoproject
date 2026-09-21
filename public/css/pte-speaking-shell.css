@@ -195,4 +195,10 @@ body.pte-shell-v3 .pte-dock #ra-retry-btn { background: transparent; color: var(
 body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: hidden; pointer-events: none; }
 @media (max-width: 600px) {
   #mode-speak.speak-pte-v3 .pte-dock { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  /* Keep the open menu above the fixed site header (1100), below dialogs. */
+  #mode-speak.speak-pte-v3 .pte-modebar:has(.pte-popover) { z-index: 1200; }
+  #mode-speak.speak-pte-v3 .pte-popover {
+    position: fixed; inset: 16px 16px auto; width: auto; max-width: none;
+    max-height: calc(100dvh - 32px); overflow-y: auto;
+  }
 }

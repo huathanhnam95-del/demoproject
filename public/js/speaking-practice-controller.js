@@ -1798,10 +1798,12 @@
         (group.options || []).forEach(option => {
           const value = typeof option === 'object' ? option.value : option;
           const button = v3Element('button', 'pte-btn', option.label || String(option));
+          button.dataset.filterValue = String(value);
           button.setAttribute('aria-pressed', String(group.get?.() === value));
           button.addEventListener('click', () => {
             group.set(value);
-            [...field.querySelectorAll('button')].forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+            // A mode may reject a locked choice; reflect the accepted state.
+            [...field.querySelectorAll('button')].forEach(item => item.setAttribute('aria-pressed', String(item.dataset.filterValue === String(group.get?.()))));
             syncController(state.modeId);
           }); field.append(button);
         }); menu.append(field);

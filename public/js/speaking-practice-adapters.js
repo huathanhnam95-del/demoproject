@@ -478,6 +478,76 @@
   // English Take Notes stays legacy because enabledScopes intentionally omits it.
   controller.register({
     modeId: 'notes',
+    shell: 'v3',
+    v3: {
+      title: 'Retell Lecture',
+      cardBodySelector: '#notes-practice-area',
+      progressSteps: ['Listen', 'Feedback'],
+      phaseToStep: { loading: 0, listen: 0, complete: 0, feedback: 1 },
+      statusText: { listen: 'Listen and take notes.', complete: 'Audio ended. Review your notes and get feedback.' },
+      getPhase: () => window.TakeNotesMode?.getPtePhase?.() || 'loading',
+      onMount: () => window.TakeNotesMode?.mountPteShell?.(),
+      onSync: () => window.TakeNotesMode?.syncPteShell?.(),
+      onUnmount: () => window.TakeNotesMode?.unmountPteShell?.(),
+      filters: [
+        {
+          label: 'Status',
+          get: () => window.TakeNotesMode?.getCurrentFilter?.() || 'all',
+          set: (val) => window.TakeNotesMode?.applyFilters?.(val),
+          options: [
+            { value: 'all', label: 'All Questions' },
+            { value: 'has-video', label: 'Guiding Video' },
+            { value: 'no-video', label: 'No Guiding Video' }
+          ]
+        },
+        {
+          label: 'Difficulty',
+          get: () => window.DifficultyFilter ? window.DifficultyFilter.getCurrentDifficulty('notes') : 'all',
+          set: (val) => window.DifficultyFilter?.setDifficulty?.('notes', val),
+          options: [
+            { value: 'all', label: 'Recommended' },
+            { value: '1', label: 'Level 1 (Easy)' },
+            { value: '2', label: 'Level 2 (Medium)' },
+            { value: '3', label: 'Level 3 (Hard)' }
+          ]
+        }
+      ],
+      dock: {
+        helpers: [
+          {
+            id: 'notes-intro-video-btn',
+            label: 'Intro video',
+            phases: ['listen', 'complete'],
+            count: () => (window.TakeNotesMode?.hasGuidingVideo?.() ? 1 : 0),
+            onClick: () => window.TakeNotesMode?.openIntroVideoModal?.()
+          }
+        ],
+        actions: [
+          { sourceId: 'notes-submit-btn', label: 'Get feedback', variant: 'primary', phases: ['complete'] },
+          { sourceId: 'notes-retry-btn', label: 'Try again', variant: 'ghost', phases: ['feedback'] }
+        ]
+      },
+      next: {
+        goNext: () => window.TakeNotesMode?.advanceQuestion?.()
+      },
+      attempts: {
+        practiceMode: 'notes',
+        modeLabel: 'Retell Lecture',
+        getPromptId: () => window.TakeNotesMode?.getCurrentEntry?.()?.id || null,
+        formatScores: (attempt) => {
+          const res = attempt.resultSnapshot;
+          if (res?.score != null && Number.isFinite(Number(res.score))) {
+            const max = res.maxScore ? `/${res.maxScore}` : '';
+            return [`${res.score}${max} matched`];
+          }
+          const rawScore = attempt.score;
+          if (rawScore != null && Number.isFinite(Number(rawScore))) {
+            return [`${rawScore} matched`];
+          }
+          return ['—'];
+        }
+      }
+    },
     enabledScopes: ['pte'],
     panelId: 'mode-notes',
     // Retell Lecture as implemented never records: the flow is guiding video →
@@ -494,6 +564,11 @@
       progressHost
     },
     picker: {
+      getItems: () => window.TakeNotesMode?.getItems?.() ?? [],
+      getCurrentId: () => window.TakeNotesMode?.getCurrentEntry()?.id ?? null,
+      select: (id) => { try { window.TakeNotesMode?.selectEntryById?.(id); } catch (e) { console.error('[SPC Adapters] select error:', e); } },
+      previous: () => { try { window.TakeNotesMode?.previous?.(); } catch (e) { console.error('[SPC Adapters] previous error:', e); } },
+      next: () => { try { window.TakeNotesMode?.next?.(); } catch (e) { console.error('[SPC Adapters] next error:', e); } },
       sourceSelectId: 'question-select-notes',
       previousButtonId: 'back-btn-notes',
       nextButtonId: 'next-btn-notes'

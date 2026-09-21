@@ -40,6 +40,27 @@
     let notesAttemptStartTime = null;
     let notesPerformanceTracker = null;
 
+    // V3 State
+    let v3Active = false;
+    let v3Phase = 'loading'; // 'loading' | 'listen' | 'complete' | 'feedback'
+    let pteAudioBox = null;
+    let questionGen = 0;
+    let attemptGen = 0;
+    let v3ActiveTab = 'notes-match';
+    let v3LastResult = null;
+    let v3LastUserNotes = '';
+    let v3VideoModal = null;
+
+    function isV3() {
+        return !!(v3Active || window.PteShellConfig?.isModeEnabled?.('notes', 'pte'));
+    }
+
+    function escapeHtml(str) {
+        const d = document.createElement('div');
+        d.textContent = str || '';
+        return d.innerHTML;
+    }
+
     const REASON_LABELS = {
         level_and_continuity: 'Smart Match',
         difficulty_only: 'Difficulty Match',
@@ -175,9 +196,9 @@
         if (elements.stepAudio) elements.stepAudio.style.display = 'none';
         if (elements.stepResults) elements.stepResults.style.display = 'none';
 
-        // Show Ready / Overview Step
+        // Show Ready / Overview Step (legacy only)
         if (elements.stepReady) {
-            elements.stepReady.style.display = 'block';
+            elements.stepReady.style.display = isV3() ? 'none' : 'block';
             if (elements.readyTitle) {
                 elements.readyTitle.textContent = currentEntry
                     ? `#${currentEntry.id} ${currentEntry.title ? currentEntry.title.replace(/^#\d+\s*/, '') : 'Lecture'}`
@@ -207,6 +228,7 @@
         if (elements.youtubePlayer) {
             elements.youtubePlayer.innerHTML = '';
         }
+        closeIntroVideoModal();
 
         // Stop any playing audio
         audioLoadToken += 1;
@@ -218,6 +240,9 @@
             elements.audio.pause();
             elements.audio.removeAttribute('src');
             elements.audio.load();
+        }
+        if (pteAudioBox) {
+            pteAudioBox.reset();
         }
         const player = getAudioPlayer();
         if (player) {
@@ -320,6 +345,9 @@
         }
 
         // Play and start buttons
+        if (elements.playBtn) {
+            elements.playBtn.addEventListener('click', startPractice);
+        }
         if (elements.startBtn) {
             elements.startBtn.addEventListener('click', startPractice);
         }
@@ -874,6 +902,14 @@
         reset();
         refreshRecommendationUI();
 
+        if (isV3()) {
+            queueMicrotask(() => {
+                if (isV3() && currentEntry) {
+                    startV3QuestionFlow();
+                }
+            });
+        }
+
         // Update URL with current question ID (replaceState — no history entry per question)
         if (window.PracticeRouter && currentEntry.id) {
             window.PracticeRouter.replaceRoute('notes', currentEntry.id);
@@ -1094,21 +1130,31 @@
             return;
         }
 
-        // Hide audio step, show results step
-        if (elements.stepReady) elements.stepReady.style.display = 'none';
-        if (elements.stepVideo) elements.stepVideo.style.display = 'none';
-        if (elements.stepAudio) elements.stepAudio.style.display = 'none';
-        if (elements.stepResults) elements.stepResults.style.display = 'block';
-        window.SpeakingPracticeController?.sync?.('notes');
+        // Hide audio step, show results step (legacy only)
+        if (!isV3()) {
+            if (elements.stepReady) elements.stepReady.style.display = 'none';
+            if (elements.stepVideo) elements.stepVideo.style.display = 'none';
+            if (elements.stepAudio) elements.stepAudio.style.display = 'none';
+            if (elements.stepResults) elements.stepResults.style.display = 'block';
+        }
 
         // Compare notes with transcript
         const transcript = currentEntry.transcript || '';
         const { highlightedTranscript, matchedWords, transcriptWordCount } = compareTexts(transcript, userNotes);
 
+        if (isV3()) {
+            v3LastResult = { highlightedTranscript, matchedWords, transcriptWordCount };
+            v3LastUserNotes = userNotes;
+            v3Phase = 'feedback';
+            syncPteV3UI();
+        }
+
+        window.SpeakingPracticeController?.sync?.('notes');
+
         // Display results
-        elements.transcriptDisplay.innerHTML = highlightedTranscript;
-        elements.userDisplay.textContent = userNotes;
-        elements.matchCount.textContent = matchedWords.length;
+        if (elements.transcriptDisplay) elements.transcriptDisplay.innerHTML = highlightedTranscript;
+        if (elements.userDisplay) elements.userDisplay.textContent = userNotes;
+        if (elements.matchCount) elements.matchCount.textContent = matchedWords.length;
 
         const tracker = ensurePerformanceTracker();
         if (tracker) {
@@ -1149,6 +1195,12 @@
      * Retry practice - go back to audio step
      */
     function retryPractice() {
+        if (isV3()) {
+            if (elements.userInput) elements.userInput.value = '';
+            notesAttemptStartTime = null;
+            startV3QuestionFlow();
+            return;
+        }
         if (elements.stepResults) elements.stepResults.style.display = 'none';
         if (elements.userInput) elements.userInput.value = '';
         notesAttemptStartTime = null;
@@ -1265,15 +1317,375 @@
         }
     }
 
+    /* ──────────────────────────── V3 IMPLEMENTATION ──────────────────────────── */
+
+    function ensureV3Elements() {
+        if (!elements.practiceArea) cacheElements();
+        if (!elements.practiceArea) return;
+
+        if (elements.practiceArea) elements.practiceArea.style.display = 'block';
+
+        let instruction = document.getElementById('notes-pte-instruction');
+        if (!instruction) {
+            instruction = document.createElement('p');
+            instruction.id = 'notes-pte-instruction';
+            instruction.className = 'notes-pte-instruction';
+            instruction.textContent = 'You will hear a lecture. After listening to the lecture, in 10 seconds, please speak into the microphone and retell what you have just heard from the lecture in your own words. You will have 40 seconds to give your response.';
+            elements.practiceArea.prepend(instruction);
+        }
+
+        let stage = document.getElementById('notes-pte-stage');
+        if (!stage) {
+            stage = document.createElement('div');
+            stage.id = 'notes-pte-stage';
+            stage.className = 'notes-pte-stage';
+
+            // Audio row
+            const audioRow = document.createElement('div');
+            audioRow.className = 'notes-audio-row';
+
+            const lectureIcon = document.createElement('div');
+            lectureIcon.className = 'notes-lecture-icon';
+            lectureIcon.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`;
+            audioRow.appendChild(lectureIcon);
+
+            const audioHost = document.createElement('div');
+            audioHost.id = 'notes-pte-audio-host';
+            audioHost.className = 'notes-pte-audio-host';
+            audioRow.appendChild(audioHost);
+            stage.appendChild(audioRow);
+
+            // Notes wrapper
+            const notesWrapper = document.createElement('div');
+            notesWrapper.className = 'notes-v3-notes-wrapper';
+
+            const notesHeader = document.createElement('div');
+            notesHeader.className = 'notes-v3-header';
+            notesHeader.innerHTML = `<span class="notes-v3-title">Your notes</span><span id="notes-v3-subtitle" class="notes-v3-subtitle">· type while you listen</span>`;
+            notesWrapper.appendChild(notesHeader);
+
+            if (elements.userInput) {
+                elements.userInput.className = 'notes-v3-textarea';
+                notesWrapper.appendChild(elements.userInput);
+            }
+            stage.appendChild(notesWrapper);
+
+            if (instruction.nextSibling) {
+                elements.practiceArea.insertBefore(stage, instruction.nextSibling);
+            } else {
+                elements.practiceArea.appendChild(stage);
+            }
+        }
+
+        const audioHost = document.getElementById('notes-pte-audio-host');
+        if (audioHost && !pteAudioBox && elements.audio && window.PteAudioBox) {
+            pteAudioBox = window.PteAudioBox.create(audioHost, { audio: elements.audio });
+        }
+
+        let feedback = document.getElementById('notes-pte-feedback');
+        if (!feedback) {
+            feedback = document.createElement('div');
+            feedback.id = 'notes-pte-feedback';
+            feedback.className = 'notes-pte-feedback pte-fb';
+            feedback.style.display = 'none';
+            feedback.hidden = true;
+
+            const grid = document.createElement('div');
+            grid.className = 'notes-fb-grid';
+
+            // Left column
+            const leftCol = document.createElement('div');
+            leftCol.className = 'notes-fb-left';
+            leftCol.innerHTML = `
+                <h4 class="notes-fb-heading">Your Notes</h4>
+                <div id="notes-v3-matched-notes" class="notes-v3-matched-notes"></div>
+            `;
+            grid.appendChild(leftCol);
+
+            // Right column
+            const rightCol = document.createElement('div');
+            rightCol.className = 'notes-fb-right';
+            rightCol.innerHTML = `
+                <div class="notes-v3-fb-tabs">
+                    <button type="button" class="notes-v3-fb-tab active" data-v3-tab="notes-match">Notes match</button>
+                    <button type="button" class="notes-v3-fb-tab" data-v3-tab="transcript">Lecture transcript</button>
+                </div>
+                <div id="notes-v3-match-panel" class="notes-v3-fb-panel">
+                    <div class="notes-results-stats"><span id="notes-v3-match-count">0</span> words matched</div>
+                    <div id="notes-v3-match-details" class="notes-v3-match-details"></div>
+                </div>
+                <div id="notes-v3-transcript-panel" class="notes-v3-fb-panel" style="display: none;">
+                    <div id="notes-v3-transcript-display" class="notes-transcript-display"></div>
+                </div>
+            `;
+            grid.appendChild(rightCol);
+            feedback.appendChild(grid);
+            elements.practiceArea.appendChild(feedback);
+
+            const tabButtons = feedback.querySelectorAll('.notes-v3-fb-tab');
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tab = btn.dataset.v3Tab;
+                    v3ActiveTab = tab;
+                    tabButtons.forEach(b => b.classList.toggle('active', b === btn));
+                    const matchP = document.getElementById('notes-v3-match-panel');
+                    const transP = document.getElementById('notes-v3-transcript-panel');
+                    if (matchP) matchP.style.display = tab === 'notes-match' ? 'flex' : 'none';
+                    if (transP) transP.style.display = tab === 'transcript' ? 'flex' : 'none';
+                });
+            });
+        }
+    }
+
+    function syncPteV3UI() {
+        if (!isV3()) return;
+        const stage = document.getElementById('notes-pte-stage');
+        const feedback = document.getElementById('notes-pte-feedback');
+        if (elements.practiceArea) elements.practiceArea.style.display = 'block';
+
+        if (v3Phase === 'feedback') {
+            if (stage) { stage.hidden = true; stage.style.display = 'none'; }
+            if (feedback) { feedback.hidden = false; feedback.style.display = 'flex'; }
+            renderV3Feedback();
+        } else {
+            if (stage) { stage.hidden = false; stage.style.display = 'flex'; }
+            if (feedback) { feedback.hidden = true; feedback.style.display = 'none'; }
+        }
+    }
+
+    async function startV3QuestionFlow() {
+        if (!v3Active || !currentEntry) return;
+        closeIntroVideoModal();
+        const qGen = ++questionGen;
+        const aGen = ++attemptGen;
+        v3Phase = 'listen';
+        syncPteShell();
+
+        ensureV3Elements();
+        syncPteV3UI();
+
+        if (elements.userInput) {
+            elements.userInput.value = '';
+        }
+        notesAttemptStartTime = null;
+
+        loadAudio(currentEntry.id);
+        pteAudioBox?.reset?.();
+
+        const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
+        const cdSec = scale < 1 ? 1 : 3;
+
+        try {
+            if (pteAudioBox) {
+                await pteAudioBox.countdown(cdSec);
+            }
+        } catch (err) {
+            if (err?.name === 'AbortError' || qGen !== questionGen || aGen !== attemptGen) return;
+        }
+        if (qGen !== questionGen || aGen !== attemptGen || !v3Active) return;
+
+        try {
+            if (pteAudioBox) {
+                await pteAudioBox.play();
+            }
+        } catch (err) {
+            if (err?.name === 'AbortError' || qGen !== questionGen || aGen !== attemptGen) return;
+            console.warn('[TakeNotes v3] Audio play error:', err);
+        }
+        if (qGen !== questionGen || aGen !== attemptGen || !v3Active) return;
+
+        v3Phase = 'complete';
+        syncPteShell();
+        syncPteV3UI();
+    }
+
+    function renderV3Feedback() {
+        const feedback = document.getElementById('notes-pte-feedback');
+        if (!feedback || !v3LastResult) return;
+
+        const matchedNotes = document.getElementById('notes-v3-matched-notes');
+        if (matchedNotes) {
+            const userNotes = v3LastUserNotes || '';
+            const matchedSet = new Set((v3LastResult.matchedWords || []).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')));
+            const tokens = userNotes.split(/(\s+)/);
+            const html = tokens.map(tok => {
+                const cleanTok = tok.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (cleanTok && matchedSet.has(cleanTok)) {
+                    return `<span class="notes-matched">${escapeHtml(tok)}</span>`;
+                }
+                return escapeHtml(tok);
+            }).join('');
+            matchedNotes.innerHTML = html || '<em>No notes entered</em>';
+        }
+
+        const countEl = document.getElementById('notes-v3-match-count');
+        if (countEl) {
+            countEl.textContent = v3LastResult.matchedWords?.length || 0;
+        }
+
+        const matchDetails = document.getElementById('notes-v3-match-details');
+        if (matchDetails) {
+            const matchLen = v3LastResult.matchedWords?.length || 0;
+            const totalWords = v3LastResult.transcriptWordCount || 1;
+            const pct = Math.min(100, Math.round((matchLen / totalWords) * 100));
+            matchDetails.innerHTML = `<p><strong>Coverage:</strong> ${pct}% of key lecture terms identified</p>`;
+        }
+
+        const transcriptEl = document.getElementById('notes-v3-transcript-display');
+        if (transcriptEl) {
+            transcriptEl.innerHTML = v3LastResult.highlightedTranscript || '';
+        }
+    }
+
+    function openIntroVideoModal() {
+        if (!currentEntry?.videoUrl || currentEntry.videoUrl.trim().length === 0) {
+            showToast('No intro video available for this lecture.');
+            return;
+        }
+        const videoId = extractVideoId(currentEntry.videoUrl);
+        if (!videoId) {
+            showToast('Intro video is not available.');
+            return;
+        }
+
+        closeIntroVideoModal();
+        const opener = document.getElementById('notes-intro-video-btn') || document.activeElement;
+
+        const overlay = document.createElement('div');
+        overlay.id = 'notes-video-modal-overlay';
+        overlay.className = 'pte-dialog-overlay';
+
+        const dialog = document.createElement('div');
+        dialog.id = 'notes-video-dialog';
+        dialog.className = 'pte-dialog notes-video-dialog';
+        dialog.setAttribute('role', 'dialog');
+        dialog.setAttribute('aria-modal', 'true');
+        dialog.setAttribute('aria-labelledby', 'notes-video-modal-title');
+
+        dialog.innerHTML = `
+            <div class="notes-video-dialog-header">
+                <h3 id="notes-video-modal-title">Intro Video · ${escapeHtml(currentEntry.title ? currentEntry.title.replace(/^#\d+\s*/, '') : 'Lecture')}</h3>
+                <button type="button" class="notes-video-dialog-close" aria-label="Close intro video">✕</button>
+            </div>
+            <div class="notes-video-dialog-body">
+                <iframe
+                    width="100%"
+                    height="100%"
+                    src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1"
+                    frameborder="0"
+                    allow="autoplay; encrypted-media"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        `;
+
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        const closeBtn = dialog.querySelector('.notes-video-dialog-close');
+        const closeHandler = () => {
+            closeIntroVideoModal();
+            if (opener && opener.isConnected) opener.focus();
+        };
+        closeBtn.addEventListener('click', closeHandler);
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeHandler();
+        });
+
+        const keyHandler = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                closeHandler();
+            }
+        };
+        overlay.addEventListener('keydown', keyHandler);
+
+        v3VideoModal = {
+            overlay,
+            close: () => {
+                overlay.removeEventListener('keydown', keyHandler);
+                const iframe = overlay.querySelector('iframe');
+                if (iframe) iframe.src = '';
+                overlay.remove();
+                v3VideoModal = null;
+            }
+        };
+
+        closeBtn.focus();
+    }
+
+    function closeIntroVideoModal() {
+        if (v3VideoModal) {
+            v3VideoModal.close();
+            v3VideoModal = null;
+        }
+    }
+
+    function mountPteShell() {
+        v3Active = true;
+        const modePanel = document.getElementById('mode-notes');
+        if (modePanel) modePanel.classList.add('notes-pte-v3');
+        ensureV3Elements();
+        if (currentEntry) {
+            queueMicrotask(() => {
+                if (v3Active && currentEntry) {
+                    startV3QuestionFlow();
+                }
+            });
+        }
+        syncPteV3UI();
+    }
+
+    function unmountPteShell() {
+        v3Active = false;
+        const modePanel = document.getElementById('mode-notes');
+        if (modePanel) modePanel.classList.remove('notes-pte-v3');
+        closeIntroVideoModal();
+        pteAudioBox?.reset?.();
+        v3Phase = 'loading';
+        const inst = document.getElementById('notes-pte-instruction');
+        if (inst) inst.remove();
+        const st = document.getElementById('notes-pte-stage');
+        if (st) st.remove();
+        const fb = document.getElementById('notes-pte-feedback');
+        if (fb) fb.remove();
+        pteAudioBox = null;
+    }
+
+    function syncPteShell() {
+        if (!isV3()) return;
+        try {
+            window.SpeakingPracticeController?.sync?.('notes');
+        } catch (_) {}
+    }
+
+    function advanceQuestion() {
+        if (!filteredEntries || filteredEntries.length === 0) return;
+        const nextIndex = (currentEntryIndex + 1) % filteredEntries.length;
+        selectEntry(nextIndex);
+    }
+
+    function selectEntryById(id) {
+        const idx = filteredEntries.findIndex(e => String(e.id) === String(id));
+        if (idx >= 0) selectEntry(idx);
+    }
+
     async function onEnter() {
         init();
         if (!isInitialized) return false;
+        if (isV3()) {
+            mountPteShell();
+        }
         const load = beginEntryGeneration();
         const loaded = await loadEntries(load);
         if (!isEntryGenerationActive(load.generation)) return false;
         if (!loaded && !hasLoadedEntries) return false;
         if (window.PracticeRouter && currentEntry?.id) {
             window.PracticeRouter.replaceRoute('notes', currentEntry.id);
+        }
+        if (isV3() && currentEntry) {
+            startV3QuestionFlow();
         }
         try {
             window.SpeakingPracticeController?.sync?.('notes');
@@ -1286,6 +1698,9 @@
         if (entryAbortController) {
             entryAbortController.abort();
             entryAbortController = null;
+        }
+        if (isV3()) {
+            unmountPteShell();
         }
         reset();
     }
@@ -1306,12 +1721,26 @@
         loadEntries,
         applyFilters: applyFilter,
         selectEntry,
+        selectEntryById,
         startPractice,
         retryAudio: () => currentEntry ? loadAudio(currentEntry.id) : Promise.resolve(false),
         submitNotes,
         retryPractice,
         getCurrentEntry: () => currentEntry,
-        getItems: () => filteredEntries
+        getItems: () => filteredEntries,
+        previous: goToPrevious,
+        next: goToNext,
+        // v3 methods
+        mountPteShell,
+        unmountPteShell,
+        syncPteShell,
+        getPtePhase: () => v3Phase,
+        startV3QuestionFlow,
+        advanceQuestion,
+        openIntroVideoModal,
+        closeIntroVideoModal,
+        hasGuidingVideo: () => !!(currentEntry?.videoUrl && currentEntry.videoUrl.trim().length > 0),
+        getCurrentFilter: () => currentFilter
     };
 
     // Deep-link support: listen for PracticeRouter question navigation events

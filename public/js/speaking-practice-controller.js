@@ -1676,6 +1676,10 @@
     (dock.actions || []).forEach(action => {
       const button = document.getElementById(action.sourceId);
       if (!button) return;
+      if (button.tagName === 'BUTTON' && !button.hasAttribute('type')) {
+        button.type = 'button';
+        button.setAttribute('type', 'button');
+      }
       const record = rememberV3(state, button, state.v3DOM.actions);
       if (action.label) {
         record.children = [...button.childNodes]; button.textContent = action.label;

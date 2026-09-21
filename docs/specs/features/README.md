@@ -20,3 +20,4 @@ This folder contains the detailed specifications for each **core function** refe
 - [Survival Mode](survival-mode.md)
 - [Admin & CRM](admin-and-crm.md)
 - [AI Services](ai-services.md)
+- [PTE Speaking Shell v3](pte-speaking-shell-v3.md)

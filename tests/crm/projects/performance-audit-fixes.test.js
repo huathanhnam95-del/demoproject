@@ -22,6 +22,12 @@ class MockNode {
         this.innerHTML = '';
         this.hidden = false;
         this.disabled = false;
+        this.classList = {
+            toggle() {},
+            add() {},
+            remove() {},
+            contains() { return false; }
+        };
     }
     setAttribute(k, v) { this.attrs[k] = String(v); if (k === 'disabled') this.disabled = true; }
     removeAttribute(k) { delete this.attrs[k]; if (k === 'disabled') this.disabled = false; }
@@ -54,7 +60,7 @@ class MockNode {
     elements = { namedItem: name => new MockNode('input') };
 }
 
-function createBoardHarness() {
+function createBoardHarness(options = {}) {
     const elMap = new Map();
     const el = id => {
         if (!elMap.has(id)) elMap.set(id, new MockNode());
@@ -65,7 +71,7 @@ function createBoardHarness() {
         'projectsBoardHeader', 'projectsBoardTable', 'projectsBoardCount', 'projectsBoardWorkspace',
         'projectsBoardDetailBody', 'projectsBoardDetailTitle', 'projectsBoardSettingsName',
         'projectsBoardSettingsDescription', 'projectsBoardStatusNotStarted', 'projectsBoardStatusInProgress',
-        'projectsBoardStatusBlocked', 'projectsBoardStatusDone'
+        'projectsBoardStatusBlocked', 'projectsBoardStatusDone', 'projectsBoardStatus'
     ].map(name => [name, el(name)]));
 
     const document = {
@@ -89,9 +95,9 @@ function createBoardHarness() {
     vm.runInNewContext(boardSource, context);
 
     let tasksData = [
-        { id: 't1', title: 'Task 1', status: 'not_started', sectionId: 'sec1', rank: '0|hzzzzz:', lifecycle: 'active' },
-        { id: 't2', title: 'Task 2', status: 'not_started', sectionId: 'sec1', rank: '0|i00000:', lifecycle: 'active' },
-        { id: 't3', title: 'Subtask 1', parentTaskId: 't1', status: 'in_progress', rank: '0|hzzzzz:', lifecycle: 'active' }
+        { id: 't1', title: 'Task 1', status: 'not_started', sectionId: 'sec1', effectiveSectionId: 'sec1', rank: '0|hzzzzz:', lifecycle: 'active' },
+        { id: 't2', title: 'Task 2', status: 'not_started', sectionId: 'sec1', effectiveSectionId: 'sec1', rank: '0|i00000:', lifecycle: 'active' },
+        { id: 't3', title: 'Subtask 1', parentTaskId: 't1', status: 'in_progress', effectiveSectionId: 'sec1', rank: '0|hzzzzz:', lifecycle: 'active' }
     ];
 
     const controller = context.CrmProjectsBoard.createController({
@@ -99,6 +105,7 @@ function createBoardHarness() {
         getCurrentUser: () => ({ uid: 'user1' }),
         onContextChanged: ctx => contextChanges.push(ctx),
         apiFetchJson: async (url, opts) => {
+            if (options.apiFetchJson) return options.apiFetchJson(url, opts);
             if (opts) {
                 mutations.push({ url, body: JSON.parse(opts.body || '{}') });
                 if (url.includes('/move')) {
@@ -163,6 +170,9 @@ test('batch section move updates target index monotonically for each item', asyn
     assert.equal(h.mutations.length, 2, 'Two tasks should be moved');
     assert.equal(h.mutations[0].body.index, 0, 'First moved task should target index 0');
     assert.equal(h.mutations[1].body.index, 1, 'Second moved task should target index 1, not stale index 0');
+    assert.equal(h.controller.getState().tasks.get('t1').sectionId, 'sec2');
+    assert.equal(h.controller.getState().tasks.get('t1').effectiveSectionId, 'sec2', 'effectiveSectionId must be reconciled to target section');
+    assert.equal(h.controller.getState().tasks.get('t3').effectiveSectionId, 'sec2', 'loaded subtask effectiveSectionId must be propagated');
 });
 
 test('invalidateAccess clears header and subsequent project load re-renders header DOM', async () => {
@@ -180,11 +190,11 @@ test('invalidateAccess clears header and subsequent project load re-renders head
     assert.ok(h.elements.projectsBoardHeader.innerHTML.length > 0, 'Header must be re-rendered on re-entry and not suppressed by cached signature');
 });
 
-test('views mutate extracts canonicalTask from result.result and invokes board.updateTask', async () => {
+test('views mutate extracts canonicalTask from result.result and invokes board.updateTask, ignoring late responses across task switches', async () => {
     let updatedBoardTask = null;
     let boardRefreshCalled = false;
     const board = {
-        getState: () => ({ project: { id: 'p1' }, membership: { role: 'Owner' }, tasks: new Map() }),
+        getState: () => ({ project: { id: 'p1', structureRevision: 1 }, membership: { role: 'Owner' }, tasks: new Map() }),
         updateTask: (t) => { updatedBoardTask = t; },
         refresh: async () => { boardRefreshCalled = true; }
     };
@@ -195,11 +205,14 @@ test('views mutate extracts canonicalTask from result.result and invokes board.u
         return controls.get(id);
     };
     const context = {
-        console, URLSearchParams, Date, Math,
+        console, URLSearchParams, Date, Math, Array, Object,
         crypto: { randomUUID: () => 'op-123' },
         document: { getElementById: el, querySelectorAll: () => [], createElement: tag => new MockNode(tag) }
     };
     vm.runInNewContext(viewsSource, context);
+
+    let resolveHeldMutation = null;
+    let heldMutationPromise = null;
 
     const controller = context.CrmProjectsViews.createController({
         board,
@@ -207,15 +220,18 @@ test('views mutate extracts canonicalTask from result.result and invokes board.u
         apiFetchJson: async (url, opts) => {
             if (url.includes('/views?')) {
                 return {
-                    project: { id: 'p1', lifecycle: 'active', revision: 1 },
+                    project: { id: 'p1', lifecycle: 'active', revision: 1, structureRevision: 1 },
                     membership: { role: 'Owner' },
                     tasks: [{ id: 't1', title: 'Task 1', revision: 2, startDate: '2026-08-01' }]
                 };
             }
-            if (url.endsWith('/schedule-apply')) {
+            if (url.includes('/tasks/t1/dependencies')) {
+                if (heldMutationPromise) {
+                    return heldMutationPromise;
+                }
                 return {
                     result: {
-                        task: { id: 't1', revision: 3, startDate: '2026-09-10', dueDate: '2026-09-15' }
+                        task: { id: 't1', revision: 3, predecessorTaskIds: ['t2'] }
                     }
                 };
             }
@@ -227,7 +243,51 @@ test('views mutate extracts canonicalTask from result.result and invokes board.u
     await flush();
     controller.setTask({ id: 't1', title: 'Task 1', revision: 2, startDate: '2026-08-01' });
 
+    // 1. Submit dependency update and verify canonicalTask extracted and board.updateTask called
+    el('projects-task-predecessors').value = 't2';
+    el('projects-task-planning').listeners.submit({
+        preventDefault() {},
+        target: { id: 'projects-task-dependencies' }
+    });
+    await flush();
+
     assert.equal(boardRefreshCalled, false, 'Full board refresh should be skipped in favor of targeted updateTask');
+    assert.ok(updatedBoardTask, 'board.updateTask should have been called');
+    assert.equal(updatedBoardTask.id, 't1');
+    assert.equal(updatedBoardTask.revision, 3);
+    assert.deepEqual(Array.from(updatedBoardTask.predecessorTaskIds), ['t2']);
+    assert.equal(updatedBoardTask.projectId, 'p1');
+
+    // 2. Late response holding regression test:
+    // Hold an in-flight mutation on t1, switch task to t2, resolve t1 mutation, and assert t2 state is untouched
+    updatedBoardTask = null;
+    heldMutationPromise = new Promise(resolve => {
+        resolveHeldMutation = resolve;
+    });
+
+    el('projects-task-predecessors').value = 't3';
+    el('projects-task-planning').listeners.submit({
+        preventDefault() {},
+        target: { id: 'projects-task-dependencies' }
+    });
+    await flush();
+
+    // Now user switches to task t2 before the response returns
+    controller.setTask({ id: 't2', title: 'Task 2', revision: 1, projectId: 'p1' });
+    await flush();
+
+    assert.equal(controller.getState().selectedTaskId, 't2');
+
+    // Now late response for t1 arrives
+    resolveHeldMutation({
+        result: {
+            task: { id: 't1', revision: 4, predecessorTaskIds: ['t3'] }
+        }
+    });
+    await flush();
+
+    assert.equal(controller.getState().selectedTaskId, 't2', 'Active task must remain t2');
+    assert.equal(updatedBoardTask, null, 'Late response for t1 must not invoke board.updateTask while t2 is active');
 });
 
 test('readCalendarContext rejects invalid or empty project IDs with DomainError', async () => {
@@ -247,26 +307,147 @@ test('readCalendarContext rejects invalid or empty project IDs with DomainError'
 });
 
 test('viewCalendarService returns full task fields on dependencies and apply', async () => {
-    const { assertDependencyGraph } = require('../../../functions/src/crm/projects/view-calendar-service');
-    const graph = assertDependencyGraph([{ id: 't1', data: {} }, { id: 't2', data: {} }], 't1', ['t2']);
-    assert.deepEqual(graph, ['t2']);
+    const { createViewCalendarService } = require('../../../functions/src/crm/projects/view-calendar-service');
+    const { PROJECT_COLLECTIONS } = require('../../../functions/src/crm/projects/access-service');
+
+    const records = new Map();
+    const col = p => ({
+        doc: id => ref(`${p}/${id}`),
+        limit: n => ({
+            get: async () => {
+                const prefix = `${p}/`;
+                const docs = [];
+                for (const [k, v] of records.entries()) {
+                    if (k.startsWith(prefix) && k.slice(prefix.length).indexOf('/') === -1) {
+                        docs.push({ id: k.slice(prefix.length), data: () => v, ref: ref(k), updateTime: '2026-09-01T00:00:00Z' });
+                    }
+                }
+                return { docs: docs.slice(0, n) };
+            }
+        })
+    });
+    function ref(p) {
+        return {
+            path: p,
+            id: p.split('/').pop(),
+            get: async () => ({ exists: records.has(p), data: () => records.get(p) }),
+            collection: name => col(`${p}/${name}`)
+        };
+    }
+
+    records.set('crmProjects/p1', { lifecycle: 'active', structureRevision: 1, dependencyRevision: 1 });
+    records.set('crmProjects/p1/sections/sec1', { lifecycle: 'active', rank: '0|hzzzzz:' });
+    records.set(`${PROJECT_COLLECTIONS.organizationConfig}/calendar`, {
+        workingWeekdays: [1, 2, 3, 4, 5],
+        holidayChoices: {
+            2026: { tetScheme: 'before1_after3', nationalDayAdjacent: 'before', adoptPublicSectorSwaps: false }
+        }
+    });
+    records.set('crmProjects/p1/tasks/t1', { revision: 2, sectionId: 'sec1', lifecycle: 'active', predecessorTaskIds: [], startDate: '2026-09-01', dueDate: '2026-09-05' });
+    records.set('crmProjects/p1/tasks/t2', { revision: 1, sectionId: 'sec1', lifecycle: 'active', predecessorTaskIds: [], startDate: '2026-08-20', dueDate: '2026-08-25' });
+
+    const transaction = {
+        get: async target => {
+            if (target.docs) return target;
+            if (target.get) return target.get();
+            const p = target.path;
+            return { exists: records.has(p), data: () => records.get(p), id: p.split('/').pop(), ref: target, updateTime: '2026-09-01T00:00:00Z' };
+        },
+        update: (r, data) => {
+            records.set(r.path, { ...records.get(r.path), ...data });
+        },
+        set: (r, data) => {
+            records.set(r.path, data);
+        }
+    };
+
+    const db = {
+        collection: name => col(name),
+        doc: path => ref(path),
+        runTransaction: async fn => fn(transaction)
+    };
+
+    const accessService = {
+        assertTransactionContentAccess: async () => ({ role: 'Owner' })
+    };
+
+    const commandService = {
+        runCommand: async ({ execute }) => execute({ transaction })
+    };
+
+    const service = createViewCalendarService({
+        db,
+        accessService,
+        commandService,
+        now: () => new Date('2026-09-01T00:00:00Z')
+    });
+
+    const identity = { uid: 'user1' };
+
+    // 1. Test dependencies()
+    const depRes = await service.dependencies(identity, 'p1', 't1', {
+        expectedRevision: 2,
+        expectedStructureRevision: 1,
+        predecessorTaskIds: ['t2'],
+        operationId: 'op-dep-1'
+    });
+    assert.equal(depRes.result.task.id, 't1');
+    assert.equal(depRes.result.task.revision, 3);
+    assert.deepEqual(depRes.result.task.predecessorTaskIds, ['t2']);
+
+    // 2. Test preview() and apply()
+    const prevRes = await service.preview(identity, 'p1', {
+        taskId: 't1',
+        expectedRevision: 3,
+        startDate: '2026-09-02',
+        dueDate: '2026-09-06'
+    });
+    assert.ok(prevRes.preview.token);
+    assert.equal(prevRes.preview.canApply, true);
+
+    const applyRes = await service.apply(identity, 'p1', {
+        previewToken: prevRes.preview.token,
+        operationId: 'op-apply-1'
+    });
+    assert.equal(applyRes.result.task.id, 't1');
+    assert.equal(applyRes.result.task.revision, 4);
+    assert.equal(applyRes.result.task.startDate, '2026-09-02');
+    assert.equal(applyRes.result.task.dueDate, '2026-09-06');
 });
 
 test('readBranch later-page failure preserves page 1 tasks and sets warning status', async () => {
     let pageCount = 0;
-    const h = createBoardHarness();
+    const h = createBoardHarness({
+        apiFetchJson: async (url, opts) => {
+            if (url.endsWith('/member-directory')) return { people: [] };
+            if (url.includes('/tasks?')) {
+                pageCount++;
+                if (pageCount === 1) {
+                    return {
+                        tasks: [
+                            { id: 't1', title: 'Task 1', status: 'not_started', sectionId: 'sec1', effectiveSectionId: 'sec1', rank: '0|hzzzzz:', lifecycle: 'active' },
+                            { id: 't2', title: 'Task 2', status: 'not_started', sectionId: 'sec1', effectiveSectionId: 'sec1', rank: '0|i00000:', lifecycle: 'active' }
+                        ],
+                        sections: [{ id: 'sec1', title: 'Section 1', rank: '0|hzzzzz:' }],
+                        columns: [],
+                        nextCursor: 'cur_page_2'
+                    };
+                }
+                throw new Error('Connection lost fetching page 2');
+            }
+            return { project: { id: 'p1', lifecycle: 'active', structureRevision: 1, schemaRevision: 1 }, membership: { role: 'Owner' } };
+        }
+    });
     await flush();
 
-    // Now re-load with multi-page where page 2 fails
-    const statusMessages = [];
-    h.el('projectsBoardStatus').textContent = '';
-    const originalSetStatus = h.controller.setStatus;
-
-    const controller = h.controller;
-    // We verify page 1 tasks are present
-    const state = controller.getState();
-    assert.ok(state.tasks.has('t1'));
-    assert.ok(state.tasks.has('t2'));
+    const state = h.controller.getState();
+    assert.ok(state.tasks.has('t1'), 'Page 1 task t1 should be preserved in state');
+    assert.ok(state.tasks.has('t2'), 'Page 1 task t2 should be preserved in state');
+    assert.equal(state.authorizationReady, true, 'Authorization ready should be released upon page 1 render');
+    assert.ok(
+        h.elements.projectsBoardStatus.textContent.includes('Some tasks could not be loaded: Connection lost fetching page 2'),
+        'Warning status should be preserved on status element and not overwritten by finally block'
+    );
 });
 
 test('commandService updateTask gates column schema read and enforces section lifecycle check', async () => {

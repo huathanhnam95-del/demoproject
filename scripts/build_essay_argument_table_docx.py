@@ -8,12 +8,12 @@ from docx.enum.section import WD_SECTION, WD_ORIENT
 from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import qn, nsdecls
 
-ESSAY_QUESTIONS_DATA_A2_B1 = [
+ESSAY_QUESTIONS_DATA = [
     {
         "id": 5,
         "question": "With cities expanding, governments should look forward to creating better networks of public transport available for everyone rather than building more roads for vehicle owning population. To what extent do you agree or disagree?",
         "side1": {
-            "opinion": "Opinion: Agree (Đồng ý - Nên ưu tiên xe buýt và tàu điện)",
+            "opinion": "Opinion: Agree (Đồng ý)",
             "points": [
                 {
                     "title": "Saving money for workers and students (Tiết kiệm tiền đi lại cho người lao động và học sinh)",
@@ -35,7 +35,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
             ]
         },
         "side2": {
-            "opinion": "Opinion: Disagree (Không đồng ý - Vẫn rất cần mở rộng đường cho xe máy và ô tô)",
+            "opinion": "Opinion: Disagree (Không đồng ý)",
             "points": [
                 {
                     "title": "Buses cannot enter small residential alleys (Xe buýt không thể đi vào các con ngõ nhỏ)",
@@ -61,7 +61,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
         "id": 9,
         "question": "Climate change is a concerning global issue. Who has the main responsibility to take action to solve this problem, governments, large companies, or individuals?",
         "side1": {
-            "opinion": "Opinion: Governments and Big Companies (Chính phủ và các công ty lớn chịu trách nhiệm chính)",
+            "opinion": "Opinion: Governments and Big Companies (Chính phủ & Các công ty lớn)",
             "points": [
                 {
                     "title": "Making strict laws and stopping factory pollution (Ban hành luật nghiêm và phạt các nhà máy xả thải)",
@@ -83,7 +83,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
             ]
         },
         "side2": {
-            "opinion": "Opinion: Individuals and Families (Từng cá nhân và gia đình đóng vai trò quyết định)",
+            "opinion": "Opinion: Individuals and Families (Từng cá nhân & Hộ gia đình)",
             "points": [
                 {
                     "title": "Small daily habits save a lot of energy (Những thói quen nhỏ hàng ngày giúp tiết kiệm nhiều năng lượng)",
@@ -109,7 +109,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
         "id": 17,
         "question": "Many education systems assess students' learning using formal written examinations. Those kinds of exams are a valid method. To what extent do you agree or disagree? Give examples with your own experience.",
         "side1": {
-            "opinion": "Opinion: Agree (Đồng ý - Thi viết là cách kiểm tra công bằng và rõ ràng)",
+            "opinion": "Opinion: Agree (Đồng ý)",
             "points": [
                 {
                     "title": "Fair grading without teacher favoritism (Chấm điểm công bằng, không bị thầy cô thiên vị)",
@@ -131,7 +131,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
             ]
         },
         "side2": {
-            "opinion": "Opinion: Disagree (Không đồng ý - Thi viết gây nhiều áp lực và chưa đủ thực tế)",
+            "opinion": "Opinion: Disagree (Không đồng ý)",
             "points": [
                 {
                     "title": "Encouraging students to memorize without understanding (Học sinh dễ học vẹt đối phó rồi quên hết sau khi thi)",
@@ -157,7 +157,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
         "id": 24,
         "question": "The information revolution brought about by modern mass communications has both positive and negative consequences for individuals and society. To what extent do you agree with this statement? Give the reason with your own experience.",
         "side1": {
-            "opinion": "Opinion: Positive Effects (Mặt tích cực - Giúp cuộc sống tiện lợi và gắn kết hơn)",
+            "opinion": "Opinion: Positive Effects (Mặt tích cực / Lợi ích)",
             "points": [
                 {
                     "title": "Calling family and friends for free anytime (Gọi điện và nhìn thấy người thân ở xa hoàn toàn miễn phí)",
@@ -179,7 +179,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
             ]
         },
         "side2": {
-            "opinion": "Opinion: Negative Effects (Mặt tiêu cực - Gây mệt mỏi và làm giảm tiếp xúc trực tiếp)",
+            "opinion": "Opinion: Negative Effects (Mặt tiêu cực / Bất lợi)",
             "points": [
                 {
                     "title": "Fake news and online scams cause panic and loss of money (Tin đồn giả và lừa đảo trên mạng gây hoang mang, mất tiền)",
@@ -205,7 +205,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
         "id": 30,
         "question": "In many towns and cities large shopping malls are replacing small local shops. Some people say that this is a positive development. To what extent do you agree?",
         "side1": {
-            "opinion": "Opinion: Agree / Positive (Đồng ý / Tích cực - Trung tâm thương mại sạch sẽ và tiện lợi)",
+            "opinion": "Opinion: Agree / Positive (Đồng ý / Tích cực)",
             "points": [
                 {
                     "title": "Clean, cool place with everything under one roof (Chỗ vui chơi sạch sẽ, mát mẻ, có đủ mọi thứ ở một nơi)",
@@ -227,7 +227,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
             ]
         },
         "side2": {
-            "opinion": "Opinion: Disagree / Negative (Không đồng ý / Tiêu cực - Mất đi tiệm tạp hóa nhỏ và tình làng nghĩa xóm)",
+            "opinion": "Opinion: Disagree / Negative (Không đồng ý / Tiêu cực)",
             "points": [
                 {
                     "title": "Small family shops lose their business and income (Các tiệm tạp hóa gia đình bị mất khách và khó kiếm sống)",
@@ -253,7 +253,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
         "id": 35,
         "question": "The mass media, such as TV, radio and newspapers, have an influence on people, particularly on younger generations. It plays a pivotal role in shaping the opinions of people, especially teenagers and young people. To what extent do you agree with this? Please give examples.",
         "side1": {
-            "opinion": "Opinion: Agree (Đồng ý - Truyền thông mạng ảnh hưởng rất lớn đến người trẻ)",
+            "opinion": "Opinion: Agree (Đồng ý)",
             "points": [
                 {
                     "title": "Copying fashion, food, and shopping trends online (Bắt chước cách ăn mặc, ăn uống và mua sắm theo trào lưu trên mạng)",
@@ -275,7 +275,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
             ]
         },
         "side2": {
-            "opinion": "Opinion: Disagree (Không đồng ý - Gia đình và đời thực mới là thứ quan trọng nhất)",
+            "opinion": "Opinion: Disagree (Không đồng ý)",
             "points": [
                 {
                     "title": "Parents and teachers teach the most important life values (Cha mẹ và thầy cô mới là người dạy các nếp sống quan trọng nhất)",
@@ -301,7 +301,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
         "id": 39,
         "question": "Nowadays, it is increasingly more difficult to maintain the right balance between work and the other aspects of one's life, such as leisure pursuits with family members. How important do you think this balance is and what are the reasons why some people think that this is hard to achieve？",
         "side1": {
-            "opinion": "Opinion: Balance Is Very Important (Cân bằng là rất quan trọng - Tốt cho sức khỏe và gia đình)",
+            "opinion": "Opinion: Balance Is Very Important (Cân bằng là rất quan trọng)",
             "points": [
                 {
                     "title": "Keeping the body and mind healthy without getting sick (Giữ cho cơ thể khỏe mạnh, tránh kiệt sức và đổ bệnh)",
@@ -323,7 +323,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
             ]
         },
         "side2": {
-            "opinion": "Opinion: Why It Is Hard to Achieve (Vì sao khó đạt được - Vật giá đắt đỏ và điện thoại làm phiền)",
+            "opinion": "Opinion: Reasons Why It Is Hard to Achieve (Những lý do khó đạt được)",
             "points": [
                 {
                     "title": "High living costs force people to work extra hours (Vật giá đắt đỏ buộc mọi người phải làm thêm giờ để kiếm tiền)",
@@ -349,7 +349,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
         "id": 43,
         "question": "Should parents be held legally responsible for the actions of their children? Support your opinion from your study, observations or experiences.",
         "side1": {
-            "opinion": "Opinion: Agree / Yes (Đồng ý - Cha mẹ nên chịu trách nhiệm tiền bạc và quản lý con)",
+            "opinion": "Opinion: Agree / Yes (Đồng ý - Cha mẹ nên chịu trách nhiệm)",
             "points": [
                 {
                     "title": "Parents buy the phones and motorbikes used by their kids (Cha mẹ là người cho tiền và mua xe nên phải bồi thường nếu con gây hại)",
@@ -371,7 +371,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
             ]
         },
         "side2": {
-            "opinion": "Opinion: Disagree / No (Không đồng ý - Trẻ tự làm tự chịu, phạt cha mẹ là bất công)",
+            "opinion": "Opinion: Disagree / No (Không đồng ý - Trẻ tự chịu trách nhiệm)",
             "points": [
                 {
                     "title": "Teenagers have their own minds and follow bad friends outside (Thanh thiếu niên đã lớn, có ý thức riêng và dễ bị bạn xấu rủ rê)",
@@ -397,7 +397,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
         "id": 46,
         "question": "In some companies, employers involve workers in the decision-making process about products and services. What are the advantages and disadvantages of such a policy?",
         "side1": {
-            "opinion": "Opinion: Advantages (Mặt tốt - Nhân viên hiểu khách hàng và làm việc nhiệt tình hơn)",
+            "opinion": "Opinion: Advantages (Ưu điểm / Mặt tốt)",
             "points": [
                 {
                     "title": "Workers talk to customers every day and know what to fix (Nhân viên tiếp xúc với khách hàng mỗi ngày nên biết rõ cần sửa đổi gì)",
@@ -419,7 +419,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
             ]
         },
         "side2": {
-            "opinion": "Opinion: Disadvantages (Mặt xấu - Họp hành mất thời gian và dễ gây tị nạnh nội bộ)",
+            "opinion": "Opinion: Disadvantages (Nhược điểm / Mặt xấu)",
             "points": [
                 {
                     "title": "Too many meetings waste time and slow down decisions (Họp hành quá nhiều làm mất thời gian và chậm trễ công việc)",
@@ -443,7 +443,7 @@ ESSAY_QUESTIONS_DATA_A2_B1 = [
     }
 ]
 
-def set_cell_margins(cell, top=140, bottom=140, left=180, right=180):
+def set_cell_margins(cell, top=100, bottom=100, left=140, right=140):
     """Set cell padding in twips (1 pt = 20 twips)."""
     tcPr = cell._tc.get_or_add_tcPr()
     tcMar = OxmlElement('w:tcMar')
@@ -454,13 +454,8 @@ def set_cell_margins(cell, top=140, bottom=140, left=180, right=180):
         tcMar.append(node)
     tcPr.append(tcMar)
 
-def set_cell_background(cell, color_hex):
-    """Set cell background color."""
-    shading_elm = parse_xml(f'<w:shd {nsdecls("w")} w:fill="{color_hex}"/>')
-    cell._tc.get_or_add_tcPr().append(shading_elm)
-
 def set_table_borders(table, color="000000", sz="4"):
-    """Set crisp table borders."""
+    """Set crisp table borders matching image."""
     tblPr = table._tbl.tblPr
     tblBorders = parse_xml(
         f'<w:tblBorders {nsdecls("w")}>\n'
@@ -475,161 +470,148 @@ def set_table_borders(table, color="000000", sz="4"):
     tblPr.append(tblBorders)
 
 def render_opinion_block(cell, opinion_data):
-    """Render an opinion block with Opinion label, Points (EN & VN), and Suggested Vocabulary."""
-    # 1. Opinion header
+    """Render an opinion block with Opinion label, Points, and Suggested Vocabulary."""
+    # 1. Opinion line
     p_op = cell.paragraphs[0]
-    p_op.paragraph_format.space_before = Pt(2)
-    p_op.paragraph_format.space_after = Pt(4)
+    p_op.paragraph_format.space_before = Pt(1)
+    p_op.paragraph_format.space_after = Pt(3)
     p_op.paragraph_format.line_spacing = 1.15
     
     run_op = p_op.add_run(opinion_data["opinion"])
     run_op.bold = True
     run_op.font.name = "Arial"
     run_op.font.size = Pt(10)
-    run_op.font.color.rgb = RGBColor(17, 24, 39)
+    run_op.font.color.rgb = RGBColor(0, 0, 0)
     
     # 2. Points
     for idx, pt in enumerate(opinion_data["points"], 1):
-        # Point title
+        # Point label & title
         p_pt = cell.add_paragraph()
-        p_pt.paragraph_format.space_before = Pt(3)
-        p_pt.paragraph_format.space_after = Pt(2)
+        p_pt.paragraph_format.space_before = Pt(2)
+        p_pt.paragraph_format.space_after = Pt(1)
         p_pt.paragraph_format.line_spacing = 1.15
         
         run_lbl = p_pt.add_run(f"Point {idx}: ")
         run_lbl.bold = True
         run_lbl.font.name = "Arial"
         run_lbl.font.size = Pt(9.5)
-        run_lbl.font.color.rgb = RGBColor(15, 23, 42)
+        run_lbl.font.color.rgb = RGBColor(0, 0, 0)
         
         run_title = p_pt.add_run(pt["title"])
-        run_title.bold = True
         run_title.font.name = "Arial"
         run_title.font.size = Pt(9.5)
-        run_title.font.color.rgb = RGBColor(30, 41, 59)
+        run_title.font.color.rgb = RGBColor(17, 24, 39)
         
         # EN detail
         p_en = cell.add_paragraph()
-        p_en.paragraph_format.left_indent = Inches(0.18)
-        p_en.paragraph_format.space_before = Pt(1)
-        p_en.paragraph_format.space_after = Pt(2)
+        p_en.paragraph_format.left_indent = Inches(0.15)
+        p_en.paragraph_format.space_before = Pt(0)
+        p_en.paragraph_format.space_after = Pt(1)
         p_en.paragraph_format.line_spacing = 1.15
         
         tag_en = p_en.add_run("• EN: ")
         tag_en.bold = True
         tag_en.font.name = "Arial"
         tag_en.font.size = Pt(9)
-        tag_en.font.color.rgb = RGBColor(37, 99, 235) # Blue-600
+        tag_en.font.color.rgb = RGBColor(37, 99, 235)
         
         txt_en = p_en.add_run(pt["en"])
         txt_en.font.name = "Arial"
         txt_en.font.size = Pt(9)
-        txt_en.font.color.rgb = RGBColor(30, 41, 59)
+        txt_en.font.color.rgb = RGBColor(31, 41, 55)
         
         # VN detail
         p_vn = cell.add_paragraph()
-        p_vn.paragraph_format.left_indent = Inches(0.18)
-        p_vn.paragraph_format.space_before = Pt(1)
-        p_vn.paragraph_format.space_after = Pt(3)
+        p_vn.paragraph_format.left_indent = Inches(0.15)
+        p_vn.paragraph_format.space_before = Pt(0)
+        p_vn.paragraph_format.space_after = Pt(2)
         p_vn.paragraph_format.line_spacing = 1.15
         
         tag_vn = p_vn.add_run("• VN: ")
         tag_vn.bold = True
         tag_vn.font.name = "Arial"
         tag_vn.font.size = Pt(9)
-        tag_vn.font.color.rgb = RGBColor(180, 83, 9) # Amber-700
+        tag_vn.font.color.rgb = RGBColor(180, 83, 9)
         
         txt_vn = p_vn.add_run(pt["vi"])
         txt_vn.font.name = "Arial"
         txt_vn.font.size = Pt(9)
-        txt_vn.font.color.rgb = RGBColor(71, 85, 105)
+        txt_vn.font.color.rgb = RGBColor(75, 85, 99)
 
-    # 3. Suggested Vocabulary Block
+    # 3. Suggested Vocabulary
     if "vocab" in opinion_data and opinion_data["vocab"]:
         p_v_hdr = cell.add_paragraph()
-        p_v_hdr.paragraph_format.space_before = Pt(4)
-        p_v_hdr.paragraph_format.space_after = Pt(2)
+        p_v_hdr.paragraph_format.space_before = Pt(3)
+        p_v_hdr.paragraph_format.space_after = Pt(1)
         p_v_hdr.paragraph_format.line_spacing = 1.15
         
-        run_v_hdr = p_v_hdr.add_run("Key Vocabulary / Useful Phrases (Từ vựng & Cụm từ gợi ý):")
+        run_v_hdr = p_v_hdr.add_run("Suggested Vocabulary (Từ vựng gợi ý):")
         run_v_hdr.bold = True
         run_v_hdr.font.name = "Arial"
-        run_v_hdr.font.size = Pt(9.5)
-        run_v_hdr.font.color.rgb = RGBColor(67, 56, 202) # Indigo-700
+        run_v_hdr.font.size = Pt(9)
+        run_v_hdr.font.color.rgb = RGBColor(79, 70, 229)
         
         for v in opinion_data["vocab"]:
             p_v = cell.add_paragraph()
-            p_v.paragraph_format.left_indent = Inches(0.18)
-            p_v.paragraph_format.space_before = Pt(1)
+            p_v.paragraph_format.left_indent = Inches(0.15)
+            p_v.paragraph_format.space_before = Pt(0)
             p_v.paragraph_format.space_after = Pt(1)
-            p_v.paragraph_format.line_spacing = 1.15
+            p_v.paragraph_format.line_spacing = 1.12
             
             bullet = p_v.add_run("• ")
             bullet.bold = True
             bullet.font.name = "Arial"
-            bullet.font.size = Pt(9)
-            bullet.font.color.rgb = RGBColor(79, 70, 229)
+            bullet.font.size = Pt(8.5)
+            bullet.font.color.rgb = RGBColor(99, 102, 241)
             
             run_term = p_v.add_run(f"{v['en']}: ")
             run_term.bold = True
             run_term.font.name = "Arial"
-            run_term.font.size = Pt(9)
-            run_term.font.color.rgb = RGBColor(15, 23, 42)
+            run_term.font.size = Pt(8.5)
+            run_term.font.color.rgb = RGBColor(17, 24, 39)
             
             run_vi = p_v.add_run(v['vi'])
             run_vi.font.name = "Arial"
-            run_vi.font.size = Pt(9)
-            run_vi.font.color.rgb = RGBColor(71, 85, 105)
+            run_vi.font.size = Pt(8.5)
+            run_vi.font.color.rgb = RGBColor(75, 85, 99)
 
-def build_docx(output_path):
+def build_docx(output_path, orientation="portrait"):
     doc = docx.Document()
     
-    # Configure Section for Landscape A4
+    # Configure Section margins
     section = doc.sections[0]
-    section.orientation = WD_ORIENT.LANDSCAPE
-    section.page_width = Inches(11.69)   # 29.7 cm
-    section.page_height = Inches(8.27)   # 21.0 cm
-    section.top_margin = Inches(0.6)
-    section.bottom_margin = Inches(0.6)
-    section.left_margin = Inches(0.6)
-    section.right_margin = Inches(0.6)
+    if orientation == "portrait":
+        section.orientation = WD_ORIENT.PORTRAIT
+        section.page_width = Inches(8.5)
+        section.page_height = Inches(11.0)
+        section.top_margin = Inches(0.5)
+        section.bottom_margin = Inches(0.5)
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5)
+        # Total usable width = 7.5 in
+        col_widths = [Inches(0.45), Inches(2.65), Inches(4.40)]
+    else:
+        section.orientation = WD_ORIENT.LANDSCAPE
+        section.page_width = Inches(11.0)
+        section.page_height = Inches(8.5)
+        section.top_margin = Inches(0.5)
+        section.bottom_margin = Inches(0.5)
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5)
+        col_widths = [Inches(0.55), Inches(3.45), Inches(6.00)]
     
-    # Title Header
-    p_title = doc.add_paragraph()
-    p_title.paragraph_format.space_before = Pt(0)
-    p_title.paragraph_format.space_after = Pt(2)
-    p_title.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r_title = p_title.add_run("BILINGUAL ESSAY ARGUMENT IDEAS & VOCABULARY BANK (A2 - B1 LEVEL)")
-    r_title.bold = True
-    r_title.font.name = "Arial"
-    r_title.font.size = Pt(13.5)
-    r_title.font.color.rgb = RGBColor(15, 23, 42)
-    
-    p_sub = doc.add_paragraph()
-    p_sub.paragraph_format.space_before = Pt(0)
-    p_sub.paragraph_format.space_after = Pt(8)
-    p_sub.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r_sub = p_sub.add_run("Target Questions: 5, 9, 17, 24, 30, 35, 39, 43, 46 — Simplified A2-B1 English, Natural Vietnamese & Diversified Vocabulary")
-    r_sub.font.name = "Arial"
-    r_sub.font.size = Pt(9.5)
-    r_sub.font.color.rgb = RGBColor(100, 116, 139)
-    
-    # Table definition: Header row + 2 rows per question (18 rows) = 19 rows total
-    num_rows = 1 + len(ESSAY_QUESTIONS_DATA_A2_B1) * 2
+    # The table starts immediately at top of page, matching Google Docs / Word table format
+    num_rows = 1 + len(ESSAY_QUESTIONS_DATA) * 2
     table = doc.add_table(rows=num_rows, cols=3)
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    set_table_borders(table, color="1E293B", sz="4")
+    set_table_borders(table, color="000000", sz="4")
     
-    # Column widths (Total ~10.49 inches)
-    col_widths = [Inches(0.65), Inches(3.2), Inches(6.64)]
-    
-    # Header Row
+    # Header Row: ID | Question | Ideas
     hdr_row = table.rows[0]
-    hdr_titles = ["ID", "Question", "Ideas & Suggested Vocabulary"]
+    hdr_titles = ["ID", "Question", "Ideas"]
     for i, title in enumerate(hdr_titles):
         cell = hdr_row.cells[i]
-        set_cell_background(cell, "F1F5F9")
-        set_cell_margins(cell, top=120, bottom=120, left=140, right=140)
+        set_cell_margins(cell, top=100, bottom=100, left=120, right=120)
         cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
         p = cell.paragraphs[0]
         p.paragraph_format.space_before = Pt(2)
@@ -641,15 +623,15 @@ def build_docx(output_path):
         run = p.add_run(title)
         run.bold = True
         run.font.name = "Arial"
-        run.font.size = Pt(10.5)
-        run.font.color.rgb = RGBColor(15, 23, 42)
+        run.font.size = Pt(10)
+        run.font.color.rgb = RGBColor(0, 0, 0)
         
     # Repeat header on every page
     header_tr = hdr_row._tr.get_or_add_trPr()
     header_tr.append(OxmlElement('w:tblHeader'))
     
     # Fill Question Rows
-    for q_idx, item in enumerate(ESSAY_QUESTIONS_DATA_A2_B1):
+    for q_idx, item in enumerate(ESSAY_QUESTIONS_DATA):
         r1_idx = 1 + q_idx * 2
         r2_idx = r1_idx + 1
         
@@ -658,41 +640,40 @@ def build_docx(output_path):
         
         # ID Cell in Row 1
         cell_id_1 = row1.cells[0]
-        set_cell_margins(cell_id_1, top=140, bottom=140, left=100, right=100)
+        set_cell_margins(cell_id_1, top=120, bottom=120, left=80, right=80)
         p_id = cell_id_1.paragraphs[0]
         p_id.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p_id.paragraph_format.space_before = Pt(4)
-        p_id.paragraph_format.space_after = Pt(4)
+        p_id.paragraph_format.space_before = Pt(2)
+        p_id.paragraph_format.space_after = Pt(2)
         run_id = p_id.add_run(str(item["id"]))
-        run_id.bold = True
         run_id.font.name = "Arial"
-        run_id.font.size = Pt(11)
-        run_id.font.color.rgb = RGBColor(15, 23, 42)
-        cell_id_1.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+        run_id.font.size = Pt(10)
+        run_id.font.color.rgb = RGBColor(0, 0, 0)
+        cell_id_1.vertical_alignment = WD_ALIGN_VERTICAL.TOP
         
         # Question Cell in Row 1
         cell_q_1 = row1.cells[1]
-        set_cell_margins(cell_q_1, top=140, bottom=140, left=140, right=140)
+        set_cell_margins(cell_q_1, top=120, bottom=120, left=120, right=120)
         p_q = cell_q_1.paragraphs[0]
         p_q.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        p_q.paragraph_format.space_before = Pt(4)
-        p_q.paragraph_format.space_after = Pt(4)
+        p_q.paragraph_format.space_before = Pt(2)
+        p_q.paragraph_format.space_after = Pt(2)
         p_q.paragraph_format.line_spacing = 1.15
         run_q = p_q.add_run(item["question"])
         run_q.font.name = "Arial"
         run_q.font.size = Pt(9.5)
-        run_q.font.color.rgb = RGBColor(30, 41, 59)
-        cell_q_1.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+        run_q.font.color.rgb = RGBColor(0, 0, 0)
+        cell_q_1.vertical_alignment = WD_ALIGN_VERTICAL.TOP
         
         # Ideas Cell in Row 1 (Side 1)
         cell_ideas_1 = row1.cells[2]
-        set_cell_margins(cell_ideas_1, top=140, bottom=140, left=160, right=160)
+        set_cell_margins(cell_ideas_1, top=120, bottom=120, left=140, right=140)
         cell_ideas_1.vertical_alignment = WD_ALIGN_VERTICAL.TOP
         render_opinion_block(cell_ideas_1, item["side1"])
         
         # Ideas Cell in Row 2 (Side 2)
         cell_ideas_2 = row2.cells[2]
-        set_cell_margins(cell_ideas_2, top=140, bottom=140, left=160, right=160)
+        set_cell_margins(cell_ideas_2, top=120, bottom=120, left=140, right=140)
         cell_ideas_2.vertical_alignment = WD_ALIGN_VERTICAL.TOP
         render_opinion_block(cell_ideas_2, item["side2"])
         
@@ -711,14 +692,23 @@ def build_docx(output_path):
             row.cells[c_idx].width = width
             
     doc.save(output_path)
-    print(f"Successfully generated docx file at: {output_path}")
+    print(f"Successfully generated docx file at: {output_path} ({orientation})")
 
 if __name__ == "__main__":
     out_dir = os.path.join("public", "database", "Write Essay", "ESSAY")
     os.makedirs(out_dir, exist_ok=True)
-    target_path = os.path.join(out_dir, "PTE_Essay_Bilingual_Argument_Ideas_Table.docx")
-    build_docx(target_path)
     
-    # Also save a copy in root directory for convenience
+    # 1. Primary files in Portrait (exact layout as shown in user's screenshot)
+    target_path = os.path.join(out_dir, "PTE_Essay_Bilingual_Argument_Ideas_Table.docx")
+    build_docx(target_path, orientation="portrait")
+    
     root_path = "PTE_Essay_Bilingual_Argument_Ideas_Table.docx"
-    build_docx(root_path)
+    build_docx(root_path, orientation="portrait")
+    
+    # 2. Also save an explicit portrait-named file in root
+    portrait_path = "IELTS_PTE_Essay_Ideas_Table_Format.docx"
+    build_docx(portrait_path, orientation="portrait")
+    
+    # 3. Also save a landscape copy for users who prefer wider horizontal view
+    landscape_path = os.path.join(out_dir, "PTE_Essay_Bilingual_Argument_Ideas_Table_Landscape.docx")
+    build_docx(landscape_path, orientation="landscape")

@@ -336,12 +336,13 @@ test('commandService updateTask gates column schema read and enforces section li
     );
 });
 
-test('views applyStatus uses board.updateTask instead of full board refresh', async () => {
+test('views applyStatus uses one canonical board.setTaskField command without full board refresh', async () => {
     let boardRefreshCalled = false;
-    let boardUpdateTaskCalled = false;
+    const commands = [];
+    const directWrites = [];
     const board = {
         refresh: async () => { boardRefreshCalled = true; },
-        updateTask: () => { boardUpdateTaskCalled = true; },
+        setTaskField: async command => { commands.push(command); },
         getState: () => ({ membership: { role: 'Owner' } })
     };
     const elMap = new Map();
@@ -360,19 +361,13 @@ test('views applyStatus uses board.updateTask instead of full board refresh', as
     const controller = context.CrmProjectsViews.createController({
         board,
         getCurrentUser: () => ({ uid: 'user1' }),
-        apiFetchJson: async (url) => {
+        apiFetchJson: async (url, options) => {
+            if (options?.method && options.method !== 'GET') directWrites.push({ url, options });
             if (url.includes('/views?')) {
                 return {
                     project: { id: 'p1', lifecycle: 'active', revision: 1 },
                     membership: { role: 'Owner' },
                     tasks: [{ id: 't1', title: 'Task 1', revision: 2, status: 'not_started' }]
-                };
-            }
-            if (url.includes('/tasks/t1')) {
-                return {
-                    result: {
-                        task: { id: 't1', revision: 3, status: 'done' }
-                    }
                 };
             }
             return {};
@@ -391,8 +386,13 @@ test('views applyStatus uses board.updateTask instead of full board refresh', as
     content.listeners?.change?.({ target: { dataset: { taskStatus: 't1' }, value: 'done' } });
     await flush();
 
-    assert.equal(boardUpdateTaskCalled, true, 'board.updateTask must be invoked on status change');
-    assert.equal(boardRefreshCalled, false, 'board.refresh must not be invoked on status change when board.updateTask exists');
+    assert.equal(commands.length, 1, 'Exactly one logical status command must be issued');
+    const { isCurrent, ...command } = commands[0];
+    assert.deepEqual(command, { taskId: 't1', field: 'status', value: 'done', revision: 2, projectId: 'p1', actorUid: 'user1' });
+    assert.equal(typeof isCurrent, 'function', 'Canonical command must receive its scope fence');
+    assert.equal(isCurrent(), true);
+    assert.equal(directWrites.length, 0, 'Views must not bypass canonical board commands');
+    assert.equal(boardRefreshCalled, false, 'Canonical status change must not trigger a full branch refresh');
 });
 
 

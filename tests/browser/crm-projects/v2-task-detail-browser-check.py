@@ -9,16 +9,19 @@ def main():
     hashes,results,errors={},{},[]
     def source(name):
         data=(root/name).read_bytes();hashes[name]=hashlib.sha256(data).hexdigest();return data.decode('utf-8')
-    panel=runpy.run_path(str(Path(__file__).with_name('v2-wave1-browser-check.py')))['ProjectsPanel']();panel.feed(source('public/crm-admin.html'));markup=''.join(panel.parts)
+    host=source('public/crm-admin.html')
+    panel=runpy.run_path(str(Path(__file__).with_name('v2-wave1-browser-check.py')))['ProjectsPanel']();panel.feed(host);markup=''.join(panel.parts)
+    header=re.search(r'<header class="crm-header">.*?</header>',host,re.S).group()
+    styles=re.findall(r'<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"',host)
     bindings=dict(re.findall(r"elements\.(projects\w+) = document.getElementById\('([^']+)'\)",source('public/crm-admin.js')))
     with sync_playwright() as pw:
         browser=pw.chromium.launch(channel='chrome',headless=True)
         try:
-            for width in [390,700,980,1280]:
+            for width in [390,700,980,1280,1600]:
                 context=browser.new_context(viewport={'width':width,'height':900},has_touch=True)
                 page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.route('**/*',lambda route:route.abort())
-                page.set_content('<!doctype html><html><body class="crm-admin">'+markup+'</body></html>')
-                for name in ['design-tokens.css','crm-admin.css','css/crm-projects.css','css/crm-projects-v2.css']:page.add_style_tag(content=source('public/'+name))
+                page.set_content('<!doctype html><html><body><div class="crm-admin">'+header+'<main id="crm-main" class="crm-content">'+markup+'</main></div></body></html>')
+                for name in styles:page.add_style_tag(content=source('public/'+name.split('?')[0].lstrip('/')))
                 page.add_style_tag(content='[data-panel="projects"]{display:block!important;}')
                 for name in ['presentation/column-model','presentation/table-layout','presentation/field-feedback','state','presentation/detail-surface','board','date-picker','discussion','views','workspace','presentation/ui-preferences','presentation/shell','presentation/entry']:page.add_script_tag(content=source(f'public/js/crm/projects/{name}.js'))
                 page.evaluate('CrmProjectsDatePicker.init()')
@@ -64,6 +67,27 @@ def main():
                 expected='modal' if width<1000 else 'drawer';assert dialog.get_attribute('data-detail-mode')==expected
                 assert dialog.evaluate('e=>e.matches(":modal")')==(expected=='modal')
                 if expected=='drawer':assert 440<=dialog.bounding_box()['width']<=500
+                # Include the real sticky CRM header: a visible Close can still be occluded.
+                page.evaluate('window.scrollTo(0,0)')
+                close=page.locator('#btn-projects-board-close-detail')
+                host_hit=close.evaluate('''e=>{
+                    const r=e.getBoundingClientRect(),d=e.closest('dialog').getBoundingClientRect(),
+                        h=document.querySelector('.crm-header').getBoundingClientRect(),
+                        t=document.getElementById('projects-board-detail-title'),tr=t.getBoundingClientRect();
+                    return {ownsHit:e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)),
+                        top:d.top,headerTop:h.top,headerBottom:h.bottom,titleTop:tr.top,titleBottom:tr.bottom,
+                        titleUnclipped:t.scrollWidth<=t.clientWidth&&t.scrollHeight<=t.clientHeight,
+                        bottom:d.bottom,viewport:innerHeight};
+                }''')
+                page.screenshot(path=str(out/f'full-host-close-{width}.png'))
+                (out/f'full-host-close-{width}.json').write_text(json.dumps(host_hit,indent=2))
+                close.click(timeout=3000)  # Ordinary actionability/hit-testing; never force a click.
+                assert host_hit['ownsHit'] and host_hit['titleUnclipped'],host_hit
+                assert host_hit['titleTop']>=host_hit['top'] and host_hit['titleBottom']<=host_hit['bottom']<=host_hit['viewport']+1,host_hit
+                if expected=='drawer':assert host_hit['headerTop']==0 and host_hit['top']>=host_hit['headerBottom']>0,host_hit
+                assert not dialog.evaluate('e=>e.open')
+                assert page.evaluate('document.activeElement.closest("[data-task-id]")?.dataset.taskId')=='t0'
+                title.click()
                 assert page.locator('#projects-detail-tab-details').text_content()=='Overview'
                 assert page.locator('[data-detail-tab="files"], [data-detail-tab="activity"]').count()==0
                 assert page.locator('#projects-board-detail-body [data-field-kind="title"]').count()==1

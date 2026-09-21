@@ -175,6 +175,12 @@
   inset: 0 0 0 auto; margin: 0; padding: 20px; z-index: 90;
   font-size: calc(14px * var(--pj-v2-text-scale, 1)); overscroll-behavior: contain;
 }
+[data-projects-ui="v2"] dialog#projects-board-detail[data-detail-mode="drawer"] {
+  /* Share the host's responsive header height without covering its navigation. */
+  top: var(--crm-nav-height, 0px);
+  height: calc(100dvh - var(--crm-nav-height, 0px));
+  max-height: calc(100dvh - var(--crm-nav-height, 0px));
+}
 [data-projects-ui="v2"] dialog#projects-board-detail[data-detail-mode="modal"] {
   width: 100vw; max-width: 100vw; border: 0; padding: 16px;
   padding-bottom: max(16px, env(safe-area-inset-bottom));

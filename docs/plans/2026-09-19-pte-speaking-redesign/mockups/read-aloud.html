@@ -1,0 +1,741 @@
+<title>Read Aloud Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+/* Light only, like the BEL learner app. Tokens copied from public/design-tokens.css.
+   The question area (instruction, recorder box, passage) keeps the PTE test styling agreed earlier. */
+:root{
+  --bg:#f8f9fa; --surface:#fff; --surface-2:#f8fafc; --tint:#f1f5f9;
+  --ink:#1e293b; --ink-2:#475569; --muted:#5d6b7f; --line:#e2e8f0; --line-2:#cbd5e1;
+  --blue:#2563eb; --blue-700:#1d4ed8; --blue-800:#1e40af; --blue-50:#eff6ff; --blue-100:#dbeafe; --blue-200:#bfdbfe;
+  --green:#1b8a4f; --green-700:#156d3e; --green-50:#f0fdf4; --green-100:#dcfce7;
+  --gold-50:#fff8e7; --gold-100:#fef3c7; --gold-800:#92400e; --amber:#d97706;
+  --red:#dc2626; --red-700:#b91c1c; --red-50:#fef2f2; --red-100:#fee2e2;
+  --coach-link:#1d4ed8; --coach-red:#d97706; --coach-red-text:#92400e;
+  --shadow-sm:0 1px 2px rgba(15,23,42,.06); --shadow-md:0 4px 12px -2px rgba(15,23,42,.10); --shadow-lg:0 10px 30px -4px rgba(15,23,42,.12);
+  --ease:color .2s ease-out,background-color .2s ease-out,border-color .2s ease-out,box-shadow .2s ease-out,transform .2s ease-out,opacity .2s ease-out;
+  --ann:#dc2626;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 "Outfit",system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.page{max-width:1280px;margin:0 auto;padding-inline:20px;padding-block:28px 72px;display:flex;flex-direction:column;gap:20px}
+
+/* ---------- mockup chrome (outside the app) ---------- */
+.intro{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px 44px;align-items:end}
+.eyebrow{font:500 12px "Roboto Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.intro h1{margin:0;font-size:clamp(28px,3.4vw,38px);line-height:1.1;font-weight:600;letter-spacing:-.02em;text-wrap:balance}
+.intro p{margin:10px 0 0;color:var(--ink-2);max-width:62ch}
+.principles{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:14.5px;color:var(--ink-2)}
+.principles li{display:grid;grid-template-columns:22px 1fr;gap:10px}
+.principles b{color:var(--ink);font-weight:600}
+.principles .n{width:20px;height:20px;border-radius:10px;background:var(--ink);color:#fff;font:600 11px/20px "Outfit";text-align:center;margin-top:2px}
+.chrome{display:flex;justify-content:space-between;align-items:center;gap:10px 18px;flex-wrap:wrap;padding-block:10px;border-block:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:60}
+.seg{display:inline-flex;gap:2px;padding:3px;background:var(--tint);border:1px solid var(--line);border-radius:999px;flex-wrap:wrap}
+.seg button{border:0;background:none;padding:6px 14px;border-radius:999px;font-size:14px;font-weight:500;color:var(--ink-2);cursor:pointer;transition:var(--ease)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--blue-700);box-shadow:var(--shadow-sm)}
+.seg .lbl{padding:6px 6px 6px 10px;font:500 11px "Roboto Mono",monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;align-self:center}
+.sw{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2);cursor:pointer;user-select:none}
+.sw input{appearance:none;width:34px;height:20px;border-radius:10px;background:var(--line-2);position:relative;cursor:pointer;margin:0;transition:var(--ease);flex:none}
+.sw input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:8px;background:#fff;box-shadow:var(--shadow-sm);transition:left .2s ease-out}
+.sw input:checked{background:var(--blue)}
+.sw input:checked::after{left:16px}
+.sw.ann input:checked{background:var(--ann)}
+.chrome-r{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+
+/* ---------- app shell (unchanged global header) ---------- */
+.app{background:var(--bg);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow-lg);overflow:hidden;position:relative}
+.gh{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#0f766e,#2563eb);color:#fff;font:700 14px/40px "Outfit";text-align:center;flex:none}
+.brand b{display:block;font-size:16px;line-height:1.2}
+.brand small{display:block;font-size:12px;color:var(--muted)}
+.gh-r{display:flex;align-items:center;gap:8px}
+.gh-pill{background:var(--tint);border-radius:999px;padding:7px 16px;font-weight:600;font-size:15px}
+.gh-ic{width:36px;height:36px;border-radius:18px;display:grid;place-items:center;color:var(--ink)}
+.gh-ic svg{width:21px;height:21px}
+
+/* ---------- mode bar (new: one row) ---------- */
+.modebar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px 16px;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.mb-l,.mb-r{display:flex;align-items:center;gap:8px;min-width:0}
+.mb-r{justify-content:flex-end}
+.ib{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--ink-2);transition:var(--ease);flex:none}
+.ib:hover{background:var(--tint);color:var(--ink)}
+.ib svg{width:18px;height:18px}
+.mtitle{display:flex;align-items:baseline;gap:8px;min-width:0}
+.mtitle b{font-size:18px;font-weight:600;white-space:nowrap}
+.mtitle small{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--blue)}
+.picker{display:inline-flex;align-items:center;gap:2px;background:var(--tint);border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:var(--shadow-sm);max-width:100%;min-width:0}
+.picker button{border:0;background:none;cursor:pointer;color:var(--ink-2);transition:var(--ease)}
+.pk-b{width:34px;height:34px;border-radius:999px;font-size:18px;line-height:1;flex:none}
+.pk-b:hover{background:var(--surface);box-shadow:var(--shadow-sm);color:var(--ink)}
+.pk-pill{height:34px;padding:0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;max-width:360px;font-weight:600;font-size:14.5px;color:var(--ink)!important}
+.pk-pill small{font-weight:400;color:var(--muted);font-size:14px;overflow:hidden;text-overflow:ellipsis}
+.pk-pill .note{color:var(--blue);font-size:13px}
+.tb{height:38px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:inline-flex;align-items:center;gap:7px;padding:0 12px;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink-2);transition:var(--ease);white-space:nowrap;position:relative}
+.tb:hover{background:var(--tint);color:var(--ink)}
+.tb svg{width:17px;height:17px}
+.tb[aria-pressed="true"]{background:var(--blue-50);border-color:var(--blue-200);color:var(--blue-700)}
+.tb .cnt{min-width:20px;height:20px;border-radius:10px;background:var(--tint);color:var(--ink-2);font-size:12px;font-weight:600;display:inline-grid;place-items:center;padding:0 6px}
+.tb[aria-pressed="true"] .cnt{background:var(--blue);color:#fff}
+.tb .dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:4px;background:var(--blue);box-shadow:0 0 0 2px #fff}
+.lvl{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:999px;background:var(--green-50);color:var(--green-700);border:1px solid var(--green-100);font-size:12.5px;font-weight:600;white-space:nowrap}
+
+/* ---------- workspace ---------- */
+.ws{display:grid;grid-template-columns:minmax(0,1fr);gap:0;min-height:680px;position:relative}
+.ws.coach-open{grid-template-columns:minmax(0,1fr) 360px}
+.stage{padding:28px 24px 40px;display:flex;flex-direction:column;align-items:center;gap:26px;min-width:0}
+.qcard.wide,.attempts.wide{max-width:1200px}
+.qcard{width:100%;max-width:940px;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-md);display:flex;flex-direction:column;position:relative;min-width:0}
+.prog{display:flex;align-items:center;gap:10px;padding:14px 26px 0;font-size:12.5px;color:var(--muted)}
+.prog ol{list-style:none;margin:0;padding:0;display:flex;gap:6px;flex:1;min-width:0}
+.prog li{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.prog li i{display:block;height:4px;border-radius:2px;background:var(--line)}
+.prog li.done i{background:var(--blue-200)} .prog li.now i{background:var(--blue)}
+.prog li span{font-weight:500;white-space:nowrap}
+.prog li.now span{color:var(--blue-700)}
+.qbody{padding:22px 34px 26px;display:flex;flex-direction:column;gap:22px;min-width:0}
+
+/* PTE question area (reference styling) */
+.instr{margin:0;font:15px/1.6 Arial,Helvetica,sans-serif;color:#333}
+.center{display:flex;justify-content:center}
+/* Recorder widget: countdown circle -> red recording ring with live waveform -> green Complete (per the guideline image) */
+.rw{display:inline-flex;align-items:center;gap:14px;font:14px/1.35 Arial,Helvetica,sans-serif;color:#6b6b6b;min-height:48px}
+.rw-ring{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;border:2px solid #7a7a7a;font:16px Arial,Helvetica,sans-serif;color:#555;font-variant-numeric:tabular-nums;background:#fff}
+.rw-ring i{width:18px;height:18px;border-radius:50%;display:block}
+.rw-ring.rec{border-color:#f26b6b;border-width:2.5px}
+.rw-ring.rec i{background:#f04e4e;animation:rwpulse 1.2s ease-in-out infinite}
+.rw-ring.done{border-color:#2eb82e;border-width:2.5px}
+.rw-ring.done i{background:#2eb82e}
+@keyframes rwpulse{50%{transform:scale(.82)}}
+.rw-col{display:flex;flex-direction:column;gap:2px;min-width:62px}
+.rw-col small{font-size:12.5px;color:#8a8a8a;font-variant-numeric:tabular-nums}
+.rw-wave{display:flex;align-items:center;gap:1px;width:200px;height:28px;max-width:40vw}
+.rw-wave i{flex:1;height:1px;background:#c9ced6;border-radius:1px}
+.rw-wave i.on{background:#4aa3df;height:var(--h)}
+.rw-wave i.live{animation:wv .45s ease-in-out infinite alternate}
+@keyframes wv{from{transform:scaleY(.45)}to{transform:scaleY(1.15)}}
+.rw-total{font-size:13px;color:#8a8a8a;font-variant-numeric:tabular-nums}
+.rw-line{display:block;width:200px;max-width:40vw;height:2px;background:#9aa0a8}
+.dlg-back{position:fixed;inset:0;background:rgba(15,23,42,.38);display:flex;align-items:center;justify-content:center;z-index:70;padding:16px}
+.dlg{background:var(--surface);border-radius:18px;box-shadow:var(--shadow-lg);width:400px;max-width:100%;padding:22px 22px 18px}
+.dlg h3{margin:0;font-size:18px;font-weight:600;display:flex;align-items:center;gap:10px}
+.dlg h3 .ic{width:30px;height:30px;border-radius:15px;display:grid;place-items:center;font-size:15px;font-weight:700}
+.dlg h3 .ic.stop{background:var(--red-100);color:var(--red-700)} .dlg h3 .ic.q{background:var(--blue-50);color:var(--blue-700)}
+.dlg p{margin:8px 0 18px;color:var(--ink-2);font-size:15px}
+.dlg-f{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.passage{margin:0;font:17px/2.15 Arial,Helvetica,sans-serif;color:#222;max-width:80ch;position:relative}
+.w{border-radius:3px;position:relative;transition:background-color .2s}
+.tie{display:inline-block;width:.3em}
+.pause{display:none;font-weight:bold;color:#7c3aed;margin:0 4px}
+.g-link .tie{width:.55em;height:.45em;margin:0 .05em;vertical-align:-.3em;border-bottom:2px solid var(--coach-link);border-radius:0 0 .5em .5em}
+.g-pause .pause{display:inline}
+.g-red .w.red{box-shadow:inset 0 -2px 0 var(--coach-red);background:var(--gold-50);cursor:pointer}
+.g-red .w.red:hover{background:var(--gold-100)}
+.g-red .w.red.on{background:var(--gold-100);box-shadow:inset 0 -2px 0 var(--coach-red),0 0 0 2px var(--coach-red)}
+/* scored transcript (feedback state) */
+.scored .w{cursor:pointer}
+.scored .w:hover{outline:1px solid var(--line-2)}
+.scored .w.s-good{background:var(--green-50)}
+.scored .w.s-unclear{background:var(--gold-100);box-shadow:inset 0 -2px 0 var(--amber)}
+.scored .w.s-bad{background:var(--red-100);box-shadow:inset 0 -2px 0 var(--red)}
+.scored .w.s-omit{color:var(--red-700);text-decoration:line-through;background:var(--red-50)}
+.scored .w.s-coach{box-shadow:0 0 0 1.5px #7c3aed inset}
+.scored .w.playing{outline:2px solid var(--blue)}
+
+/* word popover */
+.pop{position:absolute;z-index:40;width:290px;max-width:calc(100vw - 40px);background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);padding:14px 16px;font:14px/1.5 "Outfit",sans-serif;color:var(--ink)}
+.pop-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pop-h b{font-size:17px}
+.chipk{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--gold-100);color:var(--coach-red-text)}
+.chipk.link{background:var(--blue-50);color:var(--blue-700)}
+.pop .say{margin:6px 0 4px;color:var(--ink-2)}
+.pop .say b{color:var(--coach-red-text);font-size:16px}
+.pop .ipa{font:13px "Roboto Mono",monospace;color:var(--muted)}
+.pop-f{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.mini{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:var(--ink-2);transition:var(--ease)}
+.mini:hover{border-color:#94a3b8;color:var(--ink)}
+.mini.solid{background:var(--blue);border-color:var(--blue);color:#fff}
+.linkbtn{border:0;background:none;color:var(--blue-700);font-weight:600;font-size:13.5px;cursor:pointer;padding:0}
+
+/* inline coach nudge (coach closed) */
+.nudge{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink-2);margin-top:-6px}
+.nudge .mini{padding:3px 10px}
+
+/* action dock */
+.dock{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 26px;border-top:1px solid var(--line);background:var(--surface);border-radius:0 0 20px 20px;position:sticky;bottom:0;z-index:5}
+.dock-l{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px;min-width:0}
+.dock-r{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-left:auto;justify-content:flex-end}
+.btn{height:44px;border-radius:12px;padding:0 20px;font-size:15px;font-weight:600;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:var(--ease)}
+.btn:hover{background:var(--tint)}
+.btn:active{transform:translateY(1px)}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 1px 2px rgba(37,99,235,.25),0 4px 12px -4px rgba(37,99,235,.45)}
+.btn.pri:hover{background:var(--blue-700)}
+.btn.stop{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.stop::before{content:"";width:10px;height:10px;border-radius:2px;background:#ff5a4f}
+.btn.ghost{border-color:transparent;background:none;color:var(--ink-2)}
+.btn.ghost:hover{background:var(--tint)}
+.btn svg{width:18px;height:18px}
+
+/* feedback section */
+.fb{display:flex;flex-direction:column;gap:20px;border-top:1px solid var(--line);padding-top:22px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.stat{padding:14px 18px;border-left:1px solid var(--line);min-width:0}
+.stat:first-child{border-left:0;background:var(--blue-50)}
+.stat small{display:block;font-size:12.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.stat b{display:block;font-size:30px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums}
+.stat b span{font-size:16px;color:var(--muted);font-weight:500}
+.stat:first-child b{color:var(--blue-800)}
+.stat .trk{height:5px;border-radius:3px;background:var(--line);margin-top:8px;overflow:hidden}
+.stat .trk i{display:block;height:100%;background:var(--blue)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);align-items:center}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.listen{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.listen .seg button{font-size:13.5px}
+.mp{display:inline-flex;align-items:center;gap:10px;background:var(--tint);border-radius:999px;padding:5px 14px 5px 5px;font-size:13px;color:var(--ink-2)}
+.mp button{width:30px;height:30px;border-radius:15px;border:0;background:var(--blue);color:#fff;display:grid;place-items:center;cursor:pointer;font-size:11px}
+.mp .t{width:150px;height:5px;border-radius:3px;background:var(--line-2);overflow:hidden}
+.mp .t i{display:block;height:100%;width:35%;background:var(--blue)}
+.mp .tm{font-variant-numeric:tabular-nums;color:var(--muted)}
+.voice{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13.5px;color:var(--muted)}
+.fix-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.fix-h h3{margin:0;font-size:16px;font-weight:600}
+.fixes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.fixes li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
+.fixes li:first-child{border-top:0}
+.fx-ic{width:26px;height:26px;border-radius:13px;display:grid;place-items:center;font-size:13px;font-weight:700}
+.fx-ic.bad{background:var(--red-100);color:var(--red-700)} .fx-ic.unc{background:var(--gold-100);color:var(--coach-red-text)} .fx-ic.ok{background:var(--green-100);color:var(--green-700)}
+.fixes b{font-weight:600}
+.fixes p{margin:2px 0 0;color:var(--ink-2);font-size:14.5px}
+.fixes .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.adv{border-top:1px solid var(--line);padding-top:14px}
+.adv svg{width:100%;height:auto;display:block;margin-top:10px}
+.analyzing{display:flex;align-items:center;gap:10px;color:var(--ink-2);font-size:15px}
+.spin{width:18px;height:18px;border-radius:9px;border:2.5px solid var(--blue-100);border-top-color:var(--blue);animation:sp 0.8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* feedback: two columns, no scrolling */
+.fbgrid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:0 30px;align-items:start}
+.col-l,.col-r{display:flex;flex-direction:column;gap:18px;min-width:0}
+.col-r{border-left:1px solid var(--line);padding-left:28px;gap:16px}
+.stats.four .stat{padding:10px 14px}
+.stats.four .stat small{font-size:11.5px}
+.stats.four .stat b{font-size:24px}
+.stats.four .stat .trk{margin-top:6px}
+.col-r .fixes li{padding:8px 0;gap:10px;grid-template-columns:24px minmax(0,1fr) auto}
+.col-r .fixes p{font-size:13.5px;margin:1px 0 0}
+.col-r .fx-ic{width:22px;height:22px;font-size:12px}
+.col-r .fixes .mini{padding:3px 9px;font-size:12.5px}
+.col-r .fix-h{margin-bottom:2px}
+.col-l .listen{padding-top:4px}
+.col-l .mp .t{width:120px}
+.col-r .fix-h h3{font-size:15px}
+.col-r .hints{padding:0;overflow:visible}
+.col-r .guides{padding:0 0 12px}
+.coachbtn .cnt{min-width:20px;height:20px;border-radius:10px;background:var(--tint);color:var(--ink-2);font-size:12px;font-weight:600;display:inline-grid;place-items:center;padding:0 6px}
+.coachbtn[aria-pressed="true"]{background:var(--blue-50);border-color:var(--blue-200);color:var(--blue-700)}
+.coachbtn[aria-pressed="true"] .cnt{background:var(--blue);color:#fff}
+
+/* previous attempts: its own section at the end of the mode page */
+.attempts{width:100%;max-width:940px}
+.att-h{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap}
+.att-h h2{margin:0;font-size:18px;font-weight:600;display:flex;align-items:center;gap:10px}
+.trend{font-size:13px;font-weight:600;color:var(--green-700);background:var(--green-50);border:1px solid var(--green-100);border-radius:999px;padding:2px 10px}
+.att-list{list-style:none;margin:12px 0 0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-sm)}
+.att-list li{display:grid;grid-template-columns:minmax(150px,1fr) minmax(0,2fr) auto auto;gap:10px 18px;align-items:center;padding:12px 18px;border-top:1px solid var(--line)}
+.att-list li:first-child{border-top:0}
+.att-list li.new{background:var(--blue-50)}
+.att-when b{display:block;font-weight:600;font-size:15px}
+.att-when small{color:var(--muted);font-size:13px}
+.att-tag{font-size:11px;font-weight:600;background:var(--blue);color:#fff;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:1px}
+.att-scores{display:flex;gap:6px;flex-wrap:wrap}
+.att-scores span{background:var(--tint);border-radius:999px;padding:3px 10px;font-size:13px;color:var(--ink-2)}
+.att-scores b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.att-dur{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.att-acts{display:flex;gap:6px}
+.att-note{font-size:13px;color:var(--muted);margin:8px 2px 0}
+
+/* coach drawer */
+.coach{background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;min-width:0;max-height:100%}
+.coach-h{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 10px}
+.coach-h h2{margin:0;font-size:17px;font-weight:600}
+.coach-h small{display:block;font-size:13px;color:var(--muted);font-weight:400}
+.guides{display:flex;flex-wrap:wrap;gap:6px;padding:0 18px 14px;border-bottom:1px solid var(--line)}
+.gchip{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink-2);display:inline-flex;gap:6px;align-items:center;transition:var(--ease)}
+.gchip[aria-pressed="true"]{background:var(--blue-50);border-color:var(--blue-200);color:var(--blue-700)}
+.gchip:disabled{opacity:.45;cursor:not-allowed}
+.gchip i{font-style:normal;font-size:11.5px;color:var(--muted)}
+.hints{list-style:none;margin:0;padding:6px 10px 14px;overflow:auto;display:flex;flex-direction:column}
+.hint{display:block;width:100%;text-align:left;border:0;background:none;padding:12px 10px;border-radius:12px;cursor:pointer;transition:var(--ease)}
+.hint:hover{background:var(--tint)}
+.hint.on{background:var(--gold-50);box-shadow:inset 0 0 0 1px #fcd9a8}
+.hint-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hint-h b{font-size:15.5px}
+.hint p{margin:4px 0 0;font-size:14px;color:var(--ink-2)}
+.hint .say{font-size:13.5px;color:var(--muted);margin-top:3px}
+.hint .say b{color:var(--coach-red-text);font-size:14px}
+.coach-f{padding:12px 18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+
+/* popovers from the mode bar */
+.menu{position:absolute;z-index:50;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:14px;width:360px;max-width:calc(100% - 32px)}
+.menu h4{margin:0 0 6px;font-size:12.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.menu section+section{margin-top:14px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13.5px;cursor:pointer;color:var(--ink-2);transition:var(--ease)}
+.opt[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.menu-f{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.mlist{list-style:none;margin:0;padding:0}
+.mlist button{width:100%;display:flex;align-items:center;gap:12px;border:0;background:none;padding:10px;border-radius:10px;cursor:pointer;font-size:14.5px;text-align:left}
+.mlist button:hover{background:var(--tint)}
+.mlist svg{width:18px;height:18px;color:var(--muted);flex:none}
+.mlist small{display:block;font-size:12.5px;color:var(--muted)}
+.qsearch{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-radius:12px;font-size:14.5px;margin-bottom:8px}
+.qsearch:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
+.qlist{list-style:none;margin:0;padding:0;max-height:300px;overflow:auto}
+.qlist button{width:100%;display:grid;grid-template-columns:58px 1fr 16px;gap:8px;align-items:center;border:0;background:none;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:14px;text-align:left}
+.qlist button:hover{background:var(--tint)}
+.qlist button.cur{background:var(--blue-50);color:var(--blue-800);font-weight:600}
+.qlist .id{font:500 12px "Roboto Mono",monospace;color:var(--muted)}
+.qlist .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qlist .au{color:var(--blue);font-size:12px}
+
+/* ask me launcher (global, smaller) */
+.askme{position:absolute;right:18px;bottom:18px;width:48px;height:48px;border-radius:24px;background:var(--blue);color:#fff;border:0;box-shadow:var(--shadow-lg);display:grid;place-items:center;cursor:pointer;z-index:30}
+.askme svg{width:22px;height:22px}
+
+/* current-app comparison */
+.current{background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow-lg);overflow:hidden}
+.current figcaption{padding:10px 16px;font-size:13.5px;color:var(--muted);border-bottom:1px solid var(--line)}
+.current img{display:block;width:100%;height:auto}
+
+/* annotations */
+.ann [data-ann]{outline:1.5px dashed var(--ann);outline-offset:3px}
+.ann [data-ann]:not(.askme):not(.dock){position:relative}
+.ann [data-ann]::after{content:attr(data-ann);position:absolute;top:-12px;right:-12px;min-width:20px;height:20px;border-radius:10px;background:var(--ann);color:#fff;font:600 11px/20px "Outfit",sans-serif;text-align:center;padding:0 5px;z-index:45;pointer-events:none;box-shadow:0 0 0 2px #fff;letter-spacing:0;text-transform:none;font-style:normal}
+.ann [data-ann].pulse{outline-style:solid;outline-width:3px}
+
+/* change list */
+.changes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px 48px}
+.changes h2{margin:0 0 10px;font-size:20px;font-weight:600;letter-spacing:-.01em}
+.moved{width:100%;border-collapse:collapse;font-size:14.5px}
+.moved th,.moved td{text-align:left;padding:9px 10px;border-top:1px solid var(--line);vertical-align:top}
+.moved th{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-top:0}
+.moved td:first-child{color:var(--ink-2)}
+.moved td b{font-weight:600}
+.moved .k{display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:10px;background:var(--ann);color:#fff;font-size:11px;font-weight:600;margin-right:6px;padding:0 5px}
+.moved .gone{color:var(--muted);font-style:italic}
+.tblwrap{overflow-x:auto}
+.why{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.why li{padding:10px 0;border-top:1px solid var(--line);font-size:15px;color:var(--ink-2)}
+.why li b{color:var(--ink);font-weight:600}
+
+@media (max-width:980px){
+  .fbgrid{grid-template-columns:1fr;gap:20px}
+  .col-r{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:18px}
+  .att-list li{grid-template-columns:1fr auto}
+  .att-scores{grid-column:1/-1}
+  .ws.coach-open{grid-template-columns:minmax(0,1fr)}
+  .coach{border-left:0;border-top:1px solid var(--line)}
+  .intro,.changes{grid-template-columns:1fr}
+  .modebar{grid-template-columns:1fr;justify-items:start}
+  .mb-r{justify-content:flex-start;flex-wrap:wrap}
+}
+@media (max-width:600px){
+  .page{padding-inline:16px}
+  .gh,.modebar{padding-inline:14px}
+  .stage{padding:16px 10px 28px}
+  .qbody{padding:18px 16px 22px}
+  .dock{padding:14px 16px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat:nth-child(3){border-left:0}
+  .stat:nth-child(n+3){border-top:1px solid var(--line)}
+  .pk-pill{max-width:180px}
+  .tb .lbl{display:none}
+  .fixes li{grid-template-columns:28px minmax(0,1fr)}
+  .fixes .acts{grid-column:2;justify-content:flex-start}
+}
+</style>
+
+<div class="page">
+  <header class="intro">
+    <div>
+      <p class="eyebrow">BEL · Read Aloud · Redesign 1 of 17</p>
+      <h1>Read Aloud with one action bar and a quieter screen</h1>
+      <p>Every current feature is still here. The question area keeps the PTE test layout. Speech Coach, filters, the sample voice and history now open only when you ask for them. Try it: switch states above the screen, press <b>Coach</b> in the action bar, click a marked word, open <b>Filters</b>, or compare with the current app.</p>
+    </div>
+    <ol class="principles">
+      <li><span class="n">1</span><span><b>One row of navigation</b> replaces four: title, question picker and three tool buttons.</span></li>
+      <li><span class="n">2</span><span><b>One action bar</b>, always in the same place, with one blue primary action for each state.</span></li>
+      <li><span class="n">3</span><span><b>Helpers stay closed until you open them.</b> Coach sits next to Start recording and hides while you record.</span></li>
+      <li><span class="n">4</span><span><b>Feedback fits on one screen.</b> Scored transcript on the left, scores and next steps on the right. Previous attempts always sit at the end of the page.</span></li>
+    </ol>
+  </header>
+
+  <div class="chrome">
+    <div class="seg" id="states" role="group" aria-label="Screen state"><span class="lbl">State</span></div>
+    <div class="chrome-r">
+      <div class="seg" id="viewsw" role="group" aria-label="Version"><button type="button" data-v="new" aria-pressed="true">Redesign</button><button type="button" data-v="old" aria-pressed="false">Current app</button></div>
+      <label class="sw ann"><input type="checkbox" id="sw-ann" checked> Notes</label>
+      <label class="sw"><input type="checkbox" id="sw-auto" checked> Live timers</label>
+    </div>
+  </div>
+
+  <div id="mock"></div>
+
+  <section class="changes">
+    <div>
+      <h2>Where each current control went</h2>
+      <div class="tblwrap"><table class="moved" id="moved"></table></div>
+    </div>
+    <div>
+      <h2>Why it is calmer</h2>
+      <ul class="why">
+        <li><b>The eye stays in one column while you practise.</b> Instruction, recorder, passage and action bar are stacked in a single card. Feedback is the only step that uses two columns, so the whole result fits on one screen.</li>
+        <li><b>One primary color.</b> Today the actions are red, green, orange and purple. Now each state has one blue button; recording is the only red, shown as a small dot.</li>
+        <li><b>No duplicated information.</b> The question heading, the order summary, the status line, the step bar and the tips box repeated what the picker, the recorder and Coach already say.</li>
+        <li><b>The recorder follows the test.</b> A countdown circle becomes a red recording ring with a live waveform, then a green Complete, so the footer timers and the “Listening to you…” line are gone.</li>
+        <li><b>Next behaves like the test.</b> It is blocked with a “Cannot skip” message during the countdown and asks for confirmation while recording or after you finish.</li>
+        <li><b>Settings sit next to what they change.</b> Question filters are by the picker. The sample voice is by the sample audio. History is in the More menu.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------------- data ---------------- */
+const STATES=[['prep','Prep'],['recording','Recording'],['recorded','Recorded'],['feedback','Feedback']];
+const TEXT='One of the great contributing factors to mental illness is the idea that we should, at all costs and at all times, be well. We suffer far more than we should because of how long it can take many of us until we allow ourselves to fall properly and usefully ill.';
+const TOK=TEXT.split(' ');
+const WORDS=TOK.length;
+const PREP_S=WORDS>=60?40:Math.max(30,Math.min(35,Math.round(WORDS/1.5)));
+const REC_S=Math.min(PREP_S,40);
+/* waveform heights (seeded, speech-like envelope) */
+const WAVE=Array.from({length:64},(_,i)=>{const x=Math.sin(i*1.7)*0.5+Math.sin(i*0.37)*0.35+Math.sin(i*5.3)*0.15;return Math.max(3,Math.round(Math.abs(x)*24)+2);});
+const TIES=new Set([0,15,17,18,19,31,34,38,39,43,49]);
+const PAUSES=new Set([8,14,21,23,30,40,44]);
+const HINTS={
+  of:{t:'Reduced word',say:'uhv',d:'Reduce the vowel and keep it quick; the strong form is used for emphasis.',ipa:'Strong /ʌv/ · Weak /əv/ or /ə/'},
+  the:{t:'Reduced word',say:'thuh (or thee before a vowel)',d:'Use /ðə/ before a consonant sound and /ði/ before a vowel sound; stress it only for emphasis.',ipa:'Strong /ðiː/ · Weak /ðə/ or /ði/'},
+  to:{t:'Reduced word',say:'tuh',d:'Shorten it and keep it unstressed in the middle of the phrase.',ipa:'Strong /tuː/ · Weak /tə/'},
+  and:{t:'Reduced word',say:'un (or just n)',d:'Lighten or omit sounds in unstressed connected speech; use the strong form for emphasis.',ipa:'Strong /ænd/ · Weak /ən/, /n/'}
+};
+const clean=w=>w.replace(/[^A-Za-z']/g,'').toLowerCase();
+/* sample assessment (feedback state) */
+const SCORE={4:'unclear',47:'bad',49:'unclear',45:'omit',2:'coach',39:'coach',18:'coach'};
+const QUESTIONS=[[448,'Q449','Scientists suggest that there are a number of…',1],[449,'Q450','This is a new, accessible and engaging way…',0],[450,'Q451','One of the great contributing factors to mental…',1],[451,'Q452','Eating a handful of almonds a day may…',1],[452,'Q453','When you’re scared, your body will release…',1],[453,'Q454','The natural world is full of wonder and…',0],[454,'Q455','Quantum computing is a new type of…',1]];
+
+const st={fbTab:'results',state:'prep',view:'new',ann:true,auto:true,coach:false,guides:new Set(['link','red']),menu:null,pop:null,src:'yours',adv:false,dlg:null,prep:PREP_S,rec:0,filters:{audio:0,feature:0,level:0,order:0},voice:1,speed:0};
+
+/* ---------------- icons ---------------- */
+const I={
+ back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+ filter:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>',
+ coach:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V18h6v-1.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>',
+ more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
+ mic:'<svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2z"/></svg>',
+ user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 18.5c1.3-2 3.2-3 5.5-3s4.2 1 5.5 3"/></svg>',
+ bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
+ play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+ redo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
+ focus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+ hist:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>',
+ help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/></svg>',
+ chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+ x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+};
+const A=k=>k?` data-ann="${k}"`:'';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mmss=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
+const activeFilters=()=>Object.entries(st.filters).filter(([k,v])=>v!==0).length;
+
+/* ---------------- render pieces ---------------- */
+function modebar(){
+  const q=QUESTIONS.find(x=>x[0]===450);
+  const nf=activeFilters();
+  return `<div class="modebar"${A('1')}>
+    <div class="mb-l"><button class="ib" type="button" aria-label="Back to dashboard">${I.back}</button><div class="mtitle"><b>Read Aloud</b><small>Speaking</small></div></div>
+    <div class="picker"${A('2')}><button class="pk-b" type="button" aria-label="Previous question">‹</button><button class="pk-pill" type="button" data-menu="picker" aria-haspopup="dialog">#${q[0]} <small>${esc(q[2])}</small><span class="note" title="Sample audio available">♪</span></button><button class="pk-b" type="button" aria-label="Next question">›</button></div>
+    <div class="mb-r">
+      <button class="tb" type="button" data-menu="filters" aria-haspopup="dialog"${A('3')}>${I.filter}<span class="lbl">Filters</span>${nf?`<span class="cnt" style="background:var(--blue);color:#fff">${nf}</span>`:''}</button>
+      <button class="ib" type="button" data-menu="more" aria-label="More options" aria-haspopup="menu"${A('5')}>${I.more}</button>
+      <span class="lvl" title="Your adaptive level">A1</span>
+    </div></div>`;
+}
+function progress(){
+  const idx={prep:0,recording:1,recorded:1,feedback:2}[st.state];
+  const L=['Prepare','Record','Feedback'];
+  return `<div class="prog"${A('6')}><ol>${L.map((l,i)=>`<li class="${i<idx?'done':i===idx?'now':''}"><i></i><span>${l}</span></li>`).join('')}</ol></div>`;
+}
+function waveHtml(){
+  const on=Math.round(st.rec/REC_S*WAVE.length);
+  return WAVE.map((h,i)=>`<i class="${i<on?'on':''}${i<on&&i>=on-4?' live':''}" style="--h:${h}px"></i>`).join('');
+}
+function recorder(){
+  let inner;
+  if(st.state==='prep'){
+    inner=`<span class="rw-ring" aria-hidden="true" id="rw-count">${st.prep}</span><span id="rw-msg">The recording will begin in ${st.prep} seconds</span>`;
+  } else if(st.state==='recording'){
+    inner=`<span class="rw-ring rec" aria-hidden="true"><i></i></span><span class="rw-col"><small id="rw-el">${mmss(st.rec)}</small><span>Recording</span></span><span class="rw-wave" id="rw-wave" aria-hidden="true">${waveHtml()}</span><span class="rw-total">${mmss(REC_S)}</span>`;
+  } else {
+    inner=`<span class="rw-ring done" aria-hidden="true"><i></i></span><span>Complete</span><span class="rw-line" aria-hidden="true"></span>`;
+  }
+  return `<div class="center"><div class="rw" role="status" aria-live="polite"${A('7')}>${inner}</div></div>`;
+}
+function passage(){
+  const scored=st.state==='feedback';
+  const cls=[scored?'scored':'', st.coach&&!scored&&st.guides.has('link')?'g-link':'', st.coach&&!scored&&st.guides.has('red')?'g-red':'', st.coach&&!scored&&st.guides.has('pause')?'g-pause':''].join(' ');
+  const html=TOK.map((w,i)=>{
+    const c=clean(w);let k='w';
+    if(HINTS[c])k+=' red';
+    if(scored){const s=SCORE[i];k+=s==='unclear'?' s-unclear':s==='bad'?' s-bad':s==='omit'?' s-omit':' s-good';if(s==='coach')k+=' s-coach';}
+    const sep=i===TOK.length-1?'':TIES.has(i)?'<span class="tie" aria-hidden="true"></span>':' ';
+    return `<span class="${k}" data-i="${i}" ${HINTS[c]&&!scored?`data-hint="${c}" tabindex="0" role="button"`:''}${scored?' tabindex="0" role="button"':''}>${esc(w)}</span>${PAUSES.has(i)?'<span class="pause"> /</span>':''}${sep}`;
+  }).join('');
+  return `<p class="passage ${cls}" id="passage"${scored?' aria-label="Your scored transcript"':''}>${html}</p>`;
+}
+function legend(){
+  return `<div class="legend"><span><i style="background:var(--green-50);box-shadow:inset 0 0 0 1px var(--green-100)"></i>Good</span><span><i style="background:var(--gold-100);box-shadow:inset 0 -2px 0 var(--amber)"></i>Unclear</span><span><i style="background:var(--red-100);box-shadow:inset 0 -2px 0 var(--red)"></i>Needs practice</span><span><i style="box-shadow:inset 0 0 0 1.5px #7c3aed"></i>Speech Coach checked</span><span>Click a word to hear yourself say it.</span></div>`;
+}
+function hintList(){
+  return `<ul class="hints">${Object.entries(HINTS).map(([k,h])=>`<li><button class="hint${st.pop===k?' on':''}" type="button" data-hint="${k}"><span class="hint-h"><b>${k}</b><span class="chipk">${h.t}</span></span><span class="say" style="display:block">Say it like <b>${esc(h.say)}</b></span><p>${esc(h.d)}</p></button></li>`).join('')}</ul>`;
+}
+function guideChips(){
+  const G=[['link','Linking','11'],['red','Reduced words','4'],['pause','Pauses','7'],['snd','Sound changes','0']];
+  return `<div class="guides" role="group" aria-label="Show on passage">${G.map(([k,l,n])=>`<button class="gchip" type="button" data-guide="${k}" aria-pressed="${st.guides.has(k)}" ${n==='0'?'disabled':''}>${l} <i>${n}</i></button>`).join('')}</div>`;
+}
+function feedbackRight(){
+  const tabs=`<div class="seg" role="tablist" aria-label="Feedback panel"><button type="button" role="tab" data-fbtab="results" aria-pressed="${st.fbTab==='results'}">Your results</button><button type="button" role="tab" data-fbtab="coach" aria-pressed="${st.fbTab==='coach'}">Coach tips · 4</button></div>`;
+  if(st.fbTab==='coach'){
+    return `<div class="col-r"${A('9')}>${tabs}<div style="font-size:13.5px;color:var(--muted)">Guides you turn on here apply to your next attempt.</div>${guideChips()}${hintList()}</div>`;
+  }
+  const pct=(n)=>`<div class="trk"><i style="width:${n}%"></i></div>`;
+  const sample=st.src==='sample';
+  return `<div class="col-r"${A('10')}>${tabs}
+    <div class="stats four"><div class="stat"><small>Accuracy</small><b>84<span>%</span></b>${pct(84)}</div><div class="stat"><small>Fluency</small><b>78<span>%</span></b>${pct(78)}</div><div class="stat"><small>Completeness</small><b>96<span>%</span></b>${pct(96)}</div><div class="stat"><small>Overall</small><b>82<span>%</span></b>${pct(82)}</div></div>
+    <div>
+      <div class="fix-h"><h3${A('12')}>What to practise next</h3><button class="linkbtn" type="button" data-act="adv"${A('13')}>${st.adv?'Hide':'Show'} advanced analysis ›</button></div>
+      <ul class="fixes">
+        <li><span class="fx-ic bad">!</span><div><b>“properly”</b> needs practice <span style="color:var(--muted)">(48%)</span><p>Three syllables, stress first: <b>PROP</b>-er-ly.</p></div><div class="acts"><button class="mini" type="button" data-word="47">▶ You</button><button class="mini" type="button">▶ Model</button></div></li>
+        <li><span class="fx-ic unc">?</span><div><b>“the great”</b>: strong form /ðiː/<p>Before a consonant, say it lightly: <b>thuh</b> /ðə/.</p></div><div class="acts"><button class="mini" type="button" data-word="2">▶ You</button><button class="mini" type="button">▶ Model</button></div></li>
+        <li><span class="fx-ic unc">?</span><div><b>“many of us”</b>: full vowel in “of”<p>Keep it quick: <b>many-uhv-us</b>.</p></div><div class="acts"><button class="mini" type="button" data-word="39">▶ You</button><button class="mini" type="button">▶ Model</button></div></li>
+        <li><span class="fx-ic ok">✓</span><div><b>“costs and at”</b>: weak “and” /ən/<p>Good. Keep linking it.</p></div><div class="acts"><button class="mini" type="button" data-word="18">▶ You</button></div></li>
+      </ul>
+    </div>
+    ${st.adv?`<div class="adv">`:''}
+      ${st.adv?`<svg viewBox="0 0 800 150" role="img" aria-label="Pitch contour of your recording compared with the sample"><rect width="800" height="150" fill="#f8fafc" rx="10"/><g font-family="Outfit" font-size="12" fill="#5d6b7f"><text x="14" y="20">Pitch</text><text x="700" y="20">— you</text><text x="700" y="36" fill="#1d4ed8">— sample</text></g><path d="M20 100 C80 60 120 70 160 90 S260 50 300 80 380 110 420 70 520 60 560 90 660 70 780 95" fill="none" stroke="#94a3b8" stroke-width="2.5"/><path d="M20 95 C80 50 120 55 160 85 S260 40 300 70 380 100 420 55 520 50 560 85 660 60 780 90" fill="none" stroke="#1d4ed8" stroke-width="2.5"/></svg>`:''}
+    ${st.adv?`</div>`:''}
+  </div>`;
+}
+function listenBack(){
+  const sample=st.src==='sample';
+  return `<div class="listen"${A('11')}>
+      <div class="seg" role="group" aria-label="Audio source"><button type="button" data-src="yours" aria-pressed="${!sample}">Your recording</button><button type="button" data-src="sample" aria-pressed="${sample}">Sample</button></div>
+      <span class="mp"><button type="button" aria-label="Play">▶</button><span class="t"><i></i></span><span class="tm">0:14 / 0:31</span></span>
+      ${sample?`<div class="voice"><div class="seg" role="group" aria-label="Voice"><button type="button" data-voice="0" aria-pressed="${st.voice===0}">Male</button><button type="button" data-voice="1" aria-pressed="${st.voice===1}">Female</button></div><div class="seg" role="group" aria-label="Speed"><button type="button" data-speed="0" aria-pressed="${st.speed===0}">Normal</button><button type="button" data-speed="1" aria-pressed="${st.speed===1}">Slow</button></div><button class="mini" type="button">Pick a voice ▾</button></div>`:''}
+    </div>`;
+}
+function attempts(){
+  const rows=[];
+  if(st.state==='feedback')rows.push(['Just now','Today, 2:18 PM',84,78,82,'0:31',true]);
+  rows.push(['Yesterday','18 Sep 2026, 9:42 PM',75,66,71,'0:34',false],['16 Sep 2026','8:05 PM',70,58,64,'0:29',false]);
+  const first=rows[rows.length-1][4],last=rows[0][4];
+  return `<section class="attempts${st.state==='feedback'?' wide':''}" aria-labelledby="att-t"${A('16')}>
+    <div class="att-h"><h2 id="att-t">Previous attempts <span class="trend">${last>first?'+':''}${last-first} since your first try</span></h2>
+      <div class="seg" role="group" aria-label="Which attempts"><button type="button" aria-pressed="true">This question · ${rows.length}</button><button type="button" aria-pressed="false">All Read Aloud · 27</button></div></div>
+    <ul class="att-list">${rows.map(([when,sub,acc,flu,ov,dur,isNew])=>`<li class="${isNew?'new':''}"><div class="att-when"><b>${when}${isNew?'<span class="att-tag">New</span>':''}</b><small>${sub}</small></div><div class="att-scores"><span>Overall <b>${ov}%</b></span><span>Accuracy <b>${acc}%</b></span><span>Fluency <b>${flu}%</b></span></div><span class="att-dur">${dur}</span><div class="att-acts"><button class="mini" type="button" aria-label="Play recording from ${when}">▶ Play</button><button class="mini" type="button">Open feedback</button></div></li>`).join('')}</ul>
+    <p class="att-note">Your recordings and scores for this question are kept here after every attempt.</p>
+  </section>`;
+}
+function dock(){
+  let l='',r='';
+  const next=`<button class="btn ghost" type="button" data-act="next"${A('15')}>Next →</button>`;
+  const pressed=st.state==='feedback'?st.fbTab==='coach':st.coach;
+  const coach=`<button class="btn coachbtn" type="button" data-act="coach" aria-pressed="${pressed}"${A('4')}>${I.coach} Coach <span class="cnt">4</span></button>`;
+  if(st.state==='prep'){l=`Recording starts automatically when the countdown ends.`;r=`${coach}<button class="btn pri" type="button" data-go="recording">${I.mic.replace('<svg','<svg fill="currentColor"')} Start recording</button>${next}`;}
+  if(st.state==='recording'){l=`Read the passage aloud.`;r=`<button class="btn ghost" type="button" data-go="prep">Cancel</button><button class="btn stop" type="button" data-go="recorded">Finish recording</button>${next}`;}
+  if(st.state==='recorded'){l=`Recording saved. Listen back or get feedback.`;r=`${coach}<button class="btn ghost" type="button" data-go="prep">${I.redo} Record again</button><button class="btn" type="button">${I.play} Play</button><button class="btn pri" type="button" data-go="feedback">Get feedback</button>${next}`;}
+  if(st.state==='feedback'){l=`Saved to Previous attempts below.`;r=`${coach}<button class="btn ghost" type="button" data-go="prep">${I.redo} Try again</button><button class="btn pri" type="button" data-act="nextq">Next question →</button>`;}
+  return `<div class="dock"${A('8')}><div class="dock-l">${l}</div><div class="dock-r">${r}</div></div>`;
+}
+function dialog(){
+  if(st.dlg==='noskip')return `<div class="dlg-back"><div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlg-t" aria-describedby="dlg-d"><h3 id="dlg-t"><span class="ic stop">!</span>Cannot skip</h3><p id="dlg-d">The recording is about to begin. As in the test, you can't move to the next question during the countdown.</p><div class="dlg-f"><button class="btn pri" type="button" data-act="dlg-close">OK</button></div></div></div>`;
+  if(st.dlg==='confirm'){
+    const body=st.state==='recording'?'Your recording will stop and this attempt will be saved without feedback.':'This attempt is saved. You can get feedback on it later from Previous attempts at the bottom of the page.';
+    return `<div class="dlg-back"><div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlg-t" aria-describedby="dlg-d"><h3 id="dlg-t"><span class="ic q">?</span>Go to the next question?</h3><p id="dlg-d">${body}</p><div class="dlg-f"><button class="btn ghost" type="button" data-act="dlg-close">Stay here</button><button class="btn pri" type="button" data-act="dlg-yes">Next question</button></div></div></div>`;
+  }
+  return '';
+}
+function coachDrawer(){
+  if(!st.coach||!(st.state==='prep'||st.state==='recorded'))return '';
+  return `<aside class="coach" aria-label="Speech Coach"${A('9')}>
+    <div class="coach-h"><div><h2>Speech Coach</h2><small>Tap a hint or a marked word</small></div><button class="ib" type="button" data-act="coach" aria-label="Close Speech Coach">${I.x}</button></div>
+    ${guideChips()}
+    ${hintList()}
+    <div class="coach-f">Speech Coach reviews only the guides that are on when you record.</div>
+  </aside>`;
+}
+function menus(){
+  if(st.menu==='filters'){
+    const F=[['audio','Sample audio',['All','Available','No audio']],['feature','Prompt feature',['All prompts','Any connected speech','Linking','Reduced words','Sound changes']],['level','Difficulty',['Recommended','Level 1 (Easy)','Level 2 (Medium)','Level 3 (Hard)']],['order','Order',['Random','In order']]];
+    return `<div class="menu" id="menu" role="dialog" aria-label="Question filters" style="top:128px;right:24px">${F.map(([k,t,o])=>`<section><h4>${t}</h4><div class="opts">${o.map((x,i)=>`<button class="opt" type="button" data-f="${k}" data-v="${i}" aria-pressed="${st.filters[k]===i}">${x}</button>`).join('')}</div></section>`).join('')}<div class="menu-f"><span>1,449 questions match</span><button class="linkbtn" type="button" data-act="reset">Reset</button></div></div>`;
+  }
+  if(st.menu==='more'){
+    return `<div class="menu" id="menu" role="menu" style="top:128px;right:24px;width:300px"><ul class="mlist"><li><button type="button" role="menuitem">${I.focus}<span>Focus mode<small>Hide the page header while you practise</small></span></button></li><li><button type="button" role="menuitem">${I.help}<span>How Read Aloud works<small>Timing, scoring and tips</small></span></button></li></ul></div>`;
+  }
+  if(st.menu==='picker'){
+    return `<div class="menu" id="menu" role="dialog" aria-label="Choose a question" style="top:128px;left:50%;transform:translateX(-50%);width:420px"><input class="qsearch" type="search" placeholder="Search by number, title or text" aria-label="Search questions"><ul class="qlist">${QUESTIONS.map(q=>`<li><button type="button" class="${q[0]===450?'cur':''}"><span class="id">#${q[0]}</span><span class="t">${esc(q[2])}</span><span class="au">${q[3]?'♪':''}</span></button></li>`).join('')}</ul><div class="menu-f"><span>1,449 questions · Random order</span><span>♪ = sample audio</span></div></div>`;
+  }
+  return '';
+}
+function popover(){
+  if(!st.pop||!st.coach||st.state==='feedback'||st.state==='recording')return '';
+  const h=HINTS[st.pop];
+  return `<div class="pop" id="pop" role="dialog" aria-label="Hint for ${st.pop}"><div class="pop-h"><b>${st.pop}</b><span class="chipk">${h.t}</span></div><div class="say">Say it like <b>${esc(h.say)}</b></div><div>${esc(h.d)}</div><div class="ipa" style="margin-top:6px">${esc(h.ipa)}</div><div class="pop-f"><button class="mini solid" type="button">▶ Listen</button><button class="linkbtn" type="button" data-act="closepop">Close</button></div></div>`;
+}
+
+function render(){
+  const sb=document.getElementById('states');
+  sb.innerHTML='<span class="lbl">State</span>'+STATES.map(([k,l])=>`<button type="button" data-go="${k}" aria-pressed="${st.state===k}">${l}</button>`).join('');
+  document.querySelectorAll('#viewsw button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===st.view));
+  const mock=document.getElementById('mock');
+  if(st.view==='old'){
+    const note=st.state==='feedback'?' Scoring could not run in this offline capture, so the current app shows its error message where results would appear.':'';
+    mock.innerHTML=`<figure class="current"><figcaption>Current app, ${STATES.find(s=>s[0]===st.state)[1].toLowerCase()} state (v2.0.13, captured today).${note}</figcaption><img src="img/current-${st.state}.webp" alt="Current Read Aloud screen" width="1440"></figure>`;
+    renderMoved();return;
+  }
+  mock.innerHTML=`<div class="app${st.ann?' ann':''}">
+    <div class="gh"><div class="brand"><span class="logo">BEL</span><div><b>Better English Learning</b><small>Adaptive English practice for active learners</small></div></div><div class="gh-r"><span class="gh-pill">Practice</span><span class="gh-ic">${I.user}</span><span class="gh-ic">${I.bell}</span></div></div>
+    ${modebar()}
+    ${(()=>{const drawer=coachDrawer();const fb=st.state==='feedback';
+      const qa=`<p class="instr">Look at the text below. In ${PREP_S} seconds, you must read this text aloud as naturally and clearly as possible. You have ${REC_S} seconds to read aloud.</p>${recorder()}${passage()}`;
+      return `<div class="ws${drawer?' coach-open':''}">
+      <div class="stage"><section class="qcard${fb?' wide':''}">
+        ${progress()}
+        <div class="qbody">${fb?`<div class="fbgrid"><div class="col-l">${qa}${legend()}${listenBack()}</div>${feedbackRight()}</div>`:qa}</div>
+        ${dock()}
+      </section>
+      ${attempts()}</div>
+      ${drawer}
+    </div>`;})()}
+    ${menus()}
+    ${popover()}
+    ${dialog()}
+    <button class="askme" type="button" aria-label="Ask me (study assistant)" title="Ask me!"${A('14')}>${I.chat}</button>
+  </div>`;
+  placePopover();
+  renderMoved();
+}
+function placePopover(){
+  const pop=document.getElementById('pop');if(!pop)return;
+  const w=document.querySelector(`#passage .w[data-hint="${st.pop}"]`);const app=document.querySelector('.app');
+  if(!w||!app){pop.remove();return;}
+  document.querySelectorAll('#passage .w.on').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll(`#passage .w[data-hint="${st.pop}"]`).forEach(x=>x.classList.add('on'));
+  const r=w.getBoundingClientRect(),a=app.getBoundingClientRect();
+  let left=r.left-a.left-20;left=Math.max(12,Math.min(left,a.width-pop.offsetWidth-12));
+  pop.style.left=left+'px';pop.style.top=(r.bottom-a.top+10)+'px';
+}
+
+const MOVED=[
+ ['Practice title, Back to Dashboard, READ ALOUD pill with ?','1','Mode bar: back arrow and “Read Aloud · Speaking”. Help is in the More menu.'],
+ ['Picker ‹ #450 Q451 … › and the purple next button','2','Same v7 pill, centred in the mode bar, in neutral colours'],
+ ['Random: ON','3','Filters → Order'],
+ ['Settings → Practice Target (sample audio, prompt feature, difficulty)','3','Filters popover beside the picker, with a badge when active'],
+ ['Basic / Advanced toggle','4','Removed. Coach shows the guides; the other advanced options now have a clear home.'],
+ ['Speech Coach rail (always open) and its Hide button','4, 9','Coach button in the action bar, next to Start recording, hidden while recording. Opens a side drawer before and after recording, and a tab beside your results in Feedback.'],
+ ['Chunking / Linking / Reduced words / Sound changes toggles','9','Chips at the top of the Coach drawer, with counts'],
+ ['Speaking tips box and View all tips','9','Merged: the same tips are in Coach and on the marked words'],
+ ['Settings → Listen (male/female, normal/slow, pick a voice)','11','Beside the sample player in Feedback, where it is used'],
+ ['Settings → History','16','Previous attempts section at the end of the page, always visible, with a trend and ▶ Play / Open feedback for each attempt'],
+ ['⛶ Focus','5','More → Focus mode'],
+ ['“Question 996 · READ ALOUD” and “Random • 1449 questions”','—','<span class="gone">Removed; the picker already shows the question and the list shows the count</span>'],
+ ['Prep / Record / Results step bar and the status line','6','Thin progress bar at the top of the card; status text moves into the recorder box'],
+ ['PREP TIME / RECORD TIME in the footer','7','Recorder: countdown circle, then a red recording ring with elapsed time, live waveform and total time, then a green Complete'],
+ ['Start recording now, Finish recording, Play your recording, Get feedback, Record again','8','Action bar at the bottom of the card, with one blue primary action per state'],
+ ['Next prompt (always allowed)','15','Next follows the test: “Cannot skip” during the countdown; a confirmation during and after recording'],
+ ['Your Recording / Sample Audio tabs and player','11','Listen-back row inside Feedback'],
+ ['Accuracy readout, recognized transcript, Fluency / Completeness / Overall','10','Two-column Feedback: the passage becomes the scored transcript on the left; scores, listen back and next steps sit on the right, with no scrolling'],
+ ['Speech Coach feedback after recording','12','“What to practise next” list with ▶ You / ▶ Model'],
+ ['✨ Show Advanced Analysis','13','Link at the end of Feedback'],
+ ['A1 (Beginner I) level chip','—','Compact “A1” chip at the right of the mode bar'],
+ ['Ask me! floating assistant','14','Smaller round launcher; it no longer covers the passage (global change, optional)']
+];
+function renderMoved(){
+  document.getElementById('moved').innerHTML='<thead><tr><th>Current</th><th>New place</th></tr></thead><tbody>'+MOVED.map(([a,k,b])=>`<tr data-k="${k}"><td>${a}</td><td>${k!=='—'?k.split(', ').map(x=>`<span class="k">${x}</span>`).join(''):''}${b}</td></tr>`).join('')+'</tbody>';
+}
+
+/* ---------------- behaviour ---------------- */
+function go(s){if(s==='feedback')st.fbTab='results';st.state=s;st.pop=null;st.menu=null;if(s==='prep'){st.prep=PREP_S;st.rec=0;}if(s==='recording'){st.rec=0;}render();}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,[data-hint],.w');
+  if(!t){if(e.target.closest('#pop,#menu'))return;if(st.menu||st.pop){st.menu=null;st.pop=null;render();}return;}
+  if(t.closest('#states')&&t.dataset.go){st.dlg=null;go(t.dataset.go);if(t.dataset.go==='recording'){st.rec=Math.round(REC_S*0.35);render();}return;}
+  if(t.closest('#viewsw')){st.view=t.dataset.v;render();return;}
+  if(!t.closest('#mock'))return;
+  if(t.dataset.go){go(t.dataset.go);return;}
+  if(t.dataset.menu){st.menu=st.menu===t.dataset.menu?null:t.dataset.menu;st.pop=null;render();return;}
+  if(t.dataset.f){st.filters[t.dataset.f]=+t.dataset.v;render();return;}
+  if(t.dataset.guide){st.guides.has(t.dataset.guide)?st.guides.delete(t.dataset.guide):st.guides.add(t.dataset.guide);render();return;}
+  if(t.dataset.src){st.src=t.dataset.src;render();return;}
+  if(t.dataset.fbtab){st.fbTab=t.dataset.fbtab;render();return;}
+  if(t.dataset.voice){st.voice=+t.dataset.voice;render();return;}
+  if(t.dataset.speed){st.speed=+t.dataset.speed;render();return;}
+  if(t.dataset.word){flashWord(+t.dataset.word);return;}
+  if(t.dataset.hint&&st.state!=='feedback'&&st.state!=='recording'){ if(!st.coach){st.coach=true;} st.pop=st.pop===t.dataset.hint?null:t.dataset.hint;st.menu=null;render();return;}
+  if(t.classList.contains('w')&&st.state==='feedback'){flashWord(+t.dataset.i);return;}
+  const a=t.dataset.act;
+  if(a==='coach'){if(st.state==='feedback'){st.fbTab=st.fbTab==='coach'?'results':'coach';}else{st.coach=!st.coach;}st.pop=null;st.menu=null;render();return;}
+  if(a==='adv'){st.adv=!st.adv;render();return;}
+  if(a==='reset'){st.filters={audio:0,feature:0,level:0,order:0};render();return;}
+  if(a==='closepop'){st.pop=null;render();return;}
+  if(a==='nextq'){st.dlg=null;go('prep');return;}
+  if(a==='next'){st.dlg=st.state==='prep'?'noskip':'confirm';st.menu=null;st.pop=null;render();document.querySelector('.dlg .btn.pri')?.focus();return;}
+  if(a==='dlg-close'){st.dlg=null;render();return;}
+  if(a==='dlg-yes'){st.dlg=null;go('prep');return;}
+  if(st.menu&&!t.closest('#menu')){st.menu=null;render();}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&(st.menu||st.pop||st.dlg)){st.menu=null;st.pop=null;st.dlg=null;render();return;}
+  const t=e.target;
+  if((e.key==='Enter'||e.key===' ')&&t.classList&&t.classList.contains('w')){e.preventDefault();t.click();}
+});
+function flashWord(i){
+  const w=document.querySelector(`#passage .w[data-i="${i}"]`);if(!w)return;
+  w.classList.add('playing');w.scrollIntoView({block:'nearest',behavior:'smooth'});setTimeout(()=>w.classList.remove('playing'),900);
+}
+document.getElementById('sw-ann').addEventListener('change',e=>{st.ann=e.target.checked;const app=document.querySelector('.app');if(app)app.classList.toggle('ann',st.ann);});
+document.getElementById('sw-auto').addEventListener('change',e=>{st.auto=e.target.checked;});
+document.getElementById('moved').addEventListener('mouseover',e=>{
+  const tr=e.target.closest('tr[data-k]');document.querySelectorAll('.app .pulse').forEach(x=>x.classList.remove('pulse'));
+  if(tr&&tr.dataset.k!=='—')tr.dataset.k.split(', ').forEach(k=>document.querySelectorAll(`.app [data-ann="${k}"]`).forEach(x=>x.classList.add('pulse')));
+});
+document.getElementById('moved').addEventListener('mouseleave',()=>document.querySelectorAll('.app .pulse').forEach(x=>x.classList.remove('pulse')));
+window.addEventListener('resize',()=>placePopover());
+
+/* live timers: countdown circle, then the recording ring with a growing waveform, then Complete */
+setInterval(()=>{
+  if(!st.auto||st.view!=='new')return;
+  if(st.state==='prep'){
+    st.prep=Math.max(0,st.prep-1);
+    const c=document.getElementById('rw-count'),m=document.getElementById('rw-msg');
+    if(c)c.textContent=st.prep; if(m)m.textContent=`The recording will begin in ${st.prep} seconds`;
+    if(st.prep===0)go('recording');
+  } else if(st.state==='recording'){
+    st.rec=Math.min(REC_S,st.rec+1);
+    const el=document.getElementById('rw-el'),w=document.getElementById('rw-wave');
+    if(el)el.textContent=mmss(st.rec); if(w)w.innerHTML=waveHtml();
+    if(st.rec>=REC_S)go('recorded');
+  }
+},1000);
+
+render();
+})();
+</script>

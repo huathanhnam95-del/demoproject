@@ -1,105 +1,30 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: "Prepare and perform a focused review of completed or in-progress changes, or request an authorized reviewer. Use to assess requirement coverage, correctness, security, regressions and maintainability against the actual candidate."
 ---
 
-# Requesting Code Review
+# Review a concrete candidate
 
-Dispatch a code-reviewer subagent to catch issues before they cascade.
+Identify the requested scope and acceptance criteria. Review the actual change state; a commit range alone does not include dirty work. This skill can be executed directly and does not require delegation.
 
-**Core principle:** Review early, review often.
+## Establish scope
 
-## When to Request Review
+Read repository instructions and inspect status before selecting a diff. Include the relevant staged, unstaged and untracked files when reviewing work in progress; read new files directly. For a committed change, verify the base and candidate revisions. Preserve unrelated edits and identify which changes belong to this task.
 
-**Mandatory:**
-- After each task in subagent-driven development
-- After completing major feature
-- Before merge to main
+Read changed logic with its callers, contracts and tests. Generated outputs, schemas, configuration, dependencies and shared entry points need explicit attention when affected. Do not stage, reset, commit or modify source merely to obtain a reviewable diff.
 
-**Optional but valuable:**
-- When stuck (fresh perspective)
-- Before refactoring (baseline check)
-- After fixing complex bug
+## Review distinct concerns
 
-## How to Request
+1. **Requirements:** Does the candidate deliver the requested behavior, including relevant error, empty, loading and recovery paths? Are omissions or scope expansion hidden by tests or summaries?
+2. **Correctness and risk:** Trace important inputs, state, async ordering and failure paths. Check authorization, trust boundaries, data loss, persistence, compatibility, resource lifecycle and meaningful performance risks.
+3. **Standards and maintainability:** Apply the project's actual conventions. Assess contracts and complexity from caller evidence. An optional [simplicity review](../code-refactoring/references/simplicity-review.md) can reveal avoidable machinery, but fewer lines do not outweigh required behavior or verification.
 
-**1. Get git SHAs:**
-```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
-HEAD_SHA=$(git rev-parse HEAD)
-```
+Evaluate the assertions and evidence, not just a passing test count. Distinguish a reproduced failure from a plausible risk. Do not invent findings to fill a quota or promote personal style preferences into defects.
 
-**2. Dispatch code-reviewer subagent:**
+## Report and hand off
 
-Use the Task tool with code-reviewer type, fill template at `code-reviewer.md`
+Return actionable findings in severity order with file/line, concrete trigger, consequence and a bounded correction. State assumptions, unverified areas and tests performed. If no actionable defect is found, say so with the review's limits.
 
-**Placeholders:**
-- `{WHAT_WAS_IMPLEMENTED}` - What you just built
-- `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
-- `{DESCRIPTION}` - Brief summary
+If the selected route authorizes delegation, give the reviewer the exact candidate, requirements, owned scope and verification evidence using the host's actual tools. Otherwise review directly. No absent Task API or code-reviewer template is required.
 
-**3. Act on feedback:**
-- Fix Critical issues immediately
-- Fix Important issues before proceeding
-- Note Minor issues for later
-- Push back if reviewer is wrong (with reasoning)
-
-## Example
-
-```
-[Just completed Task 2: Add verification function]
-
-You: Let me request code review before proceeding.
-
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
-
-[Dispatch code-reviewer subagent]
-  WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-
-[Subagent returns]:
-  Strengths: Clean architecture, real tests
-  Issues:
-    Important: Missing progress indicators
-    Minor: Magic number (100) for reporting interval
-  Assessment: Ready to proceed
-
-You: [Fix progress indicators]
-[Continue to Task 3]
-```
-
-## Integration with Workflows
-
-**Subagent-Driven Development:**
-- Review after EACH task
-- Catch issues before they compound
-- Fix before moving to next task
-
-**Executing Plans:**
-- Review after each batch (3 tasks)
-- Get feedback, apply, continue
-
-**Ad-Hoc Development:**
-- Review before merge
-- Review when stuck
-
-## Red Flags
-
-**Never:**
-- Skip review because "it's simple"
-- Ignore Critical issues
-- Proceed with unfixed Important issues
-- Argue with valid technical feedback
-
-**If reviewer wrong:**
-- Push back with technical reasoning
-- Show code/tests that prove it works
-- Request clarification
-
-See template at: requesting-code-review/code-reviewer.md
+After fixes, inspect the actual updated diff and rerun affected checks. Review completion does not authorize merging, pushing or deploying. [Provenance](SOURCE.md).

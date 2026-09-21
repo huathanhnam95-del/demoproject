@@ -1,0 +1,4 @@
+interface:
+  display_name: "Domain Modeling"
+  short_description: "Clarify domain terms, rules and relationships"
+  default_prompt: "Use $domain-modeling to help with the relevant part of this task."

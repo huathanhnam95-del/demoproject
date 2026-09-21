@@ -1,3 +1,28 @@
+<!-- BEGIN PAR COMMAND ENTRYPOINT -->
+## Automatic readiness and PAR
+
+Before completing deployable work, evaluating R4D, or executing PAR, read the [release protocol](.agent/rules/session_tagging.md). Automatically record and mark verified ready tasks (R). PAR explicitly authorizes discovery, safe integration, verification, commit, push, deployment, and live checks for the current project's eligible batch; no repeated stage approvals are needed. Mark (D) only after all intended surfaces are verified live. Invalidate readiness when new work starts. Use verified native task IDs and shared readiness records; never guess a session or use another host's title helper. Existing safety and deployment gates still apply.
+<!-- END PAR COMMAND ENTRYPOINT -->
+
+<!-- BEGIN WORKSPACE PARALLEL WORK SAFETY -->
+## Required safety policy for every agent
+
+Read the complete policy in [parallel-work-safety.md](.agent/rules/parallel-work-safety.md) before writing, handing off, integrating, publishing, migrating data, or retiring work. It applies to every agent host and model in this workspace and supplements the account-wide policy.
+
+Apply its ownership and preservation requirements to all workflows below: use one integration owner for the current destination, assign one writer per shared file/resource, preserve existing content and unowned dirty work, and record the exact changes and checks before integration. A shared tracker or release workflow does not permit competing writers or bypass that review. Integrate sequentially and verify both tasks' behavior; keep deployment and live-data changes within their authorized scope. Existing sessions must reread this policy before their next affected action. These instructions do not install or prove automated Git enforcement.
+<!-- END WORKSPACE PARALLEL WORK SAFETY -->
+
+<!-- BEGIN SHARED CURATED SKILLS -->
+## Shared curated skills across agent applications
+
+- This Windows account shares the curated skill methods across Codex, Claude and Gemini hosts. Each host has complete native skill packages; use its supplied catalog and read the selected native SKILL.md before applying it.
+- Resolve references, scripts and assets from that native package. Normal skill use does not require cross-host filesystem access. The optional maintenance catalog is `C:/Users/Admin/.agents/shared-skills.md`; if it is outside the host's permitted scope, the native packages remain sufficient.
+- For the catalogued skills, prefer the curated generic recipe over an older duplicate or cached skill body. Preserve explicit project domain rules, brand conventions, ownership, approval gates and release controls.
+- Load only skills that materially help the task. No universal skill interview, startup banner or 1% relevance threshold is required by this integration.
+- Sharing skills does not switch the host, model, reasoning, speed, delegation route or provider. Codex-only APIs and routing rules remain Codex-only; existing host-specific policies remain in force where applicable.
+- When an account-wide skill update is authorized, reconcile the native copies listed in the maintenance catalog with the curated source and preserve backups; do not auto-update them during unrelated tasks.
+<!-- END SHARED CURATED SKILLS -->
+
 # Master Conductor File
 
 > **Source of Truth for Agent Context**
@@ -20,7 +45,7 @@ This file guides the agent's understanding of the project structure and context.
 ## AI Task Tracking (CRITICAL)
 
 - **Continuous Tracking Rule**: You MUST automatically check and update a `TASK_TRACKER.csv` file located in the **root directory of the current active workspace**.
-- **Session Tag Hygiene (MANDATORY)**: Whenever starting a task (setting Current Status to 'In Progress') or when resuming a conversation that currently starts with `(D) `, you MUST immediately strip the `(D) ` prefix in your initial tool calls by running: `python scripts/session_tagger.py remove-deployed`. An active development session MUST NEVER retain the `(D) ` prefix.
+- **Session Tag Hygiene (MANDATORY)**: Follow [.agent/rules/session_tagging.md](.agent/rules/session_tagging.md). Remove stale `(R)`/`(D)` markers before new implementation using a verified native task identity; never guess a session or invoke a no-ID helper.
 - **When to update**: Only update the CSV when a task is **created** and when it is **completed**. Do NOT update the CSV at each stage of working, or when it's edited/fixed, unless the user explicitly types `#update`.
 - **Starting a task**: Read the CSV in the current workspace, append a new line with the incremented Task No., current Created Date, a concise Task Description (avoiding commas), and set Current Status to 'In Progress'. Format: `TaskNo,CreatedDate,Description,Status,DoneDate`
 - **Completing a task**: Update the existing row's Current Status to 'Done' and set the Done Date in the CSV.
@@ -36,7 +61,7 @@ This file guides the agent's understanding of the project structure and context.
 5. **Calculate TaskNo by scanning ALL rows**: When appending a new task, find the maximum TaskNo across the entire file — do NOT just read the last line. Out-of-order or deleted rows can cause duplicates if you only check the bottom.
 6. **Preserve line endings**: Match the existing file's line ending style (`\r\n` on Windows). Mixed line endings cause git to flag every line as changed and make targeted edits unreliable.
 7. **Verify after editing**: After any edit to TASK_TRACKER.csv, re-read the affected lines to confirm: (a) no duplicate TaskNos exist, (b) no duplicate rows were introduced, (c) the row count has not unexpectedly increased.
-8. **Strip `(D)` prefix on resume / task start**: Before or when updating TASK_TRACKER.csv with an 'In Progress' task, if the current session title starts with `(D) `, immediately run `python scripts/session_tagger.py remove-deployed`. Never leave `(D) ` on an active development session.
+8. **Invalidate stale readiness on new implementation**: Follow the release protocol's verified-identity title and readiness-record updates; never choose the latest database row as the active session.
 
 ## GSD Auto-Integration (MANDATORY)
 
@@ -47,7 +72,7 @@ Every task MUST follow the GSD (Get Stuff Done) methodology automatically. This 
 When a new task is created, immediately classify it:
 
 > [!IMPORTANT]
-> **Active Session Title Check**: If the current session title starts with `(D) `, run `python scripts/session_tagger.py remove-deployed` immediately during your first tool calls. Development sessions must never retain `(D)`.
+> **Active Session Title Check**: Before new implementation, invalidate stale `(R)`/`(D)` status through the release protocol. Use the current host's verified task identity.
 
 | Type | Examples | GSD Flow |
 |------|----------|----------|
@@ -136,8 +161,8 @@ These workflows add product thinking, automated QA, and release automation:
   3. Read `council_latest.txt` and present the full council output.
   The `--context` flag injects the temp file's contents as inline context so council personas can analyze the conversation. The script auto-saves to a timestamped file if `--out` is omitted, but always use `--out` for a predictable filename.
 - **#hproto**: When the user types `#hproto`, immediately initiate the [Harness Engineering Protocol](.agent/workflows/harness-protocol.md) and guide the user through the Spec -> Plan -> Execute -> Verify loop.
-- **R4D**: When the user states "R4D" (ready for deployment), immediately mark the session as `(R) ` in the session title by running `python scripts/session_tagger.py mark-ready`.
-- **PAR**: When the user asks to "PAR" ("push all readied"), inspect all readied sessions (`python scripts/session_tagger.py list-ready`), execute the workspace deployment verification and push workflow per rules, and batch mark all deployed sessions with `(D) ` using `python scripts/session_tagger.py mark-deployed --cid <cids...>` or `python scripts/session_tagger.py trace-deployed`.
+- **R4D**: Evaluate readiness using [.agent/rules/session_tagging.md](.agent/rules/session_tagging.md); apply `(R)` only after verification. Eligible tasks also mark themselves automatically without this command.
+- **PAR**: Execute the complete current-project discovery, integration, verification, commit, push, deployment, and live-check sequence in [.agent/rules/session_tagging.md](.agent/rules/session_tagging.md). The command authorizes those normal release stages.
 - **Auto-Boost Protocol**: Automatically activated on any **Complex Task** per [.agent/rules/auto_boost_protocol.md](.agent/rules/auto_boost_protocol.md). Automatically applies the deep reasoning, subagent orchestration, and empirical verification workflow of `/boost` without requiring manual `/boost` invocation.
 
 ## Response Formatting
@@ -152,12 +177,7 @@ These workflows add product thinking, automated QA, and release automation:
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
 - **Next Version**: `V2.0.14`
 
-- **Session Tagging Protocol (`(R)` & `(D)`)**:
-  - **Ready for Deployment (`(R)`)**: Whenever the user says "R4D", mark the session with prefix `(R) ` via `python scripts/session_tagger.py mark-ready`. List all ready sessions via `python scripts/session_tagger.py list-ready`.
-  - **Push All Readied (`PAR`)**: When the user requests "PAR", deploy all readied changes per the workspace deployment workflow, then transition readied sessions to `(D) ` using `python scripts/session_tagger.py mark-deployed --cid ...` or `python scripts/session_tagger.py trace-deployed`.
-  - **Deployed Tagging (`(D)`)**: Whenever a session/conversation concludes with an approved production deployment, rename it with a `(D) ` prefix by running `python scripts/session_tagger.py mark-deployed`.
-  - **Batch Deployment Back-Tracing (MANDATORY)**: When an approved production deployment integrates work from multiple preceding development tracks or chat sessions (e.g. multi-task releases), trace back to each chat session that produced those changes (via `TASK_TRACKER.csv`, git commit log, or `python scripts/session_tagger.py search "<query>"`) and mark each origin session with `(D) ` as well (e.g. `python scripts/session_tagger.py mark-deployed --cid <cid1> <cid2> ...` or `mark-batch` or `trace-deployed`).
-  - **Resume / Task Start Removal**: Whenever a conversation marked with `(D)` is resumed or new development starts, the agent MUST immediately strip the `(D) ` prefix during its initial tool calls by running: `python scripts/session_tagger.py remove-deployed`. Never wait until after answering.
+- **Session Tagging Protocol (`(R)` & `(D)`)**: The single authority is [.agent/rules/session_tagging.md](.agent/rules/session_tagging.md). Ready tasks are automatically `(R)` with a verified shared readiness record. PAR discovers the eligible batch across supported hosts and registry records. Only complete, live-verified releases become `(D)`; failures and partial releases remain accurately recorded. All title mutations require verified native IDs.
 
 - **SemVer Protocol**:
   - **Minor Push (Bug fixes, small edits)**: Increment the LAST digit (e.g., `1.0.0` -> `1.0.1`).

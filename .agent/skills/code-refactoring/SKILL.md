@@ -1,51 +1,18 @@
 ---
 name: code-refactoring-refactor-clean
-description: "You are a code refactoring expert specializing in clean code principles, SOLID design patterns, and modern software engineering best practices. Analyze and refactor the provided code to improve its quality, maintainability, and performance."
+description: "Refactor an authorized code area to reduce evidenced complexity, duplication or coupling while preserving behavior and meaningful tests. Use for targeted structural improvements, not speculative rewrites or mandatory cleanup around unrelated fixes."
 ---
 
-# Refactor and Clean Code
+# Behavior-preserving refactoring
 
-You are a code refactoring expert specializing in clean code principles, SOLID design patterns, and modern software engineering best practices. Analyze and refactor the provided code to improve its quality, maintainability, and performance.
+Identify the concrete pain: repeated policy, callers that coordinate internal details, inconsistent ownership, brittle tests or difficult changes. Read representative callers and existing contracts before choosing a structure. File length or a metric threshold alone does not justify a rewrite.
 
-## Use this skill when
+Establish the current behavior and relevant test baseline. Preserve dirty work and separate a requested behavior change from a structural change in the reasoning and verification. Use characterization tests where behavior is important but undocumented.
 
-- Refactoring tangled or hard-to-maintain code
-- Reducing duplication, complexity, or code smells
-- Improving testability and design consistency
-- Preparing modules for new features safely
+Apply [module-design principles](../architecture-design/references/module-design.md) when changing interfaces or ownership. Use the [implementation playbook](resources/implementation-playbook.md) for sequencing. An optional [simplicity review](references/simplicity-review.md) helps check whether a proposed abstraction earns its cost.
 
-## Do not use this skill when
+Prefer focused steps that can be reviewed and verified. Move policy to a clear owner, reduce duplication only when the concepts are truly the same, and keep security, transaction, compatibility and lifecycle boundaries explicit. Existing code, platform features and suitable dependencies may be better than a new abstraction.
 
-- You only need a small one-line fix
-- Refactoring is prohibited due to change freeze
-- The request is for documentation only
+For wide changes, preserve compatibility while migrating callers. Do not remove old paths until remaining use and behavior have been checked. Do not replace tests solely because their former module disappears; retain independent assertions that protect meaningful behavior.
 
-## Context
-The user needs help refactoring code to make it cleaner, more maintainable, and aligned with best practices. Focus on practical improvements that enhance code quality without over-engineering.
-
-## Requirements
-$ARGUMENTS
-
-## Instructions
-
-- Assess code smells, dependencies, and risky hotspots.
-- Propose a refactor plan with incremental steps.
-- Apply changes in small slices and keep behavior stable.
-- Update tests and verify regressions.
-- If detailed patterns are required, open `resources/implementation-playbook.md`.
-
-## Safety
-
-- Avoid changing external behavior without explicit approval.
-- Keep diffs reviewable and ensure tests pass.
-
-## Output Format
-
-- Summary of issues and target areas
-- Refactor plan with ordered steps
-- Proposed changes and expected impact
-- Test/verification notes
-
-## Resources
-
-- `resources/implementation-playbook.md` for detailed patterns and examples.
+Verify the changed contracts and original scenarios with proportionate tests. Compare the final diff against the authorized scope, including generated files and shared interfaces. Explain what became easier, what behavior is preserved and what evidence supports that claim. A no-change recommendation is valid if the benefit does not justify the risk. [Provenance](SOURCE.md).

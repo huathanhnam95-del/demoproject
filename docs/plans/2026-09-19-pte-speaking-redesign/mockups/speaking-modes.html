@@ -1,0 +1,860 @@
+<title>Speaking Modes Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+/* Light only, like the BEL learner app. Tokens copied from public/design-tokens.css.
+   The question area (instruction, recorder box, passage) keeps the PTE test styling agreed earlier. */
+:root{
+  --bg:#f8f9fa; --surface:#fff; --surface-2:#f8fafc; --tint:#f1f5f9;
+  --ink:#1e293b; --ink-2:#475569; --muted:#5d6b7f; --line:#e2e8f0; --line-2:#cbd5e1;
+  --blue:#2563eb; --blue-700:#1d4ed8; --blue-800:#1e40af; --blue-50:#eff6ff; --blue-100:#dbeafe; --blue-200:#bfdbfe;
+  --green:#1b8a4f; --green-700:#156d3e; --green-50:#f0fdf4; --green-100:#dcfce7;
+  --gold-50:#fff8e7; --gold-100:#fef3c7; --gold-800:#92400e; --amber:#d97706;
+  --red:#dc2626; --red-700:#b91c1c; --red-50:#fef2f2; --red-100:#fee2e2;
+  --coach-link:#1d4ed8; --coach-red:#d97706; --coach-red-text:#92400e;
+  --shadow-sm:0 1px 2px rgba(15,23,42,.06); --shadow-md:0 4px 12px -2px rgba(15,23,42,.10); --shadow-lg:0 10px 30px -4px rgba(15,23,42,.12);
+  --ease:color .2s ease-out,background-color .2s ease-out,border-color .2s ease-out,box-shadow .2s ease-out,transform .2s ease-out,opacity .2s ease-out;
+  --ann:#dc2626;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 "Outfit",system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.page{max-width:1280px;margin:0 auto;padding-inline:20px;padding-block:28px 72px;display:flex;flex-direction:column;gap:20px}
+
+/* ---------- mockup chrome (outside the app) ---------- */
+.intro{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px 44px;align-items:end}
+.eyebrow{font:500 12px "Roboto Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.intro h1{margin:0;font-size:clamp(28px,3.4vw,38px);line-height:1.1;font-weight:600;letter-spacing:-.02em;text-wrap:balance}
+.intro p{margin:10px 0 0;color:var(--ink-2);max-width:62ch}
+.principles{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:14.5px;color:var(--ink-2)}
+.principles li{display:grid;grid-template-columns:22px 1fr;gap:10px}
+.principles b{color:var(--ink);font-weight:600}
+.principles .n{width:20px;height:20px;border-radius:10px;background:var(--ink);color:#fff;font:600 11px/20px "Outfit";text-align:center;margin-top:2px}
+.chrome{display:flex;justify-content:space-between;align-items:center;gap:10px 18px;flex-wrap:wrap;padding-block:10px;border-block:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:60}
+.seg{display:inline-flex;gap:2px;padding:3px;background:var(--tint);border:1px solid var(--line);border-radius:999px;flex-wrap:wrap}
+.seg button{border:0;background:none;padding:6px 14px;border-radius:999px;font-size:14px;font-weight:500;color:var(--ink-2);cursor:pointer;transition:var(--ease)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--blue-700);box-shadow:var(--shadow-sm)}
+.seg .lbl{padding:6px 6px 6px 10px;font:500 11px "Roboto Mono",monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;align-self:center}
+.sw{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2);cursor:pointer;user-select:none}
+.sw input{appearance:none;width:34px;height:20px;border-radius:10px;background:var(--line-2);position:relative;cursor:pointer;margin:0;transition:var(--ease);flex:none}
+.sw input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:8px;background:#fff;box-shadow:var(--shadow-sm);transition:left .2s ease-out}
+.sw input:checked{background:var(--blue)}
+.sw input:checked::after{left:16px}
+.sw.ann input:checked{background:var(--ann)}
+.chrome-r{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+
+/* ---------- app shell (unchanged global header) ---------- */
+.app{background:var(--bg);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow-lg);overflow:hidden;position:relative}
+.gh{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#0f766e,#2563eb);color:#fff;font:700 14px/40px "Outfit";text-align:center;flex:none}
+.brand b{display:block;font-size:16px;line-height:1.2}
+.brand small{display:block;font-size:12px;color:var(--muted)}
+.gh-r{display:flex;align-items:center;gap:8px}
+.gh-pill{background:var(--tint);border-radius:999px;padding:7px 16px;font-weight:600;font-size:15px}
+.gh-ic{width:36px;height:36px;border-radius:18px;display:grid;place-items:center;color:var(--ink)}
+.gh-ic svg{width:21px;height:21px}
+
+/* ---------- mode bar (new: one row) ---------- */
+.modebar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px 16px;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.mb-l,.mb-r{display:flex;align-items:center;gap:8px;min-width:0}
+.mb-r{justify-content:flex-end}
+.ib{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--ink-2);transition:var(--ease);flex:none}
+.ib:hover{background:var(--tint);color:var(--ink)}
+.ib svg{width:18px;height:18px}
+.mtitle{display:flex;align-items:baseline;gap:8px;min-width:0}
+.mtitle b{font-size:18px;font-weight:600;white-space:nowrap}
+.mtitle small{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--blue)}
+.picker{display:inline-flex;align-items:center;gap:2px;background:var(--tint);border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:var(--shadow-sm);max-width:100%;min-width:0}
+.picker button{border:0;background:none;cursor:pointer;color:var(--ink-2);transition:var(--ease)}
+.pk-b{width:34px;height:34px;border-radius:999px;font-size:18px;line-height:1;flex:none}
+.pk-b:hover{background:var(--surface);box-shadow:var(--shadow-sm);color:var(--ink)}
+.pk-pill{height:34px;padding:0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;max-width:360px;font-weight:600;font-size:14.5px;color:var(--ink)!important}
+.pk-pill small{font-weight:400;color:var(--muted);font-size:14px;overflow:hidden;text-overflow:ellipsis}
+.pk-pill .note{color:var(--blue);font-size:13px}
+.tb{height:38px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:inline-flex;align-items:center;gap:7px;padding:0 12px;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink-2);transition:var(--ease);white-space:nowrap;position:relative}
+.tb:hover{background:var(--tint);color:var(--ink)}
+.tb svg{width:17px;height:17px}
+.tb[aria-pressed="true"]{background:var(--blue-50);border-color:var(--blue-200);color:var(--blue-700)}
+.tb .cnt{min-width:20px;height:20px;border-radius:10px;background:var(--tint);color:var(--ink-2);font-size:12px;font-weight:600;display:inline-grid;place-items:center;padding:0 6px}
+.tb[aria-pressed="true"] .cnt{background:var(--blue);color:#fff}
+.tb .dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:4px;background:var(--blue);box-shadow:0 0 0 2px #fff}
+.lvl{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:999px;background:var(--green-50);color:var(--green-700);border:1px solid var(--green-100);font-size:12.5px;font-weight:600;white-space:nowrap}
+
+/* ---------- workspace ---------- */
+.ws{display:grid;grid-template-columns:minmax(0,1fr);gap:0;min-height:680px;position:relative}
+.ws.coach-open{grid-template-columns:minmax(0,1fr) 360px}
+.stage{padding:28px 24px 40px;display:flex;flex-direction:column;align-items:center;gap:26px;min-width:0}
+.qcard.wide,.attempts.wide{max-width:1200px}
+.qcard{width:100%;max-width:940px;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-md);display:flex;flex-direction:column;position:relative;min-width:0}
+.prog{display:flex;align-items:center;gap:10px;padding:14px 26px 0;font-size:12.5px;color:var(--muted)}
+.prog ol{list-style:none;margin:0;padding:0;display:flex;gap:6px;flex:1;min-width:0}
+.prog li{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.prog li i{display:block;height:4px;border-radius:2px;background:var(--line)}
+.prog li.done i{background:var(--blue-200)} .prog li.now i{background:var(--blue)}
+.prog li span{font-weight:500;white-space:nowrap}
+.prog li.now span{color:var(--blue-700)}
+.qbody{padding:22px 34px 26px;display:flex;flex-direction:column;gap:22px;min-width:0}
+
+/* PTE question area (reference styling) */
+.instr{margin:0;font:15px/1.6 Arial,Helvetica,sans-serif;color:#333}
+.center{display:flex;justify-content:center}
+/* Recorder widget: countdown circle -> red recording ring with live waveform -> green Complete (per the guideline image) */
+.rw{display:inline-flex;align-items:center;gap:14px;font:14px/1.35 Arial,Helvetica,sans-serif;color:#6b6b6b;min-height:48px}
+.rw-ring{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;border:2px solid #7a7a7a;font:16px Arial,Helvetica,sans-serif;color:#555;font-variant-numeric:tabular-nums;background:#fff}
+.rw-ring i{width:18px;height:18px;border-radius:50%;display:block}
+.rw-ring.rec{border-color:#f26b6b;border-width:2.5px}
+.rw-ring.rec i{background:#f04e4e;animation:rwpulse 1.2s ease-in-out infinite}
+.rw-ring.done{border-color:#2eb82e;border-width:2.5px}
+.rw-ring.done i{background:#2eb82e}
+@keyframes rwpulse{50%{transform:scale(.82)}}
+.rw-col{display:flex;flex-direction:column;gap:2px;min-width:62px}
+.rw-col small{font-size:12.5px;color:#8a8a8a;font-variant-numeric:tabular-nums}
+.rw-wave{display:flex;align-items:center;gap:1px;width:200px;height:28px;max-width:40vw}
+.rw-wave i{flex:1;height:1px;background:#c9ced6;border-radius:1px}
+.rw-wave i.on{background:#4aa3df;height:var(--h)}
+.rw-wave i.live{animation:wv .45s ease-in-out infinite alternate}
+@keyframes wv{from{transform:scaleY(.45)}to{transform:scaleY(1.15)}}
+.rw-total{font-size:13px;color:#8a8a8a;font-variant-numeric:tabular-nums}
+.rw-line{display:block;width:200px;max-width:40vw;height:2px;background:#9aa0a8}
+.dlg-back{position:fixed;inset:0;background:rgba(15,23,42,.38);display:flex;align-items:center;justify-content:center;z-index:70;padding:16px}
+.dlg{background:var(--surface);border-radius:18px;box-shadow:var(--shadow-lg);width:400px;max-width:100%;padding:22px 22px 18px}
+.dlg h3{margin:0;font-size:18px;font-weight:600;display:flex;align-items:center;gap:10px}
+.dlg h3 .ic{width:30px;height:30px;border-radius:15px;display:grid;place-items:center;font-size:15px;font-weight:700}
+.dlg h3 .ic.stop{background:var(--red-100);color:var(--red-700)} .dlg h3 .ic.q{background:var(--blue-50);color:var(--blue-700)}
+.dlg p{margin:8px 0 18px;color:var(--ink-2);font-size:15px}
+.dlg-f{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.passage{margin:0;font:17px/2.15 Arial,Helvetica,sans-serif;color:#222;max-width:80ch;position:relative}
+.w{border-radius:3px;position:relative;transition:background-color .2s}
+.tie{display:inline-block;width:.3em}
+.pause{display:none;font-weight:bold;color:#7c3aed;margin:0 4px}
+.g-link .tie{width:.55em;height:.45em;margin:0 .05em;vertical-align:-.3em;border-bottom:2px solid var(--coach-link);border-radius:0 0 .5em .5em}
+.g-pause .pause{display:inline}
+.g-red .w.red{box-shadow:inset 0 -2px 0 var(--coach-red);background:var(--gold-50);cursor:pointer}
+.g-red .w.red:hover{background:var(--gold-100)}
+.g-red .w.red.on{background:var(--gold-100);box-shadow:inset 0 -2px 0 var(--coach-red),0 0 0 2px var(--coach-red)}
+/* scored transcript (feedback state) */
+.scored .w{cursor:pointer}
+.scored .w:hover{outline:1px solid var(--line-2)}
+.scored .w.s-good{background:var(--green-50)}
+.scored .w.s-unclear{background:var(--gold-100);box-shadow:inset 0 -2px 0 var(--amber)}
+.scored .w.s-bad{background:var(--red-100);box-shadow:inset 0 -2px 0 var(--red)}
+.scored .w.s-omit{color:var(--red-700);text-decoration:line-through;background:var(--red-50)}
+.scored .w.s-coach{box-shadow:0 0 0 1.5px #7c3aed inset}
+.scored .w.playing{outline:2px solid var(--blue)}
+
+/* word popover */
+.pop{position:absolute;z-index:40;width:290px;max-width:calc(100vw - 40px);background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);padding:14px 16px;font:14px/1.5 "Outfit",sans-serif;color:var(--ink)}
+.pop-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pop-h b{font-size:17px}
+.chipk{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--gold-100);color:var(--coach-red-text)}
+.chipk.link{background:var(--blue-50);color:var(--blue-700)}
+.pop .say{margin:6px 0 4px;color:var(--ink-2)}
+.pop .say b{color:var(--coach-red-text);font-size:16px}
+.pop .ipa{font:13px "Roboto Mono",monospace;color:var(--muted)}
+.pop-f{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.mini{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:var(--ink-2);transition:var(--ease)}
+.mini:hover{border-color:#94a3b8;color:var(--ink)}
+.mini.solid{background:var(--blue);border-color:var(--blue);color:#fff}
+.linkbtn{border:0;background:none;color:var(--blue-700);font-weight:600;font-size:13.5px;cursor:pointer;padding:0}
+
+/* inline coach nudge (coach closed) */
+.nudge{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink-2);margin-top:-6px}
+.nudge .mini{padding:3px 10px}
+
+/* action dock */
+.dock{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 26px;border-top:1px solid var(--line);background:var(--surface);border-radius:0 0 20px 20px;position:sticky;bottom:0;z-index:5}
+.dock-l{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px;min-width:0}
+.dock-r{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-left:auto;justify-content:flex-end}
+.btn{height:44px;border-radius:12px;padding:0 20px;font-size:15px;font-weight:600;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:var(--ease)}
+.btn:hover{background:var(--tint)}
+.btn:active{transform:translateY(1px)}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 1px 2px rgba(37,99,235,.25),0 4px 12px -4px rgba(37,99,235,.45)}
+.btn.pri:hover{background:var(--blue-700)}
+.btn.stop{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.stop::before{content:"";width:10px;height:10px;border-radius:2px;background:#ff5a4f}
+.btn.ghost{border-color:transparent;background:none;color:var(--ink-2)}
+.btn.ghost:hover{background:var(--tint)}
+.btn svg{width:18px;height:18px}
+
+/* feedback section */
+.fb{display:flex;flex-direction:column;gap:20px;border-top:1px solid var(--line);padding-top:22px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.stat{padding:14px 18px;border-left:1px solid var(--line);min-width:0}
+.stat:first-child{border-left:0;background:var(--blue-50)}
+.stat small{display:block;font-size:12.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.stat b{display:block;font-size:30px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums}
+.stat b span{font-size:16px;color:var(--muted);font-weight:500}
+.stat:first-child b{color:var(--blue-800)}
+.stat .trk{height:5px;border-radius:3px;background:var(--line);margin-top:8px;overflow:hidden}
+.stat .trk i{display:block;height:100%;background:var(--blue)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);align-items:center}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.listen{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.listen .seg button{font-size:13.5px}
+.mp{display:inline-flex;align-items:center;gap:10px;background:var(--tint);border-radius:999px;padding:5px 14px 5px 5px;font-size:13px;color:var(--ink-2)}
+.mp button{width:30px;height:30px;border-radius:15px;border:0;background:var(--blue);color:#fff;display:grid;place-items:center;cursor:pointer;font-size:11px}
+.mp .t{width:150px;height:5px;border-radius:3px;background:var(--line-2);overflow:hidden}
+.mp .t i{display:block;height:100%;width:35%;background:var(--blue)}
+.mp .tm{font-variant-numeric:tabular-nums;color:var(--muted)}
+.voice{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13.5px;color:var(--muted)}
+.fix-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.fix-h h3{margin:0;font-size:16px;font-weight:600}
+.fixes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.fixes li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
+.fixes li:first-child{border-top:0}
+.fx-ic{width:26px;height:26px;border-radius:13px;display:grid;place-items:center;font-size:13px;font-weight:700}
+.fx-ic.bad{background:var(--red-100);color:var(--red-700)} .fx-ic.unc{background:var(--gold-100);color:var(--coach-red-text)} .fx-ic.ok{background:var(--green-100);color:var(--green-700)}
+.fixes b{font-weight:600}
+.fixes p{margin:2px 0 0;color:var(--ink-2);font-size:14.5px}
+.fixes .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.adv{border-top:1px solid var(--line);padding-top:14px}
+.adv svg{width:100%;height:auto;display:block;margin-top:10px}
+.analyzing{display:flex;align-items:center;gap:10px;color:var(--ink-2);font-size:15px}
+.spin{width:18px;height:18px;border-radius:9px;border:2.5px solid var(--blue-100);border-top-color:var(--blue);animation:sp 0.8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* feedback: two columns, no scrolling */
+.fbgrid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:0 30px;align-items:start}
+.col-l,.col-r{display:flex;flex-direction:column;gap:18px;min-width:0}
+.col-r{border-left:1px solid var(--line);padding-left:28px;gap:16px}
+.stats.four .stat{padding:10px 14px}
+.stats.four .stat small{font-size:11.5px}
+.stats.four .stat b{font-size:24px}
+.stats.four .stat .trk{margin-top:6px}
+.col-r .fixes li{padding:8px 0;gap:10px;grid-template-columns:24px minmax(0,1fr) auto}
+.col-r .fixes p{font-size:13.5px;margin:1px 0 0}
+.col-r .fx-ic{width:22px;height:22px;font-size:12px}
+.col-r .fixes .mini{padding:3px 9px;font-size:12.5px}
+.col-r .fix-h{margin-bottom:2px}
+.col-l .listen{padding-top:4px}
+.col-l .mp .t{width:120px}
+.col-r .fix-h h3{font-size:15px}
+.col-r .hints{padding:0;overflow:visible}
+.col-r .guides{padding:0 0 12px}
+.coachbtn .cnt{min-width:20px;height:20px;border-radius:10px;background:var(--tint);color:var(--ink-2);font-size:12px;font-weight:600;display:inline-grid;place-items:center;padding:0 6px}
+.coachbtn[aria-pressed="true"]{background:var(--blue-50);border-color:var(--blue-200);color:var(--blue-700)}
+.coachbtn[aria-pressed="true"] .cnt{background:var(--blue);color:#fff}
+
+/* previous attempts: its own section at the end of the mode page */
+.attempts{width:100%;max-width:940px}
+.att-h{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap}
+.att-h h2{margin:0;font-size:18px;font-weight:600;display:flex;align-items:center;gap:10px}
+.trend{font-size:13px;font-weight:600;color:var(--green-700);background:var(--green-50);border:1px solid var(--green-100);border-radius:999px;padding:2px 10px}
+.att-list{list-style:none;margin:12px 0 0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-sm)}
+.att-list li{display:grid;grid-template-columns:minmax(150px,1fr) minmax(0,2fr) auto auto;gap:10px 18px;align-items:center;padding:12px 18px;border-top:1px solid var(--line)}
+.att-list li:first-child{border-top:0}
+.att-list li.new{background:var(--blue-50)}
+.att-when b{display:block;font-weight:600;font-size:15px}
+.att-when small{color:var(--muted);font-size:13px}
+.att-tag{font-size:11px;font-weight:600;background:var(--blue);color:#fff;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:1px}
+.att-scores{display:flex;gap:6px;flex-wrap:wrap}
+.att-scores span{background:var(--tint);border-radius:999px;padding:3px 10px;font-size:13px;color:var(--ink-2)}
+.att-scores b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.att-dur{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.att-acts{display:flex;gap:6px}
+.att-note{font-size:13px;color:var(--muted);margin:8px 2px 0}
+
+/* coach drawer */
+.coach{background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;min-width:0;max-height:100%}
+.coach-h{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 10px}
+.coach-h h2{margin:0;font-size:17px;font-weight:600}
+.coach-h small{display:block;font-size:13px;color:var(--muted);font-weight:400}
+.guides{display:flex;flex-wrap:wrap;gap:6px;padding:0 18px 14px;border-bottom:1px solid var(--line)}
+.gchip{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink-2);display:inline-flex;gap:6px;align-items:center;transition:var(--ease)}
+.gchip[aria-pressed="true"]{background:var(--blue-50);border-color:var(--blue-200);color:var(--blue-700)}
+.gchip:disabled{opacity:.45;cursor:not-allowed}
+.gchip i{font-style:normal;font-size:11.5px;color:var(--muted)}
+.hints{list-style:none;margin:0;padding:6px 10px 14px;overflow:auto;display:flex;flex-direction:column}
+.hint{display:block;width:100%;text-align:left;border:0;background:none;padding:12px 10px;border-radius:12px;cursor:pointer;transition:var(--ease)}
+.hint:hover{background:var(--tint)}
+.hint.on{background:var(--gold-50);box-shadow:inset 0 0 0 1px #fcd9a8}
+.hint-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hint-h b{font-size:15.5px}
+.hint p{margin:4px 0 0;font-size:14px;color:var(--ink-2)}
+.hint .say{font-size:13.5px;color:var(--muted);margin-top:3px}
+.hint .say b{color:var(--coach-red-text);font-size:14px}
+.coach-f{padding:12px 18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+
+/* popovers from the mode bar */
+.menu{position:absolute;z-index:50;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:14px;width:360px;max-width:calc(100% - 32px)}
+.menu h4{margin:0 0 6px;font-size:12.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.menu section+section{margin-top:14px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13.5px;cursor:pointer;color:var(--ink-2);transition:var(--ease)}
+.opt[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.menu-f{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.mlist{list-style:none;margin:0;padding:0}
+.mlist button{width:100%;display:flex;align-items:center;gap:12px;border:0;background:none;padding:10px;border-radius:10px;cursor:pointer;font-size:14.5px;text-align:left}
+.mlist button:hover{background:var(--tint)}
+.mlist svg{width:18px;height:18px;color:var(--muted);flex:none}
+.mlist small{display:block;font-size:12.5px;color:var(--muted)}
+.qsearch{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-radius:12px;font-size:14.5px;margin-bottom:8px}
+.qsearch:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
+.qlist{list-style:none;margin:0;padding:0;max-height:300px;overflow:auto}
+.qlist button{width:100%;display:grid;grid-template-columns:58px 1fr 16px;gap:8px;align-items:center;border:0;background:none;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:14px;text-align:left}
+.qlist button:hover{background:var(--tint)}
+.qlist button.cur{background:var(--blue-50);color:var(--blue-800);font-weight:600}
+.qlist .id{font:500 12px "Roboto Mono",monospace;color:var(--muted)}
+.qlist .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qlist .au{color:var(--blue);font-size:12px}
+
+/* ask me launcher (global, smaller) */
+.askme{position:absolute;right:18px;bottom:18px;width:48px;height:48px;border-radius:24px;background:var(--blue);color:#fff;border:0;box-shadow:var(--shadow-lg);display:grid;place-items:center;cursor:pointer;z-index:30}
+.askme svg{width:22px;height:22px}
+
+/* current-app comparison */
+.current{background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow-lg);overflow:hidden}
+.current figcaption{padding:10px 16px;font-size:13.5px;color:var(--muted);border-bottom:1px solid var(--line)}
+.current img{display:block;width:100%;height:auto}
+
+/* annotations */
+.ann [data-ann]{outline:1.5px dashed var(--ann);outline-offset:3px}
+.ann [data-ann]:not(.askme):not(.dock){position:relative}
+.ann [data-ann]::after{content:attr(data-ann);position:absolute;top:-12px;right:-12px;min-width:20px;height:20px;border-radius:10px;background:var(--ann);color:#fff;font:600 11px/20px "Outfit",sans-serif;text-align:center;padding:0 5px;z-index:45;pointer-events:none;box-shadow:0 0 0 2px #fff;letter-spacing:0;text-transform:none;font-style:normal}
+.ann [data-ann].pulse{outline-style:solid;outline-width:3px}
+
+/* change list */
+.changes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px 48px}
+.changes h2{margin:0 0 10px;font-size:20px;font-weight:600;letter-spacing:-.01em}
+.moved{width:100%;border-collapse:collapse;font-size:14.5px}
+.moved th,.moved td{text-align:left;padding:9px 10px;border-top:1px solid var(--line);vertical-align:top}
+.moved th{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-top:0}
+.moved td:first-child{color:var(--ink-2)}
+.moved td b{font-weight:600}
+.moved .k{display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:10px;background:var(--ann);color:#fff;font-size:11px;font-weight:600;margin-right:6px;padding:0 5px}
+.moved .gone{color:var(--muted);font-style:italic}
+.tblwrap{overflow-x:auto}
+.why{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.why li{padding:10px 0;border-top:1px solid var(--line);font-size:15px;color:var(--ink-2)}
+.why li b{color:var(--ink);font-weight:600}
+
+@media (max-width:980px){
+  .fbgrid{grid-template-columns:1fr;gap:20px}
+  .col-r{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:18px}
+  .att-list li{grid-template-columns:1fr auto}
+  .att-scores{grid-column:1/-1}
+  .ws.coach-open{grid-template-columns:minmax(0,1fr)}
+  .coach{border-left:0;border-top:1px solid var(--line)}
+  .intro,.changes{grid-template-columns:1fr}
+  .modebar{grid-template-columns:1fr;justify-items:start}
+  .mb-r{justify-content:flex-start;flex-wrap:wrap}
+}
+@media (max-width:600px){
+  .page{padding-inline:16px}
+  .gh,.modebar{padding-inline:14px}
+  .stage{padding:16px 10px 28px}
+  .qbody{padding:18px 16px 22px}
+  .dock{padding:14px 16px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat:nth-child(3){border-left:0}
+  .stat:nth-child(n+3){border-top:1px solid var(--line)}
+  .pk-pill{max-width:180px}
+  .tb .lbl{display:none}
+  .fixes li{grid-template-columns:28px minmax(0,1fr)}
+  .fixes .acts{grid-column:2;justify-content:flex-start}
+}
+
+/* ---------- speaking set additions ---------- */
+.chrome{flex-direction:column;align-items:stretch;gap:10px}
+.chrome-row{display:flex;justify-content:space-between;align-items:center;gap:10px 18px;flex-wrap:wrap}
+.modesw{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.modesw button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:14px;cursor:pointer;display:inline-flex;gap:8px;align-items:baseline;color:var(--ink-2);transition:var(--ease)}
+.modesw button b{font:500 11.5px "Roboto Mono",monospace;color:var(--muted)}
+.modesw button[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.modesw button[aria-selected="true"] b{color:#b6c2d1}
+.ralink{margin-left:auto;font-size:14px;font-weight:600;color:var(--blue-700);text-decoration:none;padding:6px 4px}
+.ralink:hover{text-decoration:underline}
+.btn.helper{font-weight:500}
+.mini svg{width:12px;height:12px;flex:none}
+.btn.helper .cnt{min-width:20px;height:20px;border-radius:10px;background:var(--tint);color:var(--ink-2);font-size:12px;font-weight:600;display:inline-grid;place-items:center;padding:0 6px}
+.btn.helper[aria-pressed="true"]{background:var(--blue-50);border-color:var(--blue-200);color:var(--blue-700)}
+.btn.helper:disabled{opacity:.5;cursor:not-allowed}
+.coin{font-style:normal;background:var(--gold-100);color:var(--gold-800);border-radius:999px;padding:1px 7px;font-size:11.5px;font-weight:600}
+/* PTE audio box (test styling) */
+.pbox{width:300px;max-width:100%;background:linear-gradient(#36699f,#28598f);border:1px solid #1c4675;color:#fff;padding:14px 20px 16px;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.25);font:14px/1.5 Arial,Helvetica,sans-serif}
+.pbox b{font-weight:bold}
+.bar{height:10px;background:#a4bddb;border:1px solid #1c4675;margin-top:12px;overflow:hidden}
+.bar i{display:block;height:100%;background:#fff;width:0;transition:width .9s linear}
+.vol{display:flex;align-items:center;gap:8px;margin-top:12px}
+.vol svg{width:15px;height:15px}
+.vol span{display:block;width:120px;height:4px;background:#fff;border-radius:2px;position:relative}
+.vol span::after{content:"";position:absolute;right:18px;top:-5px;width:14px;height:14px;border-radius:7px;background:#fff;box-shadow:0 0 0 1px #1c4675}
+.qrow{display:flex;gap:22px 36px;flex-wrap:wrap;align-items:center}
+.qrow.center{justify-content:center}
+.qside{flex:1 1 260px;display:flex;justify-content:center}
+.rec-in{animation:recin .35s ease-out both}
+@keyframes recin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.iconfig svg{width:130px;height:auto;display:block}
+.fig{margin:0;background:#fff;border:1px solid #d6d6d6;padding:12px;width:460px;max-width:100%;position:relative}
+.fig svg{display:block;width:100%;height:auto}
+.fig.small{width:100%;max-width:420px;padding:8px}
+.fig.zoomed{position:fixed;inset:6vh 6vw;width:auto;z-index:80;box-shadow:var(--shadow-lg);border-radius:14px;display:flex;align-items:center;justify-content:center;padding:28px}
+.fig.zoomed svg{max-height:100%;width:auto;height:100%}
+.zoombtn{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.92);display:grid;place-items:center;cursor:pointer;color:var(--ink-2);z-index:2}
+.zoombtn svg{width:18px;height:18px}
+.notepad{display:flex;flex-direction:column;gap:8px;min-width:0}
+.notepad-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:13.5px;color:var(--muted)}
+.notepad-h b{color:var(--ink);font-weight:600}
+.notepad textarea{width:100%;min-height:104px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2);padding:12px 14px;font:15px/1.6 "Outfit",sans-serif;color:var(--ink);resize:vertical;transition:var(--ease)}
+.notepad textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100);background:#fff}
+.tabs{display:inline-flex;gap:2px;padding:3px;background:var(--tint);border:1px solid var(--line);border-radius:999px;flex-wrap:wrap}
+.tabs button{border:0;background:none;padding:5px 12px;font-size:13px;font-weight:500;cursor:pointer;border-radius:999px;color:var(--ink-2);transition:var(--ease)}
+.tabs button.on{background:var(--surface);color:var(--blue-700);box-shadow:var(--shadow-sm)}
+.sub{margin:0 0 6px;font-size:12.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.fb-title{margin:0;font-size:16px;font-weight:600}
+.lbl2{font-size:13px;font-weight:600;color:var(--muted)}
+.muted{margin:0;font-size:13.5px;color:var(--muted)}
+.ipa{font:13px "Roboto Mono",monospace;color:var(--muted)}
+.sample{margin:0;font-size:15px;line-height:1.7;color:var(--ink-2)}
+.sample b{color:var(--ink);font-weight:600}
+.sample mark,.notes-fb mark,.spk-notes mark{background:var(--green-100);color:var(--green-700);border-radius:3px;padding:0 2px}
+.notes-fb{margin:0;font-size:15px;line-height:1.8;color:var(--ink-2)}
+.spk-notes{display:flex;flex-direction:column;gap:4px;font-size:14.5px;color:var(--ink-2)}
+.spk-notes p{margin:0}
+.spk-notes b{color:var(--ink);font-weight:600;margin-right:6px}
+.diff{line-height:2.1;font-size:17px;margin:0;font-family:Arial,Helvetica,sans-serif}
+.diff span{padding:2px 4px;border-radius:6px}
+.diff .ok{color:var(--green-700);background:var(--green-50)}
+.diff .miss{color:var(--red-700);background:var(--red-100);text-decoration:line-through}
+.diff .wrong{color:var(--red-700);background:var(--red-50);box-shadow:inset 0 -2px 0 var(--red);cursor:help}
+.kp{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:15px}
+.kp li{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start}
+.kp li>span:first-child{width:22px;height:22px;border-radius:11px;display:grid;place-items:center;font-size:12px;font-weight:700}
+.kp .y{background:var(--green-100);color:var(--green-700)} .kp .n{background:var(--red-100);color:var(--red-700)} .kp .p{background:var(--gold-100);color:var(--gold-800)}
+.verdict{display:flex;align-items:baseline;gap:12px;padding:14px 16px;border-radius:14px}
+.verdict.ok{background:var(--green-50);color:var(--green-700)}
+.verdict b{font-size:22px;font-weight:600}
+.empty-score{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:16px;border:1px dashed var(--line-2);border-radius:14px}
+.empty-score b{font-size:16px}
+@media (max-width:600px){.modesw button{padding:5px 10px;font-size:13px}.ralink{margin-left:0}}
+</style>
+
+<div class="page">
+  <header class="intro">
+    <div>
+      <p class="eyebrow">BEL · Speaking · Redesign 2–7 of 17</p>
+      <h1>The other six Speaking modes on the Read Aloud pattern</h1>
+      <p>Same rules as the approved Read Aloud screen: one mode bar, the PTE question area in a single card, one action bar whose buttons follow the state, helpers next to the main action and hidden while recording, two-column feedback without scrolling, and Previous attempts at the end of the page. Pick a mode, then step through its states or let the live timers run.</p>
+    </div>
+    <ol class="principles">
+      <li><span class="n">1</span><span><b>Audio first, then the recorder.</b> The recorder appears only when the audio has finished, and uses the new countdown, recording and Complete style.</span></li>
+      <li><span class="n">2</span><span><b>Each mode's helpers sit beside its main button:</b> Replay and Shadow, Replay question, Intro video. They hide while you record.</span></li>
+      <li><span class="n">3</span><span><b>Notes stay with the audio</b> in Retell Lecture and Summarize Group Discussion, instead of being a separate step.</span></li>
+      <li><span class="n">4</span><span><b>Next follows the test:</b> “Cannot skip” during the countdown to recording, a confirmation at other times.</span></li>
+    </ol>
+  </header>
+
+  <div class="chrome">
+    <div class="modesw" id="modesw" role="tablist" aria-label="Speaking mode"></div>
+    <div class="chrome-row">
+      <div class="seg" id="states" role="group" aria-label="Screen state"></div>
+      <div class="chrome-r">
+        <div class="seg" id="viewsw" role="group" aria-label="Version"><button type="button" data-v="new" aria-pressed="true">Redesign</button><button type="button" data-v="old" aria-pressed="false">Current app</button></div>
+        <label class="sw ann"><input type="checkbox" id="sw-ann" checked> Notes</label>
+        <label class="sw"><input type="checkbox" id="sw-auto" checked> Live timers</label>
+      </div>
+    </div>
+  </div>
+
+  <div id="mock"></div>
+
+  <section class="changes">
+    <div>
+      <h2 id="moved-title">Where each current control went</h2>
+      <div class="tblwrap"><table class="moved" id="moved"></table></div>
+    </div>
+    <div>
+      <h2>Same across all six</h2>
+      <ul class="why">
+        <li><b>Mode bar:</b> back, mode name, the v7 question picker, Filters (only when the mode has filters), More, level chip. The Basic / Advanced / Settings row and the separate question heading are gone.</li>
+        <li><b>Progress bar</b> at the top of the card replaces the numbered step bar.</li>
+        <li><b>Action bar</b> at the bottom of the card: one blue primary action per state, and Next at the far right.</li>
+        <li><b>Feedback</b> uses two columns: what you said on the left, scores and next steps on the right, with a second tab for the mode's extra material.</li>
+        <li><b>Previous attempts</b> always sit at the end of the page, newest first, with a trend badge.</li>
+        <li id="mode-note"></li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------------- icons ---------------- */
+const I={
+ back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+ filter:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>',
+ more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
+ mic:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2z"/></svg>',
+ user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 18.5c1.3-2 3.2-3 5.5-3s4.2 1 5.5 3"/></svg>',
+ bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
+ play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+ redo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
+ replay:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7L4 8.5"/><path d="M4 4v4.5h4.5"/><path d="M11 9l4 3-4 3z" fill="currentColor" stroke="none"/></svg>',
+ shadow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12h2M8 8v8M12 5v14M16 8v8M20 11v2"/></svg>',
+ video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>',
+ zoom:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8v6M8 11h6"/></svg>',
+ focus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+ help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/></svg>',
+ reset:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.7L20 8.5"/><path d="M20 4v4.5h-4.5"/></svg>',
+ chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+ spk:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="#fff"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>',
+ people:'<svg viewBox="0 0 120 100" aria-hidden="true" fill="#222"><circle cx="30" cy="30" r="11"/><path d="M12 72c0-12 8-20 18-20s18 8 18 20z"/><circle cx="90" cy="30" r="11"/><path d="M72 72c0-12 8-20 18-20s18 8 18 20z"/><circle cx="60" cy="48" r="12"/><path d="M40 96c0-13 9-22 20-22s20 9 20 22z"/><path d="M40 6h26a6 6 0 0 1 6 6v10a6 6 0 0 1-6 6H52l-8 7v-7h-4a6 6 0 0 1-6-6V12a6 6 0 0 1 6-6z" fill="#444"/></svg>'
+};
+const A=k=>k?` data-ann="${k}"`:'';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mmss=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
+const WAVE=Array.from({length:64},(_,i)=>{const x=Math.sin(i*1.7)*0.5+Math.sin(i*0.37)*0.35+Math.sin(i*5.3)*0.15;return Math.max(3,Math.round(Math.abs(x)*24)+2);});
+const CHART=`<svg viewBox="0 0 380 240" role="img" aria-label="Grouped bar chart of household energy share by source, 2010 and 2025"><g font-family="Arial" font-size="10" fill="#444">${[0,10,20,30,40,50].map(v=>{const y=200-v*3.4;return `<line x1="44" x2="370" y1="${y}" y2="${y}" stroke="#e3e3e3"/><text x="38" y="${y+3.5}" text-anchor="end">${v}</text>`}).join('')}<text x="12" y="118" transform="rotate(-90 12 118)" text-anchor="middle">Share of household energy (%)</text>${[['Gas',48,31],['Electricity',30,41],['Oil',20,13],['Solar',2,15]].map(([n,a,c],i)=>{const gx=62+i*78;return `<rect x="${gx}" y="${200-a*3.4}" width="26" height="${a*3.4}" fill="#9aa9b8"/><rect x="${gx+30}" y="${200-c*3.4}" width="26" height="${c*3.4}" fill="#2c5d96"/><text x="${gx+13}" y="${196-a*3.4}" text-anchor="middle" font-size="9">${a}</text><text x="${gx+43}" y="${196-c*3.4}" text-anchor="middle" font-size="9">${c}</text><text x="${gx+28}" y="215" text-anchor="middle" font-size="11">${n}</text>`}).join('')}<line x1="44" x2="370" y1="200" y2="200" stroke="#888"/><rect x="250" y="222" width="10" height="10" fill="#9aa9b8"/><text x="264" y="231">2010</text><rect x="300" y="222" width="10" height="10" fill="#2c5d96"/><text x="314" y="231">2025</text></g></svg>`;
+
+/* ---------------- modes ---------------- */
+const RS_WORDS=[['The','ok'],['library','ok'],['will','ok'],['extend','ok'],['its','miss'],['opening','ok'],['hours','ok'],['during','ok'],['the','ok'],['examination','wrong','you said “exam”'],['period.','ok']];
+const M={
+ rs:{name:'Repeat Sentence',code:'RS',qid:57,qt:'Library opening hours',total:640,audio:true,audioStart:3,audioLen:5,prep:3,rec:15,
+  instr:'You will hear a sentence. Please repeat the sentence exactly as you hear it. You will hear the sentence only once.',
+  steps:['Listen','Record','Feedback'],
+  filters:[['Question order',['Recommended','Manual']],['Status',['All','New','Practised','Mastered']],['Length',['All','Short','Medium','Long']],['Difficulty',['Recommended','Level 1 (Easy)','Level 2 (Medium)','Level 3 (Hard)']]],
+  more:[[I.reset,'Reset progress','Start this question set again']],
+  recHint:'Repeat the sentence.',
+  helpers(ph){
+    if(ph==='prep'||ph==='complete'){const left=st.replays;return `<button class="btn helper" type="button" data-act="replay" ${left?'':'disabled'}${A('21')}>${I.replay} Replay <span class="cnt">${left}</span></button>`+(ph==='prep'?`<button class="btn helper" type="button" data-act="shadow" aria-pressed="${st.shadow}"${A('22')}>${I.shadow} Shadow <em class="coin">5c</em></button>`:'');}
+    return '';
+  },
+  content(ph){return '';},
+  fbTabs:[['results','Your results'],['practise','Practise missed words']],
+  fbLeft(){return `<div><h4 class="sub">The sentence</h4><p class="diff">${RS_WORDS.map(([w,c,x])=>`<span class="${c}"${x?` title="${x}"`:''}>${w}</span>`).join(' ')}</p></div>
+    <div class="legend"><span><i style="background:var(--green-50);box-shadow:inset 0 0 0 1px var(--green-100)"></i>Matched</span><span><i style="background:var(--red-100)"></i>Missed</span><span><i style="background:var(--red-50);box-shadow:inset 0 -2px 0 var(--red)"></i>Different (hover to see what you said)</span></div>
+    <div class="listen"><span class="lbl2">Correction</span><button class="mini" type="button">${I.play} Replay animation</button><button class="mini" type="button">From the beginning</button><button class="mini" type="button">From the end</button></div>
+    ${listen(['Your recording','Original sentence'])}`;},
+  fbRight(tab){
+    if(tab==='practise')return `<p class="muted">Words you missed or changed. Listen, then record just that word.</p><ul class="fixes">${[['its','/ɪts/','Missed. It links into “opening”: its‿opening.'],['examination','/ɪɡˌzæmɪˈneɪʃn/','You said “exam”. Five syllables, stress on -NA-.']].map(([w,ipa,t])=>`<li><span class="fx-ic bad">!</span><div><b>“${w}”</b> <span class="ipa">${ipa}</span><p>${t}</p></div><div class="acts"><button class="mini" type="button">▶ Model</button><button class="mini" type="button">${I.mic.replace('<svg','<svg width="12" height="12"')} Try</button></div></li>`).join('')}</ul>`;
+    return `${stats([['Points','10','/13',77],['Pronunciation','72','%',72],['Fluency','80','%',80],['Completeness','91','%',91]])}
+      <div><div class="fix-h"><h3>What to practise next</h3></div><ul class="fixes">
+      <li><span class="fx-ic bad">!</span><div><b>“its”</b> was missed<p>Link it to the next word: <b>its-opening</b>.</p></div><div class="acts"><button class="mini" type="button">▶ Model</button></div></li>
+      <li><span class="fx-ic unc">?</span><div><b>“examination”</b> became “exam”<p>Keep the full word; stress <b>-NA-</b>.</p></div><div class="acts"><button class="mini" type="button">▶ You</button><button class="mini" type="button">▶ Model</button></div></li>
+      <li><span class="fx-ic ok">✓</span><div><b>Rhythm</b> was steady<p>You kept the sentence in one breath.</p></div><div class="acts"></div></li></ul></div>`;},
+  attempts:[['Today, 2:58 PM',['Points 10/13','Pron. 72%'],'0:06'],['18 Sep, 8:10 PM',['Points 8/13','Pron. 65%'],'0:05'],['15 Sep, 7:42 PM',['Points 7/13','Pron. 61%'],'0:06']],trend:'+3 words since your first try',
+  moved:[
+   ['Picker, Basic / Advanced / Settings, focus','1, 2, 5','Mode bar with the v7 picker; Focus and How it works in More'],
+   ['Recommended, Adaptive / Manual, Status, Length, Difficulty filters','3','Filters popover (question order, status, length, difficulty)'],
+   ['↺ Reset progress','5','More → Reset progress'],
+   ['Play button and “5 times left” badge under the player','21','Audio plays by itself; Replay with the count sits in the action bar after the audio'],
+   ['🎙️ Shadow Mode (5 coins)','22','Shadow toggle with its coin cost, next to Start recording; hidden while recording'],
+   ['“Speak what you hear” live transcript box','25','Your words appear in Feedback, compared with the sentence'],
+   ['Start Recording, Check, Retry','8','Action bar: Start recording → Finish → Get feedback → Try again / Next'],
+   ['Points, correction animation (Skip / Replay / From the beginning / From the end), correct sentence','25, 26','Feedback: sentence comparison and correction controls on the left, points and scores on the right'],
+   ['Pronunciation practice for missed words','26','“Practise missed words” tab in Feedback']]
+ },
+ di:{name:'Describe Image',code:'DI',qid:23,qt:'Household energy by source',total:210,audio:false,prep:25,rec:40,
+  instr:'Look at the image below. In 25 seconds, please speak into the microphone and describe in detail what the image is showing. You will have 40 seconds to give your response.',
+  steps:['Prepare','Record','Feedback'],
+  filters:[['Difficulty',['All','Level 1 (Easy)','Level 2 (Medium)','Level 3 (Hard)']]],
+  more:[],recHint:'Describe the image.',
+  helpers(){return '';},
+  content(){return '';},
+  layout:'side',
+  fbTabs:[['results','Key points'],['sample','Sample answer']],
+  fbLeft(){return `<figure class="fig small">${CHART}</figure>${listen(['Your recording'])}<div><h4 class="sub">What you said</h4><p class="sample">The chart compares household energy sources in 2010 and 2025. In 2010 gas was the biggest at forty-eight percent, but by 2025 electricity overtook it at forty-one percent. Solar grew a lot…</p></div>`;},
+  fbRight(tab){
+    if(tab==='sample')return `<p class="sample">The chart compares household energy sources in 2010 and 2025. In 2010, gas was dominant at 48%, but by 2025 it had dropped to 31%, while electricity rose to 41%. Solar grew most rapidly, from 2% to 15%, and oil declined to 13%. Overall, homes are moving away from fossil fuels.</p><div class="listen"><button class="mini" type="button">▶ Hear the sample</button></div>`;
+    return `${stats([['Key points','3','/5',60],['Speaking time','0:38','',95],['Fluency','76','%',76],['Pronunciation','71','%',71]])}
+    <ul class="kp"><li><span class="y">✓</span>Gas was the largest source in 2010 (48%)</li><li><span class="y">✓</span>Electricity overtook gas by 2025 (41% vs 31%)</li><li><span class="p">~</span>Solar rose sharply (no figures given)</li><li><span class="n">✗</span>Oil fell from 20% to 13%</li><li><span class="n">✗</span>Conclusion: the shift away from fossil fuels</li></ul>
+    <div class="listen"><button class="mini solid" type="button"${A('27')}>AI content assessment</button><span class="muted">Opens in Ask me! with your transcript and the key points</span></div>`;},
+  attempts:[['Today, 3:02 PM',['3/5 key points','0:38 spoken'],'0:40'],['17 Sep, 9:15 PM',['2/5 key points','0:29 spoken'],'0:40']],trend:'+1 key point since your first try',
+  moved:[
+   ['Picker, Basic / Advanced / Settings, focus','1, 2, 5','Mode bar with the v7 picker; Focus and How it works in More'],
+   ['Difficulty filter','3','Filters popover'],
+   ['Start Practice','8','Countdown starts when the image opens; Start recording skips it'],
+   ['Preparation badge and “00:01 / 00:25” timer','7','Recorder countdown circle beside the image'],
+   ['🔍 Zoom and ✕','24','Zoom icon on the image corner'],
+   ['Stop Recording, Listen to your recording, Try Again, See Results','8','Action bar: Finish → Get feedback; Play and Record again after recording'],
+   ['Sample Answer & Key Points','26','Feedback: Key points tab (checklist) and Sample answer tab'],
+   ['🤖 AI Content Assessment','27','Button under the key points; still sends to Ask me!'],
+   ['Next Question','15','Next in the action bar']]
+ },
+ rl:{name:'Retell Lecture',code:'RL',qid:1,qt:'Gas Giants',total:188,audio:true,audioStart:3,audioLen:8,prep:10,rec:40,
+  instr:'You will hear a lecture. After listening to the lecture, in 10 seconds, please speak into the microphone and retell what you have just heard from the lecture in your own words. You will have 40 seconds to give your response.',
+  steps:['Listen','Record','Feedback'],
+  filters:[['Question order',['Recommended','Manual']],['Status',['All','New','Practised']],['Difficulty',['All','Level 1 (Easy)','Level 2 (Medium)','Level 3 (Hard)']]],
+  more:[],recHint:'Retell the lecture.',
+  helpers(ph){return ph==='listen'?`<button class="btn helper" type="button"${A('21')}>${I.video} Intro video</button>`:'';},
+  content(ph){return notes('rl',ph);},
+  fbTabs:[['results','Your results'],['transcript','Lecture transcript']],
+  fbLeft(){return `${listen(['Your recording','Lecture'])}<div><h4 class="sub">Your notes</h4><p class="notes-fb"><mark>Jupiter</mark> + <mark>Saturn</mark> = gas giants · mostly <mark>hydrogen</mark> & <mark>helium</mark> · no <mark>solid surface</mark> · strong magnetic field · many moons (J 95?)</p><p class="muted">Highlighted words also appear in the lecture.</p></div>`;},
+  fbRight(tab){
+    if(tab==='transcript')return `<p class="sample">Gas giants are the largest planets in our solar system. <mark>Jupiter</mark> and <mark>Saturn</mark> are made mostly of <mark>hydrogen</mark> and <mark>helium</mark>, and unlike Earth they have no <mark>solid surface</mark>. Deep inside, pressure turns hydrogen into a metal that conducts electricity, which gives them powerful magnetic fields…</p>`;
+    return `${stats([['Key points','3','/4',75],['Notes match','62','%',62],['Fluency','74','%',74],['Pronunciation','70','%',70]])}
+    <ul class="kp"><li><span class="y">✓</span>Jupiter and Saturn are gas giants</li><li><span class="y">✓</span>Mostly hydrogen and helium, no solid surface</li><li><span class="y">✓</span>Strong magnetic fields</li><li><span class="n">✗</span>Why: metallic hydrogen conducts electricity</li></ul>`;},
+  attempts:[['Today, 3:05 PM',['3/4 key points','Notes 62%'],'0:36'],['16 Sep, 6:40 PM',['2/4 key points','Notes 48%'],'0:31']],trend:'+1 key point since your first try',
+  moved:[
+   ['Picker, Basic / Advanced / Settings, focus','1, 2, 5','Mode bar with the v7 picker; Focus and How it works in More'],
+   ['Recommended, status and difficulty filters','3','Filters popover'],
+   ['Overview card (“Guiding video available”, Start Lecture ▶)','21','Lecture starts with the countdown; Intro video is a helper next to Next'],
+   ['Guiding video step and Proceed to Notes','21','Optional: Intro video opens over the card'],
+   ['Listen and Take Notes: player, loading line, notes box','23','Audio box with the notes box right under it'],
+   ['Submit Notes (twice: card and footer)','8','Notes are saved with the attempt; one action bar'],
+   ['— (no speaking step today)','7','New: recorder appears 10 s after the lecture and records 40 s, as in the test'],
+   ['Review Your Results: transcript with matched words, Try Again','25, 26','Feedback: your notes and recording on the left; key points and the lecture transcript on the right']]
+ },
+ asq:{name:'Answer Short Question',code:'ASQ',qid:204,qt:'Question 204',total:900,audio:true,audioStart:3,audioLen:3,prep:1,rec:10,
+  instr:'You will hear a question. Please give a simple and short answer. Often just one or a few words is enough.',
+  steps:['Listen','Answer','Feedback'],filters:[],more:[],recHint:'Answer the question.',
+  helpers(ph){return (ph==='prep'||ph==='complete')?`<button class="btn helper" type="button"${A('21')}>${I.replay} Replay question</button>`:'';},
+  content(){return '';},
+  fbTabs:[['results','Your answer']],
+  fbLeft(){return `<div><h4 class="sub">The question</h4><p class="sample"><b>What instrument is used to measure temperature?</b></p></div>${listen(['Question','Your recording'])}`;},
+  fbRight(){return `<div class="verdict ok"><b>Correct</b> <span>+5 XP</span></div><p class="sample">You said: <em>“thermometer”</em></p><p class="sample">Accepted answers: <b>a thermometer</b>, <b>thermometer</b></p>`;},
+  attempts:[['Today, 3:07 PM',['Correct','+5 XP'],'0:02'],['14 Sep, 5:20 PM',['Incorrect','“temperature”'],'0:03']],trend:'Correct this time',
+  moved:[
+   ['Question select and picker','1, 2','Mode bar with the v7 picker'],
+   ['Play prompt player and “Play the prompt audio, then record your answer.”','20','Audio box plays the question by itself'],
+   ['Record answer, Stop, Redo','8','Recorder appears after the question; action bar: Finish → Get feedback → Try again'],
+   ['Play prompt (again)','21','Replay question helper beside Start recording, hidden while recording'],
+   ['Result line, “You said”, accepted answers','26','Feedback right column; the question text is revealed on the left']]
+ },
+ sgd:{name:'Summarize Group Discussion',code:'SGD',qid:2,qt:'Writing an Essay',total:96,audio:true,audioStart:3,audioLen:10,prep:10,rec:120,
+  instr:'You will hear three people having a discussion. When you hear the beep, summarize the whole discussion. You will have 10 seconds to prepare and 2 minutes to give your response.',
+  steps:['Listen','Record','Feedback'],
+  filters:[['Question order',['Recommended','Manual']],['Difficulty',['All','Level 1 (Easy)','Level 2 (Medium)','Level 3 (Hard)']]],
+  more:[],recHint:'Summarize the discussion.',
+  helpers(){return '';},
+  content(ph){return notes('sgd',ph);},
+  lead:I.people,
+  fbTabs:[['results','Who said what'],['transcript','Transcript']],
+  fbLeft(){return `${listen(['Your recording','Discussion'])}<div><h4 class="sub">Your notes</h4><div class="spk-notes"><p><b>Topic</b> how to plan an essay</p><p><b>Speaker 1</b> outline first · <mark>thesis</mark> early</p><p><b>Speaker 2</b> <mark>drafts</mark> change · don't over-plan</p><p><b>Speaker 3</b> <mark>deadline</mark> · plan 10 min</p></div></div>`;},
+  fbRight(tab){
+    if(tab==='transcript')return `<p class="sample"><b>Speaker 1:</b> I always start with an outline so my <mark>thesis</mark> is clear early on…<br><b>Speaker 2:</b> But first <mark>drafts</mark> change anyway, so I don't spend long planning…<br><b>Speaker 3:</b> With a <mark>deadline</mark>, ten minutes of planning saves an hour later…</p>`;
+    return `${stats([['Overall','68','%',68],['Speaker 1','3','/4',75],['Speaker 2','2','/4',50],['Speaker 3','3','/4',75]])}
+    <ul class="kp"><li><span class="y">✓</span>Speaker 1: outline first, state the thesis early</li><li><span class="p">~</span>Speaker 2: drafts change (you missed “don't over-plan”)</li><li><span class="y">✓</span>Speaker 3: short plan saves time under a deadline</li><li><span class="n">✗</span>Nobody agreed on one method</li></ul>`;},
+  attempts:[['Today, 3:12 PM',['Overall 68%','2:00 spoken'],'2:00'],['12 Sep, 7:55 PM',['Overall 55%','1:32 spoken'],'1:32']],trend:'+13 points since your first try',
+  moved:[
+   ['Picker, Basic / Advanced / Settings, focus','1, 2, 5','Mode bar with the v7 picker; Focus and How it works in More'],
+   ['Recommended and difficulty filters','3','Filters popover'],
+   ['Play (footer) and Step 1 “Listen & Take Notes” header','20','Audio box plays by itself with the group icon beside it'],
+   ['Topic / Speaker 1–3 note boxes','23','Notes with tabs right under the audio, still there while you prepare and record'],
+   ['Proceed to Speaking →, ← Back to Notes','7','No separate steps: the recorder appears under the audio and the notes stay visible'],
+   ['🎙 Start Recording, ⏹ Stop, Submit & Review Notes','8','Action bar: Start recording → Finish → Get feedback'],
+   ['Results: overall accuracy and speaker comparison, Try Again','25, 26','Feedback: “Who said what” per speaker on the right, your notes and recording on the left']]
+ },
+ rts:{name:'Respond to a Situation',code:'RTS',qid:1,qt:'Shared Study Space',total:120,audio:true,audioStart:15,audioLen:6,prep:10,rec:40,
+  instr:'Listen to and read a description of a situation. You will have 10 seconds to think about your answer. Then you will hear a beep. You will have 40 seconds to answer the question. Please answer as completely as you can.',
+  steps:['Listen','Record','Feedback'],filters:[],more:[],recHint:'Respond to the situation.',
+  helpers(){return '';},
+  content(){return `<p class="passage">You manage a small local library and have arranged a space within it for community members to study and work. Upon a routine check, you find that the area is cluttered with personal items left behind. You need to address this issue with the community members. What would you say to the community members?</p>`;},
+  contentFirst:true,
+  fbTabs:[['results','AI score'],['sample','Sample answers']],
+  fbLeft(){return `${listen(['Your recording'])}<div><h4 class="sub">Your transcript</h4><p class="sample">Hi everyone, thanks for using the study space. I've noticed a lot of personal items left behind, which makes it hard for others to find a seat. Please take your things with you when you leave…</p></div>`;},
+  fbRight(tab){
+    if(tab==='sample')return `<div class="seg" role="group" aria-label="Sample version"><button type="button" data-samp="0" aria-pressed="${st.samp===0}">Full</button><button type="button" data-samp="1" aria-pressed="${st.samp===1}">Simplified</button></div><p class="sample">${st.samp===0?'Hello everyone, and thank you for making such good use of our study space. During a routine check I noticed that many personal items are being left behind, which makes it difficult for others to find a place to work. From next week, anything left overnight will go to the lost-and-found at the front desk. Please take your belongings with you when you leave.':'Hi everyone. Thanks for using the study space. Many things are left here after people go. From next week, we will move them to lost-and-found. Please take your things when you leave.'}</p>`;
+    return `<div class="empty-score"><b>Not scored yet</b><p class="muted">AI scoring reads your transcript and scores content, fluency and pronunciation. Sign in to use it.</p><button class="btn pri" type="button"${A('27')}>Submit to AI scoring</button></div>`;},
+  attempts:[['Today, 3:15 PM',['Not scored','0:38 spoken'],'0:38'],['13 Sep, 8:30 PM',['AI score 64/90','0:35 spoken'],'0:35']],trend:'2 attempts',
+  moved:[
+   ['Picker (no filters)','1, 2','Mode bar with the v7 picker'],
+   ['▶ Start','20','Countdown starts when the question opens'],
+   ['Situation card and 🎧 “The clip will play in N seconds” card','20','Situation as plain test text, then the audio box counting down'],
+   ['Prep timer and record timer','7','Recorder: countdown circle, then recording ring and waveform'],
+   ['⏹ Stop Recording','8','Finish recording in the action bar'],
+   ['Playback card and read-only transcript','25','Feedback left column'],
+   ['🤖 Submit to AI Scoring (and Log in)','27','AI score tab on the right; asks you to sign in when needed'],
+   ['📝 Full Sample / 📖 Simplified tabs','26','Sample answers tab with a Full / Simplified switch'],
+   ['🔄 Try Again, Next Question →','8, 15','Action bar']]
+ }
+};
+const ORDER=['rs','di','rl','asq','sgd','rts'];
+
+/* ---------------- state ---------------- */
+const st={mode:'rs',ph:'listen',view:'new',ann:true,auto:true,menu:null,dlg:null,fbTab:'results',src:0,samp:0,shadow:false,replays:5,aT:3,aP:0,prepT:3,rec:0,noteTab:0,zoom:false,filters:{}};
+const cur=()=>M[st.mode];
+function phases(){return cur().audio?[['listen','Listen'],['prep','Prepare'],['recording','Recording'],['complete','Complete'],['feedback','Feedback']]:[['prep','Prepare'],['recording','Recording'],['complete','Complete'],['feedback','Feedback']];}
+
+/* ---------------- shared pieces ---------------- */
+function stats(list){return `<div class="stats four"${A('26')}>${list.map(([l,v,u,p])=>`<div class="stat"><small>${l}</small><b>${v}<span>${u}</span></b><div class="trk"><i style="width:${p}%"></i></div></div>`).join('')}</div>`;}
+function listen(srcs){return `<div class="listen"${A('25')}>${srcs.length>1?`<div class="seg" role="group" aria-label="Audio source">${srcs.map((s,i)=>`<button type="button" data-src="${i}" aria-pressed="${st.src===i}">${s}</button>`).join('')}</div>`:`<span class="lbl2">${srcs[0]}</span>`}<span class="mp"><button type="button" aria-label="Play">▶</button><span class="t"><i></i></span><span class="tm">0:04 / 0:12</span></span></div>`;}
+function audioBox(){
+  const c=cur();let status,pct;
+  if(st.ph==='listen'){ if(st.aT>0){status=`Beginning in ${st.aT} seconds`;pct=0;} else {status='Playing';pct=Math.round(st.aP/c.audioLen*100);} }
+  else {status='Completed';pct=100;}
+  return `<div class="pbox"${A('20')}><div>Status: <b id="au-status">${status}</b></div><div class="bar"><i id="au-bar" style="width:${pct}%"></i></div><div class="vol">${I.spk}<span></span></div></div>`;
+}
+function waveHtml(){const c=cur();const on=Math.round(st.rec/c.rec*WAVE.length);return WAVE.map((h,i)=>`<i class="${i<on?'on':''}${i<on&&i>=on-4?' live':''}" style="--h:${h}px"></i>`).join('');}
+function recorder(){
+  const c=cur();let inner;
+  if(st.ph==='prep')inner=`<span class="rw-ring" aria-hidden="true" id="rw-count">${st.prepT}</span><span id="rw-msg">The recording will begin in ${st.prepT} second${st.prepT===1?'':'s'}</span>`;
+  else if(st.ph==='recording')inner=`<span class="rw-ring rec" aria-hidden="true"><i></i></span><span class="rw-col"><small id="rw-el">${mmss(st.rec)}</small><span>Recording</span></span><span class="rw-wave" id="rw-wave" aria-hidden="true">${waveHtml()}</span><span class="rw-total">${mmss(c.rec)}</span>`;
+  else inner=`<span class="rw-ring done" aria-hidden="true"><i></i></span><span>Complete</span><span class="rw-line" aria-hidden="true"></span>`;
+  return `<div class="rw" role="status" aria-live="polite"${A('7')}>${inner}</div>`;
+}
+const NOTES={rl:[['Notes','Jupiter + Saturn = gas giants\nmostly hydrogen & helium\nno solid surface\nstrong magnetic field']],
+  sgd:[['Topic','how to plan an essay'],['Speaker 1','outline first\nthesis early'],['Speaker 2','drafts change\ndon\'t over-plan'],['Speaker 3','deadline → plan 10 min']]};
+function notes(mode,ph){
+  const n=NOTES[mode];const i=Math.min(st.noteTab,n.length-1);
+  return `<div class="notepad"${A('23')}><div class="notepad-h"><span><b>Your notes</b> · ${ph==='recording'?'look at them while you speak':'type while you listen'}</span>${n.length>1?`<span class="tabs" role="tablist">${n.map(([t],k)=>`<button type="button" role="tab" data-ntab="${k}" aria-selected="${k===i}" class="${k===i?'on':''}">${t}</button>`).join('')}</span>`:''}</div><textarea aria-label="${n[i][0]} notes">${esc(n[i][1])}</textarea></div>`;
+}
+
+/* ---------------- screen ---------------- */
+function modebar(){
+  const c=cur();const nf=Object.values(st.filters).filter(v=>v).length;
+  return `<div class="modebar"${A('1')}>
+    <div class="mb-l"><button class="ib" type="button" aria-label="Back to dashboard">${I.back}</button><div class="mtitle"><b>${c.name}</b><small>Speaking</small></div></div>
+    <div class="picker"${A('2')}><button class="pk-b" type="button" aria-label="Previous question">‹</button><button class="pk-pill" type="button" data-menu="picker">#${c.qid} <small>${esc(c.qt)}</small></button><button class="pk-b" type="button" aria-label="Next question">›</button></div>
+    <div class="mb-r">${c.filters.length?`<button class="tb" type="button" data-menu="filters"${A('3')}>${I.filter}<span class="lbl">Filters</span>${nf?`<span class="cnt" style="background:var(--blue);color:#fff">${nf}</span>`:''}</button>`:''}<button class="ib" type="button" data-menu="more" aria-label="More options"${A('5')}>${I.more}</button><span class="lvl">A1</span></div></div>`;
+}
+function progress(){
+  const c=cur();const idx={listen:0,prep:c.audio?1:0,recording:1,complete:1,feedback:2}[st.ph];
+  return `<div class="prog"${A('6')}><ol>${c.steps.map((l,i)=>`<li class="${i<idx?'done':i===idx?'now':''}"><i></i><span>${l}</span></li>`).join('')}</ol></div>`;
+}
+function question(){
+  const c=cur();const showRec=st.ph!=='listen';
+  if(c.layout==='side'){ // Describe Image: image left, recorder right
+    return `<p class="instr">${c.instr}</p><div class="qrow"><figure class="fig${st.zoom?' zoomed':''}" id="fig"><button class="zoombtn" type="button" data-act="zoom" aria-label="${st.zoom?'Close zoom':'Zoom image'}"${A('24')}>${I.zoom}</button>${CHART}</figure><div class="qside">${recorder()}</div></div>`;
+  }
+  const lead=c.lead?`<div class="iconfig">${c.lead}</div>`:'';
+  const audio=`<div class="qrow center">${lead}${audioBox()}</div>`;
+  const rec=showRec?`<div class="center rec-in">${recorder()}</div>`:'';
+  const content=c.content(st.ph);
+  if(c.contentFirst)return `<p class="instr">${c.instr}</p>${content}${audio}${rec}`;
+  return `<p class="instr">${c.instr}</p>${audio}${rec}${content}`;
+}
+function dock(){
+  const c=cur();const ph=st.ph;let l='',r='';
+  const next=`<button class="btn ghost" type="button" data-act="next"${A('15')}>Next →</button>`;
+  const h=c.helpers(ph);
+  if(ph==='listen'){l='Listen carefully. The recorder appears when the audio ends.';r=`${h}${next}`;}
+  if(ph==='prep'){l='Recording starts automatically when the countdown ends.';r=`${h}<button class="btn pri" type="button" data-go="recording">${I.mic} Start recording</button>${next}`;}
+  if(ph==='recording'){l=c.recHint;r=`<button class="btn ghost" type="button" data-go="prep">Cancel</button><button class="btn stop" type="button" data-go="complete">Finish recording</button>${next}`;}
+  if(ph==='complete'){l='Recording saved. Listen back or get feedback.';r=`${h}<button class="btn ghost" type="button" data-go="${c.audio?'listen':'prep'}">${I.redo} Record again</button><button class="btn" type="button">${I.play} Play</button><button class="btn pri" type="button" data-go="feedback">Get feedback</button>${next}`;}
+  if(ph==='feedback'){l='Saved to Previous attempts below.';r=`<button class="btn ghost" type="button" data-go="${c.audio?'listen':'prep'}">${I.redo} Try again</button><button class="btn pri" type="button" data-act="nextq">Next question →</button>`;}
+  return `<div class="dock"${A('8')}><div class="dock-l">${l}</div><div class="dock-r">${r}</div></div>`;
+}
+function feedback(){
+  const c=cur();
+  const tabs=c.fbTabs.length>1?`<div class="seg" role="tablist" aria-label="Feedback panel">${c.fbTabs.map(([k,l])=>`<button type="button" role="tab" data-fbtab="${k}" aria-pressed="${st.fbTab===k}">${l}</button>`).join('')}</div>`:`<h3 class="fb-title">${c.fbTabs[0][1]}</h3>`;
+  return `<p class="instr">${c.instr}</p><div class="fbgrid"><div class="col-l">${c.fbLeft()}</div><div class="col-r">${tabs}${c.fbRight(st.fbTab)}</div></div>`;
+}
+function attempts(){
+  const c=cur();const rows=c.attempts.map((r,i)=>[i===0&&st.ph==='feedback'?'Just now':r[0],r[1],r[2],i===0&&st.ph==='feedback']);
+  if(st.ph!=='feedback')rows.shift();
+  return `<section class="attempts${st.ph==='feedback'?' wide':''}" aria-labelledby="att-t"${A('16')}>
+    <div class="att-h"><h2 id="att-t">Previous attempts <span class="trend">${c.trend}</span></h2><div class="seg" role="group" aria-label="Which attempts"><button type="button" aria-pressed="true">This question · ${rows.length}</button><button type="button" aria-pressed="false">All ${c.name}</button></div></div>
+    <ul class="att-list">${rows.map(([when,sc,dur,isNew])=>`<li class="${isNew?'new':''}"><div class="att-when"><b>${esc(when)}${isNew?'<span class="att-tag">New</span>':''}</b><small>${c.code} #${c.qid}</small></div><div class="att-scores">${sc.map(x=>`<span>${esc(x)}</span>`).join('')}</div><span class="att-dur">${dur}</span><div class="att-acts"><button class="mini" type="button">▶ Play</button><button class="mini" type="button">Open feedback</button></div></li>`).join('')}</ul>
+  </section>`;
+}
+function menus(){
+  const c=cur();
+  if(st.menu==='filters'){
+    return `<div class="menu" id="menu" role="dialog" aria-label="Question filters" style="top:128px;right:24px">${c.filters.map(([t,o],k)=>`<section><h4>${t}</h4><div class="opts">${o.map((x,i)=>`<button class="opt" type="button" data-f="${k}" data-v="${i}" aria-pressed="${(st.filters[st.mode+k]||0)===i}">${x}</button>`).join('')}</div></section>`).join('')}<div class="menu-f"><span>${c.total.toLocaleString()} questions match</span><button class="linkbtn" type="button" data-act="reset">Reset</button></div></div>`;
+  }
+  if(st.menu==='more'){
+    const items=[[I.focus,'Focus mode','Hide the page header while you practise'],...c.more,[I.help,`How ${c.name} works`,'Timing, scoring and tips']];
+    return `<div class="menu" id="menu" role="menu" style="top:128px;right:24px;width:300px"><ul class="mlist">${items.map(([ic,t,d])=>`<li><button type="button" role="menuitem">${ic}<span>${t}<small>${d}</small></span></button></li>`).join('')}</ul></div>`;
+  }
+  if(st.menu==='picker'){
+    const list=[...Array(6)].map((_,i)=>c.qid-2+i).filter(n=>n>0);
+    return `<div class="menu" id="menu" role="dialog" aria-label="Choose a question" style="top:128px;left:50%;transform:translateX(-50%);width:400px"><input class="qsearch" type="search" placeholder="Search by number or title" aria-label="Search questions"><ul class="qlist">${list.map(n=>`<li><button type="button" class="${n===c.qid?'cur':''}"><span class="id">#${n}</span><span class="t">${n===c.qid?esc(c.qt):'Question '+n}</span><span class="au"></span></button></li>`).join('')}</ul><div class="menu-f"><span>${c.total.toLocaleString()} questions</span></div></div>`;
+  }
+  return '';
+}
+function dialog(){
+  if(st.dlg==='noskip')return `<div class="dlg-back"><div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlg-t"><h3 id="dlg-t"><span class="ic stop">!</span>Cannot skip</h3><p>The recording is about to begin. As in the test, you can't move to the next question during the countdown.</p><div class="dlg-f"><button class="btn pri" type="button" data-act="dlg-close">OK</button></div></div></div>`;
+  if(st.dlg==='confirm'){const body=st.ph==='recording'?'Your recording will stop and this attempt will be saved without feedback.':st.ph==='listen'?'You haven\'t answered this question yet. It will be marked as skipped.':'This attempt is saved. You can get feedback on it later from Previous attempts at the bottom of the page.';
+    return `<div class="dlg-back"><div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlg-t"><h3 id="dlg-t"><span class="ic q">?</span>Go to the next question?</h3><p>${body}</p><div class="dlg-f"><button class="btn ghost" type="button" data-act="dlg-close">Stay here</button><button class="btn pri" type="button" data-act="dlg-yes">Next question</button></div></div></div>`;}
+  return '';
+}
+
+function render(){
+  const c=cur();
+  document.getElementById('modesw').innerHTML=ORDER.map(k=>`<button type="button" role="tab" data-mode="${k}" aria-selected="${st.mode===k}"><b>${M[k].code}</b>${M[k].name}</button>`).join('')+`<a class="ralink" href="read-aloud.html">Read Aloud ↗</a>`;
+  document.getElementById('states').innerHTML='<span class="lbl">State</span>'+phases().map(([k,l])=>`<button type="button" data-go="${k}" aria-pressed="${st.ph===k}">${l}</button>`).join('');
+  document.querySelectorAll('#viewsw button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===st.view));
+  const mock=document.getElementById('mock');
+  if(st.view==='old'){
+    mock.innerHTML=`<figure class="current"><figcaption>Current app: ${c.name} (v2.0.13, captured today in guest mode${st.mode==='di'?'; the chart is a stand-in because question images load from remote storage':''}).</figcaption><img src="img/current-${st.mode}.webp" alt="Current ${c.name} screen" width="1440"></figure>`;
+  } else {
+    const fb=st.ph==='feedback';
+    mock.innerHTML=`<div class="app${st.ann?' ann':''}">
+      <div class="gh"><div class="brand"><span class="logo">BEL</span><div><b>Better English Learning</b><small>Adaptive English practice for active learners</small></div></div><div class="gh-r"><span class="gh-pill">Practice</span><span class="gh-ic">${I.user}</span><span class="gh-ic">${I.bell}</span></div></div>
+      ${modebar()}
+      <div class="ws"><div class="stage"><section class="qcard${fb?' wide':''}">${progress()}<div class="qbody">${fb?feedback():question()}</div>${dock()}</section>${attempts()}</div></div>
+      ${menus()}${dialog()}
+      <button class="askme" type="button" aria-label="Ask me (study assistant)"${A('14')}>${I.chat}</button>
+    </div>`;
+  }
+  document.getElementById('moved-title').textContent=`Where each current ${c.name} control went`;
+  document.getElementById('moved').innerHTML='<thead><tr><th>Current</th><th>New place</th></tr></thead><tbody>'+c.moved.map(([a,k,b])=>`<tr data-k="${k}"><td>${a}</td><td>${k.split(', ').map(x=>`<span class="k">${x}</span>`).join('')}${b}</td></tr>`).join('')+'</tbody>';
+  const note={rs:'Repeat Sentence keeps its limited replays and Shadow mode as helpers; the audio still plays once by itself.',di:'Describe Image has no audio, so the recorder shows straight away beside the image.',rl:'Retell Lecture gains the PTE speaking step; today it only compares your notes with the lecture.',asq:'Answer Short Question has no filters, so the Filters button is hidden.',sgd:'Summarize Group Discussion keeps the per-speaker notes on screen from listening through to recording.',rts:'Respond to a Situation uses the app’s current timings: a 15-second wait before the audio, 10 seconds to think, 40 seconds to answer.'}[st.mode];
+  document.getElementById('mode-note').innerHTML=`<b>This mode:</b> ${note}`;
+}
+
+/* ---------------- behaviour ---------------- */
+function go(ph){
+  const c=cur();st.ph=ph;st.menu=null;
+  if(ph==='listen'){st.aT=c.audioStart;st.aP=0;}
+  if(ph==='prep'){st.prepT=c.prep;}
+  if(ph==='recording'){st.rec=0;}
+  if(ph==='feedback'){st.fbTab=c.fbTabs[0][0];st.src=0;}
+  render();
+}
+function setMode(m){st.mode=m;st.dlg=null;st.zoom=false;st.noteTab=0;st.replays=5;st.shadow=false;go(M[m].audio?'listen':'prep');}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,a');
+  if(!t){if(e.target.closest('#menu'))return;if(st.menu){st.menu=null;render();}return;}
+  if(t.dataset.mode){setMode(t.dataset.mode);return;}
+  if(t.closest('#states')&&t.dataset.go){st.dlg=null;go(t.dataset.go);if(t.dataset.go==='recording'){st.rec=Math.round(cur().rec*0.35);render();}if(t.dataset.go==='listen'&&!st.auto){st.aT=0;st.aP=Math.round(cur().audioLen*0.4);render();}return;}
+  if(t.closest('#viewsw')){st.view=t.dataset.v;render();return;}
+  if(!t.closest('#mock'))return;
+  if(t.dataset.go){go(t.dataset.go);return;}
+  if(t.dataset.menu){st.menu=st.menu===t.dataset.menu?null:t.dataset.menu;render();return;}
+  if(t.dataset.f){st.filters[st.mode+t.dataset.f]=+t.dataset.v;render();return;}
+  if(t.dataset.fbtab){st.fbTab=t.dataset.fbtab;render();return;}
+  if(t.dataset.src){st.src=+t.dataset.src;render();return;}
+  if(t.dataset.samp){st.samp=+t.dataset.samp;render();return;}
+  if(t.dataset.ntab){const ta=document.querySelector('.notepad textarea');const n=NOTES[st.mode];if(ta)n[Math.min(st.noteTab,n.length-1)][1]=ta.value;st.noteTab=+t.dataset.ntab;render();return;}
+  const a=t.dataset.act;
+  if(a==='replay'&&st.replays>0){st.replays--;render();return;}
+  if(a==='shadow'){st.shadow=!st.shadow;render();return;}
+  if(a==='zoom'){st.zoom=!st.zoom;render();return;}
+  if(a==='reset'){Object.keys(st.filters).forEach(k=>{if(k.startsWith(st.mode))delete st.filters[k];});render();return;}
+  if(a==='next'){st.dlg=st.ph==='prep'?'noskip':'confirm';st.menu=null;render();document.querySelector('.dlg .btn.pri')?.focus();return;}
+  if(a==='dlg-close'){st.dlg=null;render();return;}
+  if(a==='dlg-yes'||a==='nextq'){st.dlg=null;go(cur().audio?'listen':'prep');return;}
+  if(st.menu&&!t.closest('#menu')){st.menu=null;render();}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(st.menu||st.dlg||st.zoom)){st.menu=null;st.dlg=null;st.zoom=false;render();}});
+document.addEventListener('input',e=>{if(e.target.matches('.notepad textarea')){const n=NOTES[st.mode];n[Math.min(st.noteTab,n.length-1)][1]=e.target.value;}});
+document.getElementById('sw-ann').addEventListener('change',e=>{st.ann=e.target.checked;const app=document.querySelector('.app');if(app)app.classList.toggle('ann',st.ann);});
+document.getElementById('sw-auto').addEventListener('change',e=>{st.auto=e.target.checked;});
+document.getElementById('moved').addEventListener('mouseover',e=>{const tr=e.target.closest('tr[data-k]');document.querySelectorAll('.app .pulse').forEach(x=>x.classList.remove('pulse'));if(tr)tr.dataset.k.split(', ').forEach(k=>document.querySelectorAll(`.app [data-ann="${k}"]`).forEach(x=>x.classList.add('pulse')));});
+document.getElementById('moved').addEventListener('mouseleave',()=>document.querySelectorAll('.app .pulse').forEach(x=>x.classList.remove('pulse')));
+
+/* live timers: audio countdown → playing → recorder countdown → recording → Complete */
+setInterval(()=>{
+  if(!st.auto||st.view!=='new'||st.dlg)return;
+  const c=cur();
+  if(st.ph==='listen'){
+    if(st.aT>0){st.aT--;}else{st.aP++;}
+    if(st.aT===0&&st.aP>=c.audioLen){go('prep');return;}
+    const s=document.getElementById('au-status'),b=document.getElementById('au-bar');
+    if(s)s.textContent=st.aT>0?`Beginning in ${st.aT} seconds`:'Playing'; if(b)b.style.width=(st.aT>0?0:Math.round(st.aP/c.audioLen*100))+'%';
+  } else if(st.ph==='prep'){
+    st.prepT=Math.max(0,st.prepT-1);
+    const n=document.getElementById('rw-count'),m=document.getElementById('rw-msg');
+    if(n)n.textContent=st.prepT; if(m)m.textContent=`The recording will begin in ${st.prepT} second${st.prepT===1?'':'s'}`;
+    if(st.prepT===0)go('recording');
+  } else if(st.ph==='recording'){
+    st.rec=Math.min(c.rec,st.rec+1);
+    const el=document.getElementById('rw-el'),w=document.getElementById('rw-wave');
+    if(el)el.textContent=mmss(st.rec); if(w)w.innerHTML=waveHtml();
+    if(st.rec>=c.rec)go('complete');
+  }
+},1000);
+
+setMode('rs');
+})();
+</script>

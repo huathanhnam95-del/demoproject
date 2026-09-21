@@ -1,132 +1,28 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: "Decompose an approved goal or substantial specification into executable, independently verifiable slices when a plan is requested or needed for coordination. Keep simple tasks direct and follow the current project documentation and approval rules."
 ---
 
-# Writing Plans
+# Executable planning
 
-## Overview
+Establish the intended outcome, existing behavior, protected work and acceptance criteria. Read the relevant code and project conventions before naming implementation paths. Ask about unresolved product decisions, not facts the repository can answer.
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+## Slice by useful behavior
 
-Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
+Prefer vertical slices that deliver or prove an end-to-end capability. An infrastructure-only task is appropriate when it is a real prerequisite, not merely because layers can be assigned separately.
 
-**Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
+For each slice state the outcome, required inputs, owner, exact files or contracts when known, verification, and actual dependencies. Distinguish hard prerequisites from work that merely happens nearby. Do not promise parallelism for shared files, mutable test environments or unknown contracts.
 
-**Context:** This should be run in a dedicated worktree (created by brainstorming skill).
+Separate discovery tasks from implementation-ready tasks. Where paths are not yet known, bound the investigation and its output rather than inventing filenames or declaring a blanket directory allowlist.
 
-**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
+For a wide migration, consider expand, migrate and contract: provide compatibility, move bounded consumers with evidence, then remove the old path only when remaining use and required coverage have been checked. Preserve an explicit recovery route for stateful changes.
 
-## Bite-Sized Task Granularity
+## Make execution unambiguous
 
-**Each step produces exactly one artifact: a written test, a passing test run output, a code file, a commit. If a step produces two artifacts, split it.**
+Include applicable tests and success criteria, relevant runtime or data prerequisites, output destinations, ownership boundaries and material risks. Use steps large enough to represent meaningful outcomes; do not force every action into a tiny timed task.
 
-Examples:
-- "Write the failing test" - step (artifact: test file)
-- "Run it to make sure it fails" - step (artifact: test run output)
-- "Implement the minimal code to make the test pass" - step (artifact: code file)
-- "Run the tests and make sure they pass" - step (artifact: passing test run output)
-- "Commit" - step (artifact: commit)
+Reuse compatible existing worktrees. Create one only for an authorized parallel writer or a justified release/verification boundary under the account rules. A planning skill does not itself authorize agents, publication, migration or production deployment.
 
-## Path Convention
+Use the requested artifact and the project's existing documentation locations. Respect any explicit plan-feedback gate. Do not create implementation_plan.md or another gated artifact just to add ceremony to a small task. Keep durable plans current when scope changes, without overwriting other owners' work.
 
-For files that don't exist yet, use paths based on the project's existing naming convention. If no convention exists, document the path convention you're using at the top of the plan.
-
-## Plan Document Header
-
-**Every plan MUST start with this header:**
-
-```markdown
-# [Feature Name] Implementation Plan
-
-> **For Antigravity:** REQUIRED SUB-SKILL: Load executing-plans to implement this plan task-by-task.
-
-**Goal:** [One sentence describing what this builds]
-
-**Architecture:** [2-3 sentences about approach]
-
-**Tech Stack:** [Key technologies/libraries]
-
----
-```
-
-## Task Structure
-
-````markdown
-### Task N: [Component Name]
-
-**Files:**
-- Create: `exact/path/to/file.py`
-- Modify: `exact/path/to/existing.py:123-145`
-- Test: `tests/exact/path/to/test.py`
-
-**Step 1: Write the failing test**
-
-```python
-def test_specific_behavior():
-    result = function(input)
-    assert result == expected
-```
-
-**Step 2: Run test to verify it fails**
-
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: FAIL with "function not defined"
-
-**Step 3: Write minimal implementation**
-
-```python
-def function(input):
-    return expected
-```
-
-**Step 4: Run test to verify it passes**
-
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: PASS
-
-**Step 5: Commit**
-
-```bash
-git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
-```
-````
-
-## Plan Validation
-
-Before handing the plan to execution: read it from the perspective of an engineer who has never seen this codebase. Does every task have enough context to start without asking questions? If not, add it.
-
-Checklist:
-- Every file path is exact and follows the documented convention
-- Every command includes expected output
-- Every task's purpose is clear from its name and description alone
-- No task assumes knowledge of a prior conversation or undocumented context
-
-## Remember
-- Exact file paths always
-- Complete code in plan (not "add validation")
-- Exact commands with expected output
-- Reference relevant skills with @ syntax
-- DRY, YAGNI, TDD, frequent commits
-
-## Execution Handoff
-
-After saving the plan, offer execution choice:
-
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
-
-**1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration. **REQUIRED:** Switch Antigravity to **Fast Mode** for this implementation phase.
-
-**2. Parallel Session (separate)** - Open new session with executing-plans, batch execution with checkpoints
-
-**Which approach?"**
-
-**If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Load executing-plans
-- Stay in this session
-- Fresh subagent per task + code review
-
-**If Parallel Session chosen:**
-- Guide them to open new session in worktree
-- **REQUIRED SUB-SKILL:** New session loads executing-plans
+Complete when the next implementer can identify what to change, what to preserve, what depends on what, and how to prove success. If implementation is already authorized and no applicable gate remains, continue according to the chosen route. [Provenance](SOURCE.md).

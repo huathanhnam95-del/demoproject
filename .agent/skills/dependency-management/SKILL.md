@@ -1,139 +1,24 @@
 ---
 name: dependency-management
-description: Use when adding new dependencies, deciding whether to update packages, running security audits on dependencies, evaluating library alternatives, or encountering outdated or vulnerable packages
+description: "Evaluate, add, update or remove a software dependency when the task needs that decision. Check existing capabilities, compatibility, maintenance, licensing, security and lockfile effects before changing the dependency graph."
 ---
 
-# Dependency Management
+# Dependency decisions
 
-## Overview
+Start with the required behavior and operating constraints. Read the project's manifests, lockfile, supported runtimes and existing wrappers. Search for a suitable capability already in the project before proposing another package.
 
-Every dependency is a commitment -- to its maintenance, security surface, and upgrade path. Add deliberately, update strategically, audit regularly.
+## Compare actual options
 
-**Core principle:** Every dependency decision should be justified. Don't add what you can write. Don't ignore what you can update. Don't skip what you can audit.
+Consider existing code, the standard library, native platform features and a maintained dependency. Compare correctness, edge cases, security, accessibility where relevant, portability, performance, maintenance effort and integration cost. Fewer lines or fewer dependencies do not automatically make an option better; a mature library may be safer than a custom implementation.
 
-## When to Use
+Use current primary documentation and relevant advisories to verify version-dependent claims. Check API compatibility, supported runtimes, licenses and transitive effects. Download counts, age and vulnerability scan counts alone are not quality verdicts. Distinguish confirmed exposure from an advisory that does not affect this usage.
 
-- Adding a new package or library to a project
-- Security audit warnings (npm audit, pip-audit, cargo audit, etc.)
-- Batch dependency update time
-- Major version upgrade decisions
-- Choosing between alternative libraries
-- Lockfile merge conflicts
-- Questioning if a package is still maintained
+## Make a bounded change
 
-**Don't use when:**
-- Internal module/code organization (that's refactoring)
-- Learning a single package's API (that's research)
+Use the project's package manager and version policy. Update the manifest and lockfile together, inspect the actual dependency delta and avoid unrelated broad upgrades. For a major change, read migration guidance and test affected callers before claiming compatibility.
 
-## Decision Tree
+Preserve existing public behavior unless changing it is authorized. Do not install an entire toolkit, add a package-manager migration or replace working validation just to simplify a diff. Do not run a force-fix command that rewrites the graph without inspecting its consequences.
 
-```dot
-digraph dependency_decision {
-    "What dependency decision?" [shape=diamond];
-    "Add new package" [shape=box];
-    "Update existing" [shape=box];
-    "Security alert" [shape=box];
-    "Remove package" [shape=box];
+Verify installation reproducibility as appropriate and run focused tests for the behavior that uses the dependency. Explain the selected option, relevant compatibility/security limits and any deferred upgrade. For removal, check runtime, build, test and dynamic use rather than relying solely on one text search.
 
-    "Evaluation Criteria" [shape=box, style=filled, fillcolor=lightyellow];
-    "Update Type?" [shape=diamond];
-    "Urgency Matrix" [shape=box, style=filled, fillcolor=lightyellow];
-    "Usage check, remove" [shape=box];
-
-    "Patch" [shape=box];
-    "Minor" [shape=box];
-    "Major" [shape=box];
-
-    "What dependency decision?" -> "Add new package";
-    "What dependency decision?" -> "Update existing";
-    "What dependency decision?" -> "Security alert";
-    "What dependency decision?" -> "Remove package";
-
-    "Add new package" -> "Evaluation Criteria";
-    "Update existing" -> "Update Type?";
-    "Security alert" -> "Urgency Matrix";
-    "Remove package" -> "Usage check, remove";
-
-    "Update Type?" -> "Patch" [label="x.x.Z"];
-    "Update Type?" -> "Minor" [label="x.Y.0"];
-    "Update Type?" -> "Major" [label="X.0.0"];
-}
-```
-
-## New Package Evaluation
-
-Before adding any dependency, evaluate against all seven criteria:
-
-| Criterion | Question | Red Flag |
-|-----------|----------|----------|
-| **Necessity** | Can stdlib or existing deps do this? | Adding a package for 10 lines of code |
-| **Maintenance** | Last commit? Issue/PR response time? | 12+ months inactive, unanswered issues |
-| **Community** | Weekly downloads, stars, forks? | Very low usage, single maintainer |
-| **License** | Compatible with project license? | GPL in commercial project (license contamination) |
-| **Size** | Bundle size? Transitive dependency count? | Massive dep tree for a small task |
-| **Security** | Known CVEs? Clean audit? | Active security vulnerabilities |
-| **Alternatives** | Better/lighter alternative available? | Picking the first result without evaluating |
-
-**Rule of thumb:** If a package fails two or more criteria, find an alternative or write it yourself.
-
-## Update Strategy
-
-| Update Type | Strategy | Risk |
-|-------------|----------|------|
-| **Patch** (x.x.Z) | Update immediately, run test suite | Low |
-| **Minor** (x.Y.0) | Read changelog, update, test | Medium |
-| **Major** (X.0.0) | Breaking change analysis, migration plan, test on separate branch | High |
-
-**Workflow for batch updates:**
-1. Update patch versions first, run tests, commit
-2. Update minor versions one by one, run tests after each
-3. Tackle major versions individually on feature branches
-4. Never batch major updates together -- isolate each one
-
-## Security Urgency Matrix
-
-| Severity | Exploit exists? | Action | Timeframe |
-|----------|----------------|--------|-----------|
-| Critical | Yes | Update immediately or apply workaround | Hours |
-| Critical | No | Priority update | 1-2 days |
-| High | -- | Update within sprint | 1 week |
-| Medium/Low | -- | Add to next update cycle | Planned |
-
-**When a security audit reports vulnerabilities:**
-1. Run the audit tool for your ecosystem (npm audit, pip-audit, cargo audit, bundler-audit)
-2. Classify each finding using the matrix above
-3. Address critical/exploitable issues before any other work
-4. Document accepted risks for findings you cannot immediately resolve
-
-## Lockfile & Pinning Rules
-
-- Always commit lockfiles (package-lock.json, yarn.lock, poetry.lock, Cargo.lock, etc.)
-- Pin exact versions for production dependencies where possible
-- Use ranges only for libraries (not applications)
-- Never manually edit lockfiles -- use package manager commands
-- After resolving lockfile merge conflicts, always run install to regenerate
-
-## Common Mistakes
-
-| Mistake | Reality |
-|---------|---------|
-| "Popular package is safe" | Popularity does not equal security. `event-stream` was hacked at 2M weekly downloads |
-| "Lockfile commit is unnecessary" | Without lockfile, builds are not reproducible |
-| "Update everything at once" | Batch updates make it impossible to isolate the source of issues |
-| "Major update is just a version number" | Breaking change = potential refactoring |
-| "Dev dependency security doesn't matter" | Supply chain attacks target build processes |
-| "Add a package instead of writing 10 lines" | Every package adds attack surface and maintenance burden |
-
-## Removing a Dependency
-
-Before removing a package:
-1. Search the codebase for all imports and usages
-2. Check if other dependencies rely on it transitively
-3. Remove the import statements and package reference, then run the full test suite
-4. Verify the lockfile is cleanly regenerated after removal
-
-## Related Skills
-
-- **security-review** -- For auditing vulnerable and outdated components (OWASP A06)
-- **systematic-debugging** -- For diagnosing issues introduced by dependency updates
-- **verification-before-completion** -- For confirming dependency changes do not break the build
+Stop when the needed capability is supported and the dependency change is reviewable with adequate evidence. [Provenance](SOURCE.md).

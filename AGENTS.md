@@ -1,3 +1,28 @@
+<!-- BEGIN PAR COMMAND ENTRYPOINT -->
+## Automatic readiness and PAR
+
+Before completing deployable work, evaluating R4D, or executing PAR, read the [release protocol](.agent/rules/session_tagging.md). Automatically record and mark verified ready tasks (R). PAR explicitly authorizes discovery, safe integration, verification, commit, push, deployment, and live checks for the current project's eligible batch; no repeated stage approvals are needed. Mark (D) only after all intended surfaces are verified live. Invalidate readiness when new work starts. Use verified native task IDs and shared readiness records; never guess a session or use another host's title helper. Existing safety and deployment gates still apply.
+<!-- END PAR COMMAND ENTRYPOINT -->
+
+<!-- BEGIN WORKSPACE PARALLEL WORK SAFETY -->
+## Required safety policy for every agent
+
+Read the complete policy in [parallel-work-safety.md](.agent/rules/parallel-work-safety.md) before writing, handing off, integrating, publishing, migrating data, or retiring work. It applies to every agent host and model in this workspace and supplements the account-wide policy.
+
+Apply its ownership and preservation requirements to all workflows below: use one integration owner for the current destination, assign one writer per shared file/resource, preserve existing content and unowned dirty work, and record the exact changes and checks before integration. A shared tracker or release workflow does not permit competing writers or bypass that review. Integrate sequentially and verify both tasks' behavior; keep deployment and live-data changes within their authorized scope. Existing sessions must reread this policy before their next affected action. These instructions do not install or prove automated Git enforcement.
+<!-- END WORKSPACE PARALLEL WORK SAFETY -->
+
+<!-- BEGIN SHARED CURATED SKILLS -->
+## Shared curated skills across agent applications
+
+- This Windows account shares the curated skill methods across Codex, Claude and Gemini hosts. Each host has complete native skill packages; use its supplied catalog and read the selected native SKILL.md before applying it.
+- Resolve references, scripts and assets from that native package. Normal skill use does not require cross-host filesystem access. The optional maintenance catalog is `C:/Users/Admin/.agents/shared-skills.md`; if it is outside the host's permitted scope, the native packages remain sufficient.
+- For the catalogued skills, prefer the curated generic recipe over an older duplicate or cached skill body. Preserve explicit project domain rules, brand conventions, ownership, approval gates and release controls.
+- Load only skills that materially help the task. No universal skill interview, startup banner or 1% relevance threshold is required by this integration.
+- Sharing skills does not switch the host, model, reasoning, speed, delegation route or provider. Codex-only APIs and routing rules remain Codex-only; existing host-specific policies remain in force where applicable.
+- When an account-wide skill update is authorized, reconcile the native copies listed in the maintenance catalog with the curated source and preserve backups; do not auto-update them during unrelated tasks.
+<!-- END SHARED CURATED SKILLS -->
+
 # Local Agent Notes
 
 ## Repository structure authority
@@ -14,12 +39,11 @@
 
 ## Session Tagging & Deployment Protocol (`(R)` & `(D)`)
 
-- **Ready for Deployment (`(R)`) & R4D Trigger**: When the user says "R4D" (ready for deployment) in any chat session, mark the session name with prefix `(R) ` via `scripts/session_tagger.py mark-ready`.
-- **Push All Readied (`PAR`) Trigger**: When the user requests "PAR" (push all readied), discover all readied sessions (`scripts/session_tagger.py list-ready`), execute the workspace deployment verification and push workflow, and batch transition all deployed sessions to `(D) ` via `scripts/session_tagger.py mark-deployed --cid <cid>` or `scripts/session_tagger.py trace-deployed`.
-- **Active Development Rule**: Active development sessions (planning, bug fixes, feature work, code edits, audits, test runs) **MUST NEVER** retain the `(D) ` prefix in their title.
-- **Resume/new-task removal**: When a tagged `(D) ` session is resumed or a task starts, immediately remove the prefix through the supported task-title API after verifying the task and title identity. Codex must never run the no-ID Antigravity `scripts/session_tagger.py` helper or pass a Codex UUID to it. Antigravity may use that helper only with an explicit, verified Antigravity CID; do not infer a CID from the latest database row.
-- **Deployment tagging**: After an approved production deployment, mark the session `(D) ` through the supported task-title API for Codex after verifying task/title identity. Antigravity uses its helper only with an explicit verified CID.
-- **Batch Deployment Back-Tracing**: When an approved production deployment integrates work from multiple preceding chat sessions or development tracks (e.g. multi-task releases), trace back to each origin session that produced those changes (using `TASK_TRACKER.csv`, git commit log, or session search) and tag each origin session with `(D) ` via `scripts/session_tagger.py mark-deployed --cid <cid>` (or `mark-batch` / `trace-deployed`), in addition to marking the deploying session itself.
+- Follow the complete [automatic readiness and PAR protocol](.agent/rules/session_tagging.md). Mark verified deployable tasks `(R)` automatically; `R4D` requests a readiness check.
+- `PAR` authorizes discovering the current project's ready batch, integrating, verifying, committing, pushing, deploying, and verifying live. Do not request repeated approval for these normal stages.
+- The main integration worktree is `C:/Cursor AI` on its established branch. Do not infer a branch named `main` or include other projects without explicit scope.
+- Codex uses supported task discovery/read/title APIs with verified task IDs. Antigravity helper mutations require explicit verified Antigravity CIDs; never run its no-ID mode or pass a Codex ID.
+- Use the shared per-task readiness records in the common Git directory. Remove stale markers on new implementation; set `(D)` only for tasks whose complete deployment scope passed live verification.
 
 ## Browser Testing Credentials
 

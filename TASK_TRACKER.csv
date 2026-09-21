@@ -2208,4 +2208,33 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1213,2026-09-19,Execute PAR batch deployment V2.0.13 integrating all readied sessions to production,Done,2026-09-19
 1214,2026-09-19,Mock up PTE question area on the real app for all 17 speaking writing listening modes with before/after screenshots,Done,2026-09-19
 1215,2026-09-19,Sequence PTE audio box then recorder box for listen-then-speak modes in question-area mockups,Done,2026-09-19
-1216,2026-09-19,Redesign Read Aloud controls helpers and layout to reduce distraction (mockup),In Progress,
+1216,2026-09-19,Redesign Read Aloud controls helpers and layout to reduce distraction (mockup),Done,2026-09-19
+1217,2026-09-19,Implement 3-model local LLM batch generation and quality audit pipeline for SWT questions,Done,2026-09-19
+1218,2026-09-19,Apply guideline recorder UI (countdown circle recording ring waveform Complete) and Next skip rules to Read Aloud redesign mockup,Done,2026-09-19
+1219,2026-09-19,Read Aloud redesign: two-column feedback without scrolling; Coach beside Start recording hidden while recording; always-visible Previous attempts section,Done,2026-09-19
+1220,2026-09-19,Redesign remaining Speaking modes (RS DI RL ASQ SGD RTS) with the approved Read Aloud pattern (mockup),Done,2026-09-19
+1221,2026-09-19,Write implementation handoff plan for PTE question area and Speaking modes redesign (for GPT agents),Done,2026-09-19
+1222,2026-09-19,Fix collo-dictate syntax error GCS bucket CORS and Firestore profile permission denied,Done,2026-09-19
+1223,2026-09-19,Batch generate and 3-model audit SWT questions batch 2 (questions 11 to 50),Done,2026-09-19
+1224,2026-09-19,Audit and overhaul SWT core point coverage and highlight quality with 3 local LLMs,Done,2026-09-19
+1225,2026-09-19,Explore new BEL logo concept territories (round 3 concept sketches) after round 2 directions were not liked,Done,2026-09-19
+1226,2026-09-20,Derive BEL mascot options from the owner Bat Tu chart and render premium emblem concepts (cat tiger rooster),Done,2026-09-20
+1227,2026-09-20,Explore seven stylized treatments of the BEL cat mascot (silhouette engraved faceted folk geometric curled minimal),Done,2026-09-20
+1228,2026-09-20,Investigate why voice waveform graph appears intermittently on PTE Uni Read Aloud pages,Done,2026-09-20
+1229,2026-09-20,Explore weaving the BEL cat mascot into the BEL letterforms (monogram and wordmark fusions),Done,2026-09-20
+1230,2026-09-20,Research successful learning platform brands and redesign the BEL cat identity from those traits,Done,2026-09-20
+1231,2026-09-20,Redraw BEL cat mascot as an adult refined mark with BEL name always in the lockup and a Wood-Metal chart aligned palette,Done,2026-09-20
+1232,2026-09-20,Redraw BEL mascot as a full-body cat (fix fox-like head) with BEL lockups and Wood-Metal palette,Done,2026-09-20
+1233,2026-09-20,Explore cat-and-letter compositions with the serif BEL wordmark (perched bowl tail peek loaf curled) and varied sitting poses,Done,2026-09-20
+1234,2026-09-20,Write objective handoff summary of the BEL branding exploration for other agents,Done,2026-09-20
+1235,2026-09-20,Projects performance and correctness pass: late response scope bulk move section loading state and test audit,Done,2026-09-20
+1236,2026-09-20,Remediation plan and implementation for DEMOPROJECT_RECHECK_42a1686 audit findings,Done,2026-09-20
+1237,2026-09-20,Deep boost audit of CRM Projects branch changes and audit remediation,Done,2026-09-20
+1238,2026-09-20,Expand BEL branding handoff summary with full Bat Tu chart detail per owner authorisation,Done,2026-09-20
+1239,2026-09-20,Modernize Teacher Scheduler session popover per P1.B specification with clean typography custom dropdown and consolidated actions,Done,2026-09-20
+1240,2026-09-21,Add Teacher Scheduler cancellation confirmation panel and WCAG AA contrast adjustments,Done,2026-09-21
+1241,2026-09-21,Implement syllable-level word and sentence stress typography in Read Aloud mode,Done,2026-09-21
+1242,2026-09-21,Investigate auto-start dev server script and fix emulators and https server startup in start_all_servers.bat,Done,2026-09-21
+1243,2026-09-21,Execute CRM Projects V2 visual inline creation and drawer streamlining plan,Done,2026-09-21
+1244,2026-09-21,Review debug and refactor CRM Projects V2 visual inline creation and streamlined drawer,Done,2026-09-21
+1245,2026-09-21,Design homepage redesign mockup directions for BEL web app on a design canvas,Done,2026-09-21

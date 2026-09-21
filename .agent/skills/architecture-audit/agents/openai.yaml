@@ -1,0 +1,4 @@
+interface:
+  display_name: "Architecture Audit"
+  short_description: "Audit architecture with bounded read-only evidence"
+  default_prompt: "Use $architecture-audit to help with the relevant part of this task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Evaluation"
+  short_description: "Compare skill behavior using recorded evidence"
+  default_prompt: "Use $skill-evaluation to help with the relevant part of this task."

@@ -87,16 +87,21 @@ test('actual CRM composition wires one workspace, scope and flag with ordered sc
     }
 });
 
-test('actual inline presentation flag enables only explicit loopback query and keeps the frozen default', () => {
+test('actual inline presentation flag defaults loopback to V2 with explicit legacy rollback', () => {
     const html = fs.readFileSync(path.join(root, 'public/crm-admin.html'), 'utf8');
     const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]).find(script => script.includes('window.__CRM_PRESENTATION_CONFIG__'));
     assert.ok(inline);
     for (const hostname of ['localhost', '127.0.0.1', '[::1]', 'example.com', 'localhost.example.com', '127.0.0.2', '::1']) {
-        for (const search of ['', '?projectsV2=0', '?projectsV2=true', '?projectsV2=', '?projectsV2=1', '?other=x&projectsV2=1']) {
+        for (const [search, localEnabled] of [
+            ['', true], ['?other=x', true], ['?projectsV2=0', false],
+            ['?projectsV2=true', false], ['?projectsV2=', false],
+            ['?projectsV2=1', true], ['?other=x&projectsV2=1', true],
+            ['?other=x&projectsV2=0', false]
+        ]) {
             const context = { window: {}, location: { hostname, search }, URLSearchParams };
             vm.runInNewContext(inline, context);
             assert.equal(context.window.__CRM_PRESENTATION_CONFIG__.projectsV2,
-                ['localhost', '127.0.0.1', '[::1]'].includes(hostname) && new URLSearchParams(search).get('projectsV2') === '1', `${hostname}${search}`);
+                ['localhost', '127.0.0.1', '[::1]'].includes(hostname) && localEnabled, `${hostname}${search}`);
             assert.ok(Object.isFrozen(context.window.__CRM_PRESENTATION_CONFIG__));
         }
     }

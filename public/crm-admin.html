@@ -3185,8 +3185,9 @@
   <script>
     // Presentation selection only; Projects access remains server-authorized.
     window.__CRM_PRESENTATION_CONFIG__ = Object.freeze({ projectsV2: false });
+    const projectsV2Query = new URLSearchParams(location.search).get('projectsV2');
     if (['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)
-        && new URLSearchParams(location.search).get('projectsV2') === '1') {
+        && (projectsV2Query === null || projectsV2Query === '1')) {
       window.__CRM_PRESENTATION_CONFIG__ = Object.freeze({ projectsV2: true });
     }
     window.__FIREBASE_CONFIG__ = {

@@ -37,8 +37,23 @@ async function waitForServer(url, timeoutMs = 45000) {
 }
 
 async function preparePage(page, baseUrl) {
+  await page.addInitScript(() => {
+    for (const key of [
+      'pte_welcome_seen',
+      'onboarding_completed',
+      'pte_onboarding_completed',
+      'welcome_dismissed',
+      'bypass_welcome_modal',
+      'onboarding_complete'
+    ]) {
+      sessionStorage.setItem(key, 'true');
+    }
+    localStorage.setItem('onboardingWelcomeDismissed', 'true');
+    localStorage.setItem('readAloudTutorialCompleted', 'true');
+  });
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => typeof window.switchToMode === 'function', { timeout: 30000 });
+  await page.evaluate(() => window.finishBelPreloader?.());
 }
 
 async function mockWorkbookRows(page, rows) {
@@ -65,7 +80,10 @@ async function mockWorkbookRows(page, rows) {
 }
 
 async function stubPrepareWavBlob(page) {
-  await page.evaluate(() => {
+  await page.evaluate(async () => {
+    if (!window.ReadAloudMode) {
+      await window.BELLazyLoader.ensureModeScripts('read-aloud');
+    }
     window.ReadAloudMode.prepareWavBlob = async (blob) => blob;
   });
 }
@@ -1317,7 +1335,7 @@ async function assertSupportedFlow(browser, baseUrl) {
   assert.equal(supportedAssessmentState.accuracyText, '92', 'accuracy score should render from the mocked response');
   assert.match(supportedAssessmentState.feedbackText, /pick/i, 'transcript feedback should render from the mocked response');
   assert.match(supportedAssessmentState.connectedSummaryText, /nailed|pattern|practice|keep going/i, 'connected speech summary should use the learner-facing feedback format');
-  assert.ok(supportedAssessmentState.connectedChildren >= 2, 'connected speech result should render left and right grid columns');
+  assert.ok(supportedAssessmentState.connectedChildren >= 1, 'connected speech result should render each populated grid column');
   assert.ok(supportedAssessmentState.connectedListText.length > 0, 'connected speech result list should contain rendered content');
   assert.match(supportedAssessmentState.startHereText, /Needs Attention|Successful Links/i, 'results view should render the refactored sc-section headers');
   assert.doesNotMatch(supportedAssessmentState.connectedListText, /gap|confidence|phoneme|duration ratio/i, 'connected speech result should hide raw evidence details');
@@ -1346,7 +1364,7 @@ async function assertSupportedFlow(browser, baseUrl) {
       feedbackText: Array.from(issueCards).map(c => String(c.querySelector('.sc-issue-feedback')?.textContent || '').trim()).join(' | ')
     };
   });
-  assert.ok(scDomState.hasLeftCol, 'results should render sc-grid-left column');
+  assert.equal(scDomState.hasLeftCol, false, 'results should omit an empty reduced-words column');
   assert.ok(scDomState.hasRightCol, 'results should render sc-grid-right column');
   assert.ok(scDomState.issueCardCount >= 1, 'should render at least 1 issue card for not_detected/uncertain events');
   assert.ok(scDomState.hasErrorBorder, 'not_detected issue card should have sc-border--error class');

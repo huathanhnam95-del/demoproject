@@ -33,15 +33,17 @@ function createMockDocument() {
 
     set innerHTML(value) {
       this.children = [];
-      this._textContent = value ? String(value) : '';
+      this._innerHTML = value ? String(value) : '';
+      this._textContent = value ? String(value).replace(/<[^>]+>/g, '') : '';
     }
 
     get innerHTML() {
-      return this._textContent;
+      return this._innerHTML !== undefined ? this._innerHTML : this._textContent;
     }
 
     set textContent(value) {
       this.children = [];
+      this._innerHTML = undefined;
       this._textContent = value == null ? '' : String(value);
     }
 
@@ -74,6 +76,7 @@ function createMockDocument() {
 
 async function loadSharedModules() {
   await import(pathToFileURL(path.join(__dirname, '../public/js/read-aloud-prompt-grammar.js')).href);
+  await import(pathToFileURL(path.join(__dirname, '../public/js/read-aloud-stress-rhythm.js')).href);
   await import(pathToFileURL(path.join(__dirname, '../public/js/read-aloud-prompt-renderer.js')).href);
   return {
     grammar: globalThis.ReadAloudPromptGrammar,
@@ -117,6 +120,21 @@ async function loadSharedModules() {
   });
   assert.strictEqual(invalidResult.chunkingAvailable, false, 'invalid chunked text should be rejected');
   assert.ok(!visibleContainer.textContent.includes(' / '), 'invalid chunked text should fall back to plain visible prompt rendering');
+
+  // Test stressEnabled: true with chunking simultaneously
+  const stressResult = renderer.renderPrompt({
+    visibleContainer,
+    accessibleContainer,
+    plainText: "It's super quick and easy to make.",
+    chunkedText: "It's super quick / and easy to make.",
+    chunkingEnabled: true,
+    stressEnabled: true,
+    grammar
+  });
+  const word1 = stressResult.wordMap.get(1); // 'super'
+  assert.ok(word1.innerHTML.includes('<span class="ra-stress-peak">su</span>per'), 'word span should contain syllable stress peak');
+  assert.ok(visibleContainer.textContent.includes(' / '), 'chunking and stress should compose simultaneously');
+  assert.strictEqual(accessibleContainer.textContent, "It's super quick and easy to make.", 'accessible plain text should stay clean');
 
   global.document = previousDocument;
   console.log('read-aloud prompt renderer tests passed');

@@ -137,6 +137,11 @@
   font-family: inherit;
 }
 
+#mode-read-aloud[data-ra-workspace="v2"] .ra-stress-peak {
+  font-weight: 700;
+  color: inherit;
+}
+
 /* ── Contextual Speaking Tips & Coach Box ── */
 #mode-read-aloud[data-ra-workspace="v2"] .ra-tips-container {
   width: 100%;

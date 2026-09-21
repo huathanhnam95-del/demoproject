@@ -59,9 +59,17 @@ class ReadAloudMode {
     // the get/set pair below) so existing analytics, cache keys, and session
     // payloads keep seeing a single dominant level.
     this.chunkingEnabled = false;
+    this.stressEnabled = (() => {
+      try {
+        return sessionStorage.getItem('bel_ra_stress_enabled') === 'true';
+      } catch (_) {
+        return false;
+      }
+    })();
     this.connectedSpeechModes = new Set();
     this.connectedSpeechLevel = 'off';
     this.sessionChunkingEnabled = false;
+    this.sessionStressEnabled = this.stressEnabled;
     this.sessionConnectedSpeechModes = new Set();
     this.connectedSpeechLayerOverrides = new Set();
     this.sessionConnectedSpeechLayerOverrides = new Set();
@@ -557,10 +565,12 @@ class ReadAloudMode {
     document.getElementById('header-ra-play-recording-btn')?.addEventListener('click', () => this.playRecordedAudio());
 
     document.getElementById('ra-toggle-chunking-btn')?.addEventListener('click', () => this.togglePromptGuide('chunking'));
+    document.getElementById('ra-toggle-stress-btn')?.addEventListener('click', () => this.togglePromptGuide('stress'));
     document.getElementById('ra-toggle-linking-btn')?.addEventListener('click', () => this.toggleConnectedSpeechLevel('linking'));
     document.getElementById('ra-toggle-reduced-words-btn')?.addEventListener('click', () => this.toggleConnectedSpeechLevel('reduced_words'));
     document.getElementById('ra-toggle-sound-changes-btn')?.addEventListener('click', () => this.toggleConnectedSpeechLevel('sound_changes'));
     document.getElementById('ra-toggle-chunking-btn')?.addEventListener('keydown', (event) => this.handlePromptGuideKeydown(event, 'chunking'));
+    document.getElementById('ra-toggle-stress-btn')?.addEventListener('keydown', (event) => this.handlePromptGuideKeydown(event, 'stress'));
     document.getElementById('ra-toggle-linking-btn')?.addEventListener('keydown', (event) => this.handleConnectedSpeechKeydown(event, 'linking'));
     document.getElementById('ra-toggle-reduced-words-btn')?.addEventListener('keydown', (event) => this.handleConnectedSpeechKeydown(event, 'reduced_words'));
     document.getElementById('ra-toggle-sound-changes-btn')?.addEventListener('keydown', (event) => this.handleConnectedSpeechKeydown(event, 'sound_changes'));
@@ -2013,6 +2023,7 @@ class ReadAloudMode {
       plainText: text,
       chunkedText,
       chunkingEnabled: this.chunkingEnabled,
+      stressEnabled: this.stressEnabled,
       grammar
     });
   }
@@ -2146,7 +2157,7 @@ class ReadAloudMode {
   }
 
   togglePromptGuide(guide, options = {}) {
-    if (guide !== 'chunking' && guide !== 'linking') return;
+    if (guide !== 'chunking' && guide !== 'linking' && guide !== 'stress') return;
     const { announce = true, persist = true } = options;
     const chunkingAvailable = !!this.currentPromptChunkedText && this.currentPromptRenderState?.chunkingAvailable !== false;
     if (guide === 'chunking' && !chunkingAvailable) {
@@ -2161,6 +2172,20 @@ class ReadAloudMode {
 
     if (guide === 'chunking') {
       this.chunkingEnabled = !this.chunkingEnabled;
+    } else if (guide === 'stress') {
+      this.stressEnabled = !this.stressEnabled;
+      if (persist) {
+        this.sessionStressEnabled = this.stressEnabled;
+        try {
+          sessionStorage.setItem('bel_ra_stress_enabled', String(this.stressEnabled));
+        } catch (_) {}
+      }
+      this.updatePromptGuideButtons();
+      if (announce) {
+        this.announceLinkingStatus(this.stressEnabled ? 'Rhythm and stress guide enabled.' : 'Rhythm and stress guide disabled.');
+      }
+      this.renderPromptForCurrentView();
+      return;
     } else {
       this.toggleConnectedSpeechLevel('linking', { announce, persist });
       return;
@@ -2390,6 +2415,7 @@ class ReadAloudMode {
 
   updatePromptGuideButtons() {
     const chunkBtn = document.getElementById('ra-toggle-chunking-btn');
+    const stressBtn = document.getElementById('ra-toggle-stress-btn');
     const linkingBtn = document.getElementById('ra-toggle-linking-btn');
     const reducedWordsBtn = document.getElementById('ra-toggle-reduced-words-btn');
     const soundChangesBtn = document.getElementById('ra-toggle-sound-changes-btn');
@@ -2400,6 +2426,7 @@ class ReadAloudMode {
     // render, which put the guide palette out of reach of every stylesheet.
     [
       [chunkBtn, this.chunkingEnabled, chunkAvailable],
+      [stressBtn, this.stressEnabled, true],
       [linkingBtn, this.isConnectedSpeechModeActive('linking'), true],
       [reducedWordsBtn, this.isConnectedSpeechModeActive('reduced_words'), true],
       [soundChangesBtn, this.isConnectedSpeechModeActive('sound_changes'), true]
@@ -2413,6 +2440,8 @@ class ReadAloudMode {
       button.disabled = !available;
       if (button === chunkBtn) {
         button.title = available ? 'Show semantic chunking markers.' : 'Chunking unavailable for this prompt.';
+      } else if (button === stressBtn) {
+        button.title = 'Show word and sentence stress rhythm peaks.';
       } else if (button === linkingBtn) {
         button.title = 'Show connected speech linking hints.';
       } else if (button === soundChangesBtn) {
@@ -2425,6 +2454,7 @@ class ReadAloudMode {
     // Legend keys follow the guides that are actually drawing marks, which in the
     // simple tier is the fixed beginner set rather than the chip selection.
     const legendModes = new Set(this.getActiveConnectedSpeechModes());
+    if (this.stressEnabled) legendModes.add('stress');
     document.querySelectorAll('#ra-guide-legend .ra-legend-item').forEach((item) => {
       item.hidden = !legendModes.has(item.getAttribute('data-legend'));
     });
@@ -2437,6 +2467,7 @@ class ReadAloudMode {
       } else {
         const activeGuides = [];
         if (this.chunkingEnabled && chunkAvailable) activeGuides.push('chunking');
+        if (this.stressEnabled) activeGuides.push('stress');
         if (this.isConnectedSpeechModeActive('linking')) activeGuides.push('linking');
         if (this.isConnectedSpeechModeActive('reduced_words')) activeGuides.push('reduced_words');
         if (this.isConnectedSpeechModeActive('sound_changes')) activeGuides.push('sound_changes');
@@ -2447,6 +2478,8 @@ class ReadAloudMode {
           const mode = activeGuides[0];
           if (mode === 'chunking') {
             instructionEl.textContent = 'Read the sentence aloud, pausing where the marks break it into groups.';
+          } else if (mode === 'stress') {
+            instructionEl.textContent = 'Read the sentence aloud, emphasizing the bold syllable peaks with clear rhythm.';
           } else if (mode === 'linking') {
             instructionEl.textContent = 'Read the sentence aloud. Where words are joined by a curve, run them together without a pause.';
           } else if (mode === 'reduced_words') {
@@ -2455,10 +2488,9 @@ class ReadAloudMode {
             instructionEl.textContent = 'Read the sentence aloud. Where words are badged, let the two sounds blend into one.';
           }
         } else {
-          // Was "Active guides: X + Y." — a readout of state, which never told the
-          // learner what to do. Lead with the action; name the guides after it.
-          const labels = activeGuides.map(m => {
+          const labels = activeGuides.map((m) => {
             if (m === 'chunking') return 'pause groups';
+            if (m === 'stress') return 'stress peaks';
             if (m === 'linking') return 'joins';
             if (m === 'reduced_words') return 'light words';
             return 'sound changes';

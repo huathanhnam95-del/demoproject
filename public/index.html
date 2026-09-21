@@ -136,7 +136,7 @@
   <script src="js/modals.js"></script>
   <script src="pronunciation-analyzer/syllable-verifier.js?v=20260114_ui_v4"></script>
   <!-- Load XLSX early to prevent ReferenceErrors in script.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="this.dataset.belFailed='true'" onload="this.dataset.belLoaded='true'"></script>
   <!-- Import Map for NPM Packages & Internal Modules -->
   <script type="importmap">
     {
@@ -5111,6 +5111,8 @@
             <div id="ra-prompt-guides-group" class="ra-guide-chips" role="group" aria-label="Prompt guides">
               <button id="ra-toggle-chunking-btn" class="ra-guide-chip ra-guide-chip--chunking" type="button"
                 aria-pressed="false">Chunking</button>
+              <button id="ra-toggle-stress-btn" class="ra-guide-chip ra-guide-chip--stress" type="button"
+                aria-pressed="false">Rhythm &amp; Stress</button>
               <div id="ra-connected-speech-group" class="ra-guide-chip-group" role="group"
                 aria-label="Connected speech">
                 <button id="ra-toggle-linking-btn" class="ra-guide-chip ra-guide-chip--linking" type="button"
@@ -5126,6 +5128,9 @@
                    amber shading to "Reduced words". Each key shows only while its
                    guide is on; JS toggles the hidden attribute. -->
               <div id="ra-guide-legend" class="ra-guide-legend" aria-label="What the marks mean">
+                <span class="ra-legend-item" data-legend="stress" hidden>
+                  <span class="ra-legend-swatch ra-legend-swatch--stress" aria-hidden="true"></span><b>bold</b> = stress peak
+                </span>
                 <span class="ra-legend-item" data-legend="linking" hidden>
                   <span class="ra-legend-swatch ra-legend-swatch--linking" aria-hidden="true"></span>runs together
                 </span>
@@ -5461,7 +5466,7 @@
   <script type="module" src="js/question-recommendation-engine.js"></script>
   <script src="js/lazy-loader.js"></script>
   <script src="js/pronunciation-tooltip.js"></script>
-  <script type="module" src="js/collo-dictate-mode.js"></script>
+  <script type="module" src="js/collo-dictate-mode.js?v=20260919_fix"></script>
   <script type="module" src="js/reading-journey.js"></script>
   <script type="module" src="script.js?v=20260802_browser_cache_fix"></script>
   <!-- Points Toast Notification Container -->
@@ -6078,13 +6083,13 @@
   <script src="/js/read-aloud-workspace-view.js?v=20260917_ra_v2"></script>
   <script src="/js/speaking-practice-adapters.js?v=20260917_ra_v2"></script>
   <script src="/js/read-aloud-prompt-grammar.js"></script>
+  <script src="/js/read-aloud-stress-rhythm.js"></script>
   <script src="/js/read-aloud-prompt-renderer.js"></script>
   <script src="/js/read-aloud-spoken-forms.js"></script>
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
   <script src="/js/media-url-resolver.js"></script>
-  <script src="/read-aloud-mode.js?v=2.0.13"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

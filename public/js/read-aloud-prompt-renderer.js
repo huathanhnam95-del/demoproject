@@ -14,6 +14,8 @@
       plainText,
       chunkedText,
       chunkingEnabled,
+      stressEnabled,
+      stressEngine,
       grammar
     } = options || {};
 
@@ -42,17 +44,41 @@
     const boundaryState = grammar.buildSpokenBoundaryKeys(tokens);
     const wordMap = new Map();
 
+    const activeStressEngine = stressEngine
+      || (typeof globalThis !== 'undefined' ? globalThis.ReadAloudStressRhythm : null);
+    const useStress = !!stressEnabled && !!activeStressEngine && typeof activeStressEngine.formatWordHtml === 'function';
+
     visibleContainer.innerHTML = '';
     visibleContainer.setAttribute('aria-hidden', 'true');
     visibleContainer.style.whiteSpace = 'pre-wrap';
     visibleContainer.style.wordBreak = 'break-word';
 
-    tokens.forEach((token) => {
+    function findAdjacentSpokenWord(tokenList, startIndex, direction) {
+      let idx = startIndex + direction;
+      while (idx >= 0 && idx < tokenList.length) {
+        if (tokenList[idx].type === 'spoken') {
+          return tokenList[idx].display || tokenList[idx].raw || '';
+        }
+        idx += direction;
+      }
+      return '';
+    }
+
+    tokens.forEach((token, tokenIndex) => {
       if (token.type === 'spoken') {
         const span = document.createElement('span');
         span.className = 'ra-prompt-word';
         span.dataset.wordIndex = String(token.wordIndex);
-        span.textContent = token.display || token.raw;
+
+        const wordText = token.display || token.raw;
+        if (useStress) {
+          const prevSpoken = findAdjacentSpokenWord(tokens, tokenIndex, -1);
+          const nextSpoken = findAdjacentSpokenWord(tokens, tokenIndex, 1);
+          span.innerHTML = activeStressEngine.formatWordHtml(wordText, prevSpoken, nextSpoken);
+        } else {
+          span.textContent = wordText;
+        }
+
         visibleContainer.appendChild(span);
         wordMap.set(token.wordIndex, span);
         return;

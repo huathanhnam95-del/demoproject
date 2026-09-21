@@ -95,6 +95,55 @@
   // the controller only adopts the existing lifecycle controls.
   controller.register({
     modeId: 'asq',
+    shell: 'v3',
+    v3: {
+      title: 'Answer Short Question',
+      cardBodySelector: '#asq-practice-area',
+      progressSteps: ['Listen', 'Answer', 'Feedback'],
+      phaseToStep: { loading: 0, listen: 0, prep: 1, recording: 1, complete: 1, feedback: 2 },
+      statusText: { recording: 'Answer the question.' },
+      getPhase: () => window.ASQMode?.getPtePhase?.() || 'loading',
+      onMount: () => window.ASQMode?.mountPteShell?.(),
+      onSync: () => window.ASQMode?.syncPteShell?.(),
+      onUnmount: () => window.ASQMode?.unmountPteShell?.(),
+      filters: [],
+      dock: {
+        helpers: [
+          {
+            id: 'asq-replay-btn',
+            label: 'Replay question',
+            phases: ['prep', 'complete'],
+            onClick: () => window.ASQMode?.replayQuestion?.()
+          }
+        ],
+        actions: [
+          { sourceId: 'asq-record-btn', label: 'Start recording', variant: 'primary', phases: ['prep'] },
+          { sourceId: 'asq-cancel-btn', label: 'Cancel', variant: 'ghost', phases: ['recording'] },
+          { sourceId: 'asq-stop-btn', label: 'Finish recording', variant: 'stop', phases: ['recording'] },
+          { sourceId: 'asq-retry-btn', label: 'Record again', variant: 'ghost', phases: ['complete'] },
+          { sourceId: 'asq-play-btn', label: 'Play', phases: ['complete'] },
+          { sourceId: 'asq-submit-btn', label: 'Get feedback', variant: 'primary', phases: ['complete'] },
+          { sourceId: 'asq-redo-btn', label: 'Try again', variant: 'ghost', phases: ['feedback'] }
+        ]
+      },
+      next: {
+        onConfirmFromRecording: () => window.ASQMode?.finishRecordingForNext?.(),
+        goNext: () => window.ASQMode?.advanceQuestion?.()
+      },
+      attempts: {
+        practiceMode: 'asq',
+        modeLabel: 'Answer Short Question',
+        getPromptId: () => window.ASQMode?.currentId || null,
+        formatScores: (attempt) => {
+          const res = attempt.resultSnapshot;
+          if (res) {
+            if (res.correct === true) return ['Correct'];
+            if (res.correct === false) return ['Incorrect'];
+          }
+          return ['—'];
+        }
+      }
+    },
     enabledScopes: ['pte'],
     panelId: 'mode-asq',
     steps: ['Listen', 'Answer', 'Results'],

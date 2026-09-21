@@ -5071,7 +5071,7 @@
           </div>
         </div>
 
-        <div
+        <div id="asq-practice-area"
           style="width: 100%; max-width: 900px; margin: 0 auto; padding: 10px 20px 20px; display: flex; flex-direction: column; gap: 14px;">
           <!-- Prompt audio uses the shared Listening player component so Speaking shows the
                same audio surface: position, duration and volume, not a bare Play button. -->
@@ -5105,10 +5105,14 @@
           <div id="asq-action-host" data-practice-action-host="asq" style="display:flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;">
             <button id="asq-record-btn" class="modern-btn modern-btn--record" type="button"
               style="min-width: 180px;">Record answer</button>
+            <button id="asq-cancel-btn" class="modern-btn" type="button" hidden>Cancel</button>
             <button id="asq-stop-btn" class="modern-btn modern-btn--retry" type="button"
-              style="min-width: 120px; display: none;">Stop</button>
+              style="min-width: 120px;" hidden>Stop</button>
+            <button id="asq-retry-btn" class="modern-btn" type="button" hidden>Record again</button>
+            <button id="asq-play-btn" class="modern-btn" type="button" hidden>Play</button>
+            <button id="asq-submit-btn" class="modern-btn modern-btn--record" type="button" hidden>Get feedback</button>
             <button id="asq-redo-btn" class="modern-btn modern-btn--retry" type="button"
-              style="min-width: 180px; display: none;">Redo</button>
+              style="min-width: 180px;" hidden>Redo</button>
           </div>
 
           <div id="asq-user-audio-box" class="ra-result"

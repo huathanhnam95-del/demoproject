@@ -128,6 +128,8 @@ async function captureSpeakingScreenshots(browser, server) {
         window.localStorage.setItem('userStatus', 'guest');
         window.localStorage.setItem('hasSeenScopeTutorial', 'true');
         window.localStorage.setItem('speakModeFirstUse', 'true');
+        window.sessionStorage.setItem('guestMode', 'true');
+        window.sessionStorage.setItem('welcomeModalSeen', 'true');
     });
     const tabletPage = await tablet.newPage();
     try {
@@ -148,6 +150,8 @@ async function captureSpeakingScreenshots(browser, server) {
         window.localStorage.setItem('userStatus', 'guest');
         window.localStorage.setItem('hasSeenScopeTutorial', 'true');
         window.localStorage.setItem('speakModeFirstUse', 'true');
+        window.sessionStorage.setItem('guestMode', 'true');
+        window.sessionStorage.setItem('welcomeModalSeen', 'true');
     });
     const mobilePage = await mobile.newPage();
     try {

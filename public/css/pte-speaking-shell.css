@@ -376,3 +376,131 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
     max-height: calc(100dvh - 32px); overflow-y: auto;
   }
 }
+
+/* ==========================================================================
+   Phase 5 — Answer Short Question v3
+   ========================================================================== */
+
+#mode-asq.asq-pte-v3 .asq-audio,
+#mode-asq.asq-pte-v3 #asq-status-message,
+#mode-asq.asq-pte-v3 #asq-action-host,
+#mode-asq.asq-pte-v3 #asq-result-box,
+#mode-asq.asq-pte-v3 #asq-user-audio-box,
+#mode-asq.asq-pte-v3 #asq-question-text {
+  display: none !important;
+}
+
+#mode-asq.asq-pte-v3 #asq-practice-area {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#mode-asq.asq-pte-v3 .asq-pte-instruction {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-main, #0f172a);
+  margin-bottom: 8px;
+}
+
+#mode-asq.asq-pte-v3 .asq-pte-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+#mode-asq.asq-pte-v3 .asq-pte-feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+#mode-asq.asq-pte-v3 .asq-fb-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+#mode-asq.asq-pte-v3 .asq-fb-left,
+#mode-asq.asq-pte-v3 .asq-fb-right {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#mode-asq.asq-pte-v3 .asq-fb-heading {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #64748b);
+  margin: 0;
+}
+
+#mode-asq.asq-pte-v3 .asq-fb-question-text {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  line-height: 1.4;
+  margin: 0;
+}
+
+#mode-asq.asq-pte-v3 .asq-fb-verdict {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+#mode-asq.asq-pte-v3 .asq-fb-verdict.correct {
+  background: var(--green-50, #f0fdf4);
+  color: var(--green-700, #15803d);
+  border: 1px solid var(--green-200, #bbf7d0);
+}
+
+#mode-asq.asq-pte-v3 .asq-fb-verdict.incorrect {
+  background: var(--red-50, #fef2f2);
+  color: var(--red-700, #b91c1c);
+  border: 1px solid var(--red-200, #fecaca);
+}
+
+#mode-asq.asq-pte-v3 .asq-fb-verdict span.asq-xp {
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  background: rgba(21, 128, 61, 0.1);
+  border-radius: 999px;
+}
+
+#mode-asq.asq-pte-v3 .asq-fb-you-said {
+  font-size: 1rem;
+  color: var(--text-main, #0f172a);
+  line-height: 1.5;
+  margin: 0;
+}
+
+#mode-asq.asq-pte-v3 .asq-fb-accepted {
+  font-size: 0.95rem;
+  color: var(--text-muted, #64748b);
+  line-height: 1.5;
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  #mode-asq.asq-pte-v3 .asq-fb-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  #mode-asq.asq-pte-v3 .pte-dock {
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+}

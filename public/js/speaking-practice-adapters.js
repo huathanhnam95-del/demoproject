@@ -181,6 +181,56 @@
   // step/result actions remain lifecycle controls in the shared shell.
   controller.register({
     modeId: 'describe-image',
+    shell: 'v3',
+    v3: {
+      title: 'Describe Image',
+      cardBodySelector: '#di-practice-area',
+      progressSteps: ['Prepare', 'Record', 'Feedback'],
+      getPhase: () => window.DescribeImageMode?.getPtePhase?.() || 'loading',
+      onMount: () => window.DescribeImageMode?.mountPteShell?.(),
+      onSync: () => window.DescribeImageMode?.syncPteShell?.(),
+      onUnmount: () => window.DescribeImageMode?.unmountPteShell?.(),
+      filters: [
+        {
+          label: 'Difficulty',
+          get: () => window.DescribeImageMode?.getDifficultyFilter?.() || 'all',
+          set: (val) => window.DescribeImageMode?.setDifficultyFilter?.(val),
+          options: [
+            { value: 'all', label: 'Recommended' },
+            { value: '1', label: 'Level 1 (Easy)' },
+            { value: '2', label: 'Level 2 (Medium)' },
+            { value: '3', label: 'Level 3 (Hard)' }
+          ]
+        }
+      ],
+      dock: {
+        actions: [
+          { sourceId: 'di-record-btn', label: 'Start recording', variant: 'primary', phases: ['prep'] },
+          { sourceId: 'di-cancel-btn', label: 'Cancel', variant: 'ghost', phases: ['recording'] },
+          { sourceId: 'di-stop-btn', label: 'Finish recording', variant: 'stop', phases: ['recording'] },
+          { sourceId: 'di-retry-btn', label: 'Record again', variant: 'ghost', phases: ['complete'] },
+          { sourceId: 'di-play-btn', label: 'Play', phases: ['complete'] },
+          { sourceId: 'di-submit-btn', label: 'Get feedback', variant: 'primary', phases: ['complete'] },
+          { sourceId: 'di-results-retry-btn', label: 'Try again', variant: 'ghost', phases: ['feedback'] }
+        ]
+      },
+      next: {
+        onConfirmFromRecording: () => window.DescribeImageMode?.finishRecordingForNext?.(),
+        goNext: () => window.DescribeImageMode?.advanceQuestion?.()
+      },
+      attempts: {
+        practiceMode: 'describe-image',
+        modeLabel: 'Describe Image',
+        getPromptId: () => window.DescribeImageMode?.getCurrentQuestionId?.(),
+        formatScores: attempt => {
+          const res = attempt.resultSnapshot;
+          if (res && Number.isFinite(res.score)) {
+            return [`Score ${res.score}/5`];
+          }
+          return ['Key points —/5'];
+        }
+      }
+    },
     enabledScopes: ['pte'],
     panelId: 'mode-describe-image',
     // Three phases, matching #di-step-progress. The previous four-step list

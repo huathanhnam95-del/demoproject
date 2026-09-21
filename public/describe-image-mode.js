@@ -40,6 +40,24 @@
     // Current step
     let currentStep = 'idle'; // idle | preparing | recording | review | results
 
+    // v3 State
+    let v3Active = false;
+    let v3Phase = 'loading'; // loading | prep | recording | complete | feedback
+    let questionGen = 0;
+    let attemptGen = 0;
+    let recordedDurationSec = 0;
+    let currentDifficultyFilter = 'all';
+    let pteRecorderWidget = null;
+    let zoomLastFocused = null;
+    let v3StageEl = null;
+    let v3FeedbackEl = null;
+    let v3InstructionEl = null;
+    let v3OriginalContainers = new Map();
+
+    function isV3() {
+        return !!(v3Active || window.PteShellConfig?.isModeEnabled?.('describe-image', 'pte'));
+    }
+
     // DOM cache
     const el = {};
 
@@ -148,6 +166,7 @@
         stopRecording(true);
         currentStep = 'idle';
         transcriptText = '';
+        recordedDurationSec = 0;
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordedChunks = [];
         recordingBlob = null;
@@ -162,15 +181,17 @@
         if (el.diTranscript) el.diTranscript.textContent = 'No transcript detected.';
         if (el.diRecordTimer) el.diRecordTimer.classList.remove('di-timer-warning');
         if (el.diRecordStatus) el.diRecordStatus.classList.remove('di-recording-active');
-        hide(el.diPracticeArea);
-        hide(el.diStepPrepare);
-        hide(el.diStepRecord);
-        hide(el.diStepReview);
-        hide(el.diStepResults);
-        updateProgressBreadcrumb('idle');
+        if (!isV3()) {
+            hide(el.diPracticeArea);
+            hide(el.diStepPrepare);
+            hide(el.diStepRecord);
+            hide(el.diStepReview);
+            hide(el.diStepResults);
+            updateProgressBreadcrumb('idle');
+            // Restore the persistent image preview
+            if (el.diImagePreview) el.diImagePreview.style.display = '';
+        }
         closeZoom();
-        // Restore the persistent image preview
-        if (el.diImagePreview) el.diImagePreview.style.display = '';
     }
 
     /* ──────────────────────────── DATA LOADING ──────────────────────────── */
@@ -264,10 +285,23 @@
 
         // Always update the persistent preview image
         setImageWithFallback(el.diPreviewImg, currentEntry);
+        setImageWithFallback(el.diImage, currentEntry);
+        setImageWithFallback(el.diImageRecord, currentEntry);
+        const fbThumb = document.getElementById('di-fb-thumb-img');
+        if (fbThumb) setImageWithFallback(fbThumb, currentEntry);
 
         // Update URL with current question ID (replaceState — no history entry per question)
         if (window.PracticeRouter && currentEntry.id) {
             window.PracticeRouter.replaceRoute('describe-image', currentEntry.id);
+        }
+
+        if (isV3() && v3Active) {
+            const token = ++questionGen;
+            setTimeout(() => {
+                if (token === questionGen && v3Active) {
+                    startPractice();
+                }
+            }, 30);
         }
     }
 
@@ -338,6 +372,8 @@
         if (filteredEntries.length === 0) return;
         currentEntryIndex = (currentEntryIndex + dir + filteredEntries.length) % filteredEntries.length;
         currentEntry = filteredEntries[currentEntryIndex];
+        questionGen += 1;
+        attemptGen += 1;
         updateQuestionDisplay();
         reset();
     }
@@ -345,6 +381,7 @@
     /* ──────────────────────────── FILTERS ──────────────────────────── */
 
     function applyDifficultyFilter(val) {
+        currentDifficultyFilter = val;
         if (val === 'all') {
             filteredEntries = [...entries];
         } else {
@@ -352,6 +389,8 @@
             filteredEntries = entries.filter(e => e.level === level);
         }
         populateQuestionSelect();
+        questionGen += 1;
+        attemptGen += 1;
         if (filteredEntries.length > 0) {
             currentEntryIndex = 0;
             currentEntry = filteredEntries[0];
@@ -373,11 +412,20 @@
         // Load image into preparation and recording steps
         setImageWithFallback(el.diImage, currentEntry);
         setImageWithFallback(el.diImageRecord, currentEntry);
+        const fbThumb = document.getElementById('di-fb-thumb-img');
+        if (fbThumb) setImageWithFallback(fbThumb, currentEntry);
 
         // Hide the persistent preview during practice (image is in the step UI)
-        if (el.diImagePreview) el.diImagePreview.style.display = 'none';
+        if (el.diImagePreview && !isV3()) el.diImagePreview.style.display = 'none';
 
-        goToStep('preparing');
+        if (isV3()) {
+            v3Phase = 'prep';
+            syncPteV3UI();
+            window.SpeakingPracticeController?.setPhase?.('describe-image', 'prep');
+            startPrepTimer();
+        } else {
+            goToStep('preparing');
+        }
     }
 
     function goToStep(step) {
@@ -445,6 +493,9 @@
         prepStartTime = performance.now();
         if (el.diPrepTimer) el.diPrepTimer.textContent = `00:00 / 00:${PREP_SECONDS}`;
         if (el.diPrepBarFill) el.diPrepBarFill.style.width = '0%';
+        if (isV3() && pteRecorderWidget) {
+            pteRecorderWidget.showCountdown(PREP_SECONDS);
+        }
         if (window.isTutorialActive) {
             prepPausedAt = performance.now();
             return;
@@ -453,12 +504,24 @@
     }
 
     function tickPrep() {
-        const elapsed = (performance.now() - prepStartTime) / 1000;
+        const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
+        const elapsed = ((performance.now() - prepStartTime) / 1000) / scale;
+        const remaining = Math.max(0, PREP_SECONDS - elapsed);
         if (el.diPrepTimer) el.diPrepTimer.textContent = `${fmt(elapsed)} / 00:${PREP_SECONDS}`;
         if (el.diPrepBarFill) el.diPrepBarFill.style.width = `${Math.min(100, (elapsed / PREP_SECONDS) * 100)}%`;
 
+        if (isV3() && pteRecorderWidget) {
+            pteRecorderWidget.tick(remaining);
+        }
+
         if (elapsed >= PREP_SECONDS) {
-            goToStep('recording');
+            if (isV3()) {
+                v3Phase = 'recording';
+                window.SpeakingPracticeController?.setPhase?.('describe-image', 'recording');
+                startRecordingSession();
+            } else {
+                goToStep('recording');
+            }
             return;
         }
         prepRAF = requestAnimationFrame(tickPrep);
@@ -474,27 +537,39 @@
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const sessionToken = ++recordingSessionToken;
+            const aGen = ++attemptGen;
+            const qGen = questionGen;
             recordedChunks = [];
             transcriptText = '';
 
+            if (sessionToken !== recordingSessionToken || aGen !== attemptGen || qGen !== questionGen || (isV3() && v3Phase !== 'recording')) {
+                stream.getTracks().forEach(t => t.stop());
+                return;
+            }
+
+            if (isV3() && pteRecorderWidget) {
+                pteRecorderWidget.showRecording(RECORD_SECONDS);
+                pteRecorderWidget.attachStream(stream);
+            }
+
             const recorder = new window.MediaRecorder(stream);
             recorder.addEventListener('dataavailable', (e) => {
-                if (sessionToken !== recordingSessionToken) return;
+                if (sessionToken !== recordingSessionToken || aGen !== attemptGen || qGen !== questionGen) return;
                 if (e.data.size > 0) recordedChunks.push(e.data);
             });
             recorder.addEventListener('stop', () => {
                 stream.getTracks().forEach(t => t.stop());
                 if (el.diRecordStatus) el.diRecordStatus.classList.remove('di-recording-active');
-                if (sessionToken !== recordingSessionToken) return;
+                if (sessionToken !== recordingSessionToken || aGen !== attemptGen || qGen !== questionGen) return;
                 if (recordedChunks.length > 0) {
-                    const blob = new Blob(recordedChunks, { type: recorder.mimeType || 'audio/webm' });
+                    const blob = new Blob(recordedChunks, { type: recorder.mimeType || 'audio/wav' });
                     recordingBlob = blob;
                     recordingBlobUrl = URL.createObjectURL(blob);
                     if (el.diRecordingPlayback) el.diRecordingPlayback.src = recordingBlobUrl;
 
                     dspPromise = (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function')
                         ? window.AudioDspPipeline.enhance(blob).then((result) => {
-                            if (sessionToken !== recordingSessionToken) return blob;
+                            if (sessionToken !== recordingSessionToken || aGen !== attemptGen || qGen !== questionGen) return blob;
                             if (result && result.wavBlob) {
                                 if (recordingBlobUrl) URL.revokeObjectURL(recordingBlobUrl);
                                 recordingBlob = result.wavBlob;
@@ -512,12 +587,21 @@
                     dspPromise = Promise.resolve(null);
                 }
 
-                // Transition to review only if we were still in the recording step.
-                if (currentStep === 'recording') {
-                    if (el.diTranscript) {
-                        el.diTranscript.textContent = transcriptText || 'No transcript detected.';
+                if (isV3()) {
+                    if (v3Phase === 'recording') {
+                        v3Phase = 'complete';
+                        if (pteRecorderWidget) pteRecorderWidget.showComplete();
+                        window.SpeakingPracticeController?.setPhase?.('describe-image', 'complete');
+                        syncPteV3UI();
                     }
-                    goToStep('review');
+                } else {
+                    // Transition to review only if we were still in the recording step.
+                    if (currentStep === 'recording') {
+                        if (el.diTranscript) {
+                            el.diTranscript.textContent = transcriptText || 'No transcript detected.';
+                        }
+                        goToStep('review');
+                    }
                 }
             });
 
@@ -546,9 +630,15 @@
     }
 
     function tickRecord() {
-        const elapsed = (performance.now() - recordStartTime) / 1000;
+        const scale = Number(window.__PTE_TEST_TIME_SCALE) || 1;
+        const elapsed = ((performance.now() - recordStartTime) / 1000) / scale;
+        recordedDurationSec = elapsed;
         if (el.diRecordTimer) el.diRecordTimer.textContent = `${fmt(elapsed)} / 00:${RECORD_SECONDS}`;
         if (el.diRecordBarFill) el.diRecordBarFill.style.width = `${Math.min(100, (elapsed / RECORD_SECONDS) * 100)}%`;
+
+        if (isV3() && pteRecorderWidget) {
+            pteRecorderWidget.setElapsed(elapsed);
+        }
 
         // Warning when approaching limit
         if (elapsed >= RECORD_SECONDS - 5) {
@@ -567,6 +657,7 @@
         if (silent) {
             // Invalidate pending MediaRecorder events so the stop handler doesn't mutate UI/state after reset/onExit.
             recordingSessionToken += 1;
+            attemptGen += 1;
         }
         if (mediaRecorder && mediaRecorder.state === 'recording') {
             mediaRecorder.stop();
@@ -633,11 +724,27 @@
         recordingBlob = null;
         dspPromise = null;
         transcriptText = '';
-        goToStep('preparing');
+        recordedDurationSec = 0;
+        attemptGen += 1;
+        if (isV3()) {
+            v3Phase = 'prep';
+            syncPteV3UI();
+            window.SpeakingPracticeController?.setPhase?.('describe-image', 'prep');
+            startPrepTimer();
+        } else {
+            goToStep('preparing');
+        }
     }
 
     function submitForResults() {
-        goToStep('results');
+        if (isV3()) {
+            v3Phase = 'feedback';
+            syncPteV3UI();
+            window.SpeakingPracticeController?.setPhase?.('describe-image', 'feedback');
+            displayResults();
+        } else {
+            goToStep('results');
+        }
     }
 
     async function displayResults() {
@@ -675,9 +782,15 @@
             }
         }
 
+        if (isV3()) {
+            renderV3Feedback();
+        }
+
         const sessionToken = recordingSessionToken;
+        const aGen = attemptGen;
+        const qGen = questionGen;
         const finalBlob = dspPromise ? await dspPromise.catch(() => recordingBlob) : recordingBlob;
-        if (sessionToken !== recordingSessionToken) return;
+        if (sessionToken !== recordingSessionToken || aGen !== attemptGen || qGen !== questionGen) return;
 
         window.PTEAttemptArchive?.saveAttempt?.({
             practiceMode: 'describe-image',
@@ -696,14 +809,15 @@
                 sampleAnswer: currentEntry.sampleAnswer || null
             },
             resultSnapshot: {
-                submitted: true
+                submitted: true,
+                score: null
             },
             scoringSource: 'client',
             media: finalBlob ? [{
                 slot: 'student',
                 label: 'Student description',
                 blob: finalBlob,
-                contentType: finalBlob.type || 'audio/webm'
+                contentType: finalBlob.type || 'audio/wav'
             }] : []
         }).catch((error) => console.warn('[PTE Archive] Describe Image save failed:', error));
     }
@@ -773,16 +887,25 @@ Please provide:
 
     function openZoom(sourceImg) {
         const imgEl = sourceImg || (currentStep === 'recording' ? el.diImageRecord : el.diImage) || el.diPreviewImg;
-        const src = imgEl?.src;
+        const src = imgEl?.src || (currentEntry ? getImageSrc(currentEntry) : '');
         if (!el.diZoomOverlay || !el.diZoomImage || !src) return;
+        zoomLastFocused = document.activeElement;
         el.diZoomImage.src = src;
         show(el.diZoomOverlay);
         document.body.style.overflow = 'hidden';
+        if (el.diZoomClose) {
+            try { el.diZoomClose.focus(); } catch (_) {}
+        }
     }
 
     function closeZoom() {
+        if (!el.diZoomOverlay) return;
         hide(el.diZoomOverlay);
         document.body.style.overflow = '';
+        if (zoomLastFocused && typeof zoomLastFocused.focus === 'function') {
+            try { zoomLastFocused.focus(); } catch (_) {}
+            zoomLastFocused = null;
+        }
     }
 
     /* ──────────────────────────── TIMER CLEANUP ──────────────────────────── */
@@ -790,6 +913,423 @@ Please provide:
     function stopAllTimers() {
         if (prepRAF) { cancelAnimationFrame(prepRAF); prepRAF = null; }
         if (recordRAF) { cancelAnimationFrame(recordRAF); recordRAF = null; }
+    }
+
+    /* ──────────────────────────── V3 ADAPTER & LIFECYCLE ──────────────────────────── */
+
+    function onRecordBtnClick() {
+        if (!isV3() || v3Phase !== 'prep') return;
+        if (prepRAF) { cancelAnimationFrame(prepRAF); prepRAF = null; }
+        v3Phase = 'recording';
+        window.SpeakingPracticeController?.setPhase?.('describe-image', 'recording');
+        startRecordingSession();
+    }
+
+    function onCancelBtnClick() {
+        if (!isV3() || v3Phase !== 'recording') return;
+        stopAllTimers();
+        stopRecording(true);
+        recordedDurationSec = 0;
+        v3Phase = 'prep';
+        syncPteV3UI();
+        window.SpeakingPracticeController?.setPhase?.('describe-image', 'prep');
+        startPrepTimer();
+    }
+
+    function onPlayBtnClick() {
+        if (!el.diRecordingPlayback) return;
+        if (el.diRecordingPlayback.paused) {
+            el.diRecordingPlayback.play().catch(() => {});
+        } else {
+            el.diRecordingPlayback.pause();
+        }
+    }
+
+    function syncPlaybackUi() {
+        const isPaused = !el.diRecordingPlayback || el.diRecordingPlayback.paused;
+        const playBtn = document.getElementById('di-play-btn');
+        if (playBtn) playBtn.textContent = isPaused ? 'Play' : 'Pause';
+        const fbPlayBtn = document.getElementById('di-fb-play-btn');
+        if (fbPlayBtn) fbPlayBtn.textContent = isPaused ? '▶' : '⏸';
+        const fbTime = document.getElementById('di-fb-time');
+        if (fbTime && el.diRecordingPlayback) {
+            fbTime.textContent = `${fmt(el.diRecordingPlayback.currentTime || 0)} / ${fmt(recordedDurationSec || el.diRecordingPlayback.duration || RECORD_SECONDS)}`;
+        }
+    }
+
+    function ensureV3Elements() {
+        const modePanel = document.getElementById('mode-describe-image');
+        if (!modePanel) return;
+
+        // Ensure dock action buttons exist in DOM so adoptV3Dock can adopt them
+        if (!document.getElementById('di-record-btn')) {
+            const btn = document.createElement('button');
+            btn.id = 'di-record-btn';
+            btn.type = 'button';
+            btn.className = 'modern-btn';
+            btn.hidden = true;
+            btn.textContent = 'Start recording';
+            btn.addEventListener('click', onRecordBtnClick);
+            (el.diStepPrepare || modePanel).appendChild(btn);
+        }
+        if (!document.getElementById('di-cancel-btn')) {
+            const btn = document.createElement('button');
+            btn.id = 'di-cancel-btn';
+            btn.type = 'button';
+            btn.className = 'modern-btn';
+            btn.hidden = true;
+            btn.textContent = 'Cancel';
+            btn.addEventListener('click', onCancelBtnClick);
+            (el.diStepRecord || modePanel).appendChild(btn);
+        }
+        if (!document.getElementById('di-play-btn')) {
+            const btn = document.createElement('button');
+            btn.id = 'di-play-btn';
+            btn.type = 'button';
+            btn.className = 'modern-btn';
+            btn.hidden = true;
+            btn.textContent = 'Play';
+            btn.addEventListener('click', onPlayBtnClick);
+            (el.diStepReview || modePanel).appendChild(btn);
+        }
+
+        const practiceArea = document.getElementById('di-practice-area');
+        if (!practiceArea) return;
+
+        // 1. PTE instruction
+        if (!document.getElementById('di-pte-instruction')) {
+            v3InstructionEl = document.createElement('p');
+            v3InstructionEl.className = 'pte-instr';
+            v3InstructionEl.id = 'di-pte-instruction';
+            v3InstructionEl.textContent = 'Look at the image below. In 25 seconds, please speak into the microphone and describe in detail what the image is showing. You will have 40 seconds to give your response.';
+            practiceArea.prepend(v3InstructionEl);
+        }
+
+        // 2. Stage container (.di-pte-stage)
+        if (!document.getElementById('di-pte-stage')) {
+            v3StageEl = document.createElement('div');
+            v3StageEl.className = 'di-pte-stage';
+            v3StageEl.id = 'di-pte-stage';
+
+            const mediaCol = document.createElement('div');
+            mediaCol.className = 'di-pte-stage-media';
+            mediaCol.id = 'di-pte-media';
+
+            const recCol = document.createElement('div');
+            recCol.className = 'di-pte-stage-rec';
+            const recHost = document.createElement('div');
+            recHost.id = 'di-pte-recorder';
+            recCol.appendChild(recHost);
+
+            v3StageEl.append(mediaCol, recCol);
+            practiceArea.appendChild(v3StageEl);
+
+            // Move #di-image-container into mediaCol
+            const imgContainer = document.getElementById('di-image-container');
+            if (imgContainer) {
+                v3OriginalContainers.set('imgContainer', { parent: imgContainer.parentNode, nextSibling: imgContainer.nextSibling });
+                mediaCol.appendChild(imgContainer);
+            }
+
+            // Move #di-zoom-btn inside #di-image-container at top right corner
+            const zoomBtn = document.getElementById('di-zoom-btn');
+            if (zoomBtn && imgContainer) {
+                v3OriginalContainers.set('zoomBtn', { parent: zoomBtn.parentNode, nextSibling: zoomBtn.nextSibling, className: zoomBtn.className, text: zoomBtn.innerHTML });
+                zoomBtn.className = 'di-zoom-btn';
+                zoomBtn.setAttribute('aria-label', 'Zoom image');
+                zoomBtn.setAttribute('title', 'Zoom image');
+                zoomBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8v6M8 11h6"/></svg>';
+                imgContainer.appendChild(zoomBtn);
+            }
+        }
+
+        // 3. Feedback container (.pte-fb#di-pte-feedback)
+        if (!document.getElementById('di-pte-feedback')) {
+            v3FeedbackEl = document.createElement('div');
+            v3FeedbackEl.className = 'pte-fb';
+            v3FeedbackEl.id = 'di-pte-feedback';
+            v3FeedbackEl.hidden = true;
+            v3FeedbackEl.style.display = 'none';
+
+            v3FeedbackEl.innerHTML = `
+                <div class="pte-fb__col pte-fb__col--left">
+                    <div class="di-image-container di-fb-image-container">
+                        <img id="di-fb-thumb-img" class="di-image" alt="Describe Image" />
+                        <button id="di-fb-zoom-btn" class="di-zoom-btn" type="button" aria-label="Zoom image">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8v6M8 11h6"/></svg>
+                        </button>
+                    </div>
+                    <div class="pte-listen" id="di-fb-listen" style="display:flex; align-items:center; gap:8px; margin:12px 0;">
+                        <span style="font-weight:600; font-size:14px; color:#475569;">Your recording</span>
+                        <button id="di-fb-play-btn" class="pte-btn pte-btn--icon" type="button" aria-label="Play recording" style="width:36px; height:36px; border-radius:50%; border:1px solid #cbd5e1; background:#fff; cursor:pointer;">▶</button>
+                        <span id="di-fb-time" style="font-size:13px; color:#64748b; font-family:'Roboto Mono',monospace;">00:00 / 00:40</span>
+                    </div>
+                    <h4 style="margin:16px 0 6px; font-size:14px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#64748b;">What you said</h4>
+                    <div class="di-transcript" id="di-fb-transcript">No transcript detected.</div>
+                </div>
+                <div class="pte-fb__col pte-fb__col--right">
+                    <div class="pte-tabs" role="tablist" style="display:inline-flex; gap:4px; padding:3px; background:#f1f5f9; border-radius:999px; margin-bottom:16px;">
+                        <button id="di-tab-keypoints" class="pte-tab is-active" type="button" role="tab" aria-selected="true" style="border:0; background:#fff; padding:6px 14px; border-radius:999px; font-weight:600; font-size:13px; color:#1d4ed8; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.06);">Key points</button>
+                        <button id="di-tab-sample" class="pte-tab" type="button" role="tab" aria-selected="false" style="border:0; background:none; padding:6px 14px; border-radius:999px; font-weight:500; font-size:13px; color:#475569; cursor:pointer;">Sample answer</button>
+                    </div>
+                    <div id="di-panel-keypoints">
+                        <div class="pte-stats" style="display:flex; gap:16px; margin-bottom:16px;">
+                            <div class="pte-stat" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 16px; flex:1;">
+                                <small style="display:block; font-size:12px; color:#64748b;">Key points</small>
+                                <b style="font-size:20px; font-weight:700; color:#1e293b;">—<span style="font-size:14px; font-weight:500; color:#94a3b8;">/5</span></b>
+                            </div>
+                            <div class="pte-stat" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 16px; flex:1;">
+                                <small style="display:block; font-size:12px; color:#64748b;">Speaking time</small>
+                                <b id="di-stat-time" style="font-size:20px; font-weight:700; color:#1e293b;">00:00</b>
+                            </div>
+                        </div>
+                        <ul class="di-keypoints-list" id="di-fb-keypoints"></ul>
+                        <div class="di-ai-action" style="margin-top:20px;">
+                            <button id="di-fb-ai-btn" class="modern-btn modern-btn--check" type="button">🤖 AI Content Assessment</button>
+                            <small style="display:block; margin-top:4px; color:#64748b;">Opens in Ask me! with your transcript and the key points</small>
+                        </div>
+                    </div>
+                    <div id="di-panel-sample" style="display:none;">
+                        <div id="di-fb-sample-answer" class="sample" style="font-size:15px; line-height:1.7; color:#334155;"></div>
+                    </div>
+                </div>
+            `;
+            practiceArea.appendChild(v3FeedbackEl);
+
+            // Wire feedback tabs
+            const tabKp = v3FeedbackEl.querySelector('#di-tab-keypoints');
+            const tabSample = v3FeedbackEl.querySelector('#di-tab-sample');
+            const panelKp = v3FeedbackEl.querySelector('#di-panel-keypoints');
+            const panelSample = v3FeedbackEl.querySelector('#di-panel-sample');
+
+            tabKp?.addEventListener('click', () => {
+                tabKp.classList.add('is-active');
+                tabKp.style.background = '#fff';
+                tabKp.style.color = '#1d4ed8';
+                tabKp.setAttribute('aria-selected', 'true');
+                tabSample?.classList.remove('is-active');
+                if (tabSample) {
+                    tabSample.style.background = 'none';
+                    tabSample.style.color = '#475569';
+                    tabSample.setAttribute('aria-selected', 'false');
+                }
+                if (panelKp) panelKp.style.display = 'block';
+                if (panelSample) panelSample.style.display = 'none';
+            });
+
+            tabSample?.addEventListener('click', () => {
+                tabSample.classList.add('is-active');
+                tabSample.style.background = '#fff';
+                tabSample.style.color = '#1d4ed8';
+                tabSample.setAttribute('aria-selected', 'true');
+                tabKp?.classList.remove('is-active');
+                if (tabKp) {
+                    tabKp.style.background = 'none';
+                    tabKp.style.color = '#475569';
+                    tabKp.setAttribute('aria-selected', 'false');
+                }
+                if (panelSample) panelSample.style.display = 'block';
+                if (panelKp) panelKp.style.display = 'none';
+            });
+
+            // Wire AI button in feedback
+            v3FeedbackEl.querySelector('#di-fb-ai-btn')?.addEventListener('click', sendAIAssessment);
+
+            // Wire Zoom button in feedback
+            v3FeedbackEl.querySelector('#di-fb-zoom-btn')?.addEventListener('click', () => {
+                const thumb = document.getElementById('di-fb-thumb-img');
+                openZoom(thumb);
+            });
+
+            // Wire Play button in feedback
+            const fbPlayBtn = v3FeedbackEl.querySelector('#di-fb-play-btn');
+            fbPlayBtn?.addEventListener('click', onPlayBtnClick);
+        }
+
+        // Recorder widget
+        const recHost = document.getElementById('di-pte-recorder');
+        if (recHost && (!pteRecorderWidget || recHost.children.length === 0)) {
+            pteRecorderWidget = window.PteRecorderWidget?.create?.(recHost, { totalSeconds: RECORD_SECONDS });
+        }
+
+        // Wire playback events on el.diRecordingPlayback once
+        if (el.diRecordingPlayback && !el.diRecordingPlayback._v3Wired) {
+            el.diRecordingPlayback._v3Wired = true;
+            el.diRecordingPlayback.addEventListener('play', syncPlaybackUi);
+            el.diRecordingPlayback.addEventListener('pause', syncPlaybackUi);
+            el.diRecordingPlayback.addEventListener('timeupdate', syncPlaybackUi);
+            el.diRecordingPlayback.addEventListener('ended', syncPlaybackUi);
+        }
+    }
+
+    function renderV3Feedback() {
+        if (!currentEntry) return;
+
+        // Thumbnail
+        const thumb = document.getElementById('di-fb-thumb-img');
+        if (thumb) setImageWithFallback(thumb, currentEntry);
+
+        // Transcript
+        const transcriptEl = document.getElementById('di-fb-transcript');
+        if (transcriptEl) transcriptEl.textContent = transcriptText || 'No transcript detected.';
+
+        // Stats
+        const statTime = document.getElementById('di-stat-time');
+        if (statTime) statTime.textContent = fmt(recordedDurationSec || RECORD_SECONDS);
+
+        // Key points checklist (neutral per O-7)
+        const kpList = document.getElementById('di-fb-keypoints');
+        if (kpList) {
+            kpList.innerHTML = '';
+            const points = currentEntry.keyPoints || [];
+            if (points.length > 0) {
+                points.forEach(p => {
+                    const li = document.createElement('li');
+                    li.textContent = p;
+                    kpList.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = 'Key points will be available after dataset generation.';
+                kpList.appendChild(li);
+            }
+        }
+
+        // Sample answer
+        const sampleEl = document.getElementById('di-fb-sample-answer');
+        if (sampleEl) {
+            const answer = currentEntry.sampleAnswer;
+            if (typeof answer === 'object' && answer.full) {
+                sampleEl.innerHTML = `
+                    <div class="di-answer-full"><strong>Full Answer:</strong><br>${escapeHtml(answer.full)}</div>
+                    ${answer.simple ? `<div class="di-answer-simple" style="margin-top:12px;"><strong>Simple Answer:</strong><br>${escapeHtml(answer.simple)}</div>` : ''}
+                `;
+            } else if (typeof answer === 'string') {
+                sampleEl.innerHTML = `<div class="di-answer-full">${escapeHtml(answer)}</div>`;
+            } else {
+                sampleEl.textContent = 'No sample answer available.';
+            }
+        }
+
+        syncPlaybackUi();
+    }
+
+    function syncPteV3UI() {
+        if (!isV3()) return;
+        const stage = document.getElementById('di-pte-stage');
+        const feedback = document.getElementById('di-pte-feedback');
+        const practiceArea = document.getElementById('di-practice-area');
+
+        if (practiceArea) practiceArea.style.display = 'block';
+
+        if (v3Phase === 'feedback') {
+            if (stage) { stage.hidden = true; stage.style.display = 'none'; }
+            if (feedback) { feedback.hidden = false; feedback.style.display = 'flex'; }
+            renderV3Feedback();
+        } else {
+            if (stage) { stage.hidden = false; stage.style.display = 'flex'; }
+            if (feedback) { feedback.hidden = true; feedback.style.display = 'none'; }
+        }
+    }
+
+    function mountPteShell() {
+        v3Active = true;
+        const modePanel = document.getElementById('mode-describe-image');
+        if (modePanel) modePanel.classList.add('di-pte-v3');
+        ensureV3Elements();
+        if (currentEntry) {
+            updateQuestionDisplay();
+        }
+        if (v3Phase === 'loading' && currentEntry) {
+            v3Phase = 'prep';
+        }
+        syncPteV3UI();
+    }
+
+    function unmountPteShell() {
+        v3Active = false;
+        const modePanel = document.getElementById('mode-describe-image');
+        if (modePanel) modePanel.classList.remove('di-pte-v3');
+
+        // Restore moved elements
+        const imgContainer = document.getElementById('di-image-container');
+        const origImg = v3OriginalContainers.get('imgContainer');
+        if (imgContainer && origImg?.parent) {
+            if (origImg.nextSibling && origImg.parent.contains(origImg.nextSibling)) {
+                origImg.parent.insertBefore(imgContainer, origImg.nextSibling);
+            } else {
+                origImg.parent.appendChild(imgContainer);
+            }
+        }
+
+        const zoomBtn = document.getElementById('di-zoom-btn');
+        const origZoom = v3OriginalContainers.get('zoomBtn');
+        if (zoomBtn && origZoom?.parent) {
+            zoomBtn.className = origZoom.className || 'modern-btn modern-btn--compact';
+            zoomBtn.innerHTML = origZoom.text || '🔍 Zoom';
+            zoomBtn.removeAttribute('title');
+            if (origZoom.nextSibling && origZoom.parent.contains(origZoom.nextSibling)) {
+                origZoom.parent.insertBefore(zoomBtn, origZoom.nextSibling);
+            } else {
+                origZoom.parent.appendChild(zoomBtn);
+            }
+        }
+
+        // Remove created v3 elements
+        document.getElementById('di-pte-instruction')?.remove();
+        document.getElementById('di-pte-stage')?.remove();
+        document.getElementById('di-pte-feedback')?.remove();
+
+        if (pteRecorderWidget) {
+            pteRecorderWidget.destroy();
+            pteRecorderWidget = null;
+        }
+
+        reset();
+    }
+
+    function syncPteShell() {
+        if (!v3Active) return;
+        window.SpeakingPracticeController?.setPhase?.('describe-image', v3Phase);
+        syncPteV3UI();
+    }
+
+    async function finishRecordingForNext() {
+        stopAllTimers();
+        const aGen = ++attemptGen;
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            try { mediaRecorder.stop(); } catch (_) {}
+        }
+        mediaRecorder = null;
+        stopSpeechRecognition();
+
+        const finalBlob = dspPromise ? await dspPromise.catch(() => recordingBlob) : recordingBlob;
+        if (aGen !== attemptGen) return;
+        if (currentEntry) {
+            try {
+                await window.PTEAttemptArchive?.saveAttempt?.({
+                    practiceMode: 'describe-image',
+                    promptSnapshot: {
+                        promptId: currentEntry.id || currentEntry.title || null,
+                        title: currentEntry.title || '',
+                        text: currentEntry.prompt || currentEntry.title || '',
+                        data: currentEntry
+                    },
+                    responseSnapshot: { transcript: transcriptText || '' },
+                    answerSnapshot: { keyPoints: currentEntry.keyPoints || [], sampleAnswer: currentEntry.sampleAnswer || null },
+                    resultSnapshot: { submitted: true, score: null },
+                    scoringSource: 'client',
+                    media: finalBlob ? [{ slot: 'student', label: 'Student description', blob: finalBlob, contentType: finalBlob.type || 'audio/wav' }] : []
+                });
+            } catch (_) {}
+        }
+        navigateQuestion(1);
+        if (v3Active) startPractice();
+    }
+
+    function advanceQuestion() {
+        navigateQuestion(1);
+        if (v3Active) startPractice();
     }
 
     /* ──────────────────────────── LIFECYCLE ──────────────────────────── */
@@ -809,7 +1349,25 @@ Please provide:
 
     /* ──────────────────────────── EXPOSE ──────────────────────────── */
 
-    window.DescribeImageMode = { init, reset, onEnter, onExit, loadEntries };
+    window.DescribeImageMode = {
+        init,
+        reset,
+        onEnter,
+        onExit,
+        loadEntries,
+        mountPteShell,
+        unmountPteShell,
+        syncPteShell,
+        getPtePhase: () => v3Phase,
+        getDifficultyFilter: () => currentDifficultyFilter,
+        setDifficultyFilter: (val) => {
+            currentDifficultyFilter = val;
+            applyDifficultyFilter(val);
+        },
+        finishRecordingForNext,
+        advanceQuestion,
+        getCurrentQuestionId: () => currentEntry?.id || null
+    };
 
     // Deep-link support: listen for PracticeRouter question navigation events
     window.addEventListener('practice-route-question', (event) => {
@@ -820,6 +1378,8 @@ Please provide:
         if (idx >= 0) {
             currentEntryIndex = idx;
             currentEntry = filteredEntries[idx];
+            questionGen += 1;
+            attemptGen += 1;
             updateQuestionDisplay();
             reset();
         }

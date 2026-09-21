@@ -202,3 +202,177 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
     max-height: calc(100dvh - 32px); overflow-y: auto;
   }
 }
+
+/* Describe Image v3 */
+#mode-describe-image.di-pte-v3 .question-selector,
+#mode-describe-image.di-pte-v3 #difficulty-filter-container-di,
+#mode-describe-image.di-pte-v3 #di-image-preview,
+#mode-describe-image.di-pte-v3 #di-start-controls,
+#mode-describe-image.di-pte-v3 #di-step-progress,
+#mode-describe-image.di-pte-v3 .notes-step-header,
+#mode-describe-image.di-pte-v3 .di-progress-bar,
+#mode-describe-image.di-pte-v3 #di-record-status,
+#mode-describe-image.di-pte-v3 .notes-results-controls,
+#mode-describe-image.di-pte-v3 #di-step-prepare > .di-progress-bar,
+#mode-describe-image.di-pte-v3 #di-step-record,
+#mode-describe-image.di-pte-v3 #di-step-review,
+#mode-describe-image.di-pte-v3 #di-step-results {
+  display: none !important;
+}
+
+#mode-describe-image.di-pte-v3 #di-practice-area {
+  display: block !important;
+  min-width: 0;
+}
+
+#mode-describe-image.di-pte-v3 .di-pte-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  margin: 20px 0;
+  min-width: 0;
+}
+
+#mode-describe-image.di-pte-v3 .di-pte-stage-media {
+  flex: 1;
+  max-width: 460px;
+  min-width: 0;
+}
+
+#mode-describe-image.di-pte-v3 .di-image-container {
+  position: relative;
+  max-width: 460px;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #d6d6d6;
+  border-radius: 12px;
+  padding: 12px;
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+
+#mode-describe-image.di-pte-v3 .di-image-container img {
+  display: block;
+  width: 100%;
+  max-height: 380px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+#mode-describe-image.di-pte-v3 .di-zoom-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  font-size: 15px;
+  padding: 0;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+#mode-describe-image.di-pte-v3 .di-zoom-btn:hover {
+  background: #ffffff;
+  transform: scale(1.05);
+}
+
+#mode-describe-image.di-pte-v3 .di-zoom-btn:focus-visible {
+  outline: var(--focus-ring, 2px solid #2563eb);
+  outline-offset: 2px;
+}
+
+#mode-describe-image.di-pte-v3 .di-pte-stage-rec {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 280px;
+}
+
+#mode-describe-image.di-pte-v3 .di-fb-image-container {
+  max-width: 240px;
+  margin: 0 0 16px;
+}
+
+#mode-describe-image.di-pte-v3 .di-transcript {
+  font: 400 15px/1.6 var(--font-body, Arial, sans-serif);
+  color: var(--text-secondary, #475569);
+  margin: 8px 0 16px;
+  background: var(--bg-canvas, #f8fafc);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+#mode-describe-image.di-pte-v3 .di-keypoints-list {
+  padding-left: 20px;
+  margin: 12px 0 20px;
+  color: var(--text-primary, #1e293b);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+#mode-describe-image.di-pte-v3 .di-keypoints-list li {
+  margin-bottom: 6px;
+}
+
+#mode-describe-image.di-pte-v3 .di-ai-action {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#mode-describe-image.di-pte-v3 .di-ai-action small {
+  color: var(--text-muted, #64748b);
+  font-size: 12px;
+}
+
+#mode-describe-image.di-pte-v3 #di-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#mode-describe-image.di-pte-v3 #di-zoom-image {
+  position: relative;
+  z-index: 1;
+  max-width: calc(100vw - 12vw);
+  max-height: calc(100vh - 12vh);
+  border-radius: 14px;
+  object-fit: contain;
+  background: white;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 768px) {
+  #mode-describe-image.di-pte-v3 .di-pte-stage {
+    flex-direction: column;
+    gap: 20px;
+  }
+  #mode-describe-image.di-pte-v3 .di-image-container {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  #mode-describe-image.di-pte-v3 .pte-dock { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  #mode-describe-image.di-pte-v3 .pte-modebar:has(.pte-popover) { z-index: 1200; }
+  #mode-describe-image.di-pte-v3 .pte-popover {
+    position: fixed; inset: 16px 16px auto; width: auto; max-width: none;
+    max-height: calc(100dvh - 32px); overflow-y: auto;
+  }
+}

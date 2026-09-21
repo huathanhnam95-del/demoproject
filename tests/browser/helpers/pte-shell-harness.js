@@ -6,13 +6,33 @@ const { launchPracticeChrome } = require('./launch-practice-chrome');
 // Same guest and media bootstrap as practice-modes-ui-full-audit, without its telemetry patches.
 function initScript() {
   localStorage.setItem('userStatus', 'guest'); localStorage.setItem('hasSeenScopeTutorial', 'true');
+  sessionStorage.setItem('guestMode', 'true'); sessionStorage.setItem('welcomeModalSeen', 'true');
   ['read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'rts'].forEach(mode => localStorage.setItem(`${mode}ModeFirstUse`, 'true'));
+  function createStubWavBlob() {
+    const samples = 8000;
+    const buffer = new ArrayBuffer(44 + samples * 2);
+    const view = new DataView(buffer);
+    const writeStr = (off, s) => { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
+    writeStr(0, 'RIFF');
+    view.setUint32(4, 36 + samples * 2, true);
+    writeStr(8, 'WAVEfmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, 16000, true);
+    view.setUint32(28, 32000, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeStr(36, 'data');
+    view.setUint32(40, samples * 2, true);
+    return new Blob([buffer], { type: 'audio/wav' });
+  }
   class StubRecorder extends EventTarget {
     constructor(stream) { super(); this.stream = stream; this.state = 'inactive'; this.mimeType = 'audio/wav'; }
     start() { this.state = 'recording'; this.dispatchEvent(new Event('start')); }
     stop() {
       this.state = 'inactive';
-      const event = new Event('dataavailable'); Object.defineProperty(event, 'data', { value: new Blob(['x'], { type: this.mimeType }) });
+      const event = new Event('dataavailable'); Object.defineProperty(event, 'data', { value: createStubWavBlob() });
       this.ondataavailable?.(event); this.dispatchEvent(event);
       const stop = new Event('stop'); this.onstop?.(stop); this.dispatchEvent(stop);
     }

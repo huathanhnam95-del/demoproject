@@ -63,7 +63,7 @@ async function finishAndAssess(page) {
   await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'complete' && !window.RepeatSentenceV3.busy);
   await page.locator('#check-btn-speak').click();
   await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'feedback' && !window.RepeatSentenceV3.busy);
-  if (await page.locator('#vocab-skip-btn').isVisible()) await page.locator('#vocab-skip-btn').click();
+  if (!await page.locator('#second-take-overlay').isVisible() && await page.locator('#vocab-skip-btn').isVisible()) await page.locator('#vocab-skip-btn').click();
 }
 
 async function exerciseListenBackRetry(page, width) {
@@ -112,6 +112,151 @@ async function leaveAndReturn(page) {
   await page.waitForFunction(() => !window.RepeatSentenceV3.active);
   await page.locator('#mode-btn-speak').click();
   await page.waitForFunction(() => window.RepeatSentenceV3.active);
+}
+
+async function exercisePlaybackDeparture(page, width, transition) {
+  await page.locator('#record-btn').click();
+  await finishAndAssess(page);
+  await page.locator('#speak-pte-original').click();
+  await page.evaluate(() => {
+    window.__departingPlayer = document.getElementById('speak-pte-playback');
+    window.__departingPlayer.loop = true;
+  });
+  await page.locator('#speak-pte-playback').click({ position: { x: 20, y: 20 } });
+  await page.waitForFunction(() => !__departingPlayer.paused && __departingPlayer.currentTime > 0);
+  if (transition === 'next') await page.locator('#pte-next-speak').click();
+  else if (transition === 'retry') await page.locator('#retry-btn-speak').click();
+  else await page.getByRole('button', { name: 'Back to dashboard', exact: true }).click();
+  if (transition === 'next') await page.waitForFunction(() => document.getElementById('current-question-id-speak').textContent === '2');
+  else await page.waitForFunction(leaving => leaving ? !RepeatSentenceV3.active : RepeatSentenceV3.phase === 'prep', transition === 'unmount');
+  const state = await page.evaluate(() => ({ paused: __departingPlayer.paused, time: __departingPlayer.currentTime }));
+  fs.writeFileSync(path.join(evidence, `${width}-playback-${transition}.json`), JSON.stringify(state));
+  assert.equal(state.paused, true, 'departing listen-back actually stops playing');
+  assert.equal(state.time, 0, 'departing listen-back resets to the start');
+}
+
+async function exerciseSecondTake(page, width, outcome) {
+  await page.evaluate(() => {
+    window.auth = { currentUser: { uid: 'skill-fixture' } };
+    window.shopModule = { ...window.shopModule, isSkillUnlocked: id => id === 'second_take' };
+    window.__skillCalls = [];
+    window.callUseActiveSkill = input => {
+      window.__skillCalls.push(input);
+      return new Promise((resolve, reject) => {
+        window.__resolveSecondTake = success => resolve({ success, cost: 10 });
+        window.__rejectSecondTake = () => reject(new Error('Second Take fixture failed'));
+      });
+    };
+  });
+  await page.locator('#record-btn').click();
+  await finishAndAssess(page);
+  const oldId = await page.evaluate(() => RepeatSentenceV3.attempt.id);
+  await page.evaluate(() => { window.__secondTakeButton = document.getElementById('second-take-yes'); });
+  await page.locator('#second-take-yes').click();
+  await page.waitForFunction(() => !!window.__resolveSecondTake);
+  if (await page.locator('#vocab-skip-btn').isVisible()) await page.locator('#vocab-skip-btn').click();
+  // A queued duplicate event must not spend the skill twice, even on a detached control.
+  if (outcome === 'repeated') await page.evaluate(() => window.__secondTakeButton.click());
+  assert.equal(await page.evaluate(() => __skillCalls.length), 1, 'one skill request per offered retry');
+  if (outcome === 'next') {
+    await page.locator('#pte-next-speak').click();
+    await page.waitForFunction(() => document.getElementById('current-question-id-speak').textContent === '2'
+      && RepeatSentenceV3.phase === 'prep');
+  } else if (outcome === 'unmount' || outcome === 'unmount-reject') {
+    await leaveAndReturn(page);
+    await page.waitForFunction(() => RepeatSentenceV3.phase === 'prep');
+  }
+  else if (outcome === 'retry' || outcome === 'recording') {
+    await page.locator('#retry-btn-speak').click();
+    await page.waitForFunction(() => RepeatSentenceV3.phase === 'prep');
+    if (outcome === 'recording') {
+      await page.locator('#record-btn').click();
+      await page.waitForFunction(() => RepeatSentenceV3.phase === 'recording' && !RepeatSentenceV3.busy);
+    }
+  }
+  const before = await page.evaluate(() => ({ generation: RepeatSentenceV3.generation, id: RepeatSentenceV3.attempt?.id,
+    context: JSON.stringify(window.currentAttemptContext) }));
+  await page.evaluate(outcome => outcome.includes('reject') ? __rejectSecondTake() : __resolveSecondTake(outcome !== 'failure'), outcome);
+  await page.waitForTimeout(100);
+  if (outcome === 'success' || outcome === 'repeated') {
+    assert.equal(await page.evaluate(() => RepeatSentenceV3.phase), 'prep', 'successful Second Take uses v3 Retry');
+    assert.equal(await page.locator('#speak-pte-recorder').isVisible(), true);
+    assert.equal(await page.locator('#record-btn').isVisible(), true);
+    await page.locator('#record-btn').click();
+    await page.waitForFunction(() => RepeatSentenceV3.phase === 'recording' && !RepeatSentenceV3.busy);
+    assert.notEqual(await page.evaluate(() => RepeatSentenceV3.attempt.id), oldId);
+    if (outcome === 'repeated') {
+      await finishAndAssess(page);
+      await page.locator('#second-take-yes').click();
+      await page.waitForFunction(() => __skillCalls.length === 2);
+      if (await page.locator('#vocab-skip-btn').isVisible()) await page.locator('#vocab-skip-btn').click();
+      await page.evaluate(() => __resolveSecondTake(true));
+      await page.waitForFunction(() => RepeatSentenceV3.phase === 'prep');
+      assert.equal(await page.locator('#record-btn').isVisible(), true, 'subsequent Second Take remains usable');
+    }
+  } else if (outcome === 'failure' || outcome === 'reject') {
+    assert.equal(await page.evaluate(() => RepeatSentenceV3.phase), 'feedback');
+    assert.equal(await page.evaluate(() => RepeatSentenceV3.attempt.id), oldId);
+    assert.equal(await page.locator('#retry-btn-speak').isVisible(), true);
+    await page.locator('#retry-btn-speak').click();
+    await page.waitForFunction(() => RepeatSentenceV3.phase === 'prep');
+  } else {
+    const after = await page.evaluate(() => ({ generation: RepeatSentenceV3.generation, id: RepeatSentenceV3.attempt?.id,
+      context: JSON.stringify(window.currentAttemptContext) }));
+    assert.deepEqual(after, before, 'stale skill result cannot reset a new lifecycle, recording or assist context');
+  }
+  fs.writeFileSync(path.join(evidence, `${width}-second-take-${outcome}.json`), JSON.stringify({ oldId, before,
+    after: await page.evaluate(() => ({ phase: RepeatSentenceV3.phase, calls: __skillCalls, generation: RepeatSentenceV3.generation })) }, null, 2));
+}
+
+async function exerciseAssessedPublication(page, width, flow) {
+  await page.evaluate(flow => {
+    Object.assign(window.PTEAttemptArchive, window.__nativeArchive);
+    window.auth = { currentUser: flow === 'guest' ? null : { uid: 'publication-fixture', getIdToken: async () => 'local-fixture' } };
+    window.firebase.storage = () => ({ ref: () => ({ put: async () => {} }) });
+    window.__publication = { events: [], local: [], refreshes: 0, writes: [] };
+    const originalFetch = window.fetch, persisted = new Map();
+    window.fetch = async (url, options = {}) => {
+      const pathname = new URL(url, location.href).pathname;
+      if (!pathname.startsWith('/api/practice-attempts')) return originalFetch(url, options);
+      const respond = (data, ok = true) => new Response(JSON.stringify({ success: ok, data, message: 'Capture save failed' }),
+        { status: ok ? 200 : 503, headers: { 'Content-Type': 'application/json' } });
+      if (!options.method || options.method === 'GET') return respond({ attempts: [...persisted.values()] });
+      const input = JSON.parse(options.body);
+      if (pathname.endsWith('/prepare')) return respond({ attemptId: input.attemptId,
+        mediaSlots: input.mediaSlots.map(slot => ({ ...slot, storagePath: `fixture/${slot.slotFile}` })) });
+      const id = input.attemptId || decodeURIComponent(pathname.split('/').at(-2));
+      __publication.writes.push({ method: options.method, id });
+      if (flow === 'native' && !input.resultSnapshot) return respond(null, false);
+      persisted.set(id, { ...persisted.get(id), ...input, attemptId: id });
+      return respond({ attemptId: id });
+    };
+    const fetchHistory = PTEAttemptArchive.fetchUserAttemptsCached;
+    PTEAttemptArchive.fetchUserAttemptsCached = (...args) => { __publication.refreshes++; return fetchHistory(...args); };
+    const local = PteAttemptHistory.recordLocal;
+    PteAttemptHistory.recordLocal = input => { __publication.local.push(input.attemptId); return local(input); };
+    window.addEventListener('pte-attempt-archive:saved', event => __publication.events.push(event.detail.attemptId));
+  }, flow);
+  await page.locator('#record-btn').click();
+  await page.waitForFunction(() => RepeatSentenceV3.phase === 'recording' && !RepeatSentenceV3.busy
+    && document.getElementById('transcription-text').textContent.includes('library'));
+  await page.locator('#speak-pte-stop').click();
+  await page.waitForFunction(() => RepeatSentenceV3.phase === 'complete' && !RepeatSentenceV3.busy);
+  await page.waitForTimeout(100);
+  await page.evaluate(() => { __publication.events.length = 0; __publication.local.length = 0; __publication.refreshes = 0; });
+  await page.locator('#check-btn-speak').click();
+  await page.waitForFunction(() => RepeatSentenceV3.phase === 'feedback' && !RepeatSentenceV3.busy);
+  await page.waitForTimeout(100);
+  const state = await page.evaluate(() => ({ ...__publication, id: RepeatSentenceV3.attempt.id,
+    rows: document.querySelectorAll('#mode-speak .pte-attempts__row').length,
+    score: document.querySelector('#mode-speak .pte-attempts__scores')?.textContent }));
+  fs.writeFileSync(path.join(evidence, `${width}-publication-${flow}.json`), JSON.stringify(state, null, 2));
+  assert.deepEqual(state.events, flow === 'guest' ? [] : [state.id], 'assessed save publishes exactly once');
+  assert.deepEqual(state.local, flow === 'guest' ? [state.id] : [], 'guest feedback has one local publication');
+  assert.equal(state.refreshes, 1, 'one history refresh per assessed save');
+  assert.equal(state.rows, 1, 'history keeps one attempt through assessment/recovery');
+  assert.match(state.score, /\d/, 'history displays assessed scores');
+  if (flow !== 'guest') assert.equal(state.writes.at(-1).method, flow === 'patch' ? 'PATCH' : 'POST');
 }
 
 async function exerciseDeparture(page, width, ordering) {
@@ -394,13 +539,17 @@ async function run() {
   const archiveScenarios = ['raw', 'assessed'].flatMap(stage =>
     ['leave', 'navigation', 'retry'].flatMap(transition => ['reject', 'success'].map(outcome => `archive-${stage}-${transition}-${outcome}`))
       .concat(`archive-${stage}-recovery-reject`, `archive-${stage}-recovery-success`));
+  const remediationScenarios = ['next', 'retry', 'unmount'].map(s => `playback-${s}`)
+    .concat(['success', 'failure', 'reject', 'next', 'retry', 'recording', 'unmount', 'unmount-reject', 'repeated'].map(s => `second-${s}`),
+      ['native', 'patch', 'guest'].map(s => `publication-${s}`));
   const scenarios = selectedScenario ? [selectedScenario] : process.argv.includes('--save-only') ? archiveScenarios
+    : process.argv.includes('--remediation-only') ? remediationScenarios
     : process.argv.includes('--ownership-only') ? ownershipScenarios
     : process.argv.includes('--departure-only') ? ownershipScenarios.filter(s => s.startsWith('departure'))
     : process.argv.includes('--shadow-only') ? ownershipScenarios.filter(s => s.startsWith('shadow'))
     : process.argv.includes('--cancel-race-only') ? ['cancel']
     : process.argv.includes('--listen-back-only') ? ['listen']
-      : process.argv.includes('--replay-start-only') ? ['full'] : ['full', 'cancel', 'listen', ...ownershipScenarios, ...archiveScenarios];
+      : process.argv.includes('--replay-start-only') ? ['full'] : ['full', 'cancel', 'listen', ...ownershipScenarios, ...archiveScenarios, ...remediationScenarios];
   try {
     for (const scenario of scenarios) for (const width of [1440, 390]) {
       const page = await harness.browser.newPage({ viewport: { width, height: width === 390 ? 844 : 900 } });
@@ -453,6 +602,9 @@ async function run() {
           else if (scenario.startsWith('departure-')) await exerciseDeparture(page, width, scenario.slice(10));
           else if (scenario.startsWith('shadow-')) await exerciseShadow(page, width, scenario.slice(7));
           else if (scenario.startsWith('archive-')) await exerciseArchiveOwnership(page, width, scenario.slice(8));
+          else if (scenario.startsWith('playback-')) await exercisePlaybackDeparture(page, width, scenario.slice(9));
+          else if (scenario.startsWith('second-')) await exerciseSecondTake(page, width, scenario.slice(7));
+          else if (scenario.startsWith('publication-')) await exerciseAssessedPublication(page, width, scenario.slice(12));
           else await exerciseListenBackRetry(page, width);
           assert.deepEqual(errors, [], 'review regressions produce no JavaScript errors');
           report.push({ scenario, width, passed: true });

@@ -211,7 +211,91 @@ async function verifyPublicationOwnershipContract() {
   assert.ok(requests.every(body => !('shouldPublish' in body)), 'publication ownership is client-local');
 }
 
-verifyAssessedSnapshotPatchContract().then(verifyPublicationOwnershipContract)
+async function verifyRepeatSentencePublicationContract() {
+  const script = fs.readFileSync(path.join(process.cwd(), 'public/script.js'), 'utf8');
+  const start = script.indexOf('    async save(resultSnapshot = null) {');
+  const end = script.indexOf('    async stop() {', start);
+  assert.ok(start > 0 && end > start, 'exercise the actual Repeat Sentence save method');
+  const events = [], locals = [], requests = [];
+  let rejectNext = false, settle = null, holdNext = false;
+  const sandboxWindow = {
+    location: { pathname: '/' },
+    PracticeScopeManager: { getScope: () => 'pte', subscribe: () => () => {} },
+    auth: { currentUser: { getIdToken: async () => 'local-contract-token' } },
+    addEventListener: () => {}, dispatchEvent: event => events.push(event), cacheInvalidations: 0,
+    PteAttemptHistory: { recordLocal: row => locals.push(row) },
+    SpeakingPracticeController: { setSaveError: () => {} }
+  };
+  const sandbox = {
+    window: sandboxWindow, PracticeScopeManager: sandboxWindow.PracticeScopeManager,
+    document: { readyState: 'loading', addEventListener: () => {} }, console, URLSearchParams, Blob, setTimeout, clearTimeout,
+    CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options.detail; } },
+    fetch: async (url, options) => {
+      const body = JSON.parse(options.body); requests.push({ url, body });
+      if (holdNext) { holdNext = false; await new Promise(resolve => { settle = resolve; }); }
+      const ok = !rejectNext; rejectNext = false;
+      return { ok, status: ok ? 200 : 503,
+        json: async () => ok ? { data: { attemptId: body.attemptId || 'rs-contract' } } : { success: false, message: 'Save failed' } };
+    }
+  };
+  const observed = helper.replace('function invalidateHistoryCache() {', 'function invalidateHistoryCache() { window.cacheInvalidations++;');
+  vm.createContext(sandbox);
+  vm.runInContext(observed, sandbox, { filename: helperPath });
+  const mode = vm.runInContext(`({${script.slice(start, end)}})`, sandbox, { filename: 'RepeatSentenceV3.save' });
+  let owned = true;
+  mode.captureAttemptOwner = () => ({ attempt: mode.attempt });
+  mode.ownsAttempt = owner => owned && owner.attempt === mode.attempt;
+  const reset = () => {
+    events.length = 0; locals.length = 0; requests.length = 0; sandboxWindow.cacheInvalidations = 0;
+    mode.attempt = { id: 'rs-contract', promptId: '1', text: 'The library opens.', transcript: 'The library opens.' };
+    owned = true;
+  };
+  const assertPublication = (count, label) => {
+    assert.strictEqual(events.length, count, `${label}: saved event count`);
+    assert.strictEqual(sandboxWindow.cacheInvalidations, count, `${label}: cache invalidation count`);
+    assert.strictEqual(locals.length, 0, `${label}: signed-in save does not publish a guest row`);
+  };
+  reset(); rejectNext = true;
+  await assert.rejects(mode.save(), /Save failed/);
+  assertPublication(0, 'raw failure');
+  await mode.save({ score: 3, maxScore: 4 });
+  assertPublication(1, 'assessed native recovery');
+  assert.ok(requests.at(-1).url.endsWith('/save'));
+  assert.strictEqual(events[0].detail.attemptId, 'rs-contract');
+  reset(); await mode.save();
+  assertPublication(1, 'raw native save');
+  events.length = 0; sandboxWindow.cacheInvalidations = 0; rejectNext = true;
+  await assert.rejects(mode.save({ score: 3, maxScore: 4 }), /Save failed/);
+  assertPublication(0, 'patch failure');
+  await mode.save();
+  assertPublication(1, 'assessed patch recovery');
+  assert.ok(requests.at(-1).url.endsWith('/result'));
+  for (const patch of [false, true]) {
+    reset(); if (patch) mode.attempt.archiveId = 'rs-contract';
+    holdNext = true; settle = null;
+    const pending = mode.save({ score: 3, maxScore: 4 });
+    for (let i = 0; !settle && i < 30; i++) await Promise.resolve();
+    assert.ok(settle, 'save reaches the real deferred archive boundary');
+    owned = false; settle();
+    assert.strictEqual(await pending, false);
+    assertPublication(0, `${patch ? 'patch' : 'native'} invalidated lifecycle`);
+    assert.ok(!mode.attempt.saved);
+  }
+  reset();
+  sandboxWindow.auth.currentUser = null;
+  mode.attempt.blob = new Blob(['local-wave'], { type: 'audio/wav' });
+  await mode.save();
+  assert.strictEqual(locals.length, 1, 'guest capture publishes one local summary');
+  locals.length = 0;
+  await mode.save({ score: 3, maxScore: 4 });
+  assert.strictEqual(locals.length, 1, 'guest assessment updates the local summary once');
+  assert.strictEqual(locals[0].attemptId, mode.attempt.id);
+  assert.strictEqual(events.length, 0, 'guest summaries never claim server persistence');
+  assert.strictEqual(sandboxWindow.cacheInvalidations, 0, 'guest skips do not invalidate server history');
+  assert.strictEqual(requests.length, 0, 'guest audio stays local');
+}
+
+verifyAssessedSnapshotPatchContract().then(verifyPublicationOwnershipContract).then(verifyRepeatSentencePublicationContract)
   .then(() => console.log('PTE attempt archive frontend contract test passed.'))
   .catch((error) => {
     console.error(error);

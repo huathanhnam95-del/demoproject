@@ -205,7 +205,7 @@
     return { assistCalibMult, assistCount };
   }
 
-  async function useActiveSkillForAttempt(skillId, mode, contentId) {
+  async function useActiveSkillForAttempt(skillId, mode, contentId, options = {}) {
     const normalizedContentId = normalizeAttemptContentId(contentId);
     if (!window.auth || !window.auth.currentUser) {
       // Guidance handled by UI via handleLockedSkillClick
@@ -224,6 +224,10 @@
       contentId: normalizedContentId,
       skillId
     });
+
+    // Optional lifecycle ownership prevents a departed skill request from
+    // registering assist usage or showing errors against the next attempt.
+    if (options.shouldApply && !options.shouldApply()) return { success: false, error: 'stale_attempt' };
 
     if (!result?.success) {
       if (result?.error === 'skill_locked') {
@@ -8745,13 +8749,28 @@
               <button id="second-take-no" class="modern-btn modern-btn--retry">Skip</button>
             </div>`;
           document.body.appendChild(secondTakeOverlay);
+          const secondTakeOwner = repeatSentenceV3.active ? repeatSentenceV3.captureAttemptOwner() : null;
+          const ownsSecondTake = () => repeatSentenceV3.ownsAttempt(secondTakeOwner) && repeatSentenceV3.phase === 'feedback';
 
           document.getElementById('second-take-no').addEventListener('click', () => {
             secondTakeOverlay.remove();
           });
           document.getElementById('second-take-yes').addEventListener('click', async () => {
             secondTakeOverlay.remove();
-            const skillResult = await useActiveSkillForAttempt('second_take', 'speak', currentSpeakQuestionId);
+            if (secondTakeOwner && !ownsSecondTake()) return;
+            let skillResult;
+            try {
+              skillResult = await useActiveSkillForAttempt('second_take', 'speak', currentSpeakQuestionId,
+                secondTakeOwner ? { shouldApply: ownsSecondTake } : {});
+              if (secondTakeOwner) {
+                if (ownsSecondTake() && skillResult?.success) await repeatSentenceV3.retry();
+                return;
+              }
+            } catch (error) {
+              if (secondTakeOwner) repeatSentenceV3.fail(error, secondTakeOwner);
+              else console.warn('[RepeatSentence] Second Take failed:', error);
+              return;
+            }
             if (skillResult?.success) {
               // Reset speak mode to allow re-recording
               if (recordBtn) { recordBtn.style.display = 'inline-block'; recordBtn.textContent = 'Start Recording'; }
@@ -8761,7 +8780,7 @@
               if (playBtnSpeak) playBtnSpeak.style.display = '';
               window.SpeakingPracticeController?.sync?.('speak');
             }
-          });
+          }, { once: true });
         }
       }
     };
@@ -10134,9 +10153,9 @@
     },
     unmount() {
       if (!this.active) return;
-      this.stopShadow();
+      this.stopShadow(); this.stopPlayback();
       this.buttonLabels?.forEach(({ node, previous }) => { node.textContent = previous; });
-      this.active = false; this.generation++; clearInterval(this.timer); this.audioBox?.destroy(); this.recorder?.destroy(); this.playback?.pause();
+      this.active = false; this.generation++; clearInterval(this.timer); this.audioBox?.destroy(); this.recorder?.destroy();
       // Capture helpers publish the WAV and decoded buffer after DSP. Keep their
       // entire lifecycle owned until it drains, including an in-flight start.
       const pending = [this.departureCleanup, this.retryOperation?.promise, this.busy, repeatSentenceStopPromise];
@@ -10155,6 +10174,10 @@
         anchor.replaceWith(node); if (style === null) node.removeAttribute('style'); else node.setAttribute('style', style); node.hidden = hidden;
       });
       this.origins = []; this.view?.remove(); modeSpeak.classList.remove('speak-pte-v3'); delete modeSpeak.dataset.ptePhase;
+    },
+    stopPlayback() {
+      if (!this.playback) return;
+      this.playback.pause(); this.playback.currentTime = 0;
     },
     selectPlayback(kind) {
       this.playback.pause();
@@ -10228,7 +10251,7 @@
       if (status) status.textContent = error?.message || 'This attempt could not be completed. Try again.';
     },
     async begin() {
-      this.stopShadow();
+      this.stopShadow(); this.stopPlayback();
       const token = ++this.generation; clearInterval(this.timer); this.audioBox.reset(); this.replaying = false;
       if (this.departureCleanup) await this.departureCleanup;
       if (!this.active || token !== this.generation) return;
@@ -10303,8 +10326,9 @@
         media: attempt.blob ? [{ slot: 'student', label: 'Your recording', blob: attempt.blob }] : [],
         scoringSource: resultSnapshot ? 'client' : null };
       if (!window.PTEAttemptArchive?.saveAttempt) throw new Error('Attempt saving is unavailable. Please try again.');
+      const patchesExisting = !!(attempt.archiveId && resultSnapshot);
       let saved;
-      try { saved = attempt.archiveId && resultSnapshot
+      try { saved = patchesExisting
         ? await window.PTEAttemptArchive.patchAttempt(attempt.archiveId, input)
         : attempt.saved && attempt.guest ? { skipped: true, reason: 'guest' }
           : await window.PTEAttemptArchive.saveAttempt(input, { shouldPublish: () => this.ownsAttempt(owner) }); }
@@ -10321,7 +10345,9 @@
       window.SpeakingPracticeController?.setSaveError('speak', '');
       if (saved?.skipped) window.PteAttemptHistory?.recordLocal({ ...input, promptId: attempt.promptId,
         audio: { studentUrl: attempt.url, durationMs: attempt.durationMs } });
-      if (attempt.archiveId && resultSnapshot) {
+      // Native saveAttempt already publishes. Only the patch path needs the
+      // mode to invalidate and announce its newly assessed result.
+      if (patchesExisting && !saved?.skipped) {
         window.PTEAttemptArchive.invalidateHistoryCache?.();
         window.dispatchEvent(new CustomEvent('pte-attempt-archive:saved', { detail: { attemptId: attempt.archiveId, practiceMode: 'speak', promptId: attempt.promptId } }));
       }
@@ -10360,7 +10386,7 @@
       this.retryOperation = operation;
       const isCurrent = () => this.active && this.retryOperation === operation
         && this.ownsAttempt(operation);
-      clearInterval(this.timer); this.audioBox.reset(); this.playback.pause();
+      clearInterval(this.timer); this.audioBox.reset(); this.stopPlayback();
       operation.promise = (async () => {
         if (operation.pending) await operation.pending.catch(() => {});
         if (!isCurrent()) return false;
@@ -10424,7 +10450,7 @@
         fluencyScore: assessment?.fluencyScore, completenessScore: assessment?.completenessScore, words: assessment?.words });
     },
     async beforeNavigate(approved = false) {
-      this.stopShadow();
+      this.stopShadow(); this.stopPlayback();
       const token = this.generation, attempt = this.attempt;
       const isCurrent = () => this.active && token === this.generation && attempt === this.attempt;
       if (this.departureCleanup) { await this.departureCleanup; return false; }

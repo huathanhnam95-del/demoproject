@@ -1189,82 +1189,77 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }
 
             const sessionOutcome = normalizeSessionOutcome(req.body?.outcome);
-            const sessionRef = db.collection(CRM_SCHEDULED_SESSIONS).doc(sessionId);
-            const sessionSnap = await sessionRef.get();
-            if (!sessionSnap.exists) {
-                return sendError(res, 404, 'SESSION_NOT_FOUND', 'Session not found.');
-            }
-
-            const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
             const rawNote = req.body?.note !== undefined ? req.body.note : req.body?.sessionNote;
-            const sessionNote = rawNote !== undefined
-                ? cleanOptionalString(rawNote, '')
-                : cleanOptionalString(existing?.sessionNote, '');
             const isAdmin = req.teacherAccess?.isAdmin === true;
-            if (!cleanOptionalString(existing.classId)) {
-                return sendError(res, 400, 'INVALID_SESSION', 'Session is missing class ownership metadata.');
-            }
-
-            const access = await loadTeacherClassroom(db, cleanOptionalString(existing.classId), callerUid, { isAdmin });
-            if (access.status !== 'ok') {
-                return sendError(res, 403, 'FORBIDDEN', 'You can only update sessions for your own classrooms.');
-            }
-
-            const sessionTeacher = cleanOptionalString(existing.teacherUid);
-            const classroomPrimaryTeacher = cleanOptionalString(access.classroom?.primaryTeacherUid);
-            const isAuthorizedTeacher = sessionTeacher === callerUid || (sessionTeacher === 'all' && classroomPrimaryTeacher === callerUid);
-            if (!isAdmin && !isAuthorizedTeacher) {
-                return sendError(res, 403, 'FORBIDDEN', 'You can only update outcomes for your own sessions.');
-            }
-            if (String(existing.status || 'scheduled') === 'cancelled' || isLockedSession(existing)) {
-                return sendError(res, 409, 'SESSION_LOCKED', 'Locked or cancelled sessions cannot be updated.');
-            }
-
-            const rawExistingTeacher = cleanOptionalString(existing.teacherUid);
-            const effectiveTeacherUid = (rawExistingTeacher && rawExistingTeacher !== 'all')
-                ? rawExistingTeacher
-                : (classroomPrimaryTeacher || callerUid);
-
-            const patch = {
-                teacherUid: effectiveTeacherUid,
-                sessionOutcome,
-                sessionNote: sessionNote || '',
-                contractCountState: deriveContractCountState({
-                    ...existing,
-                    sessionOutcome
-                }),
-                version: Number(existing.version || 1) + 1,
-                updatedAt: serverTimestamp(),
-                updatedBy: callerUid
-            };
-
-            await sessionRef.set(patch, { merge: true });
-            const scheduleState = await syncClassroomScheduleState(db, cleanOptionalString(existing.classId), { bumpVersion: true });
-
-            await writeAuditLog?.({
+            let outcome = await runSchedulingOperation({
+                db,
+                operationId: requestOperationId(req, 'teacher-outcome'),
+                actorUid: callerUid,
+                operationType: 'teacher.session.outcome',
+                payload: requestOperationPayload(req, { sessionId }),
+                serverTimestamp,
+                prepare: async ({ tx }) => {
+                    const sessionRef = db.collection(CRM_SCHEDULED_SESSIONS).doc(sessionId);
+                    const sessionSnap = await tx.get(sessionRef);
+                    if (!sessionSnap.exists) failSchedulingOperation(404, 'SESSION_NOT_FOUND', 'Session not found.');
+                    const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
+                    const classId = cleanOptionalString(existing.classId);
+                    if (!classId) failSchedulingOperation(400, 'INVALID_SESSION', 'Session is missing class ownership metadata.');
+                    const classroomRef = db.collection(CRM_CLASSROOMS).doc(classId);
+                    const classroomSnap = await tx.get(classroomRef);
+                    if (!classroomSnap.exists) failSchedulingOperation(403, 'FORBIDDEN', 'You can only update sessions for your own classrooms.');
+                    const classroom = classroomSnap.data() || {};
+                    assertTeacherClassroomAccess(classroom, callerUid, isAdmin, 'You can only update sessions for your own classrooms.');
+                    const sessionTeacher = cleanOptionalString(existing.teacherUid);
+                    const primaryTeacher = cleanOptionalString(classroom.primaryTeacherUid);
+                    if (!isAdmin && sessionTeacher !== callerUid && !(sessionTeacher === 'all' && primaryTeacher === callerUid)) {
+                        failSchedulingOperation(403, 'FORBIDDEN', 'You can only update outcomes for your own sessions.');
+                    }
+                    if (isLockedSession(existing)) failSchedulingOperation(409, 'SESSION_LOCKED', 'Locked or cancelled sessions cannot be updated.');
+                    const teacherUid = sessionTeacher && sessionTeacher !== 'all' ? sessionTeacher : (primaryTeacher || callerUid);
+                    const classSessions = await readClassSessionsInTransaction(tx, db, classId);
+                    return { teacherUids: [teacherUid], state: { sessionRef, existing, classId, classroomRef, classroom, classSessions, teacherUid } };
+                },
+                commit: async ({ tx, state }) => {
+                    const sessionNote = rawNote !== undefined ? cleanOptionalString(rawNote, '') : cleanOptionalString(state.existing.sessionNote, '');
+                    const patch = {
+                        teacherUid: state.teacherUid,
+                        sessionOutcome,
+                        sessionNote: sessionNote || '',
+                        contractCountState: deriveContractCountState({ ...state.existing, sessionOutcome }),
+                        version: Number(state.existing.version || 1) + 1,
+                        updatedAt: serverTimestamp(),
+                        updatedBy: callerUid
+                    };
+                    tx.set(state.sessionRef, patch, { merge: true });
+                    const postSessions = state.classSessions.map((session) => session.sessionId === sessionId
+                        ? normalizeScheduledSession({ ...session, ...patch }) : session);
+                    const scheduleState = stageClassroomScheduleState(tx, state.classroomRef, state.classroom, postSessions);
+                    return { committedIds: [sessionId], result: {
+                        sessionId, classId: state.classId, sessionOutcome, sessionNote: sessionNote || '',
+                        scheduleSummary: scheduleState?.scheduleSummary || null,
+                        scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
+                    } };
+                }
+            });
+            outcome = await auditCommitted(outcome, {
                 action: 'teacher.session.outcome',
                 entityType: 'scheduled_session',
                 entityId: sessionId,
                 metadata: {
-                    classId: existing.classId || null,
+                    classId: outcome.classId || null,
                     sessionOutcome,
-                    hasSessionNote: !!sessionNote
+                    hasSessionNote: !!outcome.sessionNote
                 }
-            }, { user: req.user });
+            }, req.user);
 
-            return sendSuccess(res, {
-                sessionId,
-                sessionOutcome,
-                sessionNote: sessionNote || '',
-                scheduleSummary: scheduleState?.scheduleSummary || null,
-                scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
-            }, 'Session outcome updated.');
+            return sendSuccess(res, outcome, 'Session outcome updated.');
         } catch (error) {
             const message = String(error?.message || '');
             if (message.includes('Invalid session outcome')) {
                 return sendError(res, 400, 'VALIDATION_ERROR', error.message);
             }
-            return sendError(res, 500, 'TEACHER_OUTCOME_ERROR', 'Failed to update session outcome.', error?.message || error);
+            return sendSchedulingOperationFailure(sendError, res, error, 'TEACHER_OUTCOME_ERROR', 'Failed to update session outcome.');
         }
     });
 

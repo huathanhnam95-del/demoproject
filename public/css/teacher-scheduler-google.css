@@ -2118,7 +2118,7 @@ dialog.ts-modal-dialog::backdrop,
 #teacher-scheduler-quick-add .crm-input:focus,
 #teacher-scheduler-session-bubble .crm-input:focus {
   background: #ffffff;
-  border-color: var(--ts-blue, #1a73e8);
+  border-color: #174ea6;
   outline: none;
   box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
 }
@@ -2159,6 +2159,254 @@ dialog.ts-modal-dialog::backdrop,
 .ts-floating-dialog {
   font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: var(--ts-ink, #1f1f1f);
+}
+
+/* --------------------------------------------------------------------------
+   Session Bubble Popover (Section P1.B Modernization)
+   -------------------------------------------------------------------------- */
+#teacher-scheduler-bubble-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50% !important;
+  flex-shrink: 0;
+}
+
+#teacher-scheduler-session-bubble .ts-icon-btn,
+.teacher-scheduler-session-bubble .ts-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #5f6368;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+#teacher-scheduler-session-bubble .ts-icon-btn:hover,
+.teacher-scheduler-session-bubble .ts-icon-btn:hover {
+  background: rgba(60, 64, 67, 0.08);
+  color: #202124;
+}
+
+#teacher-scheduler-session-bubble .teacher-scheduler-session-meta,
+.teacher-scheduler-session-bubble .teacher-scheduler-session-meta {
+  margin-top: 4px;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+#teacher-scheduler-session-bubble .ts-bubble-meta-date {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ts-ink, #1f1f1f);
+}
+
+#teacher-scheduler-session-bubble .ts-bubble-meta-teacher {
+  font-size: 12px;
+  color: var(--ts-meta, #5f6368);
+  margin-top: 1px;
+}
+
+#teacher-scheduler-session-bubble .teacher-scheduler-session-lock,
+.teacher-scheduler-session-bubble .teacher-scheduler-session-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fef7e0;
+  color: #873800;
+  border: 1px solid #f9ab00;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 6px;
+}
+
+.ts-custom-select-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.ts-bubble-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 100%;
+  background-color: #f8f9fa;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding: 8px 36px 8px 12px !important;
+  border: 1px solid #dadce0 !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  color: var(--ts-ink, #1f1f1f) !important;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.ts-bubble-select:focus {
+  border-color: var(--ts-blue, #1a73e8) !important;
+  background-color: #ffffff !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2) !important;
+}
+
+.ts-dictate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #174ea6;
+  background: #f8fafd;
+  border: 1px solid #dadce0;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ts-dictate-btn:hover {
+  background: #e8f0fe;
+  border-color: #d2e3fc;
+  color: #174ea6;
+}
+
+#teacher-scheduler-session-note,
+.ts-bubble-textarea {
+  min-height: 72px;
+  height: 86px;
+  max-height: 220px;
+  resize: vertical;
+  line-height: 1.45;
+  font-size: 13px;
+  padding: 8px 12px;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  background: #f8f9fa;
+  color: var(--ts-ink, #1f1f1f);
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+#teacher-scheduler-session-note:focus,
+.ts-bubble-textarea:focus {
+  background: #ffffff;
+  border-color: #174ea6;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.ts-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.ts-action-primary {
+  background: #1a73e8 !important;
+  color: #ffffff !important;
+  border: 1px solid transparent !important;
+}
+
+.ts-action-primary:hover {
+  background: #1557b0 !important;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3);
+}
+
+.ts-action-secondary {
+  background: #ffffff;
+  color: var(--ts-ink, #1f1f1f);
+  border: 1px solid #dadce0;
+}
+
+.ts-action-secondary:hover {
+  background: #f8f9fa;
+  border-color: #c6c6c6;
+}
+
+.ts-bubble-more-dropdown {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  min-width: 175px;
+  z-index: 1010;
+  padding: 4px 0;
+}
+
+.ts-bubble-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  color: var(--ts-ink, #1f1f1f);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  box-sizing: border-box;
+}
+
+.ts-bubble-dropdown-item:hover {
+  background: #f1f3f4;
+}
+
+.ts-dropdown-danger {
+  color: #c5221f;
+}
+
+.ts-dropdown-danger:hover {
+  background: #fce8e6;
+  color: #c5221f;
+}
+
+.teacher-scheduler-inline-cancel {
+  border: 1px solid #fad2cf;
+  background: #fff8f7;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 10px 0;
+  box-sizing: border-box;
+}
+
+.ts-action-danger {
+  background: #d93025 !important;
+  color: #ffffff !important;
+  border: 1px solid transparent !important;
+}
+
+.ts-action-danger:hover {
+  background: #c5221f !important;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3);
+}
+
+.ts-bubble-dropdown-divider {
+  height: 1px;
+  background: #e8eaed;
+  margin: 4px 0;
 }
 
 .teacher-scheduler-drag-ghost,

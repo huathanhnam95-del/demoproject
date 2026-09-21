@@ -14,6 +14,21 @@ function resolveLintBinPath() {
     return null;
 }
 
+function resolveJsdomPath() {
+    if (process.env.CRM_TEST_JSDOM && fs.existsSync(process.env.CRM_TEST_JSDOM)) {
+        return process.env.CRM_TEST_JSDOM;
+    }
+    const candidates = [
+        'C:\\Users\\Admin\\.codex\\external-evidence\\projects-v2-wave1-382b\\runtime\\node_modules\\jsdom',
+        'C:\\Users\\Admin\\.codex\\audits\\entrance-test-d-annotations-20260914\\test-runtime\\node_modules\\jsdom',
+        'C:\\Users\\Admin\\Documents\\Codex\\projects-ui-fix-2026-09-12\\dependencies\\node_modules\\jsdom'
+    ];
+    for (const c of candidates) {
+        if (fs.existsSync(c)) return c;
+    }
+    return null;
+}
+
 function run(command, args, extraEnv = {}) {
     const isCmdWrapper = /\.cmd$/i.test(String(command || ''));
     const spawnCommand = isCmdWrapper ? 'powershell.exe' : command;
@@ -21,12 +36,14 @@ function run(command, args, extraEnv = {}) {
         ? ['-NoProfile', '-Command', `& '${String(command).replace(/'/g, "''")}' ${args.map((arg) => `'${String(arg).replace(/'/g, "''")}'`).join(' ')}`]
         : args;
 
+    const resolvedJsdom = resolveJsdomPath();
     const result = spawnSync(spawnCommand, spawnArgs, {
         cwd: process.cwd(),
         stdio: 'inherit',
         shell: false,
         env: {
             ...process.env,
+            ...(resolvedJsdom ? { CRM_TEST_JSDOM: resolvedJsdom } : {}),
             ...extraEnv
         }
     });

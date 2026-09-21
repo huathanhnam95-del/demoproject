@@ -676,6 +676,61 @@ async function runSeriesRouteTests() {
         console.log('✓ Sanitized patch and conflictAt local slot format verified');
     }
 
+    // Outcome writes use the same atomic operation/receipt boundary as cancellation.
+    {
+        const { db, router } = buildTestEnvironment({
+            [`${CRM_CLASSROOMS}/class-1`]: createClassroomDoc('class-1'),
+            [`${CRM_SCHEDULED_SESSIONS}/outcome-1`]: createSessionDoc('outcome-1', 'class-1', 'teacher-1', '2026-09-23', '18:00')
+        });
+        const handlers = getRouteHandlers(router, '/sessions/:sessionId/outcome', 'post');
+        const req = { user: { uid: 'teacher-1' }, teacherAccess: { isAdmin: false }, params: { sessionId: 'outcome-1' }, body: { operationId: 'outcome-regression-1', outcome: 'completed', note: 'Saved note' } };
+        const first = buildRes();
+        await invokeHandlers(handlers, req, first);
+        assert.strictEqual(first._status, 200);
+        assert.strictEqual(first._json.operationId, 'outcome-regression-1', 'Outcome must produce a durable scheduling receipt');
+        const replay = buildRes();
+        await invokeHandlers(handlers, req, replay);
+        assert.strictEqual(replay._status, 200);
+        assert.strictEqual(replay._json.idempotentReplay, true);
+        assert.strictEqual(db.docs.get(`${CRM_SCHEDULED_SESSIONS}/outcome-1`).version, 2, 'Replay cannot write twice');
+        const mismatch = buildRes();
+        await invokeHandlers(handlers, { ...req, body: { ...req.body, note: 'Different intent' } }, mismatch);
+        assert.strictEqual(mismatch._status, 409);
+        const cancel = buildRes();
+        await invokeHandlers(getRouteHandlers(router, '/sessions/:sessionId/cancel', 'post'), { ...req, body: { operationId: 'cancel-regression-1' } }, cancel);
+        assert.strictEqual(cancel._status, 200);
+        const late = buildRes();
+        await invokeHandlers(handlers, { ...req, body: { ...req.body, operationId: 'outcome-regression-2' } }, late);
+        assert.strictEqual(late._status, 409, 'Cancelled session must reject a new outcome');
+        assert.strictEqual(db.docs.get(`${CRM_SCHEDULED_SESSIONS}/outcome-1`).version, 3);
+        console.log('✓ Outcome receipt replay, payload guard and cancelled-session protection');
+    }
+
+    {
+        const { db, router } = buildTestEnvironment({
+            [`${CRM_CLASSROOMS}/class-1`]: createClassroomDoc('class-1'),
+            [`${CRM_SCHEDULED_SESSIONS}/race-1`]: createSessionDoc('race-1', 'class-1', 'teacher-1', '2026-09-23', '18:00', { sessionNote: 'Original' })
+        });
+        const req = { user: { uid: 'teacher-1' }, teacherAccess: { isAdmin: false }, params: { sessionId: 'race-1' } };
+        const outcomeHandlers = getRouteHandlers(router, '/sessions/:sessionId/outcome', 'post');
+        const forbidden = buildRes();
+        await invokeHandlers(outcomeHandlers, { ...req, user: { uid: 'another-teacher' }, body: { outcome: 'completed' } }, forbidden);
+        assert.strictEqual(forbidden._status, 403);
+        const cancel = buildRes();
+        const outcome = buildRes();
+        await Promise.all([
+            invokeHandlers(getRouteHandlers(router, '/sessions/:sessionId/cancel', 'post'), { ...req, body: { operationId: 'race-cancel-1' } }, cancel),
+            invokeHandlers(outcomeHandlers, { ...req, body: { operationId: 'race-outcome-1', outcome: 'completed', note: 'Late note' } }, outcome)
+        ]);
+        assert.strictEqual(cancel._status, 200);
+        assert.strictEqual(outcome._status, 409, 'Outcome must revalidate behind concurrent cancellation');
+        const saved = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/race-1`);
+        assert.strictEqual(saved.status, 'cancelled');
+        assert.strictEqual(saved.sessionNote, 'Original');
+        assert.strictEqual(saved.version, 2);
+        console.log('✓ Concurrent cancellation rejects stale outcome and retains authorization');
+    }
+
     console.log('All teacher scheduler series route tests passed successfully!');
 }
 

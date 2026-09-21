@@ -787,6 +787,9 @@
     elements.btnTeacherSchedulerMoreMenu = document.getElementById('btn-teacher-scheduler-more-menu');
     elements.teacherSchedulerBubbleMoreDropdown = document.getElementById('teacher-scheduler-bubble-more-dropdown');
     elements.teacherSchedulerInlineReschedule = document.getElementById('teacher-scheduler-inline-reschedule');
+    elements.teacherSchedulerInlineCancel = document.getElementById('teacher-scheduler-inline-cancel');
+    elements.btnTeacherSchedulerCancelAbort = document.getElementById('btn-teacher-scheduler-cancel-abort');
+    elements.btnTeacherSchedulerCancelConfirm = document.getElementById('btn-teacher-scheduler-cancel-confirm');
     elements.inputTeacherSchedulerRescheduleDate = document.getElementById('teacher-scheduler-reschedule-date');
     elements.inputTeacherSchedulerRescheduleTime = document.getElementById('teacher-scheduler-reschedule-time');
     elements.btnTeacherSchedulerToggleReschedule = document.getElementById('btn-teacher-scheduler-toggle-reschedule');

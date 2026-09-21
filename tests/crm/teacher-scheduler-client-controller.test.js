@@ -2088,7 +2088,8 @@ async function runTests() {
         controller.openSessionBubble('s-resched-target', { left: 100, top: 200, bottom: 250 });
         assert.strictEqual(testElements.teacherSchedulerSessionBubble.style.display, 'block');
         assert.strictEqual(testElements.teacherSchedulerInlineReschedule.style.display, 'none', 'Inline reschedule panel must be initially hidden');
-        assert.strictEqual(testElements.teacherSchedulerSessionBubbleLock.textContent, 'Attendance editable', 'Must display Attendance editable instead of Outcome editable');
+        assert.strictEqual(testElements.teacherSchedulerSessionBubbleLock.style.display, 'none', 'Lock indicator must be hidden when attendance is editable');
+        assert.strictEqual(testElements.teacherSchedulerSessionBubbleLock.textContent, '', 'Lock text must be empty when attendance is editable');
 
         // Click toggle reschedule button
         testElements.btnTeacherSchedulerToggleReschedule.dispatchEvent({ type: 'click' });
@@ -4676,6 +4677,150 @@ async function runTests() {
 
         windowMock.ClassroomAPI = origAPI;
         console.log('✓ Browser-session draft remount and explicit discard (R1) verified');
+    }
+
+    // Clean cached fields follow fresh server values; dirty fields remain local.
+    {
+        const note = doc.createElement('textarea');
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: { teacherSchedulerWorkspace: doc.createElement('div'), teacherSchedulerCalendar: doc.createElement('div'), teacherSchedulerSessionBubble: doc.createElement('div'), inputTeacherSchedulerSessionNote: note },
+            showToast: () => {}, isAdmin: () => true
+        });
+        const session = { sessionId: 'clean-cache-regression', classId: 'c1', sessionNote: 'Old server note', sessionOutcome: 'none' };
+        controller.getState().sessions = [session];
+        controller.openSessionBubble(session.sessionId);
+        controller.closeSessionBubble();
+        session.sessionNote = 'New server note';
+        session.sessionOutcome = 'completed';
+        controller.openSessionBubble(session.sessionId);
+        assert.strictEqual(note.value, 'New server note', 'Clean cache must not hide refreshed server note');
+        assert.strictEqual(controller.getSessionDraft(session.sessionId).outcome, 'completed');
+        controller.setSessionDraft({ note: 'Unsaved local note' });
+        controller.closeSessionBubble();
+        session.sessionNote = 'Another server note';
+        session.sessionOutcome = 'absent_makeup';
+        controller.openSessionBubble(session.sessionId);
+        assert.strictEqual(note.value, 'Unsaved local note', 'Dirty note must survive reopening');
+        assert.strictEqual(controller.getSessionDraft(session.sessionId).outcome, 'absent_makeup', 'Clean outcome refreshes independently');
+        console.log('✓ Clean cached fields refresh without losing dirty fields');
+    }
+
+    // TEST: Section P1.B Modernized Session Popover Verification
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerSessionBubble: doc.createElement('div'),
+            teacherSchedulerSessionBubbleTitle: doc.createElement('div'),
+            teacherSchedulerSessionBubbleMeta: doc.createElement('div'),
+            teacherSchedulerSessionBubbleLock: doc.createElement('div'),
+            inputTeacherSchedulerSessionOutcome: doc.createElement('select'),
+            inputTeacherSchedulerSessionNote: doc.createElement('textarea'),
+            btnTeacherSchedulerSaveOutcome: doc.createElement('button'),
+            btnTeacherSchedulerCancelSession: doc.createElement('button'),
+            btnTeacherSchedulerDuplicateSession: doc.createElement('button'),
+            btnTeacherSchedulerOpenAttendance: doc.createElement('button'),
+            btnTeacherSchedulerMoreMenu: doc.createElement('button'),
+            teacherSchedulerBubbleMoreDropdown: doc.createElement('div'),
+            teacherSchedulerInlineCancel: doc.createElement('div'),
+            btnTeacherSchedulerCancelAbort: doc.createElement('button'),
+            btnTeacherSchedulerCancelConfirm: doc.createElement('button')
+        };
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+
+        // 1. Unlocked session test
+        const unlockedSession = {
+            sessionId: 's-p1b-unlocked',
+            classId: 'c1',
+            teacherUid: 't1',
+            teacherName: 'Teacher Alex',
+            scheduledLocalDate: '2026-09-18',
+            scheduledLocalTime: '18:00',
+            durationMinutes: 60,
+            contractUnitIndex: 5,
+            status: 'scheduled',
+            attendanceState: 'none'
+        };
+        controller.getState().sessions = [unlockedSession];
+        controller.getState().classrooms = [{ classroomId: 'c1', name: 'Speaking Masterclass' }];
+        controller.openSessionBubble(unlockedSession.sessionId);
+
+        assert.strictEqual(testElements.teacherSchedulerSessionBubbleTitle.textContent, 'Speaking Masterclass');
+        assert.strictEqual(testElements.teacherSchedulerSessionBubbleLock.style.display, 'none', 'Unlocked session must hide lock label');
+        assert.strictEqual(testElements.teacherSchedulerSessionBubbleLock.textContent, '', 'Unlocked session must have empty lock text');
+        assert(testElements.teacherSchedulerSessionBubbleMeta.textContent.includes('Teacher Alex'), 'Metadata must include teacher display name');
+        assert(testElements.teacherSchedulerSessionBubbleMeta.textContent.includes('Unit 5'), 'Metadata must include unit label');
+
+        // More... dropdown toggle
+        await controller.init();
+        assert.strictEqual(testElements.teacherSchedulerBubbleMoreDropdown.style.display || 'none', 'none');
+        testElements.btnTeacherSchedulerMoreMenu.dispatchEvent({ type: 'click' });
+        assert.strictEqual(testElements.teacherSchedulerBubbleMoreDropdown.style.display, 'block', 'More button click must open dropdown');
+        assert.strictEqual(testElements.btnTeacherSchedulerMoreMenu.getAttribute('aria-expanded'), 'true');
+
+        // Selecting item in More dropdown closes it
+        testElements.btnTeacherSchedulerDuplicateSession.dispatchEvent({ type: 'click', stopPropagation: () => {} });
+        assert.strictEqual(testElements.teacherSchedulerBubbleMoreDropdown.style.display, 'none', 'Clicking Duplicate must close dropdown');
+        assert.strictEqual(testElements.btnTeacherSchedulerMoreMenu.getAttribute('aria-expanded'), 'false');
+
+        // Cancellation confirmation workflow
+        let cancelCalledSessionId = null;
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = {
+            ...origAPI,
+            teacherCancelScheduledSession: async (sessionId) => {
+                cancelCalledSessionId = sessionId;
+                return { success: true };
+            }
+        };
+        testElements.btnTeacherSchedulerCancelSession.dataset.sessionId = unlockedSession.sessionId;
+        testElements.btnTeacherSchedulerCancelSession.dispatchEvent({ type: 'click' });
+        assert.strictEqual(testElements.teacherSchedulerInlineCancel.style.display, 'block', 'Clicking cancel session must show confirmation panel');
+        assert.strictEqual(testElements.btnTeacherSchedulerCancelConfirm.dataset.sessionId, unlockedSession.sessionId, 'Confirm button must receive session ID');
+        assert.strictEqual(cancelCalledSessionId, null, 'Must NOT cancel session before user confirms');
+
+        // Click Keep session (abort)
+        testElements.btnTeacherSchedulerCancelAbort.dispatchEvent({ type: 'click' });
+        assert.strictEqual(testElements.teacherSchedulerInlineCancel.style.display, 'none', 'Clicking Keep session must hide confirmation panel');
+        assert.strictEqual(cancelCalledSessionId, null, 'Must still not have cancelled');
+
+        // Click cancel session again, then Confirm
+        testElements.btnTeacherSchedulerCancelSession.dispatchEvent({ type: 'click' });
+        assert.strictEqual(testElements.teacherSchedulerInlineCancel.style.display, 'block');
+        testElements.btnTeacherSchedulerCancelConfirm.dispatchEvent({ type: 'click' });
+        assert.strictEqual(testElements.teacherSchedulerInlineCancel.style.display, 'none', 'Confirming cancel must hide confirmation panel');
+        assert.strictEqual(cancelCalledSessionId, unlockedSession.sessionId, 'Confirming cancel must invoke cancellation API');
+        windowMock.ClassroomAPI = origAPI;
+
+        // 2. Locked session test
+        const lockedSession = {
+            sessionId: 's-p1b-locked',
+            classId: 'c1',
+            teacherUid: 't1',
+            teacherName: 'Teacher Alex',
+            scheduledLocalDate: '2026-09-18',
+            scheduledLocalTime: '18:00',
+            durationMinutes: 60,
+            status: 'completed',
+            attendanceState: 'finalized',
+            sessionOutcome: 'completed'
+        };
+        controller.getState().sessions.push(lockedSession);
+        controller.openSessionBubble(lockedSession.sessionId);
+
+        assert.strictEqual(testElements.teacherSchedulerSessionBubbleLock.style.display, 'inline-flex', 'Locked session must display lock label');
+        assert.strictEqual(testElements.teacherSchedulerSessionBubbleLock.textContent, 'Attendance finalized', 'Locked session must explain outcome is finalized');
+        assert.strictEqual(testElements.inputTeacherSchedulerSessionOutcome.disabled, true, 'Locked session outcome select must be disabled');
+        assert.strictEqual(testElements.inputTeacherSchedulerSessionNote.disabled, true, 'Locked session note textarea must be disabled');
+        assert.strictEqual(testElements.btnTeacherSchedulerSaveOutcome.disabled, true, 'Locked session save button must be disabled');
+
+        controller.closeSessionBubble();
+        assert.strictEqual(testElements.teacherSchedulerSessionBubble.style.display, 'none');
+        console.log('✓ Section P1.B: Modernized Session Popover hierarchy, lock hiding, metadata, and dropdown verified');
     }
 
     console.log('All teacher scheduler client controller tests passed successfully!');

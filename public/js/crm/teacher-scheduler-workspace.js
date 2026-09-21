@@ -142,6 +142,27 @@ window.TeacherSchedulerWorkspace = (function () {
         return `${fmt(startMinutes)}\u2013${fmt(endMinutes)}`;
     }
 
+    function formatSessionDateDisplay(dateStr) {
+        if (!dateStr) return '';
+        try {
+            const parts = String(dateStr).split('-');
+            if (parts.length === 3) {
+                const year = Number(parts[0]);
+                const month = Number(parts[1]) - 1;
+                const day = Number(parts[2]);
+                const d = new Date(year, month, day);
+                if (Number.isFinite(d.getTime())) {
+                    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    return `${dayNames[d.getDay()]}, ${day} ${monthNames[d.getMonth()]}`;
+                }
+            }
+        } catch (_) {
+            /* ignore date parse failure and use raw string */
+        }
+        return dateStr;
+    }
+
     function hourSlots(fromHour = 7, toHour = 21) {
         const slots = [];
         for (let hour = fromHour; hour < toHour; hour += 1) {
@@ -302,12 +323,18 @@ window.TeacherSchedulerWorkspace = (function () {
             const persistedDraft = browserSessionDrafts.get(getDraftStorageKey(normalizedSessionId)) || null;
             const previousDraft = localDraft || persistedDraft;
             const rawOutcome = String(session?.sessionOutcome || '').trim();
+            const note = previousDraft && previousDraft.noteDirty
+                ? String(previousDraft.note || '')
+                : String(session?.sessionNote || '').trim();
+            const outcome = previousDraft && previousDraft.outcomeDirty
+                ? String(previousDraft.outcome || '')
+                : (rawOutcome && rawOutcome !== 'none' ? rawOutcome : '');
             const draft = {
                 sessionId: normalizedSessionId,
                 editorGeneration: ++nextEditorGeneration,
                 revision: Number(previousDraft?.revision || 0),
-                note: previousDraft ? String(previousDraft.note || '') : String(session?.sessionNote || '').trim(),
-                outcome: previousDraft ? String(previousDraft.outcome || '') : (rawOutcome && rawOutcome !== 'none' ? rawOutcome : ''),
+                note,
+                outcome,
                 noteDirty: Boolean(previousDraft?.noteDirty),
                 outcomeDirty: Boolean(previousDraft?.outcomeDirty)
             };
@@ -1943,6 +1970,18 @@ window.TeacherSchedulerWorkspace = (function () {
             if (elements.teacherSchedulerInlineReschedule) {
                 elements.teacherSchedulerInlineReschedule.style.display = 'none';
             }
+            const inlineCancel = elements.teacherSchedulerInlineCancel || (typeof document !== 'undefined' ? document.getElementById('teacher-scheduler-inline-cancel') : null);
+            if (inlineCancel) {
+                inlineCancel.style.display = 'none';
+            }
+            const moreDropdown = elements.teacherSchedulerBubbleMoreDropdown || (typeof document !== 'undefined' ? document.getElementById('teacher-scheduler-bubble-more-dropdown') : null);
+            if (moreDropdown) {
+                moreDropdown.style.display = 'none';
+            }
+            const moreBtn = elements.btnTeacherSchedulerMoreMenu || (typeof document !== 'undefined' ? document.getElementById('btn-teacher-scheduler-more-menu') : null);
+            if (moreBtn) {
+                moreBtn.setAttribute('aria-expanded', 'false');
+            }
             state.sessionBubble = null;
             renderSessionBubble();
         }
@@ -1975,7 +2014,7 @@ window.TeacherSchedulerWorkspace = (function () {
             const classroom = getClassroomById(session.classId);
             const draft = state.sessionDrafts.get(bubble.sessionId) || null;
             const outcomeLocked = isOutcomeLocked(session);
-            const lockStatus = outcomeLocked ? 'Attendance finalized' : 'Attendance editable';
+            const lockStatus = outcomeLocked ? 'Attendance finalized' : '';
             const label = session.unitType === 'overflow'
                 ? `Overflow ${session.overflowSequence || ''}`.trim()
                 : `Unit ${session.contractUnitIndex || ''}`.trim();
@@ -2007,10 +2046,28 @@ window.TeacherSchedulerWorkspace = (function () {
                 elements.teacherSchedulerSessionBubbleTitle.textContent = classroom?.name || session.classId || 'Class';
             }
             if (elements.teacherSchedulerSessionBubbleMeta) {
-                elements.teacherSchedulerSessionBubbleMeta.textContent = `${getSessionLocalDate(session)} ${formatTimeRange(getSessionLocalTime(session), session.durationMinutes)} • ${label}`;
+                const datePart = formatSessionDateDisplay(getSessionLocalDate(session));
+                const timePart = formatTimeRange(getSessionLocalTime(session), session.durationMinutes);
+                const dateLine = `${datePart} \u00b7 ${timePart}`;
+                const teacherPart = teacherName || 'Unassigned';
+                const teacherUnitLine = label ? `${teacherPart} \u00b7 ${label}` : teacherPart;
+                if (typeof elements.teacherSchedulerSessionBubbleMeta.innerHTML === 'string') {
+                    elements.teacherSchedulerSessionBubbleMeta.innerHTML = `<div class="ts-bubble-meta-date">${escapeHtml(dateLine)}</div><div class="ts-bubble-meta-teacher">${escapeHtml(teacherUnitLine)}</div>`;
+                } else {
+                    elements.teacherSchedulerSessionBubbleMeta.textContent = `${dateLine}\n${teacherUnitLine}`;
+                }
             }
             if (elements.teacherSchedulerSessionBubbleLock) {
                 elements.teacherSchedulerSessionBubbleLock.textContent = lockStatus;
+                elements.teacherSchedulerSessionBubbleLock.style.display = outcomeLocked ? 'inline-flex' : 'none';
+            }
+            const activeMoreDropdown = elements.teacherSchedulerBubbleMoreDropdown || (typeof document !== 'undefined' ? document.getElementById('teacher-scheduler-bubble-more-dropdown') : null);
+            if (activeMoreDropdown) {
+                activeMoreDropdown.style.display = 'none';
+            }
+            const activeMoreBtn = elements.btnTeacherSchedulerMoreMenu || (typeof document !== 'undefined' ? document.getElementById('btn-teacher-scheduler-more-menu') : null);
+            if (activeMoreBtn) {
+                activeMoreBtn.setAttribute('aria-expanded', 'false');
             }
             if (elements.inputTeacherSchedulerSessionOutcome) {
                 if (draft && bubble.editorGeneration === draft.editorGeneration) {
@@ -3877,6 +3934,29 @@ window.TeacherSchedulerWorkspace = (function () {
                     clearPointerDrag();
                     return;
                 }
+                const moreDropdown = elements.teacherSchedulerBubbleMoreDropdown || (typeof document !== 'undefined' ? document.getElementById('teacher-scheduler-bubble-more-dropdown') : null);
+                if (moreDropdown && moreDropdown.style.display === 'block') {
+                    moreDropdown.style.display = 'none';
+                    const moreBtn = elements.btnTeacherSchedulerMoreMenu || (typeof document !== 'undefined' ? document.getElementById('btn-teacher-scheduler-more-menu') : null);
+                    if (moreBtn) {
+                        moreBtn.setAttribute('aria-expanded', 'false');
+                        try { moreBtn.focus?.(); } catch (_) { /* focus */ }
+                    }
+                    return;
+                }
+                const inlineCancel = elements.teacherSchedulerInlineCancel || (typeof document !== 'undefined' ? document.getElementById('teacher-scheduler-inline-cancel') : null);
+                if (inlineCancel && inlineCancel.style.display === 'block') {
+                    inlineCancel.style.display = 'none';
+                    const moreBtn = elements.btnTeacherSchedulerMoreMenu || (typeof document !== 'undefined' ? document.getElementById('btn-teacher-scheduler-more-menu') : null);
+                    if (moreBtn) {
+                        try { moreBtn.focus?.(); } catch (_) { /* focus */ }
+                    }
+                    return;
+                }
+                if (elements.teacherSchedulerInlineReschedule && elements.teacherSchedulerInlineReschedule.style.display === 'block') {
+                    elements.teacherSchedulerInlineReschedule.style.display = 'none';
+                    return;
+                }
                 const createMenu = (typeof document !== 'undefined') ? document.getElementById('ts-create-menu') : null;
                 if (createMenu && createMenu.style.display === 'block') {
                     createMenu.style.display = 'none';
@@ -4009,9 +4089,71 @@ window.TeacherSchedulerWorkspace = (function () {
             if (elements.btnTeacherSchedulerCloseBubble) {
                 elements.btnTeacherSchedulerCloseBubble.addEventListener('click', () => closeSessionBubble());
             }
+            const closeBubbleMoreMenu = () => {
+                const dropdown = elements.teacherSchedulerBubbleMoreDropdown || (typeof document !== 'undefined' ? document.getElementById('teacher-scheduler-bubble-more-dropdown') : null);
+                if (dropdown) dropdown.style.display = 'none';
+                const btn = elements.btnTeacherSchedulerMoreMenu || (typeof document !== 'undefined' ? document.getElementById('btn-teacher-scheduler-more-menu') : null);
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            };
+
+            const moreMenuBtn = elements.btnTeacherSchedulerMoreMenu || (typeof document !== 'undefined' ? document.getElementById('btn-teacher-scheduler-more-menu') : null);
+            if (moreMenuBtn) {
+                moreMenuBtn.addEventListener('click', (evt) => {
+                    evt?.stopPropagation?.();
+                    const dropdown = elements.teacherSchedulerBubbleMoreDropdown || (typeof document !== 'undefined' ? document.getElementById('teacher-scheduler-bubble-more-dropdown') : null);
+                    if (!dropdown) return;
+                    const isOpen = dropdown.style.display === 'block';
+                    dropdown.style.display = isOpen ? 'none' : 'block';
+                    moreMenuBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+                    if (!isOpen) {
+                        const firstItem = dropdown.querySelector ? dropdown.querySelector('.ts-bubble-dropdown-item') : null;
+                        if (firstItem) {
+                            try { firstItem.focus?.(); } catch (_) { /* focus */ }
+                        }
+                    }
+                });
+            }
             if (elements.btnTeacherSchedulerCancelSession) {
                 elements.btnTeacherSchedulerCancelSession.addEventListener('click', () => {
+                    closeBubbleMoreMenu();
                     const sessionId = String(elements.btnTeacherSchedulerCancelSession.dataset.sessionId || '').trim();
+                    if (!sessionId) return;
+                    if (elements.teacherSchedulerInlineReschedule) {
+                        elements.teacherSchedulerInlineReschedule.style.display = 'none';
+                    }
+                    const inlineCancel = elements.teacherSchedulerInlineCancel || (typeof document !== 'undefined' ? document.getElementById('teacher-scheduler-inline-cancel') : null);
+                    if (inlineCancel) {
+                        inlineCancel.style.display = 'block';
+                        const confirmBtn = elements.btnTeacherSchedulerCancelConfirm || (typeof document !== 'undefined' ? document.getElementById('btn-teacher-scheduler-cancel-confirm') : null);
+                        if (confirmBtn) confirmBtn.dataset.sessionId = sessionId;
+                        const abortBtn = elements.btnTeacherSchedulerCancelAbort || (typeof document !== 'undefined' ? document.getElementById('btn-teacher-scheduler-cancel-abort') : null);
+                        if (abortBtn) {
+                            try { abortBtn.focus?.(); } catch (_) { /* focus */ }
+                        }
+                    } else {
+                        cancelSession(sessionId).catch((error) => showToast?.(error?.message || 'Failed to cancel session.', 'error'));
+                    }
+                });
+            }
+
+            const cancelAbortBtn = elements.btnTeacherSchedulerCancelAbort || (typeof document !== 'undefined' ? document.getElementById('btn-teacher-scheduler-cancel-abort') : null);
+            if (cancelAbortBtn) {
+                cancelAbortBtn.addEventListener('click', () => {
+                    const inlineCancel = elements.teacherSchedulerInlineCancel || (typeof document !== 'undefined' ? document.getElementById('teacher-scheduler-inline-cancel') : null);
+                    if (inlineCancel) inlineCancel.style.display = 'none';
+                    const moreBtn = elements.btnTeacherSchedulerMoreMenu || (typeof document !== 'undefined' ? document.getElementById('btn-teacher-scheduler-more-menu') : null);
+                    if (moreBtn) {
+                        try { moreBtn.focus?.(); } catch (_) { /* focus */ }
+                    }
+                });
+            }
+
+            const cancelConfirmBtn = elements.btnTeacherSchedulerCancelConfirm || (typeof document !== 'undefined' ? document.getElementById('btn-teacher-scheduler-cancel-confirm') : null);
+            if (cancelConfirmBtn) {
+                cancelConfirmBtn.addEventListener('click', () => {
+                    const inlineCancel = elements.teacherSchedulerInlineCancel || (typeof document !== 'undefined' ? document.getElementById('teacher-scheduler-inline-cancel') : null);
+                    if (inlineCancel) inlineCancel.style.display = 'none';
+                    const sessionId = String(cancelConfirmBtn.dataset.sessionId || elements.btnTeacherSchedulerCancelSession?.dataset?.sessionId || '').trim();
                     if (!sessionId) return;
                     cancelSession(sessionId).catch((error) => showToast?.(error?.message || 'Failed to cancel session.', 'error'));
                 });
@@ -4027,12 +4169,14 @@ window.TeacherSchedulerWorkspace = (function () {
             if (elements.btnTeacherSchedulerDuplicateSession) {
                 elements.btnTeacherSchedulerDuplicateSession.addEventListener('click', (evt) => {
                     evt.stopPropagation();
+                    closeBubbleMoreMenu();
                     const sessionId = String(elements.btnTeacherSchedulerDuplicateSession.dataset.sessionId || '').trim();
                     duplicateSession(sessionId).catch((error) => showToast?.(error?.message || 'Failed to duplicate session.', 'error'));
                 });
             }
             if (elements.btnTeacherSchedulerOpenAttendance) {
                 elements.btnTeacherSchedulerOpenAttendance.addEventListener('click', () => {
+                    closeBubbleMoreMenu();
                     const sessionId = String(elements.btnTeacherSchedulerOpenAttendance.dataset.sessionId || '').trim();
                     if (!sessionId) return;
                     window.ClassroomAPI?.openScheduledAttendanceSession?.(sessionId)
@@ -4046,6 +4190,7 @@ window.TeacherSchedulerWorkspace = (function () {
                     if (!elements.teacherSchedulerInlineReschedule) return;
                     const isHidden = elements.teacherSchedulerInlineReschedule.style.display === 'none' || !elements.teacherSchedulerInlineReschedule.style.display;
                     if (isHidden) {
+                        if (elements.teacherSchedulerInlineCancel) elements.teacherSchedulerInlineCancel.style.display = 'none';
                         const sessionId = String(elements.btnTeacherSchedulerToggleReschedule.dataset.sessionId || elements.btnTeacherSchedulerSaveOutcome?.dataset.sessionId || '').trim();
                         const session = state.sessions.find((s) => String(s.sessionId || '') === sessionId);
                         if (session) {
@@ -4287,6 +4432,12 @@ window.TeacherSchedulerWorkspace = (function () {
                 }
                 if (elements.teacherSchedulerSessionBubble?.style.display === 'block' && !closestTarget(evt, '#teacher-scheduler-session-bubble, .teacher-scheduler-session-pill')) {
                     closeSessionBubble();
+                }
+                const moreDropdown = elements.teacherSchedulerBubbleMoreDropdown || (typeof document !== 'undefined' ? document.getElementById('teacher-scheduler-bubble-more-dropdown') : null);
+                if (moreDropdown && moreDropdown.style.display === 'block' && !closestTarget(evt, '#teacher-scheduler-bubble-more-dropdown, #btn-teacher-scheduler-more-menu')) {
+                    moreDropdown.style.display = 'none';
+                    const moreBtn = elements.btnTeacherSchedulerMoreMenu || (typeof document !== 'undefined' ? document.getElementById('btn-teacher-scheduler-more-menu') : null);
+                    if (moreBtn) moreBtn.setAttribute('aria-expanded', 'false');
                 }
                 const createMenu = (typeof document !== 'undefined') ? document.getElementById('ts-create-menu') : null;
                 if (createMenu && createMenu.style.display === 'block' && !closestTarget(evt, '#ts-create-menu, #btn-ts-create')) {

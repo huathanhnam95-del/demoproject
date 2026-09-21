@@ -1144,14 +1144,14 @@ function startHarnessServer() {
 
 (async () => {
   const { server, origin, requestLog, state } = await startHarnessServer();
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, channel: 'chrome' });
   const context = await browser.newContext({
     viewport: { width: 1600, height: 1100 }
   });
   const page = await context.newPage();
   const errors = [];
   const firebaseStub = createFirebaseStubScript();
-  const screenshotPath = path.join('tmp', 'crm-scheduler-browser-check.png');
+  const screenshotPath = process.env.SCHEDULER_SCREENSHOT_PATH || path.join('tmp', 'crm-scheduler-browser-check.png');
 
   page.on('pageerror', (error) => {
     errors.push(error.message);
@@ -1316,6 +1316,53 @@ function startHarnessServer() {
     await page.waitForFunction(({ classCardSelector: cardSelector, sessionPillSelector: pillSelector }) => (
       !!document.querySelector(cardSelector) && !!document.querySelector(pillSelector)
     ), { classCardSelector, sessionPillSelector });
+    // Validate actual computed styles through the complete CRM stylesheet stack.
+    const expectedPastels = {
+      blue: '#D2E3FC', purple: '#E8DEF8', teal: '#CDEBE6', green: '#CEEAD6',
+      orange: '#FCE3C1', red: '#FAD2CF', indigo: '#DDE3FA', coral: '#F8D9E5', neutral: '#E8EAED'
+    };
+    const rgb = (hex) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
+    const readColors = () => page.evaluate((selector) => {
+      const pill = document.querySelector(selector);
+      return ({
+      family: pill.dataset.tsColor,
+      background: getComputedStyle(pill).backgroundColor,
+      title: getComputedStyle(pill.querySelector('.pill-title')).color,
+      meta: getComputedStyle(pill.querySelector('.pill-time')).color,
+      opacity: getComputedStyle(pill).opacity
+      });
+    }, sessionPillSelector);
+    const pastel = await readColors();
+    assert.strictEqual(pastel.background, rgb(expectedPastels[pastel.family]));
+    assert.strictEqual(pastel.title, 'rgb(31, 31, 31)');
+    assert.strictEqual(pastel.meta, 'rgb(60, 64, 67)');
+    assert.strictEqual(pastel.opacity, '1');
+    for (const stateClass of ['is-completed', 'is-saving', 'is-selected']) {
+      await page.locator(sessionPillSelector).evaluate((pill, name) => pill.classList.add(name), stateClass);
+      const colors = await readColors();
+      assert.strictEqual(colors.title, pastel.title, `${stateClass} title`);
+      assert.strictEqual(colors.meta, pastel.meta, `${stateClass} metadata`);
+      assert.strictEqual(colors.opacity, '1', `${stateClass} opacity`);
+      await page.locator(sessionPillSelector).evaluate((pill, name) => pill.classList.remove(name), stateClass);
+    }
+    await page.click('#btn-ts-settings');
+    await page.selectOption('#ts-setting-appearance', 'solid');
+    await page.click('#btn-ts-save-settings');
+    assert.strictEqual((await readColors()).title, 'rgb(255, 255, 255)');
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForFunction(() => window.teacherSchedulerController?.getState().appearance === 'solid');
+    await page.click('#btn-ts-settings');
+    await page.selectOption('#ts-setting-appearance', 'pastel');
+    await page.click('#btn-ts-save-settings');
+    await page.locator('#teacher-scheduler-from-date').fill(conflictDate);
+    await page.locator('#teacher-scheduler-to-date').fill(weekEnd);
+    await page.click('#btn-ts-view-grid');
+    await page.click('#btn-teacher-scheduler-refresh');
+    await page.waitForSelector(sessionPillSelector);
+    assert.strictEqual((await readColors()).background, pastel.background);
+    await scrollIntoView(page, sessionPillSelector);
+    await page.screenshot({ path: screenshotPath.replace(/\.png$/, '-pastel.png'), fullPage: true });
+    console.log('Chrome computed Pastel colors, status foregrounds, Solid persistence and return to Pastel passed.');
     await page.waitForTimeout(100);
     await scrollIntoView(page, classCardSelector);
     await scrollIntoView(page, originalSlotSelector);

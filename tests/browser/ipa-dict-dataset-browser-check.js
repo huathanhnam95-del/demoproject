@@ -210,9 +210,12 @@ async function run() {
       const res = await fetch('/sw.js');
       return await res.text();
     });
-    assert.ok(swContent.includes('/ipa-dict.json'), 'Service worker sw.js must include /ipa-dict.json in SHELL_URLS');
-    assert.ok(swContent.includes('/phonetics.js'), 'Service worker sw.js must include /phonetics.js in SHELL_URLS');
-    assert.ok(swContent.includes('/oxford-american-ipa.json'), 'Service worker sw.js must include the Oxford-American IPA layer in SHELL_URLS');
+    const shellMatch = swContent.match(/const SHELL_URLS = \[([\s\S]*?)\];/);
+    assert.ok(shellMatch, 'Service worker sw.js must declare SHELL_URLS');
+    const shellUrls = shellMatch[1];
+    assert.ok(!shellUrls.includes('/ipa-dict.json'), 'Large IPA dictionary must load on demand instead of blocking service-worker install');
+    assert.ok(shellUrls.includes('/phonetics.js'), 'Service worker sw.js must include /phonetics.js in SHELL_URLS');
+    assert.ok(shellUrls.includes('/oxford-american-ipa.json'), 'Service worker sw.js must include the Oxford-American IPA layer in SHELL_URLS');
 
     assert.deepStrictEqual(pageErrors, [], 'Should have no uncaught page errors');
     console.log('✅ ALL E2E BROWSER CHECKS PASSED SUCCESSFULLY!');

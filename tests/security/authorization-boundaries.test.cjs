@@ -58,21 +58,13 @@ test('SEC-04: Firestore and Storage rules protect student submissions from field
     assert.ok(subMatch, 'crmSubmissions block must exist');
     const subBlock = subMatch[1];
 
-    // Submissions creation must require membership and forbid grading fields
-    assert.ok(subBlock.includes("!request.resource.data.keys().hasAny(['grade', 'feedback', 'score', 'gradedAt', 'gradedBy', 'teacherNotes'])"),
-        'submissions must forbid student creation of grading fields');
-    assert.ok(subBlock.includes("request.resource.data.status in ['turned-in', 'submitted']"),
-        'initial submission status must be turned-in/submitted');
-
-    // Submissions update must restrict editable fields and keep studentUid, classId, workId immutable
-    assert.ok(subBlock.includes('request.resource.data.studentUid == resource.data.studentUid'),
-        'submission studentUid must be immutable on update');
-    assert.ok(subBlock.includes('request.resource.data.classId == resource.data.classId'),
-        'submission classId must be immutable on update');
-    assert.ok(subBlock.includes("resource.data.status in ['turned-in', 'submitted', 'needs-revision']"),
-        'submissions update must allow resubmission in needs-revision');
-    assert.ok(subBlock.includes("request.resource.data.diff(resource.data).affectedKeys().hasOnly(['audio', 'submittedAt'])"),
-        'students may only update audio and submittedAt on existing submissions');
+    // Submissions mutations must be server-authoritative (Admin SDK only; client direct writes blocked)
+    assert.ok(subBlock.includes('allow create, update, delete: if false;'),
+        'submissions direct client writes must be blocked for every browser role');
+    assert.ok(!subBlock.includes('allow create: if isAdmin() || ('),
+        'submissions must not permit direct student client creation');
+    assert.ok(!subBlock.includes('allow update: if isAdmin() || ('),
+        'submissions must not permit direct student client updates');
 
     // Submissions read must NOT leak to classroom peers
     assert.ok(!subBlock.includes('isClassroomMember(resource.data.classId)'),
@@ -80,15 +72,33 @@ test('SEC-04: Firestore and Storage rules protect student submissions from field
     assert.ok(subBlock.includes('resource.data.studentUid == request.auth.uid'),
         'submissions read must be restricted to student owner and admin');
 
-    // Storage uploads must check classroom membership without global claims bypass
-    const uploadMatch = storageContent.match(/match \/uploads\/\{classId\}\/\{workId\}\/\{uid\}\/\{allPaths=\*\*\} \{([\s\S]*?)\n    \}/);
+    // Storage uploads must rely on the server-authorized slot without a global claims bypass.
+    // The backend accepts both member documents and enrollment/link records, so duplicating
+    // only the member-document branch here would reject legitimate prepared uploads.
+    const uploadMatch = storageContent.match(/match \/uploads\/\{classId\}\/\{workId\}\/\{uid\}\/\{uploadIntentId\} \{([\s\S]*?)\n    \}/);
     assert.ok(uploadMatch, 'uploads block must exist');
     const uploadBlock = uploadMatch[1];
 
     assert.ok(!uploadBlock.includes('request.auth.token.isStudent'),
         'uploads must not allow global token.isStudent to bypass classroom membership');
-    assert.ok(uploadBlock.includes('crmClassrooms/$(classId)/members/$(request.auth.uid)'),
-        'storage uploads must verify classroom membership');
+    assert.ok(!uploadBlock.includes('crmClassrooms/$(classId)/members/$(request.auth.uid)'),
+        'storage uploads must not contradict the backend membership decision with a narrower duplicate check');
+
+    // Uploads must be strictly immutable and deny overwriting
+    assert.ok(uploadBlock.includes('allow update: if false;'),
+        'storage uploads must be immutable and forbid update');
+    assert.ok(uploadBlock.includes('resource == null'),
+        'storage creates must also reject replacement generations for an existing path');
+    // Uploads require a short-lived server-prepared capability bound to this
+    // exact classroom, assignment, owner, path, and lifecycle decision.
+    assert.ok(uploadBlock.includes('validSubmissionUploadSlot(classId, workId, uid, uploadIntentId)'),
+        'storage uploads must require a server-prepared upload slot');
+    assert.ok(storageContent.includes("data.status == 'prepared'"),
+        'storage upload slot must still be prepared');
+    assert.ok(storageContent.includes('data.expiresAt > request.time'),
+        'storage upload slot must not be expired');
+    assert.ok(!uploadBlock.includes('crmSubmissions/$(classId +'),
+        'storage rules must not guess the SHA-256 submission document ID');
 });
 
 test('SEC-05: User profile creation blocks fabricated points, coins, and progression ratings', () => {
@@ -172,6 +182,6 @@ test('SEC-04 (API): Student classrooms route uses deterministic submission IDs a
     assert.ok(routeContent.includes('buildHomeworkSubmissionDocId'), 'student submission endpoint must use buildHomeworkSubmissionDocId');
     assert.ok(routeContent.includes('buildHomeworkSubmissionCreateData'), 'student submission endpoint must use buildHomeworkSubmissionCreateData');
     assert.ok(routeContent.includes('buildHomeworkSubmissionResubmissionPatch'), 'student submission endpoint must use buildHomeworkSubmissionResubmissionPatch');
-    assert.ok(routeContent.includes("currentStatus === 'graded'"), 'student submission endpoint must lock graded submissions');
+    assert.ok(routeContent.includes("currentStatus !== 'needs-revision'"), 'student submission endpoint must lock every finalized state until an explicit revision');
+    assert.ok(routeContent.includes('CRM_SUBMISSION_UPLOAD_SLOTS'), 'student audio must consume a server-prepared upload slot');
 });
-

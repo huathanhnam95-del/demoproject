@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bel-offline-v28-v1-8-128';
+const CACHE_VERSION = 'bel-offline-v2.0.13';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -10,20 +10,20 @@ const SHELL_URLS = [
   '/offline.html',
   '/style.css?v=20260508_practice_router_fix',
   '/script.js?v=20260802_browser_cache_fix',
-  '/js/write-essay-support.js?v=20260903_guided_ux_v15',
-  '/write-essay-mode.js?v=1.8.128',
   '/landing/landing.css',
   '/dictionary-service.js',
   '/collocations.json',
   '/arpabet-ipa-map.js',
   '/phonetics.js',
-  '/oxford-american-ipa.json',
-  '/ipa-dict.json'
+  '/oxford-american-ipa.json'
 ];
+
+// Optional heavy assets cached on demand via RUNTIME_CACHE rather than blocking initial install:
+// ['/ipa-dict.json', '/write-essay-mode.js', '/js/write-essay-support.js']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL_URLS)).then(() => self.skipWaiting())
+    caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL_URLS))
   );
 });
 
@@ -35,8 +35,14 @@ self.addEventListener('activate', (event) => {
           .filter((key) => ![SHELL_CACHE, RUNTIME_CACHE].includes(key))
           .map((key) => caches.delete(key))
       )
-    ).then(() => self.clients.claim())
+    )
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 function isSameOrigin(requestUrl) {

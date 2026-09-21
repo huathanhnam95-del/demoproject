@@ -1533,6 +1533,8 @@ function inventorySurface(ctx) {
 
 const VERSION_MUTABLE_PATHS = Object.freeze(new Set([
   'public/index.html',
+  'public/js/lazy-loader.js',
+  'public/sw.js',
   'public/crm-admin.html',
   'public/crm-entrance-test-result.html',
   'tests/crm/crm-shell-static.test.js',
@@ -1861,8 +1863,27 @@ function validateVersionOracle(ctx) {
   const index = html('public/index.html');
   const indicator = [...index.matchAll(/id=["']version-indicator["'][^>]*>\s*V([^<\s]+)\s*</gi)];
   const readAloud = [...index.matchAll(/\bsrc=["']\/read-aloud-mode\.js\?v=([^"'&\s]+)["']/gi)];
-  if (indicator.length !== 1 || indicator[0][1] !== version || readAloud.length !== 1 || readAloud[0][1] !== version) {
-    fail('VERSION_OUTPUT', 'public/index.html does not contain exactly one current version indicator and read-aloud script token.');
+  if (indicator.length !== 1 || indicator[0][1] !== version) {
+    fail('VERSION_OUTPUT', 'public/index.html does not contain exactly one current version indicator.');
+  }
+  if (readAloud.length > 0) {
+    if (readAloud.length !== 1 || readAloud[0][1] !== version) {
+      fail('VERSION_OUTPUT', 'public/index.html does not contain exactly one current version indicator and read-aloud script token.');
+    }
+  } else {
+    const lazyLoaderPath = path.join(ctx.candidateRoot, 'public', 'js', 'lazy-loader.js');
+    if (!fs.existsSync(lazyLoaderPath)) {
+      fail('VERSION_OUTPUT', 'Version output is missing: public/js/lazy-loader.js.');
+    }
+    const lazyLoader = fs.readFileSync(lazyLoaderPath, 'utf8');
+    const loaderReadAloud = [...lazyLoader.matchAll(/loadScript\(['"]\/read-aloud-mode\.js\?v=([^"'&\s]+)['"]\)/gi)];
+    if (loaderReadAloud.length !== 1 || loaderReadAloud[0][1] !== version) {
+      fail('VERSION_OUTPUT', 'public/js/lazy-loader.js does not contain exactly one current read-aloud script token.');
+    }
+  }
+  const cacheVersions = [...html('public/sw.js').matchAll(/\bconst\s+CACHE_VERSION\s*=\s*['"]([^'"]+)['"]\s*;/g)];
+  if (cacheVersions.length !== 1 || cacheVersions[0][1] !== `bel-offline-v${version}`) {
+    fail('VERSION_OUTPUT', 'public/sw.js does not contain exactly one current service-worker cache token.');
   }
   for (const relative of ['public/crm-admin.html', 'public/crm-entrance-test-result.html']) {
     const tokens = [...html(relative).matchAll(/(?:^|[^0-9])(\d{8}-v\d+\.\d+\.\d+)(?=[^0-9]|$)/g)].map((match) => match[1]);

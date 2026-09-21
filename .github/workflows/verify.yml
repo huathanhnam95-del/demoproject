@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: ["main"]
   push:
-    branches: ["main"]
+    branches: ["main", "feat/**"]
   workflow_dispatch:
 
 jobs:
@@ -101,6 +101,21 @@ jobs:
 
       - name: Run security and authorization boundary tests
         run: npm run test:security
+
+      - name: Setup Java for Firebase emulators
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Run Firebase authorization emulator tests
+        run: npx -y firebase-tools@15.2.1 emulators:exec --project demo-bel-security --only "auth,firestore,storage" "node --test tests/security/student-submission-rules-emulator.test.cjs"
+
+      - name: Run reference performance and compiler tests
+        run: npm run test:performance:reference
+
+      - name: Verify RMCSA content publication parity
+        run: npm run check:content:rmcsa
 
       - name: Setup Python
         uses: actions/setup-python@v5

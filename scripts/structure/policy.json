@@ -92,6 +92,20 @@
       "effects": ["read-only"]
     },
     {
+      "name": "test:security",
+      "program": "node",
+      "args": ["--test", "tests/security/authorization-boundaries.test.cjs", "tests/security/rate-limiter-fail-closed.test.cjs", "tests/security/student-submission-upload-intent.test.cjs"],
+      "target": "tests/security/authorization-boundaries.test.cjs",
+      "effects": ["read-only"]
+    },
+    {
+      "name": "test:security:emulator",
+      "program": "firebase",
+      "args": ["emulators:exec", "--project", "demo-bel-security", "--only", "\"auth,firestore,storage\"", "\"node --test tests/security/student-submission-rules-emulator.test.cjs\""],
+      "target": "tests/security/student-submission-rules-emulator.test.cjs",
+      "effects": ["local-write", "emulator-write"]
+    },
+    {
       "name": "check:structure",
       "program": "node",
       "args": ["scripts/structure/check.cjs", "check"],

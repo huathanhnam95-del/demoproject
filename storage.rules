@@ -97,16 +97,34 @@ service firebase.storage {
       return firestore.get(feedbackDocPath(attemptId, feedbackId)).data;
     }
 
-    match /uploads/{classId}/{workId}/{uid}/{allPaths=**} {
+    function submissionUploadSlotPath(uploadIntentId) {
+      return /databases/(default)/documents/crmSubmissionUploadSlots/$(uploadIntentId);
+    }
+
+    function validSubmissionUploadSlot(classId, workId, uid, uploadIntentId) {
+      return firestore.exists(submissionUploadSlotPath(uploadIntentId))
+        && firestore.get(submissionUploadSlotPath(uploadIntentId)).data.classId == classId
+        && firestore.get(submissionUploadSlotPath(uploadIntentId)).data.workId == workId
+        && firestore.get(submissionUploadSlotPath(uploadIntentId)).data.studentUid == uid
+        && firestore.get(submissionUploadSlotPath(uploadIntentId)).data.storagePath == ('uploads/' + classId + '/' + workId + '/' + uid + '/' + uploadIntentId)
+        && firestore.get(submissionUploadSlotPath(uploadIntentId)).data.status == 'prepared'
+        && firestore.get(submissionUploadSlotPath(uploadIntentId)).data.expiresAt > request.time;
+    }
+
+    match /uploads/{classId}/{workId}/{uid}/{uploadIntentId} {
       // Students can read their own submissions; admins/teachers can read student submissions
       allow read: if isAdmin() || isCrmStaff() || (
         request.auth != null && request.auth.uid == uid
       );
-      // Students can only upload if enrolled in the classroom, within size and media restrictions
-      allow create, update: if request.auth != null
+      // The backend prepares a short-lived, identity-bound slot only for an
+      // initial submission or an explicit needs-revision lifecycle state.
+      allow create: if request.auth != null
+        && resource == null
         && request.auth.uid == uid
-        && firestore.exists(/databases/(default)/documents/crmClassrooms/$(classId)/members/$(request.auth.uid))
-        && isAllowedAttemptMediaUpload(50 * 1024 * 1024);
+        && isAllowedAttemptMediaUpload(50 * 1024 * 1024)
+        && validSubmissionUploadSlot(classId, workId, uid, uploadIntentId);
+      // Uploaded recordings are immutable once created; revisions must create a new versioned file.
+      allow update: if false;
       allow delete: if isAdmin() || isCrmStaff();
     }
 

@@ -6,7 +6,19 @@
   const SCRIPT_LOAD_TIMEOUT_MS = 20_000;
 
   function toAbsoluteUrl(src) {
-    return new URL(src, window.location.href).href;
+    const base = (typeof window !== 'undefined' && window.location && window.location.href) ||
+      (typeof document !== 'undefined' && document.baseURI) ||
+      'https://example.com/';
+    return new URL(src, base).href;
+  }
+
+  function isKnownScriptExportReady(absoluteUrl) {
+    if (typeof window === 'undefined') return false;
+    if (absoluteUrl.includes('xlsx') && typeof window.XLSX !== 'undefined') return true;
+    if (absoluteUrl.includes('compromise') && (typeof window.nlp !== 'undefined' || typeof window.compromise !== 'undefined')) return true;
+    if (absoluteUrl.includes('read-aloud-mode') && (window.ReadAloudMode || typeof window.initReadAloudMode === 'function')) return true;
+    if (absoluteUrl.includes('youtube-player') && typeof window.YouTubePlayer !== 'undefined') return true;
+    return false;
   }
 
   function findExistingScript(absoluteUrl) {
@@ -22,6 +34,12 @@
 
   function waitForExistingScript(scriptElement, absoluteUrl) {
     return new Promise((resolve, reject) => {
+      if (isKnownScriptExportReady(absoluteUrl)) {
+        scriptElement.dataset.belLoaded = 'true';
+        resolve();
+        return;
+      }
+
       const readyState = scriptElement.readyState || '';
       if (
         scriptElement.dataset.belLoaded === 'true' ||
@@ -34,6 +52,14 @@
           return;
         }
         resolve();
+        return;
+      }
+
+      // Check if parser-inserted script without async/defer has already completed or failed
+      if (document.readyState !== 'loading' && !scriptElement.async && !scriptElement.defer) {
+        scriptElement.dataset.belFailed = 'true';
+        try { scriptElement.remove(); } catch { /* ignore */ }
+        reject(new Error(`Failed to load script: ${absoluteUrl}`));
         return;
       }
 
@@ -75,6 +101,13 @@
     const existingScript = findExistingScript(absoluteUrl);
     if (existingScript) {
       if (existingScript.dataset.belFailed === 'true') {
+        try { existingScript.remove(); } catch { /* ignore */ }
+      } else if (isKnownScriptExportReady(absoluteUrl)) {
+        existingScript.dataset.belLoaded = 'true';
+        return Promise.resolve();
+      } else if (document.readyState !== 'loading' && !existingScript.async && !existingScript.defer) {
+        // Spent parser-inserted script without export: evict dead element and fall through to retry
+        existingScript.dataset.belFailed = 'true';
         try { existingScript.remove(); } catch { /* ignore */ }
       } else {
         const promise = waitForExistingScript(existingScript, absoluteUrl)
@@ -170,9 +203,10 @@
       loadedModes.add('notes');
       return;
     }
-    await ensureCompromiseLoaded();
-    await ensureXlsxLoaded();
-    await ensureYouTubePlayerLoaded();
+    await Promise.all([
+      ensureCompromiseLoaded(),
+      ensureXlsxLoaded()
+    ]);
     await loadScript('take-notes-mode.js');
     loadedModes.add('notes');
   }
@@ -304,8 +338,14 @@
     }
     // First migration: keep the shared speaking helpers and v7 picker CSS eager.
     // Moving the controller alone avoids guessing the shared dependency graph.
-    await loadScript('/read-aloud-mode.js?v=2.0.6');
+    await loadScript('/read-aloud-mode.js?v=2.0.13');
     await whenDomReady();
+    // A concurrent activation may have initialized the shared controller while
+    // this caller awaited the same script promise.
+    if (window.ReadAloudMode) {
+      loadedModes.add('read-aloud');
+      return;
+    }
     if (typeof window.initReadAloudMode !== 'function') throw new Error('Read Aloud initializer is missing.');
     window.initReadAloudMode();
     if (!window.ReadAloudMode) throw new Error('Read Aloud did not initialize.');

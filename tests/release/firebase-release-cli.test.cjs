@@ -380,6 +380,7 @@ function createFixture() {
   writeJson(path.join(root, '.firebaserc'), { projects: { default: 'demo-project' } });
   writeText(path.join(root, '.gitignore'), 'functions/.env*\n');
   writeText(path.join(root, 'public/index.html'), '<!doctype html><div id="version-indicator" class="version-indicator">V1.2.3</div><script src="/read-aloud-mode.js?v=old"></script>\n');
+  writeText(path.join(root, 'public/sw.js'), "const CACHE_VERSION = 'bel-offline-vold';\n");
   writeText(path.join(root, 'public/crm-admin.html'), '<!doctype html><script src="/crm-admin.js?v=20260906-v1.2.2"></script>\n');
   writeText(path.join(root, 'public/crm-entrance-test-result.html'), '<!doctype html><script src="/crm-entrance-test-result.js?v=20260906-v1.2.2"></script>\n');
   writeText(path.join(root, 'public/source-marker.txt'), 'source-A\n');

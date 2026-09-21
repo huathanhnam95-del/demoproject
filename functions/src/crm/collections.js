@@ -23,6 +23,7 @@ const CRM_AUTOMATION_QUEUE = 'crmAutomationQueue';
 const CRM_AUDIT_LOGS = 'crmAuditLogs';
 const CRM_MERGE_JOBS = 'crmMergeJobs';
 const CRM_SUBMISSIONS = 'crmSubmissions';
+const CRM_SUBMISSION_UPLOAD_SLOTS = 'crmSubmissionUploadSlots';
 const CRM_COUNTERS = 'crmCounters';
 const CRM_RECYCLE_BIN = 'crmRecycleBin';
 const CRM_BOOKS = 'crmBooks';
@@ -67,6 +68,7 @@ module.exports = {
     CRM_AUDIT_LOGS,
     CRM_MERGE_JOBS,
     CRM_SUBMISSIONS,
+    CRM_SUBMISSION_UPLOAD_SLOTS,
     CRM_COUNTERS,
     CRM_RECYCLE_BIN,
     CRM_BOOKS,

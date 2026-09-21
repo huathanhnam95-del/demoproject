@@ -196,20 +196,32 @@ window.ClassroomAPI = (function () {
         const auth = getAuth();
         if (!auth || !auth.currentUser) throw new Error("Not logged in");
         const uid = auth.currentUser.uid;
+        const headers = await getHeaders();
 
         let audioData = null;
+        let uploadIntentId = null;
         if (audioBlob) {
             if (!(audioBlob instanceof Blob)) {
                 console.error("submitAssignment: audioBlob is not a Blob", audioBlob);
                 throw new Error("Invalid audio data");
             }
-            // Double check IDs are strings
-            const cId = String(classId);
-            const wId = String(workId);
+            const prepareRes = await fetch(`/api/student/classrooms/${encodeURIComponent(classId)}/classwork/${encodeURIComponent(workId)}/submissions/upload-intent`, {
+                method: 'POST',
+                headers,
+                body: '{}'
+            });
+            const prepared = await prepareRes.json().catch(() => ({}));
+            if (!prepareRes.ok || !prepared.success || !prepared.uploadIntentId || !prepared.storagePath) {
+                throw new Error(prepared.message || `Unable to prepare audio upload (HTTP ${prepareRes.status})`);
+            }
 
-            // Upload to storage: uploads/{classId}/{workId}/{uid}/{filename}
-            const filename = `submission_${Date.now()}.webm`;
-            const path = `uploads/${cId}/${wId}/${uid}/${filename}`;
+            uploadIntentId = String(prepared.uploadIntentId);
+            const filename = String(prepared.filename || uploadIntentId);
+            const path = String(prepared.storagePath);
+            const expectedPrefix = `uploads/${String(classId)}/${String(workId)}/${uid}/`;
+            if (!path.startsWith(expectedPrefix) || filename !== uploadIntentId || path !== `${expectedPrefix}${uploadIntentId}`) {
+                throw new Error('Server returned an invalid audio upload slot.');
+            }
             const storageRef = firebase.storage().ref(path);
             await storageRef.put(audioBlob);
             audioData = {
@@ -219,47 +231,29 @@ window.ClassroomAPI = (function () {
             };
         }
 
-        const headers = await getHeaders();
-
-        // 1. Preferred secure server-authoritative submission endpoint
-        try {
-            const res = await fetch(`/api/student/classrooms/${encodeURIComponent(classId)}/classwork/${encodeURIComponent(workId)}/submissions`, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ audio: audioData })
-            });
-            if (res.ok) {
-                const json = await res.json();
-                if (json.success) {
-                    return { success: true, submissionId: json.submissionId };
-                }
-            } else {
-                const json = await res.json().catch(() => ({}));
-                if (res.status >= 400 && res.status < 500) {
-                    throw new Error(json.message || `Submission error (HTTP ${res.status})`);
-                }
-            }
-        } catch (serverErr) {
-            if (serverErr.message && !serverErr.message.includes('Failed to fetch') && !serverErr.message.includes('NetworkError')) {
-                throw serverErr;
-            }
-            console.warn('[ClassroomApi] Backend submission endpoint unreachable, falling back to direct Firestore:', serverErr.message);
-        }
-
-        // 2. Direct Firestore fallback (complies with hardened firestore.rules constraints)
-        const db = getDb();
-        const submissionRef = db.collection('crmSubmissions').doc();
-        await submissionRef.set({
-            classId,
-            workId,
-            studentUid: uid,
-            studentEmail: auth.currentUser.email,
-            audio: audioData,
-            status: 'turned-in',
-            submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+        // Server-authoritative submission endpoint enforcing deterministic ID, classroom checks, and status guards
+        const submit = () => fetch(`/api/student/classrooms/${encodeURIComponent(classId)}/classwork/${encodeURIComponent(workId)}/submissions`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ audio: audioData, uploadIntentId })
         });
-
-        return { success: true, submissionId: submissionRef.id };
+        let res;
+        try {
+            res = await submit();
+        } catch (firstNetworkError) {
+            // Retry the same intent once. If the first response was lost after a
+            // successful write, the backend returns the deterministic submission.
+            res = await submit().catch(() => { throw firstNetworkError; });
+        }
+        if (res.ok) {
+            const json = await res.json();
+            if (json.success) {
+                return { success: true, submissionId: json.submissionId };
+            }
+            throw new Error(json.message || 'Submission failed.');
+        }
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.message || `Submission error (HTTP ${res.status})`);
     }
 
     // Student: Fetch my submissions

@@ -85,11 +85,45 @@ function syncVersion({ timestamp } = {}) {
       `$1V${version}$2`
     );
     updated = updated.replace(
-      /(<script\s+src="\/read-aloud-mode\.js\?v=)[^"]+("><\/script>)/,
+      /(src=["']\/read-aloud-mode\.js\?v=)[^"'&\s]+(["'])/g,
       `$1${version}$2`
     );
     fs.writeFileSync(indexHtmlPath, updated, 'utf8');
     console.log('Updated public/index.html version indicator.');
+  }
+
+  // 1b. Update public/js/lazy-loader.js Read Aloud loader token
+  const lazyLoaderPath = path.join(__dirname, '..', 'public', 'js', 'lazy-loader.js');
+  if (fs.existsSync(lazyLoaderPath)) {
+    let content = fs.readFileSync(lazyLoaderPath, 'utf8');
+    const updated = content.replace(
+      /(loadScript\(['"]\/read-aloud-mode\.js\?v=)[^'"]+(['"]\))/,
+      `$1${version}$2`
+    );
+    if (updated !== content) {
+      fs.writeFileSync(lazyLoaderPath, updated, 'utf8');
+      console.log('Updated public/js/lazy-loader.js Read Aloud version.');
+    }
+  }
+
+  // Keep both service-worker caches tied to the canonical package version.
+  const swPath = path.join(__dirname, '..', 'public', 'sw.js');
+  if (fs.existsSync(swPath)) {
+    const content = fs.readFileSync(swPath, 'utf8');
+    const updated = content.replace(
+      /(\bconst\s+CACHE_VERSION\s*=\s*['"])[^'"]+(['"]\s*;)/,
+      `$1bel-offline-v${version}$2`
+    );
+    if (updated !== content) {
+      try {
+        fs.writeFileSync(swPath, updated, 'utf8');
+      } catch (writeErr) {
+        const swTmp = `${swPath}.tmp.${Date.now()}`;
+        fs.writeFileSync(swTmp, updated, 'utf8');
+        fs.renameSync(swTmp, swPath);
+      }
+      console.log('Updated public/sw.js cache version.');
+    }
   }
 
   // 2. Update public/crm-admin.html

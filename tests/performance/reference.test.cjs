@@ -229,3 +229,105 @@ test('lazy loader supportsMode matches managed modes and ensures stylesheets bef
   createdElements[0].listeners.load();
   await stylePromise;
 });
+
+function lazyScriptFixture({ existingScripts = [] } = {}) {
+  const scripts = [...existingScripts];
+  const appendedScripts = [];
+  let timerId = 0;
+  const timers = new Map();
+
+  function createScript(src = '') {
+    return {
+      src,
+      async: false,
+      defer: false,
+      dataset: {},
+      listeners: {},
+      getAttribute(name) { return name === 'src' ? this.src : null; },
+      addEventListener(name, fn) { this.listeners[name] = fn; },
+      remove() {
+        const index = scripts.indexOf(this);
+        if (index >= 0) scripts.splice(index, 1);
+        this.removed = true;
+      }
+    };
+  }
+
+  const document = {
+    baseURI: 'https://example.test/app/',
+    readyState: 'complete',
+    querySelectorAll(selector) {
+      if (selector === 'script[src]') return scripts;
+      if (selector === 'link[rel="stylesheet"]') return [];
+      return [];
+    },
+    querySelector() { return null; },
+    createElement(tag) {
+      assert.equal(tag, 'script');
+      return createScript();
+    },
+    head: {
+      appendChild(script) {
+        scripts.push(script);
+        appendedScripts.push(script);
+      }
+    },
+    addEventListener() {}
+  };
+  const context = {
+    document,
+    URL,
+    location: { href: 'https://example.test/app/' },
+    setTimeout(fn) {
+      const id = ++timerId;
+      timers.set(id, fn);
+      return id;
+    },
+    clearTimeout(id) { timers.delete(id); }
+  };
+  context.window = context;
+  vm.runInNewContext(source('public/js/lazy-loader.js'), context);
+  return { context, appendedScripts, timers, createScript };
+}
+
+test('lazy loader replaces a spent failed eager dependency instead of waiting on a past event', async () => {
+  const eagerXlsx = {
+    src: 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+    async: false,
+    defer: false,
+    dataset: {},
+    getAttribute(name) { return name === 'src' ? this.src : null; },
+    addEventListener() {},
+    remove() { this.removed = true; }
+  };
+  const fixture = lazyScriptFixture({ existingScripts: [eagerXlsx] });
+  const loading = fixture.context.BELLazyLoader.ensureRopModeLoaded();
+
+  assert.equal(eagerXlsx.removed, true, 'spent eager dependency should be evicted immediately');
+  assert.equal(fixture.appendedScripts.length, 1, 'a replacement XLSX request should start immediately');
+  assert.match(fixture.appendedScripts[0].src, /xlsx\/0\.18\.5\/xlsx\.full\.min\.js$/);
+
+  fixture.context.XLSX = {};
+  fixture.appendedScripts[0].listeners.load();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(fixture.appendedScripts.length, 2, 'mode controller should load after XLSX recovers');
+  fixture.appendedScripts[1].listeners.load();
+  await loading;
+});
+
+test('concurrent Read Aloud opens share one script request and initialize once', async () => {
+  const fixture = lazyScriptFixture();
+  let initCount = 0;
+  fixture.context.initReadAloudMode = () => {
+    initCount += 1;
+    fixture.context.ReadAloudMode = {};
+  };
+
+  const first = fixture.context.BELLazyLoader.ensureReadAloudModeLoaded();
+  const second = fixture.context.BELLazyLoader.ensureReadAloudModeLoaded();
+  assert.equal(fixture.appendedScripts.length, 1, 'concurrent opens should share the controller request');
+
+  fixture.appendedScripts[0].listeners.load();
+  await Promise.all([first, second]);
+  assert.equal(initCount, 1, 'Read Aloud should initialize exactly once');
+});

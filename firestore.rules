@@ -246,45 +246,22 @@ service cloud.firestore {
     }
 
     // ============================================
-    // SUBMISSIONS
+    // SUBMISSIONS (SERVER-AUTHORITATIVE)
     // ============================================
     match /crmSubmissions/{submissionId} {
-      function isClassroomMember(cId) {
-        return request.auth != null && (
-          exists(/databases/$(database)/documents/crmClassrooms/$(cId)/members/$(request.auth.uid))
-        );
-      }
-
-      // Only verified students enrolled in the classroom or admins can create submissions.
-      // Must not fabricate grading, score, or feedback fields.
-      allow create: if isAdmin() || (
-        request.auth != null 
-        && request.resource.data.studentUid == request.auth.uid
-        && isClassroomMember(request.resource.data.classId)
-        && request.resource.data.status in ['turned-in', 'submitted']
-        && request.resource.data.keys().hasAll(['classId', 'workId', 'studentUid', 'status'])
-        && request.resource.data.keys().hasOnly(['classId', 'workId', 'studentUid', 'studentEmail', 'audio', 'status', 'submittedAt'])
-        && !request.resource.data.keys().hasAny(['grade', 'feedback', 'score', 'gradedAt', 'gradedBy', 'teacherNotes'])
-      );
-
-      // Students can only update submissions in turned-in or needs-revision state; cannot reassign ownership, classroom, workId, or modify grading fields.
-      allow update: if isAdmin() || (
-        request.auth != null
-        && resource.data.studentUid == request.auth.uid
-        && request.resource.data.studentUid == resource.data.studentUid
-        && request.resource.data.classId == resource.data.classId
-        && request.resource.data.workId == resource.data.workId
-        && resource.data.status in ['turned-in', 'submitted', 'needs-revision']
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['studentUid', 'classId', 'workId', 'status', 'grade', 'score', 'feedback', 'gradedAt', 'gradedBy', 'teacherNotes'])
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['audio', 'submittedAt'])
-      );
+      // Submissions are created and modified exclusively via Cloud Functions backend (/api/student/classrooms/.../submissions).
+      // Admin SDK writes bypass rules; no browser client may mutate this collection.
+      allow create, update, delete: if false;
 
       // Student owner or admin can read submissions (teachers access submissions via Admin SDK endpoint)
       allow read: if isAdmin() || (
         request.auth != null && resource.data.studentUid == request.auth.uid
       );
+    }
 
-      allow delete: if isAdmin();
+    // Short-lived upload capabilities are created and consumed by the backend.
+    match /crmSubmissionUploadSlots/{uploadIntentId} {
+      allow read, write: if false;
     }
 
     // ============================================

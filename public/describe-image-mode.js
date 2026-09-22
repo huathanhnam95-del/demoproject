@@ -1064,45 +1064,45 @@ Please provide:
             v3FeedbackEl.style.display = 'none';
 
             v3FeedbackEl.innerHTML = `
-                <div class="pte-fb__col pte-fb__col--left">
+                <div class="pte-fb__col pte-fb__col--left pte-fb__left">
                     <div class="di-image-container di-fb-image-container">
                         <img id="di-fb-thumb-img" class="di-image" alt="Describe Image" />
                         <button id="di-fb-zoom-btn" class="di-zoom-btn" type="button" aria-label="Zoom image">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8v6M8 11h6"/></svg>
                         </button>
                     </div>
-                    <div class="pte-listen" id="di-fb-listen" style="display:flex; align-items:center; gap:8px; margin:12px 0;">
-                        <span style="font-weight:600; font-size:14px; color:#475569;">Your recording</span>
-                        <button id="di-fb-play-btn" class="pte-btn pte-btn--icon" type="button" aria-label="Play recording" style="width:36px; height:36px; border-radius:50%; border:1px solid #cbd5e1; background:#fff; cursor:pointer;">▶</button>
-                        <span id="di-fb-time" style="font-size:13px; color:#64748b; font-family:'Roboto Mono',monospace;">00:00 / 00:40</span>
+                    <div class="pte-listen di-fb-listen" id="di-fb-listen">
+                        <span class="di-fb-listen__label">Your recording</span>
+                        <button id="di-fb-play-btn" class="pte-btn pte-btn--icon di-fb-play" type="button" aria-label="Play recording">▶</button>
+                        <span id="di-fb-time" class="di-fb-time">00:00 / 00:40</span>
                     </div>
-                    <h4 style="margin:16px 0 6px; font-size:14px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#64748b;">What you said</h4>
+                    <h4 class="di-fb-heading">What you said</h4>
                     <div class="di-transcript" id="di-fb-transcript">No transcript detected.</div>
                 </div>
-                <div class="pte-fb__col pte-fb__col--right">
-                    <div class="pte-tabs" role="tablist" style="display:inline-flex; gap:4px; padding:3px; background:#f1f5f9; border-radius:999px; margin-bottom:16px;">
-                        <button id="di-tab-keypoints" class="pte-tab is-active" type="button" role="tab" aria-selected="true" style="border:0; background:#fff; padding:6px 14px; border-radius:999px; font-weight:600; font-size:13px; color:#1d4ed8; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.06);">Key points</button>
-                        <button id="di-tab-sample" class="pte-tab" type="button" role="tab" aria-selected="false" style="border:0; background:none; padding:6px 14px; border-radius:999px; font-weight:500; font-size:13px; color:#475569; cursor:pointer;">Sample answer</button>
+                <div class="pte-fb__col pte-fb__col--right pte-fb__right">
+                    <div class="pte-tabs" role="tablist" aria-label="Feedback">
+                        <button id="di-tab-keypoints" class="pte-tab" type="button" role="tab" aria-selected="true">Key points</button>
+                        <button id="di-tab-sample" class="pte-tab" type="button" role="tab" aria-selected="false">Sample answer</button>
                     </div>
-                    <div id="di-panel-keypoints">
-                        <div class="pte-stats" style="display:flex; gap:16px; margin-bottom:16px;">
-                            <div class="pte-stat" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 16px; flex:1;">
-                                <small style="display:block; font-size:12px; color:#64748b;">Key points</small>
-                                <b style="font-size:20px; font-weight:700; color:#1e293b;">—<span style="font-size:14px; font-weight:500; color:#94a3b8;">/5</span></b>
+                    <div id="di-panel-keypoints" role="tabpanel" aria-labelledby="di-tab-keypoints">
+                        <div class="pte-stats pte-stats--2">
+                            <div>
+                                <small>Key points</small>
+                                <strong>—<span class="pte-stats__unit">/5</span></strong>
                             </div>
-                            <div class="pte-stat" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 16px; flex:1;">
-                                <small style="display:block; font-size:12px; color:#64748b;">Speaking time</small>
-                                <b id="di-stat-time" style="font-size:20px; font-weight:700; color:#1e293b;">00:00</b>
+                            <div>
+                                <small>Speaking time</small>
+                                <strong id="di-stat-time">00:00</strong>
                             </div>
                         </div>
                         <ul class="di-keypoints-list" id="di-fb-keypoints"></ul>
-                        <div class="di-ai-action" style="margin-top:20px;">
-                            <button id="di-fb-ai-btn" class="modern-btn modern-btn--check" type="button">🤖 AI Content Assessment</button>
-                            <small style="display:block; margin-top:4px; color:#64748b;">Opens in Ask me! with your transcript and the key points</small>
+                        <div class="di-ai-action">
+                            <button id="di-fb-ai-btn" class="pte-btn" type="button">🤖 AI Content Assessment</button>
+                            <small>Opens in Ask me! with your transcript and the key points</small>
                         </div>
                     </div>
-                    <div id="di-panel-sample" style="display:none;">
-                        <div id="di-fb-sample-answer" class="sample" style="font-size:15px; line-height:1.7; color:#334155;"></div>
+                    <div id="di-panel-sample" role="tabpanel" aria-labelledby="di-tab-sample" hidden>
+                        <div id="di-fb-sample-answer" class="sample di-fb-sample"></div>
                     </div>
                 </div>
             `;
@@ -1114,35 +1114,17 @@ Please provide:
             const panelKp = v3FeedbackEl.querySelector('#di-panel-keypoints');
             const panelSample = v3FeedbackEl.querySelector('#di-panel-sample');
 
-            tabKp?.addEventListener('click', () => {
-                tabKp.classList.add('is-active');
-                tabKp.style.background = '#fff';
-                tabKp.style.color = '#1d4ed8';
-                tabKp.setAttribute('aria-selected', 'true');
-                tabSample?.classList.remove('is-active');
-                if (tabSample) {
-                    tabSample.style.background = 'none';
-                    tabSample.style.color = '#475569';
-                    tabSample.setAttribute('aria-selected', 'false');
-                }
-                if (panelKp) panelKp.style.display = 'block';
-                if (panelSample) panelSample.style.display = 'none';
-            });
-
-            tabSample?.addEventListener('click', () => {
-                tabSample.classList.add('is-active');
-                tabSample.style.background = '#fff';
-                tabSample.style.color = '#1d4ed8';
-                tabSample.setAttribute('aria-selected', 'true');
-                tabKp?.classList.remove('is-active');
-                if (tabKp) {
-                    tabKp.style.background = 'none';
-                    tabKp.style.color = '#475569';
-                    tabKp.setAttribute('aria-selected', 'false');
-                }
-                if (panelSample) panelSample.style.display = 'block';
-                if (panelKp) panelKp.style.display = 'none';
-            });
+            // The shell styles the active pill off aria-selected, so selection is just
+            // state now - no inline colours to keep in sync.
+            const selectFbTab = which => {
+                const onKeypoints = which === 'keypoints';
+                tabKp?.setAttribute('aria-selected', String(onKeypoints));
+                tabSample?.setAttribute('aria-selected', String(!onKeypoints));
+                if (panelKp) panelKp.hidden = !onKeypoints;
+                if (panelSample) panelSample.hidden = onKeypoints;
+            };
+            tabKp?.addEventListener('click', () => selectFbTab('keypoints'));
+            tabSample?.addEventListener('click', () => selectFbTab('sample'));
 
             // Wire AI button in feedback
             v3FeedbackEl.querySelector('#di-fb-ai-btn')?.addEventListener('click', sendAIAssessment);
@@ -1236,11 +1218,13 @@ Please provide:
 
         if (v3Phase === 'feedback') {
             if (stage) { stage.hidden = true; stage.style.display = 'none'; }
-            if (feedback) { feedback.hidden = false; feedback.style.display = 'flex'; }
+            // Leave display to the stylesheet: an inline value would override .pte-fb's
+            // grid and its stacking rule, which is what squashed the columns on phones.
+            if (feedback) { feedback.hidden = false; feedback.style.display = ''; }
             renderV3Feedback();
         } else {
             if (stage) { stage.hidden = false; stage.style.display = 'flex'; }
-            if (feedback) { feedback.hidden = true; feedback.style.display = 'none'; }
+            if (feedback) { feedback.hidden = true; feedback.style.display = ''; }
         }
     }
 

@@ -17,6 +17,7 @@ const MODE_ALIASES = {
     asq: 'answer_short_question',
     respondtosituation: 'respond_to_situation',
     respond_to_situation: 'respond_to_situation',
+    'respond_to_a_situation': 'respond_to_situation',
     'respond-to-situation': 'respond_to_situation',
     rts: 'respond_to_situation',
     summarizegroupdiscussion: 'summarize_group_discussion',

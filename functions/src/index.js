@@ -25,7 +25,11 @@ const { scoreRTS } = require('./scoreRTS');
 
 const { onRequest } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
+const { onTaskDispatched } = require('firebase-functions/v2/tasks');
 const { getFirestore } = require('firebase-admin/firestore');
+const { ScoringWorker } = require('./ai-scoring/worker');
+const { WalletService } = require('./ai-credits/wallet-service');
+const { SettlementService } = require('./ai-credits/settlement-service');
 const apiApp = require('./apiApp');
 const {
     runSpeakingAttemptCleanup,
@@ -216,5 +220,24 @@ module.exports = {
     }, async () => {
         const storage = createAttachmentStorage({ bucket: await getStorageBucket() });
         await createAttachmentCleanup({ db: getFirestore(), storage }).run();
+    }),
+    scoreWorkerTask: onTaskDispatched({
+        retryConfig: {
+            maxAttempts: 3,
+            minBackoffSeconds: 10
+        },
+        rateLimits: {
+            maxConcurrentDispatches: 6
+        },
+        region: 'asia-southeast1',
+        secrets: ['AZURE_SPEECH_KEY']
+    }, async (req) => {
+        const assessmentId = req.data?.assessmentId;
+        if (!assessmentId) return;
+        const db = getFirestore();
+        const walletService = new WalletService({ db });
+        const settlementService = new SettlementService({ db, walletService });
+        const worker = new ScoringWorker({ db, settlementService });
+        await worker.processJob(assessmentId, `cloud-task-${req.id || 'worker'}`);
     })
 };

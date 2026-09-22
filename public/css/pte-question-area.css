@@ -20,8 +20,8 @@
 .pte-audio__status { margin-bottom: 12px; }
 .pte-audio__track { height: 10px; background: #a4bddb; }
 .pte-audio__track i { display: block; width: 0; height: 100%; background: white; }
-.pte-audio__vol { display: flex; justify-content: center; gap: 8px; align-items: center; margin-top: 14px; }
-.pte-audio__vol input { width: 120px; }
+.pte-audio__vol { display: flex; justify-content: center; gap: 8px; align-items: center; margin-top: 14px; min-width: 0; }
+.pte-audio__vol input { flex: 1 1 auto; width: 100%; min-width: 0; }
 .pte-audio[role="button"] { cursor: pointer; }
 @keyframes pte-rec-pulse { 50% { transform: scale(.82); } }
 @keyframes pte-wave { from { transform: scaleY(.45); } to { transform: scaleY(1.15); } }

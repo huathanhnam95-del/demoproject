@@ -47,13 +47,14 @@ export class PraatAPI {
                     reasons: isRateable ? [] : reasons
                 },
                 primary_stress: {
-                    applicable: primaryStress !== null,
-                    expected: primaryStress,
-                    matches_expected: primaryStress !== null ? true : null,
-                    status: primaryStress !== null ? 'verified' : 'unrateable',
-                    confidence: result?.quality?.confidence ?? (isRateable ? 1 : 0),
+                    applicable: null,
+                    expected: null,
+                    observed: primaryStress,
+                    matches_expected: null,
+                    status: 'unrateable',
+                    confidence: null,
                     pitch_evidence: [],
-                    reasons: primaryStress !== null ? [] : reasons
+                    reasons: ['STRESS_VERIFICATION_MISSING']
                 },
                 model_revision: result?.analysisVersion || 'v2'
             },

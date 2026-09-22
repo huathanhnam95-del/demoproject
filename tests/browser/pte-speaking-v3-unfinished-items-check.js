@@ -239,7 +239,9 @@ async function run() {
   }
 }
 
-run().catch(err => {
+run().then(() => {
+  process.exit(0);
+}).catch(err => {
   console.error('\n❌ Verification Failed:', err);
   process.exit(1);
 });

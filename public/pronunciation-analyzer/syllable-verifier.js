@@ -46,8 +46,29 @@ class SyllableVerifier {
         this.lastManualInteraction = null;
         this.manualWaveformClickHandler = null;
         this.manualWaveformTargets = [];
+        this.audioBuffer = null;
+        this.segmentPlayer = null;
 
         this.init();
+    }
+
+    getSegmentPlayer() {
+        if (!this.segmentPlayer) {
+            const PlayerClass = typeof SegmentAudioPlayer !== 'undefined'
+                ? SegmentAudioPlayer
+                : (typeof window !== 'undefined' ? window.SegmentAudioPlayer : null);
+            if (PlayerClass) {
+                const AudioContextClass = typeof window !== 'undefined'
+                    ? (window.AudioContext || window.webkitAudioContext)
+                    : null;
+                if (AudioContextClass) {
+                    const ctx = (typeof window !== 'undefined' && window.SegmentPlaybackCoordinator?.defaultCoordinator?.getAudioContext())
+                        || new AudioContextClass();
+                    this.segmentPlayer = new PlayerClass(ctx);
+                }
+            }
+        }
+        return this.segmentPlayer;
     }
 
     init() {
@@ -571,6 +592,28 @@ class SyllableVerifier {
             // Wait for ready event (or successful load)
             await readyPromise;
 
+            // Cache decoded audio buffer for exact PCM slicing
+            if (this.wavesurfer.getDecodedData) {
+                this.audioBuffer = this.wavesurfer.getDecodedData();
+            } else if (this.wavesurfer.backend?.buffer) {
+                this.audioBuffer = this.wavesurfer.backend.buffer;
+            }
+            if (!this.audioBuffer && typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext)) {
+                try {
+                    const ctx = this.getSegmentPlayer()?.context || new (window.AudioContext || window.webkitAudioContext)();
+                    if (audio instanceof Blob) {
+                        const arrayBuf = await audio.arrayBuffer();
+                        this.audioBuffer = await ctx.decodeAudioData(arrayBuf.slice(0));
+                    } else if (typeof audio === 'string') {
+                        const resp = await fetch(audio);
+                        const arrayBuf = await resp.arrayBuffer();
+                        this.audioBuffer = await ctx.decodeAudioData(arrayBuf);
+                    }
+                } catch (e) {
+                    console.warn('SyllableVerifier: Could not pre-decode audioBuffer:', e);
+                }
+            }
+
             const waveform = this.container.querySelector('#sv-waveform');
             if (waveform && this.manualWaveformClickHandler) {
                 this.bindManualWaveformClicks(waveform);
@@ -772,29 +815,53 @@ class SyllableVerifier {
     }
 
     /**
-     * Play a specific syllable region (stops at region end)
+     * Play a specific syllable region (stops at region end without neighbour bleed)
      */
-    playSyllable(regionId) {
+    async playSyllable(regionId) {
         if (!this.regions || !this.wavesurfer) return;
 
         const region = this.regions.getRegions().find(r => r.id === regionId);
         if (!region) return;
 
         // Stop any current playback first
-        this.wavesurfer.pause();
+        this.stop();
 
         // Highlight the playing syllable
         this.highlightSyllable(regionId);
 
-        // Get current speed from selector
+        const player = this.getSegmentPlayer();
+        const buffer = this.audioBuffer || (this.wavesurfer.getDecodedData ? this.wavesurfer.getDecodedData() : this.wavesurfer.backend?.buffer);
+
+        if (player && buffer) {
+            const sampleRate = buffer.sampleRate;
+            const startSample = Math.max(0, Math.floor(region.start * sampleRate));
+            const endSample = Math.min(buffer.length, Math.ceil(region.end * sampleRate));
+
+            if (endSample > startSample) {
+                try {
+                    const res = await player.play({
+                        buffer,
+                        span: { startSample, endSample },
+                        clipId: regionId
+                    });
+                    if (res?.ended) {
+                        await res.ended;
+                    }
+                } catch (e) {
+                    console.warn('SyllableVerifier: Segment player error, falling back:', e);
+                } finally {
+                    this.clearHighlight();
+                }
+                return;
+            }
+        }
+
+        // Fallback to wavesurfer region playback if SegmentAudioPlayer unavailable
         const speed = parseFloat(this.speedSelect?.value || '1.0');
         this.wavesurfer.setPlaybackRate(speed);
-
-        // Seek to region start and play
         this.wavesurfer.setTime(region.start);
         this.wavesurfer.play();
 
-        // Set up listener to stop at region end
         const checkEnd = () => {
             if (this.wavesurfer.getCurrentTime() >= region.end) {
                 this.wavesurfer.pause();
@@ -804,7 +871,6 @@ class SyllableVerifier {
         };
         this.wavesurfer.on('audioprocess', checkEnd);
 
-        // Also clear on pause/finish
         const cleanup = () => {
             this.wavesurfer.un('audioprocess', checkEnd);
             this.wavesurfer.un('pause', cleanup);
@@ -822,17 +888,37 @@ class SyllableVerifier {
         this.stop();
         this.isPlaying = true;
 
+        const player = this.getSegmentPlayer();
+        const buffer = this.audioBuffer || (this.wavesurfer?.getDecodedData ? this.wavesurfer.getDecodedData() : this.wavesurfer?.backend?.buffer);
+
         for (let i = 0; i < this.syllables.length; i++) {
             if (!this.isPlaying) break; // Stopped by user
 
             const regionId = `syllable-${i}`;
+            const region = this.regions?.getRegions().find(r => r.id === regionId);
 
             // Highlight current syllable
             this.highlightSyllable(regionId);
 
-            // Play syllable
-            const region = this.regions?.getRegions().find(r => r.id === regionId);
-            if (region) {
+            if (player && buffer && region) {
+                const sampleRate = buffer.sampleRate;
+                const startSample = Math.max(0, Math.floor(region.start * sampleRate));
+                const endSample = Math.min(buffer.length, Math.ceil(region.end * sampleRate));
+                if (endSample > startSample) {
+                    try {
+                        const res = await player.play({
+                            buffer,
+                            span: { startSample, endSample },
+                            clipId: regionId
+                        });
+                        if (res?.ended) {
+                            await res.ended;
+                        }
+                    } catch (e) {
+                        console.warn('SyllableVerifier: Segment playback error:', e);
+                    }
+                }
+            } else if (region) {
                 await this.playRegionAsync(region);
             }
 
@@ -877,6 +963,9 @@ class SyllableVerifier {
     }
 
     stop() {
+        if (this.segmentPlayer) {
+            this.segmentPlayer.stop();
+        }
         if (this.wavesurfer) {
             this.wavesurfer.stop();
         }
@@ -936,6 +1025,10 @@ class SyllableVerifier {
     }
 
     destroy() {
+        if (this.segmentPlayer) {
+            this.segmentPlayer.dispose();
+            this.segmentPlayer = null;
+        }
         if (this.wavesurfer) {
             this.wavesurfer.destroy();
             this.wavesurfer = null;

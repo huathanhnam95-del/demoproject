@@ -24,6 +24,7 @@ const { createEchoForgeRouter } = require('./routes/echo-forge');
 const pronunciationTestRoutes = require('./routes/pronunciation-test');
 const pronunciationComparisonRoutes = require('./routes/pronunciation-comparison');
 const createPronunciationReferenceAudioRouter = require('./routes/pronunciation-reference-audio');
+const createAiScoringRouter = require('./routes/ai-scoring');
 const {
     practiceAttemptsLimiterByUid,
     sharedPracticeAttemptsLimiter,
@@ -430,7 +431,19 @@ app.use('/api', optionalAuthMiddleware, readAloudRoutes);
 app.use('/api', optionalAuthMiddleware, repeatSentenceRoutes);
 app.use('/api', optionalAuthMiddleware, createEchoForgeRouter());
 app.use('/api', optionalAuthMiddleware, pronunciationTestRoutes);
-app.use('/api', pronunciationReferenceAudioRouter);
+const cloudTasksDispatcher = {
+  dispatch: async (assessmentId) => {
+    try {
+      const { getFunctions } = require('firebase-admin/functions');
+      const queue = getFunctions().taskQueue('scoreWorkerTask', 'asia-southeast1');
+      await queue.enqueue({ assessmentId });
+    } catch (err) {
+      console.warn('[CloudTasksDispatcher] Failed to enqueue task:', err.message);
+    }
+  }
+};
+
+app.use('/api/ai-scoring', authMiddleware, createAiScoringRouter({ db, taskDispatcher: cloudTasksDispatcher }));
 
 
 // --- Reading Journey Endpoints ---

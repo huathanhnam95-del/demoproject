@@ -806,7 +806,7 @@ class AsqMode {
     if (!document.getElementById('asq-pte-instruction')) {
       const instr = document.createElement('div');
       instr.id = 'asq-pte-instruction';
-      instr.className = 'asq-pte-instruction';
+      instr.className = 'asq-pte-instruction pte-instr';
       instr.textContent = 'You will hear a question. Please give a simple and short answer. Often just one or a few words is enough.';
       area.insertBefore(instr, area.firstChild);
     }
@@ -1247,8 +1247,8 @@ class AsqMode {
       <div class="pte-tabs" role="tablist" aria-label="Feedback">
         <button type="button" class="pte-tab is-active" role="tab" aria-selected="true">Your answer</button>
       </div>
-      <div class="asq-fb-grid">
-        <div class="asq-fb-left">
+      <div class="pte-fb asq-fb-grid">
+        <div class="pte-fb__left asq-fb-left">
           <h4 class="asq-fb-heading">The question</h4>
           <p class="asq-fb-question-text"><b>${result.questionText || ''}</b></p>
           <div class="pte-listen">
@@ -1259,7 +1259,7 @@ class AsqMode {
             <audio id="asq-fb-playback" controls aria-label="Listen back" src="${this.v3SelectedListenSource === 'question' ? questionAudioSrc : userAudioUrl}"></audio>
           </div>
         </div>
-        <div class="asq-fb-right">
+        <div class="pte-fb__right asq-fb-right">
           <div class="asq-fb-verdict ${result.isCorrect ? 'correct' : 'incorrect'}">
             <b>${result.isCorrect ? 'Correct' : 'Incorrect'}</b>
             ${result.isCorrect && result.xpEarned ? `<span class="asq-xp">+${result.xpEarned} XP</span>` : ''}

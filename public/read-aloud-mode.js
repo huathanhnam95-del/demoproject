@@ -2628,6 +2628,16 @@ class ReadAloudMode {
         return;
       }
 
+      if (this.pteView && !this.pteCoachOpen) {
+        if (this.state !== 'RESULTS') {
+          this.renderPromptGuideExplanations(filteredAnalysis);
+        }
+        overlay.style.display = 'none';
+        badgeLayer.style.display = 'none';
+        badgeLayer.innerHTML = '';
+        return;
+      }
+
       const wordMap = this.currentPromptRenderState?.wordMap || new Map();
       // Every layer comes out of one superset analysis, so the render pass is
       // told exactly which families the learner switched on.
@@ -2966,6 +2976,9 @@ class ReadAloudMode {
     this.lastAssessmentSession = null;
     if (this.pteView) {
       delete this.pteView.payload;
+      this.pteView.split?.querySelector('.pte-fb__error-state')?.remove();
+      if (this.pteView.stage) this.pteView.stage.style.display = '';
+      if (this.pteView.right) this.pteView.right.style.display = '';
       this.pteView.stats?.replaceChildren();
       this.pteView.fixes?.replaceChildren();
     }
@@ -3751,6 +3764,7 @@ class ReadAloudMode {
       view.moved.push({ node, anchor }); parent.append(node);
     };
     panel.classList.add('ra-pte-v3');
+    stage.classList.add('pte-fb__left');
     this.workspaceView?.ensureLayoutHosts?.();
     view.instruction = create('p', 'pte-instr', 'ra-pte-instruction', stage);
     const recorderCenter = create('div', 'pte-center', null, stage);
@@ -3809,7 +3823,11 @@ class ReadAloudMode {
     this.hideSoundChangeTooltip(); document.removeEventListener('keydown', view.keydown);
     view.moved.reverse().forEach(({ node, anchor }) => anchor.replaceWith(node));
     view.created.reverse().forEach(node => node.remove());
+    view.split?.querySelector('.pte-fb__error-state')?.remove();
+    if (view.stage) view.stage.style.display = '';
+    if (view.right) view.right.style.display = '';
     view.panel.classList.remove('ra-pte-v3'); view.split.classList.remove('pte-fb');
+    view.stage?.classList.remove('pte-fb__left');
     document.getElementById('ra-prompt-stage')?.classList.remove('pte-passage');
     const announcement = document.getElementById('ra-workspace-instruction');
     if (announcement) announcement.classList.remove('pte-sr-only');
@@ -3834,6 +3852,18 @@ class ReadAloudMode {
     try { localStorage.setItem('bel:ra:coach-open:v1', String(this.pteCoachOpen)); } catch (_) { /* local preferences may be unavailable */ }
     if (this.speechCoachVisible !== this.pteCoachOpen) this.toggleSpeechCoachVisibility();
     if (this.state === 'RESULTS') this.pteFeedbackTab = 'coach';
+    if (this.pteView) {
+      const overlay = document.getElementById('ra-linking-overlay');
+      const badgeLayer = document.getElementById('ra-connected-speech-badges');
+      if (!this.pteCoachOpen) {
+        if (overlay) overlay.style.display = 'none';
+        if (badgeLayer) { badgeLayer.style.display = 'none'; badgeLayer.innerHTML = ''; }
+      } else {
+        this.hydrateLinkingView(this.activePromptKey, this.activePromptRenderToken);
+      }
+    } else {
+      this.renderPromptForCurrentView();
+    }
     this.syncPteShell();
     window.dispatchEvent(new Event('resize'));
   }
@@ -3893,9 +3923,80 @@ class ReadAloudMode {
     const view = this.pteView, payload = this.lastAssessmentPayload;
     if (!view || view.payload === payload) return;
     view.payload = payload; view.stats.replaceChildren(); view.fixes.replaceChildren();
+
+    const isError = this.assessmentOutcome?.kind === 'error' || (!payload && this.assessmentStatusMessage);
+    const hasScores = payload && ['accuracyScore', 'fluencyScore', 'completenessScore', 'pronScore'].some(k => Number.isFinite(payload[k]));
+
+    if (isError && !hasScores) {
+      view.split.querySelector('.pte-fb__error-state')?.remove();
+      const errorBlock = document.createElement('div');
+      errorBlock.className = 'pte-fb__error-state';
+      const cause = this.assessmentOutcome?.message || this.assessmentStatusMessage || "We couldn't score this attempt.";
+      errorBlock.innerHTML = `
+        <div class="pte-fb__error-icon">!</div>
+        <h3 class="pte-fb__error-title">We couldn't score this attempt</h3>
+        <p class="pte-fb__error-desc">${cause}</p>
+        <div class="pte-fb__error-actions">
+          <button type="button" class="pte-btn pte-btn--primary pte-fb__error-retry">Try again</button>
+          <button type="button" class="pte-btn pte-btn--ghost pte-fb__error-keep">Keep the recording</button>
+        </div>
+      `;
+      errorBlock.querySelector('.pte-fb__error-retry').addEventListener('click', () => {
+        const retryBtn = document.getElementById('ra-retry-btn');
+        if (retryBtn) retryBtn.click();
+        else this.restartPrepPhase?.();
+      });
+      errorBlock.querySelector('.pte-fb__error-keep').addEventListener('click', () => {
+        errorBlock.style.display = 'none';
+        view.stage.style.display = '';
+        view.right.style.display = '';
+      });
+      const emptyRow = document.createElement('div');
+      emptyRow.className = 'pte-stats__empty';
+      emptyRow.textContent = 'Not scored';
+      view.stats.append(emptyRow);
+      const causeP = document.createElement('p');
+      causeP.textContent = cause;
+      view.fixes.append(causeP);
+      view.stage.style.display = 'none';
+      view.right.style.display = 'none';
+      view.split.prepend(errorBlock);
+      return;
+    } else {
+      view.split.querySelector('.pte-fb__error-state')?.remove();
+      view.stage.style.display = '';
+      view.right.style.display = '';
+    }
+
     const node = (tag, text) => { const el = document.createElement(tag); el.textContent = text; return el; };
-    for (const [label, key] of [['Accuracy', 'accuracyScore'], ['Fluency', 'fluencyScore'], ['Completeness', 'completenessScore'], ['Overall', 'pronScore']]) {
-      const cell = node('div', ''); cell.append(node('small', label), node('strong', Number.isFinite(payload?.[key]) ? `${payload[key]}%` : '—')); view.stats.append(cell);
+    if (!hasScores) {
+      const emptyRow = document.createElement('div');
+      emptyRow.className = 'pte-stats__empty';
+      emptyRow.textContent = 'Not scored';
+      view.stats.append(emptyRow);
+    } else {
+      for (const [label, key] of [['Accuracy', 'accuracyScore'], ['Fluency', 'fluencyScore'], ['Completeness', 'completenessScore'], ['Overall', 'pronScore']]) {
+        const cell = node('div', '');
+        cell.append(node('small', label));
+        const val = payload?.[key];
+        if (Number.isFinite(val)) {
+          const strong = document.createElement('strong');
+          strong.textContent = String(Math.round(val));
+          const unit = document.createElement('span');
+          unit.className = 'pte-stats__unit';
+          unit.textContent = '%';
+          strong.append(unit);
+          const bar = document.createElement('span');
+          bar.className = 'pte-stats__bar';
+          const fill = document.createElement('i');
+          fill.style.width = `${Math.min(100, Math.max(0, val))}%`;
+          bar.append(fill);
+          cell.append(strong, bar);
+        } else {
+          cell.append(node('strong', '—'));
+        }
+        view.stats.append(cell);
+      }
     }
     if (!payload) { view.fixes.append(node('p', this.assessmentStatusMessage || 'Getting feedback…')); return; }
     const words = (payload.words || []).filter(word => Number.isFinite(word.accuracyScore) && word.accuracyScore < 60);
@@ -4589,13 +4690,48 @@ class ReadAloudMode {
         this.setRecordedAudio(wavBlob, { preserveAssessmentBuffer: true });
       }
 
-      if (statusMsg) statusMsg.textContent = 'Analyzing pronunciation...';
       const formData = new FormData();
       formData.append('audio', wavBlob, 'recording.wav');
       formData.append('referenceText', recordingSession.referenceText);
       if (recordingSession.questionId) {
         formData.append('questionId', recordingSession.questionId);
       }
+
+      // AI Credit Quoting & Confirmation Gate
+      if (window.AiScoringGate?.requestConsentAndConfirm) {
+        if (statusMsg) statusMsg.textContent = 'Calculating quote...';
+        const sampleRate = preparedAudioBuffer?.sampleRate || 16000;
+        const durationSec = preparedAudioBuffer?.duration || (wavBlob.size / (sampleRate * 2)) || 1;
+        const sampleCount = Math.max(16000, Math.round(durationSec * sampleRate));
+
+        const gateResult = await window.AiScoringGate.requestConsentAndConfirm({
+          mode: 'read_aloud',
+          inputMeta: {
+            sampleCount,
+            sampleRateHz: sampleRate,
+            referenceText: recordingSession.referenceText
+          },
+          questionId: recordingSession.questionId || null
+        });
+
+        if (!this.shouldApplyAssessment(recordingSession)) return false;
+
+        if (!gateResult.allowed) {
+          if (gateResult.cancelled) {
+            if (statusMsg) statusMsg.textContent = 'Assessment cancelled. No credits charged.';
+            return false;
+          }
+          const err = new Error(gateResult.error || 'Scoring not authorized');
+          err.code = 'AI_SCORING_NOT_AUTHORIZED';
+          throw err;
+        }
+
+        if (gateResult.assessmentId) {
+          formData.append('assessmentId', gateResult.assessmentId);
+        }
+      }
+
+      if (statusMsg) statusMsg.textContent = 'Analyzing pronunciation...';
       this.lastAssessmentRequest = {
         questionId: recordingSession.questionId || null,
         referenceText: recordingSession.referenceText,
@@ -5307,6 +5443,9 @@ class ReadAloudMode {
     }
 
     this.currentGuideExplanationItems = items;
+    if (this.pteView) {
+      this.syncPteShell();
+    }
     this.currentGuideHasVisibleAssimilation = typeof window.ReadAloudLinking.hasVisibleAssimilation === 'function'
       ? window.ReadAloudLinking.hasVisibleAssimilation(analysis)
       : items.some((item) => item.layer === 'assimilation');

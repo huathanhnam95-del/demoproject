@@ -1527,6 +1527,17 @@
       if (modeMeta?.label) {
         card.setAttribute('aria-label', `${modeMeta.label} Practice mode`);
       }
+
+      if (!card.dataset.prefetchBound) {
+        card.dataset.prefetchBound = 'true';
+        const prefetch = () => {
+          if (cardMode && window.BELLazyLoader?.prefetchMode) {
+            window.BELLazyLoader.prefetchMode(cardMode);
+          }
+        };
+        card.addEventListener('pointerenter', prefetch, { passive: true });
+        card.addEventListener('focusin', prefetch, { passive: true });
+      }
     });
 
     const writingEmptyState = document.getElementById('practice-writing-empty');
@@ -1626,6 +1637,74 @@
       syncSpeakingPracticeController(currentActiveMode, scope);
     }
   });
+
+  function isSpeakingModeScriptLoaded(modeId) {
+    if (modeId === 'read-aloud') return !!window.ReadAloudMode;
+    if (modeId === 'speak') return true;
+    if (modeId === 'describe-image') return !!window.DescribeImageMode;
+    if (modeId === 'asq') return !!window.ASQMode;
+    if (modeId === 'sgd') return !!window.SGDMode;
+    if (modeId === 'rts') return !!window.RTSMode;
+    if (modeId === 'notes') return !!window.TakeNotesMode;
+    return false;
+  }
+
+  function showPteShellSkeleton(modePanel, mode) {
+    if (!modePanel) return;
+    let skel = modePanel.querySelector('.pte-shell-skeleton');
+    if (!skel) {
+      skel = document.createElement('div');
+      skel.className = 'pte-shell-skeleton';
+      skel.setAttribute('aria-hidden', 'true');
+      const modeMeta = typeof getModeMeta === 'function' ? getModeMeta(mode) : null;
+      const title = modeMeta?.label || (mode.charAt(0).toUpperCase() + mode.slice(1).replace(/-/g, ' '));
+      skel.innerHTML = `
+        <div class="pte-modebar">
+          <div class="pte-modebar__title">
+            <span>${title}</span>
+            <small>PTE Speaking</small>
+          </div>
+          <div class="spc-picker-nav">
+            <div class="pte-skel-block pte-skel-pill"></div>
+          </div>
+        </div>
+        <div class="pte-card">
+          <div class="pte-progress">
+            <span class="is-now"><div class="pte-skel-block pte-skel-line" style="width: 50%;"></div></span>
+            <span><div class="pte-skel-block pte-skel-line" style="width: 50%;"></div></span>
+            <span><div class="pte-skel-block pte-skel-line" style="width: 50%;"></div></span>
+          </div>
+          <div class="pte-card__body">
+            <div class="pte-skel-block pte-skel-instr"></div>
+            <div class="pte-center" style="margin: 24px 0; display: flex; justify-content: center;">
+              <div class="pte-skel-block pte-skel-recorder"></div>
+            </div>
+            <div class="pte-skel-passage">
+              <div class="pte-skel-block pte-skel-line" style="width: 100%;"></div>
+              <div class="pte-skel-block pte-skel-line" style="width: 92%;"></div>
+              <div class="pte-skel-block pte-skel-line" style="width: 78%;"></div>
+            </div>
+          </div>
+          <div class="pte-dock">
+            <div class="pte-dock__status">
+              <div class="pte-skel-block pte-skel-line" style="width: 80px;"></div>
+            </div>
+            <div class="pte-dock__actions">
+              <button type="button" class="pte-btn pte-btn--primary" disabled>Start recording</button>
+            </div>
+          </div>
+        </div>
+      `;
+      modePanel.prepend(skel);
+    }
+    modePanel.classList.add('pte-shell-loading');
+  }
+
+  function hidePteShellSkeleton(modePanel) {
+    if (!modePanel) return;
+    modePanel.classList.remove('pte-shell-loading');
+    modePanel.querySelectorAll('.pte-shell-skeleton').forEach(el => el.remove());
+  }
 
   // Expose for external use
   window.updateCurrentModeIndicator = updateCurrentModeIndicator;
@@ -2152,31 +2231,74 @@
       return;
     }
 
-    // Retell Lecture should expose a truthful loading shell while its optional
-    // cloud/local dependencies resolve. The panel remains switchable and the
-    // final state is still committed only after the bounded loader completes.
-    const earlyNotesPanel = mode === 'notes' ? document.getElementById('mode-notes') : null;
-    if (earlyNotesPanel) {
-      earlyNotesPanel.classList.add('active');
-      earlyNotesPanel.style.display = 'block';
-      earlyNotesPanel.dataset.modePreparing = 'true';
-      const earlyStatus = earlyNotesPanel.querySelector('#notes-entry-status');
-      if (earlyStatus) {
-        earlyStatus.hidden = false;
-        earlyStatus.dataset.notesStatus = 'loading';
-        earlyStatus.textContent = 'Loading Retell Lecture questions…';
+    const isV3Speaking = speakingModes.includes(mode) && !!window.PteShellConfig?.isModeEnabled?.(mode, PracticeScopeManager?.getScope?.() || 'pte');
+    const wasScriptLoaded = isSpeakingModeScriptLoaded(mode);
+    let v3RaceTimer = null;
+    let v3TransitionSettled = false;
+    const targetSpeakingPanel = isV3Speaking ? document.getElementById('mode-' + mode) : null;
+
+    if (isV3Speaking && targetSpeakingPanel) {
+      if (!wasScriptLoaded) {
+        showPteShellSkeleton(targetSpeakingPanel, mode);
+        targetSpeakingPanel.classList.add('active');
+        targetSpeakingPanel.style.display = 'block';
+        document.querySelectorAll('.mode-panel').forEach((panel) => {
+          if (panel !== targetSpeakingPanel) {
+            panel.classList.remove('active', 'stage-fade-blur-in', 'stage-fade-blur-out');
+            panel.style.display = 'none';
+          }
+        });
+        document.querySelector('.dashboard-modern-container')?.style.setProperty('display', 'none');
+      } else {
+        v3RaceTimer = setTimeout(() => {
+          if (!v3TransitionSettled && isCurrentTransition()) {
+            showPteShellSkeleton(targetSpeakingPanel, mode);
+            targetSpeakingPanel.classList.add('active');
+            targetSpeakingPanel.style.display = 'block';
+            delete targetSpeakingPanel.dataset.modePreparing;
+            document.querySelectorAll('.mode-panel').forEach((panel) => {
+              if (panel !== targetSpeakingPanel) {
+                panel.classList.remove('active', 'stage-fade-blur-in', 'stage-fade-blur-out');
+                panel.style.display = 'none';
+              }
+            });
+            document.querySelector('.dashboard-modern-container')?.style.setProperty('display', 'none');
+          }
+        }, 150);
       }
-      document.querySelectorAll('.mode-panel').forEach((panel) => {
-        if (panel !== earlyNotesPanel) {
-          panel.classList.remove('active');
-          panel.style.display = 'none';
+    } else if (mode === 'notes') {
+      const earlyNotesPanel = document.getElementById('mode-notes');
+      if (earlyNotesPanel) {
+        earlyNotesPanel.classList.add('active');
+        earlyNotesPanel.style.display = 'block';
+        earlyNotesPanel.dataset.modePreparing = 'true';
+        const earlyStatus = earlyNotesPanel.querySelector('#notes-entry-status');
+        if (earlyStatus) {
+          earlyStatus.hidden = false;
+          earlyStatus.dataset.notesStatus = 'loading';
+          earlyStatus.textContent = 'Loading Retell Lecture questions…';
         }
-      });
-      document.querySelector('.dashboard-modern-container')?.style.setProperty('display', 'none');
+        document.querySelectorAll('.mode-panel').forEach((panel) => {
+          if (panel !== earlyNotesPanel) {
+            panel.classList.remove('active');
+            panel.style.display = 'none';
+          }
+        });
+        document.querySelector('.dashboard-modern-container')?.style.setProperty('display', 'none');
+      }
     }
 
     const assetsReady = await ensureModeAssets(mode);
     if (!assetsReady) {
+      v3TransitionSettled = true;
+      if (v3RaceTimer) clearTimeout(v3RaceTimer);
+      if (isV3Speaking && targetSpeakingPanel) {
+        hidePteShellSkeleton(targetSpeakingPanel);
+        targetSpeakingPanel.classList.remove('active');
+        targetSpeakingPanel.style.display = 'none';
+        const dashboard = document.querySelector('.dashboard-modern-container');
+        if (dashboard) dashboard.style.display = 'block';
+      }
       if (!isCurrentTransition()) return false;
       if (mode === 'notes') {
         const failedNotesPanel = document.getElementById('mode-notes');
@@ -2194,8 +2316,17 @@
       }
       return false;
     }
-    if (!isCurrentTransition()) return false;
-    if (!assetsReady) return false;
+
+    if (!isCurrentTransition()) {
+      v3TransitionSettled = true;
+      if (v3RaceTimer) clearTimeout(v3RaceTimer);
+      if (isV3Speaking && targetSpeakingPanel) {
+        hidePteShellSkeleton(targetSpeakingPanel);
+        targetSpeakingPanel.classList.remove('active');
+        targetSpeakingPanel.style.display = 'none';
+      }
+      return false;
+    }
 
     // Map mode names to tab IDs and panel IDs
     const tabId = 'tab-' + mode;
@@ -2241,7 +2372,7 @@
         || (document.querySelector('.mode-panel.active') !== modePanel ? document.querySelector('.mode-panel.active') : null)
         || (document.querySelector('.dashboard-modern-container')?.style.display !== 'none' ? document.querySelector('.dashboard-modern-container') : null);
 
-      const deferSelectedPanelReveal = speakingModes.includes(mode) && mode !== 'notes';
+      const deferSelectedPanelReveal = speakingModes.includes(mode) && mode !== 'notes' && (!isV3Speaking || wasScriptLoaded);
 
       if (deferSelectedPanelReveal) {
         modePanel.dataset.modePreparing = 'true';
@@ -2400,11 +2531,24 @@
       }
 
       if (!isCurrentTransition()) {
+        v3TransitionSettled = true;
+        if (v3RaceTimer) clearTimeout(v3RaceTimer);
+        if (isV3Speaking && targetSpeakingPanel) {
+          hidePteShellSkeleton(targetSpeakingPanel);
+          targetSpeakingPanel.classList.remove('active');
+          targetSpeakingPanel.style.display = 'none';
+        }
         outgoingStage?.classList.remove('stage-fade-blur-out');
         return false;
       }
 
       syncSpeakingPracticeController(mode, PracticeScopeManager.getScope(), leavingMode);
+
+      v3TransitionSettled = true;
+      if (v3RaceTimer) clearTimeout(v3RaceTimer);
+      if (isV3Speaking && modePanel) {
+        hidePteShellSkeleton(modePanel);
+      }
 
       if (deferSelectedPanelReveal) {
         // Keep outgoing content readable until the next state is ready; never delay the action for motion.
@@ -10475,15 +10619,39 @@
     async feedback(scores, missedWords) {
       const assessment = window.lastRepeatSentenceAssessment;
       const stats = modeSpeak.querySelector('.pte-stats'); stats.replaceChildren();
-      const tiles = [['Points', `${scores.score}/${scores.maxScore}`],
-        ['Pronunciation', assessment?.pronScore ?? assessment?.pronunciationScore],
-        ['Fluency', assessment?.fluencyScore], ['Completeness', assessment?.completenessScore]];
-      tiles.forEach(([label, value]) => {
-        if (value == null || (label !== 'Points' && !Number.isFinite(value))) return;
-        const tile = document.createElement('div'), title = document.createElement('small'), number = document.createElement('strong');
-        title.textContent = label; number.textContent = label === 'Points' ? value : `${Math.round(value)}%`;
-        tile.append(title, number); stats.append(tile);
-      });
+      const tiles = [['Points', `${scores.score}/${scores.maxScore}`, ''],
+        ['Pronunciation', assessment?.pronScore ?? assessment?.pronunciationScore, '%'],
+        ['Fluency', assessment?.fluencyScore, '%'], ['Completeness', assessment?.completenessScore, '%']];
+      const hasFinite = tiles.some(([l, val]) => val != null && (l === 'Points' ? true : Number.isFinite(val)));
+      if (!hasFinite) {
+        const emptyRow = document.createElement('div');
+        emptyRow.className = 'pte-stats__empty';
+        emptyRow.textContent = 'Not scored';
+        stats.append(emptyRow);
+      } else {
+        tiles.forEach(([label, value, unit]) => {
+          if (value == null || (label !== 'Points' && !Number.isFinite(value))) return;
+          const tile = document.createElement('div'), title = document.createElement('small'), number = document.createElement('strong');
+          title.textContent = label;
+          number.textContent = label === 'Points' ? value : String(Math.round(value));
+          if (unit) {
+            const u = document.createElement('span');
+            u.className = 'pte-stats__unit';
+            u.textContent = unit;
+            number.append(u);
+          }
+          tile.append(title, number);
+          if (label !== 'Points' && Number.isFinite(value)) {
+            const bar = document.createElement('span');
+            bar.className = 'pte-stats__bar';
+            const fill = document.createElement('i');
+            fill.style.width = `${Math.min(100, Math.max(0, value))}%`;
+            bar.append(fill);
+            tile.append(bar);
+          }
+          stats.append(tile);
+        });
+      }
       const fixes = document.getElementById('speak-pte-fixes'); fixes.replaceChildren();
       const words = assessment?.words || [];
       const targets = [...new Set([...missedWords, ...words.filter(w => w.accuracyScore < 80).map(w => w.word)])].slice(0, 4);

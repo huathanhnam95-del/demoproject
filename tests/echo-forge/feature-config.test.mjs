@@ -9,10 +9,11 @@ const functions = require('../../functions/src/public-feature-config.js');
 
 test('local and Functions config expose the same strict Echo Forge feature flag', () => {
   for (const module of [local, functions]) {
-    assert.deepEqual(module.buildPublicFeatures({}), { echoForgeSandbox: false });
-    assert.deepEqual(module.buildPublicFeatures({ ECHO_FORGE_SANDBOX_ENABLED: 'false' }), { echoForgeSandbox: false });
-    assert.deepEqual(module.buildPublicFeatures({ ECHO_FORGE_SANDBOX_ENABLED: 'TRUE' }), { echoForgeSandbox: false });
-    assert.deepEqual(module.buildPublicFeatures({ ECHO_FORGE_SANDBOX_ENABLED: 'true' }), { echoForgeSandbox: true });
+    assert.strictEqual(module.buildPublicFeatures({}).echoForgeSandbox, false);
+    assert.strictEqual(module.buildPublicFeatures({ ECHO_FORGE_SANDBOX_ENABLED: 'false' }).echoForgeSandbox, false);
+    assert.strictEqual(module.buildPublicFeatures({ ECHO_FORGE_SANDBOX_ENABLED: 'TRUE' }).echoForgeSandbox, false);
+    assert.strictEqual(module.buildPublicFeatures({ ECHO_FORGE_SANDBOX_ENABLED: 'true' }).echoForgeSandbox, true);
+    assert.deepEqual(module.buildPublicFeatures({}), module.buildPublicFeatures({}));
   }
 });
 

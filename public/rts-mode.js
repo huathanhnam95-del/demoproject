@@ -65,6 +65,7 @@
     let scoreRTSFn = null;
     let isAiScoring = false;
     let hasAiScoreResult = false;
+    let spokenAssessmentData = null;
 
     // Speech recognition
     let speechRecognition = null;
@@ -951,6 +952,53 @@
         const qGen = questionGen;
         const aGen = attemptGen;
 
+        let aiAssessmentId = null;
+        if (window.AiScoringGate?.requestConsentAndConfirm) {
+            const rawBlob = recordingBlob;
+            const sampleRate = 16000;
+            const durationSec = Math.max(1, Math.round(v3RecordedDurationSec || recordingSeconds || 40));
+            const sampleCount = Math.max(16000, durationSec * sampleRate);
+            let base64Audio = null;
+            if (rawBlob && window.AiScoringGate.blobToBase64) {
+                base64Audio = await window.AiScoringGate.blobToBase64(rawBlob).catch(() => null);
+            }
+
+            const gateResult = await window.AiScoringGate.requestConsentAndConfirm({
+                mode: 'respond_to_situation',
+                inputMeta: {
+                    textResponse: safeTranscript,
+                    sampleCount,
+                    sampleRateHz: sampleRate,
+                    audioBuffer: base64Audio
+                },
+                questionId: currentEntry?.id || null
+            });
+
+            if (!gateResult.allowed) {
+                if (gateResult.cancelled) {
+                    if (el.rtsAiScoreBtn) el.rtsAiScoreBtn.textContent = 'Submit to AI Scoring';
+                    updateAiScoreButtonState();
+                    return;
+                }
+                alert(gateResult.error || 'Scoring not authorized');
+                if (el.rtsAiScoreBtn) el.rtsAiScoreBtn.textContent = 'Submit to AI Scoring';
+                updateAiScoreButtonState();
+                return;
+            }
+            aiAssessmentId = gateResult.assessmentId || null;
+            if (aiAssessmentId && window.AiScoringGate.pollAssessmentResult) {
+                window.AiScoringGate.pollAssessmentResult(aiAssessmentId)
+                    .then(res => {
+                        spokenAssessmentData = res;
+                        const discEl = document.getElementById(v3Active ? 'rts-v3-transcript-disclosure' : 'rts-transcript-disclosure');
+                        if (discEl && window.TranscriptDisclosure && res) {
+                            new window.TranscriptDisclosure({ containerEl: discEl }).render(res);
+                        }
+                    })
+                    .catch(err => console.warn('[RTS] Spoken assessment polling failed:', err));
+            }
+        }
+
         isAiScoring = true;
         if (el.rtsAiScoreBtn) {
             el.rtsAiScoreBtn.disabled = true;
@@ -994,10 +1042,17 @@
                         teacherAdvice: data.teacherAdvice || null,
                         score: numericScore
                     },
+                    responseSnapshot: {
+                        transcript: safeTranscript,
+                        spokenTranscript: spokenAssessmentData?.transcription?.rawTranscript || null,
+                        transcriptSource: spokenAssessmentData ? 'server_asr' : 'browser_stt',
+                        pronunciationAssessmentId: aiAssessmentId || null
+                    },
                     scoringSnapshot: {
                         source: 'ai',
                         success: data.success === true,
-                        teacherAdviceChat: data.teacherAdviceChat || null
+                        teacherAdviceChat: data.teacherAdviceChat || null,
+                        pronunciationAssessmentId: aiAssessmentId || null
                     }
                 }).catch((error) => console.warn('[PTE Archive] RTS AI patch failed:', error));
             }
@@ -1079,6 +1134,7 @@
         ` : '';
 
         el.rtsResultsContainer.innerHTML = `
+            <div id="rts-transcript-disclosure" class="rts-transcript-disclosure" style="margin-bottom: 16px;"></div>
             <div class="essay-results-summary">
                 <div class="essay-results-score-circle">
                     <span class="essay-score-number">${total}</span>
@@ -1096,6 +1152,11 @@
             ${sampleHtml}
             ${teacherAdviceHtml}
         `;
+
+        if (spokenAssessmentData && window.TranscriptDisclosure) {
+            const discEl = document.getElementById('rts-transcript-disclosure');
+            if (discEl) new window.TranscriptDisclosure({ containerEl: discEl }).render(spokenAssessmentData);
+        }
 
         // Init sample tabs
         initSampleResponseTabs();
@@ -1254,7 +1315,7 @@
         if (!document.getElementById('rts-pte-instruction')) {
             const instr = document.createElement('div');
             instr.id = 'rts-pte-instruction';
-            instr.className = 'rts-pte-instruction';
+            instr.className = 'rts-pte-instruction pte-instr';
             instr.textContent = 'Listen to and read a description of a situation. You will have 10 seconds to think about your answer. Then you will hear a beep. You will have 40 seconds to answer the question. Please answer as completely as you can.';
             area.insertBefore(instr, area.firstChild);
         }
@@ -1293,14 +1354,14 @@
             feedback.style.display = 'none';
 
             feedback.innerHTML = `
-                <div class="rts-fb-grid">
-                    <div class="rts-fb-left">
+                <div class="pte-fb rts-fb-grid">
+                    <div class="pte-fb__left rts-fb-left">
                         <h4 class="rts-fb-heading">Your Recording</h4>
                         <audio id="rts-v3-playback" controls aria-label="Student recording" style="width: 100%;"></audio>
                         <h4 class="rts-fb-heading" style="margin-top: 12px;">Your Transcript</h4>
                         <div id="rts-v3-transcript" class="rts-v3-transcript" style="font-size: 1rem; line-height: 1.6; padding: 12px; background: var(--bg-secondary, #f8fafc); border-radius: 8px; border: 1px solid var(--border-light, #e2e8f0);">No transcript detected.</div>
                     </div>
-                    <div class="rts-fb-right">
+                    <div class="pte-fb__right rts-fb-right">
                         <div class="rts-v3-fb-tabs" role="tablist">
                             <button type="button" class="rts-v3-fb-tab active" data-v3-tab="ai" role="tab" aria-selected="true">AI Score</button>
                             <button type="button" class="rts-v3-fb-tab" data-v3-tab="sample" role="tab" aria-selected="false">Sample Answers</button>
@@ -1848,6 +1909,7 @@
         ` : '';
 
         container.innerHTML = `
+            <div id="rts-v3-transcript-disclosure" class="rts-v3-transcript-disclosure" style="margin-bottom: 16px;"></div>
             <div class="essay-results-summary">
                 <div class="essay-results-score-circle">
                     <span class="essay-score-number">${total}</span>
@@ -1862,6 +1924,11 @@
             ${analysisHtml}
             ${teacherAdviceHtml}
         `;
+
+        if (spokenAssessmentData && window.TranscriptDisclosure) {
+            const discEl = document.getElementById('rts-v3-transcript-disclosure');
+            if (discEl) new window.TranscriptDisclosure({ containerEl: discEl }).render(spokenAssessmentData);
+        }
     }
 
     async function finishRecordingForNext() {

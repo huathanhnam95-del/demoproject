@@ -473,9 +473,27 @@
     return false;
   }
 
+  const prefetchedModes = new Set();
+  function prefetchMode(modeId) {
+    if (typeof navigator !== 'undefined' && navigator.connection?.saveData) return;
+    if (!modeId || prefetchedModes.has(modeId)) return;
+    prefetchedModes.add(modeId);
+    const doPrefetch = () => {
+      if (managedModes.has(modeId)) {
+        ensureModeScripts(modeId).catch(() => {});
+      }
+    };
+    if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(doPrefetch, { timeout: 2000 });
+    } else {
+      setTimeout(doPrefetch, 200);
+    }
+  }
+
   window.BELLazyLoader = {
     supportsMode: mode => managedModes.has(mode),
     ensureModeScripts,
+    prefetchMode,
     ensureWatchModeLoaded,
     ensureNotesModeLoaded,
     ensureRfibModeLoaded,

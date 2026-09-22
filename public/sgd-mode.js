@@ -40,6 +40,10 @@
     let recordingSeconds = 0;
     let recordingBlobUrl = null;
     let recordingBlob = null;
+    let originalRecordingBlob = null;
+    let enhancedPlaybackBlob = null;
+    let acceptedTranscription = null;
+    let pronunciationAssessmentId = null;
     let dspPromise = null;
     let recordingSessionToken = 0;
 
@@ -1259,6 +1263,8 @@
             // Bug fix: clean up previous recording blob if re-recording
             if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
             recordingBlob = null;
+            originalRecordingBlob = null;
+            enhancedPlaybackBlob = null;
             dspPromise = null;
             const currentToken = ++recordingSessionToken;
 
@@ -1274,6 +1280,7 @@
                 stream.getTracks().forEach(t => t.stop());
                 if (recordedChunks.length > 0) {
                     const blob = new Blob(recordedChunks, { type: recorder.mimeType || 'audio/webm' });
+                    originalRecordingBlob = blob;
                     recordingBlob = blob;
                     recordingBlobUrl = URL.createObjectURL(blob);
                     if (el.recordingPlayback) el.recordingPlayback.src = recordingBlobUrl;
@@ -1285,7 +1292,7 @@
                             if (currentToken !== recordingSessionToken) return blob;
                             if (result && result.wavBlob) {
                                 if (recordingBlobUrl) URL.revokeObjectURL(recordingBlobUrl);
-                                recordingBlob = result.wavBlob;
+                                enhancedPlaybackBlob = result.wavBlob;
                                 recordingBlobUrl = result.audioUrl || URL.createObjectURL(result.wavBlob);
                                 if (el.recordingPlayback) el.recordingPlayback.src = recordingBlobUrl;
                                 return result.wavBlob;
@@ -1402,7 +1409,10 @@
                 },
                 responseSnapshot: {
                     notes: userNotes,
-                    transcript: Object.values(userNotes || {}).join(' ')
+                    spokenTranscript: acceptedTranscription?.rawTranscript || null,
+                    transcriptSource: acceptedTranscription ? 'server_asr' : null,
+                    pronunciationAssessmentId: pronunciationAssessmentId || null,
+                    legacyNotesProxy: Object.values(userNotes || {}).join(' ')
                 },
                 answerSnapshot: {
                     keyPoints: currentEntry?.keyPoints || [],
@@ -1760,7 +1770,7 @@
         if (!instruction) {
             instruction = document.createElement('p');
             instruction.id = 'sgd-pte-instruction';
-            instruction.className = 'sgd-pte-instruction';
+            instruction.className = 'sgd-pte-instruction pte-instr';
             instruction.textContent = 'You will hear three people having a discussion. When you hear the beep, summarize the whole discussion. You will have 10 seconds to prepare and 2 minutes to give your response.';
             el.practiceArea.prepend(instruction);
         }
@@ -1827,21 +1837,30 @@
         if (!feedback) {
             feedback = document.createElement('div');
             feedback.id = 'sgd-pte-feedback';
-            feedback.className = 'sgd-pte-feedback pte-fb';
+            // Only the inner grid is a .pte-fb; nesting one inside another gave the
+            // shell two competing column systems.
+            feedback.className = 'sgd-pte-feedback';
             feedback.style.display = 'none';
             feedback.hidden = true;
 
             const grid = document.createElement('div');
-            grid.className = 'sgd-fb-grid';
+            grid.className = 'sgd-fb-grid pte-fb';
 
             // Left column
             const leftCol = document.createElement('div');
-            leftCol.className = 'sgd-fb-left';
+            leftCol.className = 'sgd-fb-left pte-fb__left';
             leftCol.innerHTML = `
                 <h4 class="sgd-fb-heading">Your Recording</h4>
                 <div id="sgd-v3-playback" class="sgd-v3-playback">
                     <audio id="sgd-v3-student-audio" controls style="width: 100%;"></audio>
                 </div>
+                <div id="sgd-v3-ai-scoring-section" class="sgd-v3-ai-scoring-section" style="margin-top: 14px; margin-bottom: 16px;">
+                    <button type="button" id="sgd-v3-ai-score-btn" class="pte-btn pte-btn--primary" style="width: 100%; padding: 10px 14px; font-weight: 600; border-radius: 8px;">
+                        ⚡ Get AI Pronunciation Assessment
+                    </button>
+                    <div id="sgd-v3-ai-status" style="font-size: 13px; color: #64748b; margin-top: 6px; text-align: center;"></div>
+                </div>
+                <div id="sgd-v3-transcript-disclosure" class="sgd-v3-transcript-disclosure" style="margin-bottom: 16px;"></div>
                 <h4 class="sgd-fb-heading">Your Notes</h4>
                 <div id="sgd-v3-notes-review" class="sgd-v3-notes-review"></div>
             `;
@@ -1849,7 +1868,7 @@
 
             // Right column
             const rightCol = document.createElement('div');
-            rightCol.className = 'sgd-fb-right';
+            rightCol.className = 'sgd-fb-right pte-fb__right';
             rightCol.innerHTML = `
                 <div class="sgd-v3-fb-tabs">
                     <button type="button" class="sgd-v3-fb-tab active" data-v3-tab="stats">Who said what</button>
@@ -1862,6 +1881,11 @@
 
             feedback.appendChild(grid);
             el.practiceArea.appendChild(feedback);
+
+            const aiScoreBtn = feedback.querySelector('#sgd-v3-ai-score-btn');
+            if (aiScoreBtn) {
+                aiScoreBtn.addEventListener('click', requestSgdAiScoring);
+            }
 
             const tabButtons = feedback.querySelectorAll('.sgd-v3-fb-tab');
             tabButtons.forEach(btn => {
@@ -1940,11 +1964,13 @@
 
         if (v3Phase === 'feedback') {
             if (stage) { stage.hidden = true; stage.style.display = 'none'; }
-            if (feedback) { feedback.hidden = false; feedback.style.display = 'flex'; }
+            // Leave display to the stylesheet so .pte-fb keeps its grid and its
+            // stacking rule; an inline value overrode both.
+            if (feedback) { feedback.hidden = false; feedback.style.display = ''; }
             renderV3Feedback();
         } else {
             if (stage) { stage.hidden = false; stage.style.display = 'flex'; }
-            if (feedback) { feedback.hidden = true; feedback.style.display = 'none'; }
+            if (feedback) { feedback.hidden = true; feedback.style.display = ''; }
         }
     }
 
@@ -2068,6 +2094,8 @@
         v3RecordedDurationSec = 0;
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        originalRecordingBlob = null;
+        enhancedPlaybackBlob = null;
         dspPromise = null;
 
         let stream;
@@ -2131,6 +2159,8 @@
         mediaRecorder = null;
         recordedChunks = [];
         recordingBlob = null;
+        originalRecordingBlob = null;
+        enhancedPlaybackBlob = null;
         dspPromise = null;
         startV3Prep();
     }
@@ -2145,6 +2175,7 @@
     async function onV3RecordingComplete() {
         const myToken = recordingSessionToken;
         const blob = recordedChunks.length > 0 ? new Blob(recordedChunks, { type: mediaRecorder?.mimeType || 'audio/webm' }) : null;
+        originalRecordingBlob = blob;
         recordingBlob = blob;
         if (blob) {
             recordingBlobUrl = URL.createObjectURL(blob);
@@ -2155,7 +2186,7 @@
                 if (myToken !== recordingSessionToken) return blob;
                 if (res?.wavBlob) {
                     if (recordingBlobUrl) URL.revokeObjectURL(recordingBlobUrl);
-                    recordingBlob = res.wavBlob;
+                    enhancedPlaybackBlob = res.wavBlob;
                     recordingBlobUrl = res.audioUrl || URL.createObjectURL(res.wavBlob);
                     return res.wavBlob;
                 }
@@ -2212,7 +2243,11 @@
                 },
                 responseSnapshot: {
                     userNotes,
-                    speakerCount: Object.keys(currentEntry?.speakers || {}).length
+                    speakerCount: Object.keys(currentEntry?.speakers || {}).length,
+                    spokenTranscript: acceptedTranscription?.rawTranscript || null,
+                    transcriptSource: acceptedTranscription ? 'server_asr' : null,
+                    pronunciationAssessmentId: pronunciationAssessmentId || null,
+                    legacyNotesProxy: Object.values(userNotes || {}).join(' ')
                 },
                 answerSnapshot: {
                     keyPoints: currentEntry?.keyPoints || [],
@@ -2232,9 +2267,132 @@
         }
     }
 
+    async function requestSgdAiScoring() {
+        const aiBtn = document.getElementById('sgd-v3-ai-score-btn');
+        const aiStatus = document.getElementById('sgd-v3-ai-status');
+        const disclosureEl = document.getElementById('sgd-v3-transcript-disclosure');
+        const rawBlob = originalRecordingBlob || recordingBlob;
+        if (!rawBlob) {
+            if (aiStatus) aiStatus.textContent = 'No recording available to score.';
+            return;
+        }
+
+        if (aiBtn) aiBtn.disabled = true;
+        if (aiStatus) aiStatus.textContent = 'Calculating credit quote...';
+
+        try {
+            const sampleRate = 16000;
+            const durationSec = Math.max(1, Math.round(v3RecordedDurationSec || recordingSeconds || 30));
+            const sampleCount = Math.max(16000, durationSec * sampleRate);
+            const base64Audio = await window.AiScoringGate?.blobToBase64?.(rawBlob);
+
+            const gateResult = await window.AiScoringGate.requestConsentAndConfirm({
+                mode: 'summarize_group_discussion',
+                inputMeta: {
+                    sampleCount,
+                    sampleRateHz: sampleRate,
+                    audioBuffer: base64Audio
+                },
+                questionId: currentEntry?.id || null
+            });
+
+            if (!gateResult.allowed) {
+                if (gateResult.cancelled) {
+                    if (aiStatus) aiStatus.textContent = 'AI assessment cancelled. No credits charged.';
+                    if (aiBtn) aiBtn.disabled = false;
+                    return;
+                }
+                throw new Error(gateResult.error || 'Scoring not authorized');
+            }
+
+            if (aiStatus) aiStatus.textContent = 'Analyzing response with Azure Speech AI...';
+
+            let assessmentResult = null;
+            if (gateResult.assessmentId) {
+                assessmentResult = await window.AiScoringGate.pollAssessmentResult(gateResult.assessmentId);
+            } else if (gateResult.unmetered) {
+                assessmentResult = gateResult.result || null;
+            }
+
+            if (assessmentResult) {
+                acceptedTranscription = assessmentResult.transcription || null;
+                pronunciationAssessmentId = gateResult.assessmentId || null;
+
+                if (disclosureEl && window.TranscriptDisclosure) {
+                    const disclosure = new window.TranscriptDisclosure({
+                        containerEl: disclosureEl,
+                        onWordClick: (w) => {
+                            console.log('[SGD Disclosure] Clicked token:', w);
+                        }
+                    });
+                    disclosure.render(assessmentResult);
+                }
+
+                if (aiStatus) aiStatus.textContent = 'Pronunciation assessment complete.';
+                if (aiBtn) aiBtn.style.display = 'none';
+
+                // Patch attempt archive with real transcript and assessment id
+                const userNotes = v3LastNotes || collectSpeakerNotes();
+                window.PTEAttemptArchive?.saveAttempt?.({
+                    practiceMode: 'sgd',
+                    promptSnapshot: {
+                        promptId: currentEntry?.id || null,
+                        title: currentEntry?.title || '',
+                        text: currentEntry?.narration || '',
+                        sourceAssetPaths: currentEntry?.audio ? [currentEntry.audio] : [],
+                        data: currentEntry
+                    },
+                    responseSnapshot: {
+                        userNotes,
+                        spokenTranscript: acceptedTranscription?.rawTranscript || null,
+                        transcriptSource: 'server_asr',
+                        pronunciationAssessmentId: pronunciationAssessmentId,
+                        speakerCount: Object.keys(currentEntry?.speakers || {}).length,
+                        legacyNotesProxy: Object.values(userNotes || {}).join(' ')
+                    },
+                    answerSnapshot: {
+                        keyPoints: currentEntry?.keyPoints || [],
+                        sampleAnswer: currentEntry?.sampleAnswer || null
+                    },
+                    resultSnapshot: v3LastResult,
+                    scoringSource: 'ai',
+                    media: rawBlob ? [{
+                        slot: 'student',
+                        label: 'Student summary',
+                        blob: rawBlob,
+                        contentType: rawBlob.type || 'audio/webm'
+                    }] : []
+                }).catch(err => console.warn('[PTE Archive] SGD patch failed:', err));
+            }
+        } catch (err) {
+            console.error('[SGD AI Scoring] Error:', err);
+            if (aiStatus) aiStatus.textContent = err.message || 'Scoring failed. Please try again.';
+            if (aiBtn) aiBtn.disabled = false;
+        }
+    }
+
     function renderV3Feedback() {
         const feedback = document.getElementById('sgd-pte-feedback');
         if (!feedback || !v3LastResult) return;
+
+        const aiSection = document.getElementById('sgd-v3-ai-scoring-section');
+        const aiBtn = document.getElementById('sgd-v3-ai-score-btn');
+        const aiStatus = document.getElementById('sgd-v3-ai-status');
+        const disclosureEl = document.getElementById('sgd-v3-transcript-disclosure');
+        if (aiSection) {
+            if (recordingBlob || originalRecordingBlob) {
+                aiSection.style.display = 'block';
+                if (aiBtn) {
+                    aiBtn.style.display = pronunciationAssessmentId ? 'none' : 'block';
+                    aiBtn.disabled = false;
+                }
+                if (aiStatus) {
+                    aiStatus.textContent = pronunciationAssessmentId ? 'Pronunciation assessment complete.' : '';
+                }
+            } else {
+                aiSection.style.display = 'none';
+            }
+        }
 
         const studentAudio = document.getElementById('sgd-v3-student-audio');
         if (studentAudio && recordingBlobUrl) {

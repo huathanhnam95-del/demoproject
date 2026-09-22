@@ -179,6 +179,7 @@ const {
     generateSyllableCoaching,
     extractWordsAndSyllablesFromAzure
 } = require('../services/pronunciation-assessment-service');
+const { resolveWordClipTiming } = require('../services/azure-speech/word-clip-policy');
 
 /**
  * Performs high-precision forced acoustic alignment using Azure Speech Pronunciation Assessment.
@@ -262,10 +263,14 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
         }
         const resJson = await res.json();
         const nbest = resJson.NBest?.[0];
-        const rawWords = nbest?.Words || [];
-
-        const words = extractWordsAndSyllablesFromAzure(rawWords, { calibrateBoundaries: true });
+        // Extract words with un-truncated acoustic boundaries per §5.8
+        const words = extractWordsAndSyllablesFromAzure(rawWords);
         if (!words || words.length === 0) return null;
+
+        // Attach ending-preserving word clip timing metadata per §5.7
+        for (let i = 0; i < words.length; i++) {
+            words[i].clipTiming = resolveWordClipTiming(words[i], words[i + 1] || null);
+        }
 
         let accuracyScore = null;
         if (Number.isFinite(Number(nbest?.AccuracyScore))) {

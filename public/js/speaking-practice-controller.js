@@ -580,18 +580,46 @@
     const items = getPickerItems(config, controllerState);
     const current = items.find(i => String(i.id) === String(currentId));
 
+    const pill = controllerState.dom.pill;
     const pillId = controllerState.dom.pillId;
     const pillLabel = controllerState.dom.pillLabel;
 
     if (current) {
       pillId.textContent = '#' + current.id;
-      pillLabel.textContent = current.label;
+      if (controllerState.isV3) {
+        let text = (current.label || '').trim().replace(/^Q\d+:\s*/i, '');
+        let hasGlyph = false;
+        if (text.startsWith('🎵')) {
+          hasGlyph = true;
+          text = text.replace(/^🎵\s*/, '');
+        }
+        const words = text.split(/\s+/).filter(Boolean);
+        const excerpt = words.slice(0, 4).join(' ') + (words.length > 4 ? '\u2026' : '');
+        if (hasGlyph) {
+          const glyph = document.createElement('span');
+          glyph.className = 'pill-audio-glyph';
+          glyph.textContent = '🎵 ';
+          pillLabel.replaceChildren(glyph, document.createTextNode(excerpt));
+        } else {
+          pillLabel.textContent = excerpt;
+        }
+        if (pill) {
+          pill.title = `#${current.id}: ${current.label}`;
+        }
+      } else {
+        pillLabel.textContent = current.label;
+        if (pill) {
+          pill.title = current.label || '';
+        }
+      }
     } else if (items.length === 0) {
       pillId.textContent = '';
       pillLabel.textContent = 'Loading\u2026';
+      if (pill) pill.removeAttribute('title');
     } else {
       pillId.textContent = '';
       pillLabel.textContent = 'Select question';
+      if (pill) pill.removeAttribute('title');
     }
   }
 
@@ -1654,12 +1682,14 @@
     const card = v3Element('div', 'pte-card'); body.before(card);
     const progress = v3Element('div', 'pte-progress');
     (config.v3.progressSteps || ['Prepare', 'Record', 'Feedback']).forEach(label => progress.append(v3Element('span', '', label)));
-    card.append(progress); rememberV3(state, body, card); body.classList.add('pte-card__body');
+    const cardBody = v3Element('div', 'pte-card__body');
+    card.append(progress, cardBody);
+    rememberV3(state, body, cardBody);
     const dock = v3Element('div', 'pte-dock');
     const status = v3Element('div', 'pte-dock__status', ''); status.setAttribute('aria-live', 'polite');
     const actions = v3Element('div', 'pte-dock__actions'); dock.append(status, actions); card.append(dock);
     const attempts = v3Element('section', 'pte-attempts'); card.after(attempts);
-    state.v3DOM = { bar, card, progress, dock, status, actions, attempts };
+    state.v3DOM = { bar, card, progress, cardBody, dock, status, actions, attempts };
     // Only shell-owned chrome is hidden here; mode-specific duplication belongs to its phase.
     document.querySelectorAll('.main-header').forEach(node => { rememberV3(state, node); node.hidden = true; node.style.display = 'none'; });
     document.body.classList.add('pte-shell-v3');
@@ -1679,6 +1709,7 @@
       });
       button._pteHelper = helper; state.v3DOM.actions.append(button);
     });
+    const LEGACY_BTN_CLASSES = ['modern-btn', 'modern-btn--record', 'modern-btn--check', 'modern-btn--retry', 'modern-btn--play', 'recording'];
     (dock.actions || []).forEach(action => {
       const button = document.getElementById(action.sourceId);
       if (!button) return;
@@ -1690,6 +1721,8 @@
       if (action.label) {
         record.children = [...button.childNodes]; button.textContent = action.label;
       }
+      record.removedClasses = LEGACY_BTN_CLASSES.filter(c => button.classList.contains(c));
+      if (record.removedClasses.length) button.classList.remove(...record.removedClasses);
       button.classList.add('pte-btn', `pte-btn--${action.variant || 'secondary'}`);
       button.dataset.ptePhases = (action.phases || []).join(' ');
     });

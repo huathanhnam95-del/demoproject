@@ -780,9 +780,20 @@
     return sharedAudioContext;
   }
 
+  function getCoordinator() {
+    if (typeof window !== 'undefined' && window.SegmentPlaybackCoordinator?.defaultCoordinator) {
+      return window.SegmentPlaybackCoordinator.defaultCoordinator;
+    }
+    return null;
+  }
+
   async function getDecodedAudioBuffer(url) {
     if (!url) return null;
-    if (audioBufferCache.has(url)) {
+    const coordinator = getCoordinator();
+    if (coordinator && coordinator.cache) {
+      const cached = coordinator.cache.get(url);
+      if (cached) return cached;
+    } else if (audioBufferCache.has(url)) {
       return audioBufferCache.get(url);
     }
     const ctx = getAudioContext();
@@ -792,7 +803,11 @@
       try {
         const response = await fetch(url);
         const arrayBuffer = await response.arrayBuffer();
-        return await ctx.decodeAudioData(arrayBuffer);
+        const buffer = await ctx.decodeAudioData(arrayBuffer);
+        if (coordinator && coordinator.cache && buffer) {
+          coordinator.cache.set(url, buffer);
+        }
+        return buffer;
       } catch (err) {
         console.warn('[CRM Result] Failed to decode audio buffer for WebAudio:', err);
         audioBufferCache.delete(url);
@@ -800,18 +815,24 @@
       }
     })();
 
-    audioBufferCache.set(url, promise);
+    if (!coordinator || !coordinator.cache) {
+      audioBufferCache.set(url, promise);
+    }
     return promise;
   }
 
   function stopActiveWordPlayback({ pause = false } = {}) {
     playbackRevision++;
     if (!activeWordPlayback) return;
-    const { timer, token, audioEl, sourceNode, gainNode, isWebAudio } = activeWordPlayback;
+    const { timer, token, audioEl, sourceNode, gainNode, isWebAudio, audioUrl } = activeWordPlayback;
     if (timer) clearInterval(timer);
     if (token) {
       token.classList.remove('is-playing');
       token.removeAttribute('aria-pressed');
+    }
+    const coordinator = getCoordinator();
+    if (coordinator && coordinator.cache && audioUrl) {
+      coordinator.cache.pin(audioUrl, false);
     }
     if (isWebAudio) {
       if (sourceNode) {
@@ -855,29 +876,21 @@
     // Stop any previous active playback
     stopActiveWordPlayback({ pause: true });
 
-    // Calculate calibrated effectiveEndMs:
-    // When words are contiguous, next word onset easily bleeds into current word.
-    const rawNextStart = token.dataset.nextStartMs ? Number(token.dataset.nextStartMs) : null;
-    const isMispronounced = token.classList.contains('crm-transcript-added') || token.classList.contains('crm-transcript-error');
+    // Explicitly pause the full recording player if currently playing
+    if (audioEl && !audioEl.paused) {
+      try {
+        audioEl.pause();
+      } catch (_) {}
+    }
 
-    let effectiveEndMs = endMs;
-    if (Number.isFinite(rawNextStart) && rawNextStart > startMs) {
-      const gap = rawNextStart - endMs;
-      // Contiguous or tightly connected speech
-      if (gap < 100) {
-        if (isMispronounced) {
-          // Mispronounced words exhibit wider trailing co-articulation and stumbles
-          effectiveEndMs = Math.min(endMs - 35, rawNextStart - 50);
-        } else {
-          // Standard connected speech
-          effectiveEndMs = Math.min(endMs - 25, rawNextStart - 35);
-        }
-      }
+    // Stop any other coordinator playback if available
+    const coordinator = getCoordinator();
+    if (coordinator) {
+      coordinator.stopAll();
     }
-    // Clamp to guarantee minimum audible word duration (at least 75ms)
-    if (effectiveEndMs - startMs < 75) {
-      effectiveEndMs = Math.max(startMs + 75, endMs);
-    }
+
+    // Ending-Safe Playback: Preserve raw phonetic ending without stacked heuristic trims.
+    const effectiveEndMs = endMs;
 
     const revision = ++playbackRevision;
 
@@ -885,12 +898,20 @@
     token.classList.add('is-playing');
     token.setAttribute('aria-pressed', 'true');
 
+    const audioUrl = audioEl?.getAttribute('src') || '';
+
     activeWordPlayback = {
       revision,
       token,
       audioEl,
+      audioUrl,
       isWebAudio: true
     };
+
+    // Pin active recording in cache if coordinator exists
+    if (coordinator && coordinator.cache && audioUrl) {
+      coordinator.cache.pin(audioUrl, true);
+    }
 
     // Seek native audio element so visible scrubber aligns with word start
     if (audioEl) {
@@ -903,7 +924,6 @@
       }
     }
 
-    const audioUrl = audioEl?.getAttribute('src') || '';
     const ctx = getAudioContext();
 
     // Try WebAudio first for sample-accurate hardware scheduling and anti-bleed envelope
@@ -921,21 +941,24 @@
       if (playbackRevision !== revision) return;
 
       if (buffer) {
-        const offsetSec = Math.max(0, startMs / 1000);
-        const maxDurationSec = Math.max(0, buffer.duration - offsetSec);
-        const durationSec = Math.min(Math.max(0.06, (effectiveEndMs - startMs) / 1000), maxDurationSec);
+        const startSample = Math.max(0, Math.floor(startMs * buffer.sampleRate / 1000));
+        const endSample = Math.min(buffer.length, Math.ceil(effectiveEndMs * buffer.sampleRate / 1000));
+        const clipLength = endSample - startSample;
 
-        if (durationSec > 0) {
+        if (clipLength > 0) {
           try {
+            // Physically bounded PCM clip per §5.6: physically cannot run past accepted word ending
+            const clipBuffer = ctx.createBuffer(buffer.numberOfChannels, clipLength, buffer.sampleRate);
+            for (let c = 0; c < buffer.numberOfChannels; c++) {
+              clipBuffer.copyToChannel(buffer.getChannelData(c).subarray(startSample, endSample), c);
+            }
+
             const sourceNode = ctx.createBufferSource();
             const gainNode = ctx.createGain();
-            sourceNode.buffer = buffer;
+            sourceNode.buffer = clipBuffer;
 
-            // Anti-bleed gain envelope: 15ms-20ms fade-out at the end
-            const fadeSec = Math.min(0.020, durationSec * 0.25);
+            // Ending-Safe Playback: full fidelity to the end of the word segment without destructive fade
             gainNode.gain.setValueAtTime(1.0, ctx.currentTime);
-            gainNode.gain.setValueAtTime(1.0, ctx.currentTime + durationSec - fadeSec);
-            gainNode.gain.linearRampToValueAtTime(0.0, ctx.currentTime + durationSec);
 
             sourceNode.connect(gainNode);
             gainNode.connect(ctx.destination);
@@ -950,12 +973,13 @@
               revision,
               token,
               audioEl,
+              audioUrl,
               sourceNode,
               gainNode,
               isWebAudio: true
             };
 
-            sourceNode.start(0, offsetSec, durationSec);
+            sourceNode.start(0);
             return;
           } catch (err) {
             console.warn('[CRM Result] WebAudio playback failed, falling back to HTMLAudioElement:', err);
@@ -964,7 +988,7 @@
       }
     }
 
-    // Fallback to HTMLAudioElement with early-pause compensation
+    // Fallback to HTMLAudioElement with ending-safe bound
     if (!audioEl) {
       token.classList.remove('is-playing');
       token.removeAttribute('aria-pressed');
@@ -972,8 +996,8 @@
     }
 
     const startSec = Math.max(0, startMs / 1000);
-    // Early compensation: HTMLAudioElement pause latency is ~30-50ms
-    const compensatedEndSec = Math.max(startSec + 0.05, (effectiveEndMs - 40) / 1000);
+    // Ending-Safe Playback: preserve natural word endings without heuristic truncation (-40ms removed)
+    const compensatedEndSec = Math.max(startSec + 0.05, effectiveEndMs / 1000);
 
     try {
       const duration = Number(audioEl.duration);

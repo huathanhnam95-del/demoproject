@@ -9,7 +9,7 @@ const {
 const { sendError, sendSuccess } = require('../utils/response-helper');
 
 const router = express.Router();
-const REPEAT_SENTENCE_MAX_DURATION_MS = 25000;
+const REPEAT_SENTENCE_MAX_DURATION_MS = 15000;
 const REPEAT_SENTENCE_UPLOAD_LIMIT_BYTES = 10 * 1024 * 1024;
 
 const upload = multer({

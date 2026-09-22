@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { readScore, readAssessmentField, normalizeFinalResult } = require('./azure-speech/normalize');
 
 // === Oxford American IPA Normalization & Articulatory Coaching ===
 
@@ -603,12 +604,15 @@ function extractWordsAndSyllablesFromAzure(rawWords, options = {}) {
             }).filter(s => s.text.length > 0)
             : null;
 
+        const parsedScore = readScore(w);
         const wordObj = {
             word: String(w.Word || '').trim(),
             startMs,
             endMs,
-            accuracyScore: Math.round(Number((w.AccuracyScore ?? w.PronunciationAssessment?.AccuracyScore)) || 0),
-            errorType: String((w.ErrorType ?? w.PronunciationAssessment?.ErrorType) || 'None')
+            rawStartMs: startMs,
+            rawEndMs: endMs,
+            accuracyScore: parsedScore !== null ? Math.round(parsedScore) : 0,
+            errorType: String(readAssessmentField(w, 'ErrorType') || 'None')
         };
         if (syllables) {
             wordObj.syllables = syllables;
@@ -620,10 +624,17 @@ function extractWordsAndSyllablesFromAzure(rawWords, options = {}) {
         return mappedWords;
     }
 
-    // Acoustic boundary calibration: prevent abutting words from bleeding into the next word's onset
+    // DEPRECATED: Acoustic boundary calibration (calibrateBoundaries).
+    // Per BEL Spec §5.8, do NOT overwrite primary endMs with trimmed boundaries, which destroys word endings.
+    // Instead, preserve raw acoustic endpoints as primary endMs / rawEndMs, and expose legacy_trimmed_playback.
     const words = mappedWords.map((curr, idx) => {
         const next = mappedWords[idx + 1];
-        if (!next || curr.startMs == null || curr.endMs == null || next.startMs == null) return curr;
+        if (!next || curr.startMs == null || curr.endMs == null || next.startMs == null) {
+            return {
+                ...curr,
+                legacy_trimmed_playback: curr.endMs
+            };
+        }
         const rawGap = next.startMs - curr.endMs;
         let calibratedEndMs = curr.endMs;
         // When words are contiguous (gap < 25ms):
@@ -638,7 +649,8 @@ function extractWordsAndSyllablesFromAzure(rawWords, options = {}) {
         }
         return {
             ...curr,
-            endMs: calibratedEndMs
+            // Keep endMs unchanged to preserve true phonetic word endings
+            legacy_trimmed_playback: calibratedEndMs
         };
     });
 
@@ -701,5 +713,6 @@ module.exports = {
     generateSyllableCoaching,
     extractWordsAndSyllablesFromAzure,
     getAzureSpeechCredentials,
-    buildPronunciationAssessmentHeader
+    buildPronunciationAssessmentHeader,
+    normalizeFinalResult
 };

@@ -1285,7 +1285,9 @@
                         text: userNotes || transcriptText || '',
                         userNotes: userNotes || '',
                         transcript: transcriptText || '',
-                        speechTranscript: transcriptText || ''
+                        speechTranscript: transcriptText || '',
+                        responseKind: finalBlob ? 'spoken_retelling' : 'notes_only',
+                        pronunciation: { status: 'not_applicable' }
                     },
                     shouldPublish: () => qGen === questionGen && aGen === attemptGen && currentToken === recordingSessionToken && v3Active,
                     media: finalBlob ? [{
@@ -1511,7 +1513,7 @@
         if (!instruction) {
             instruction = document.createElement('p');
             instruction.id = 'notes-pte-instruction';
-            instruction.className = 'notes-pte-instruction';
+            instruction.className = 'notes-pte-instruction pte-instr';
             instruction.textContent = 'You will hear a lecture. After listening to the lecture, in 10 seconds, please speak into the microphone and retell what you have just heard from the lecture in your own words. You will have 40 seconds to give your response.';
             elements.practiceArea.prepend(instruction);
         }
@@ -1589,16 +1591,18 @@
         if (!feedback) {
             feedback = document.createElement('div');
             feedback.id = 'notes-pte-feedback';
-            feedback.className = 'notes-pte-feedback pte-fb';
+            // Only the inner grid is a .pte-fb; nesting one inside another gave the
+            // shell two competing column systems.
+            feedback.className = 'notes-pte-feedback';
             feedback.style.display = 'none';
             feedback.hidden = true;
 
             const grid = document.createElement('div');
-            grid.className = 'notes-fb-grid';
+            grid.className = 'notes-fb-grid pte-fb';
 
             // Left column
             const leftCol = document.createElement('div');
-            leftCol.className = 'notes-fb-left';
+            leftCol.className = 'notes-fb-left pte-fb__left';
             leftCol.innerHTML = `
                 <div id="notes-v3-audio-preview" class="notes-v3-audio-preview" style="display: none;">
                     <label class="notes-fb-heading">Your Recording</label>
@@ -1615,7 +1619,7 @@
 
             // Right column
             const rightCol = document.createElement('div');
-            rightCol.className = 'notes-fb-right';
+            rightCol.className = 'notes-fb-right pte-fb__right';
             rightCol.innerHTML = `
                 <div class="notes-v3-fb-tabs">
                     <button type="button" class="notes-v3-fb-tab active" data-v3-tab="notes-match">Notes match</button>
@@ -1699,11 +1703,13 @@
 
         if (v3Phase === 'feedback') {
             if (stage) { stage.hidden = true; stage.style.display = 'none'; }
-            if (feedback) { feedback.hidden = false; feedback.style.display = 'flex'; }
+            // Leave display to the stylesheet so .pte-fb keeps its grid and its
+            // stacking rule; an inline value overrode both.
+            if (feedback) { feedback.hidden = false; feedback.style.display = ''; }
             renderV3Feedback();
         } else {
             if (stage) { stage.hidden = false; stage.style.display = 'flex'; }
-            if (feedback) { feedback.hidden = true; feedback.style.display = 'none'; }
+            if (feedback) { feedback.hidden = true; feedback.style.display = ''; }
             if (recHost) {
                 recHost.style.display = (v3Phase === 'prep' || v3Phase === 'recording' || v3Phase === 'complete') ? '' : 'none';
             }
@@ -2116,6 +2122,24 @@
         const transcriptEl = document.getElementById('notes-v3-transcript-display');
         if (transcriptEl) {
             transcriptEl.innerHTML = v3LastResult.highlightedTranscript || '';
+        }
+
+        // Additive spoken retelling step behind RL_SPOKEN_ASSESSMENT (§12.3)
+        let spokenRetellHost = document.getElementById('notes-v3-spoken-retell-host');
+        if (!spokenRetellHost) {
+            spokenRetellHost = document.createElement('div');
+            spokenRetellHost.id = 'notes-v3-spoken-retell-host';
+            spokenRetellHost.className = 'notes-v3-spoken-retell-host';
+            feedback.appendChild(spokenRetellHost);
+        }
+
+        if (window.RLSpokenResponseController && window.RLSpokenResponseController.isEnabled()) {
+            window.RLSpokenResponseController.mount(spokenRetellHost, {
+                entry: currentEntry,
+                userNotes: v3LastUserNotes || elements.userInput?.value || ''
+            });
+        } else if (spokenRetellHost) {
+            spokenRetellHost.style.display = 'none';
         }
     }
 

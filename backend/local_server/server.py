@@ -3600,6 +3600,53 @@ def _build_v3_active_response(
         }
         if isinstance(remote_v4_alignment, dict):
             partition_variants['v4Alignment'] = remote_v4_alignment
+            timing_v42_flag = os.environ.get('PRONOUNCE_TIMING_V42', 'active').strip().lower()
+            if remote_v4_alignment.get('aligned') is True and timing_v42_flag != 'off':
+                try:
+                    from backend.local_server.pronounce_v42 import build_pronounce_v42
+                    sample_rate = int(praat_result.get('sampleRate') or 16000)
+                    pcm_data = praat_result.get('raw_pcm')
+                    if pcm_data is not None and len(pcm_data) > 0:
+                        pcm_data = np.asarray(pcm_data, dtype=np.float32)
+                        total_samples = len(pcm_data)
+                    else:
+                        duration_sec = float(praat_result.get('duration') or 0.0)
+                        total_samples = max(1, int(round(duration_sec * sample_rate)))
+                        pcm_data = np.zeros(total_samples, dtype=np.float32)
+
+                    audio_identity = {
+                        'sampleRateHz': sample_rate,
+                        'sampleCount': total_samples,
+                        'audioHash': hashlib.sha256(pcm_data.tobytes()).hexdigest(),
+                        'channels': 1,
+                        'pcmEncoding': 's16le',
+                        'canonicalizationVersion': 'canonical-v1'
+                    }
+                    v42_res = build_pronounce_v42(
+                        pcm=pcm_data,
+                        audio=audio_identity,
+                        reference={'text': reference_ipa or ''},
+                        recognizer_result=phoneme_result,
+                        v41_snapshot=remote_v4_alignment
+                    )
+                    partition_variants['timingVariants'] = {
+                        'v42': {
+                            'status': v42_res.get('status', 'available'),
+                            'mode': timing_v42_flag,
+                            'clockStatus': v42_res.get('clockStatus', 'TIME_MAPPING_UNVERIFIED'),
+                            'analysis': v42_res.get('timing'),
+                            'stress': v42_res.get('stress'),
+                            'boundaryDecisions': v42_res.get('boundaryDecisions', []),
+                            'nucleusDecisions': v42_res.get('nucleusDecisions', [])
+                        }
+                    }
+                except Exception as exc:
+                    partition_variants['timingVariants'] = {
+                        'v42': {
+                            'status': 'unavailable',
+                            'reason': f'V42_BUILD_FAILED: {str(exc)}'
+                        }
+                    }
         elif not allow_legacy_v4:
             partition_variants['v4AnalysisVersion'] = None
     if fricative_onset_refined:
@@ -3672,6 +3719,8 @@ def _build_v3_active_response(
     }
     if partition_variants is not None:
         response['partitionVariants'] = partition_variants
+        if 'timingVariants' in partition_variants:
+            response['timingVariants'] = partition_variants['timingVariants']
     return response
 
 
@@ -4098,6 +4147,72 @@ def _build_v4_comparison_envelope(v3_envelope, expected_syllables):
         'status': 'complete',
         'reason': None,
         'analysis': analysis,
+    }
+
+
+def _v42_timing_contract_error(timing_envelope, expected_syllables):
+    """Return a stable reason when a V4.2 timing envelope fails the contract."""
+    if not isinstance(timing_envelope, dict):
+        return 'V42_TIMING_INVALID'
+    if timing_envelope.get('schemaVersion') != 'pronounce-timing-v2':
+        return 'V42_SCHEMA_VERSION_INVALID'
+    if timing_envelope.get('segmentationVersion') != 'bel-segmentation-v4.2':
+        return 'V42_SEGMENTATION_VERSION_INVALID'
+    syllables = timing_envelope.get('syllables')
+    if not isinstance(syllables, list) or len(syllables) != expected_syllables:
+        return 'V42_SYLLABLE_COUNT_MISMATCH'
+    try:
+        from backend.local_server.segment_contract import validate_timing_envelope
+        validate_timing_envelope(timing_envelope)
+    except Exception:
+        return 'V42_TIMING_INVALID'
+    return None
+
+
+def _build_v42_comparison_envelope(v3_envelope, expected_syllables):
+    """Expose V4.2 candidate timing as an independent comparison envelope."""
+    unavailable = {
+        'status': 'unavailable',
+        'reason': 'PARTITION_VARIANT_V42_UNAVAILABLE',
+        'analysis': None,
+    }
+    if not isinstance(v3_envelope, dict):
+        return {**unavailable, 'reason': 'V3_ANALYSIS_UNAVAILABLE'}
+    v3_analysis = v3_envelope.get('analysis')
+    if not isinstance(v3_analysis, dict):
+        return unavailable
+    partition_variants = v3_analysis.get('partitionVariants')
+    if not isinstance(partition_variants, dict):
+        return unavailable
+    timing_variants = partition_variants.get('timingVariants')
+    if not isinstance(timing_variants, dict) or 'v42' not in timing_variants:
+        return unavailable
+    v42_data = timing_variants['v42']
+    if not isinstance(v42_data, dict):
+        return unavailable
+    if v42_data.get('status') != 'available':
+        return {
+            'status': 'unavailable',
+            'reason': v42_data.get('reason', 'V42_TIMING_UNAVAILABLE'),
+            'clockStatus': v42_data.get('clockStatus'),
+            'analysis': None
+        }
+    analysis = v42_data.get('analysis')
+    contract_err = _v42_timing_contract_error(analysis, expected_syllables)
+    if contract_err:
+        return {
+            'status': 'unavailable',
+            'reason': contract_err,
+            'clockStatus': v42_data.get('clockStatus'),
+            'analysis': analysis
+        }
+    return {
+        'status': 'complete',
+        'reason': None,
+        'clockStatus': v42_data.get('clockStatus'),
+        'analysis': analysis,
+        'boundaryDecisions': v42_data.get('boundaryDecisions', []),
+        'nucleusDecisions': v42_data.get('nucleusDecisions', [])
     }
 
 
@@ -4613,6 +4728,28 @@ def run_v3_pipeline(
         remaining = max(0.001, _V3_HARD_TIMEOUT_SECONDS - (time.time() - start_time))
         try:
             praat_result = praat_future.result(timeout=remaining)
+            if isinstance(praat_result, dict) and 'raw_pcm' not in praat_result:
+                try:
+                    import parselmouth
+                    sound = parselmouth.Sound(tmp_path)
+                    praat_result['raw_pcm'] = sound.values.squeeze().astype(np.float32)
+                    praat_result['sampleRate'] = int(sound.sampling_frequency)
+                    praat_result['duration'] = float(sound.duration)
+                except Exception:
+                    try:
+                        from scipy.io import wavfile
+                        sr, data = wavfile.read(tmp_path)
+                        if data.dtype == np.int16:
+                            pcm = data.astype(np.float32) / 32768.0
+                        else:
+                            pcm = data.astype(np.float32)
+                        if pcm.ndim > 1:
+                            pcm = pcm.mean(axis=1)
+                        praat_result['raw_pcm'] = pcm
+                        praat_result['sampleRate'] = sr
+                        praat_result['duration'] = len(pcm) / sr
+                    except Exception:
+                        pass
         except Exception as error:
             praat_error = 'V3_PRAAT_FAILED'
             print(f'V3 Praat analysis error: {error}')
@@ -4983,6 +5120,7 @@ def analyze_comparison():
             print(f'Comparison V3 analysis error: {error}')
 
         v4_envelope = _build_v4_comparison_envelope(v3_envelope, expected_syllables)
+        v42_envelope = _build_v42_comparison_envelope(v3_envelope, expected_syllables)
         complete_versions = (
             v2_envelope['status'] == 'complete',
             v3_envelope['status'] == 'complete',
@@ -5013,6 +5151,9 @@ def analyze_comparison():
             'v2': v2_envelope,
             'v3': v3_envelope,
             'v4': v4_envelope,
+            'timingVariants': {
+                'v42': v42_envelope
+            } if v42_envelope else {},
         }
         return jsonify(body), (200 if any_complete else 503)
     finally:

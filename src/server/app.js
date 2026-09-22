@@ -392,6 +392,7 @@ function createApp(options = {}) {
   const createPracticeAttemptsRouter = require('../../functions/src/routes/practice-attempts');
   const createSharedPracticeAttemptsRouter = require('../../functions/src/routes/shared-practice-attempts');
   const createProjectsRouter = require('../../functions/src/routes/crm/projects');
+  const createAiScoringRouter = require('../../functions/src/routes/ai-scoring');
 
   const routerDeps = {
     db: firebase.db,
@@ -403,6 +404,35 @@ function createApp(options = {}) {
 
   app.use('/api/practice-attempts', functionsAuthMiddleware, practiceAttemptsLimiterByUid, createPracticeAttemptsRouter(routerDeps));
   app.use('/api/shared/practice-attempts', sharedPracticeAttemptsLimiter, createSharedPracticeAttemptsRouter(routerDeps));
+  if (firebase?.db) {
+    const { ScoringWorker } = require('../../functions/src/ai-scoring/worker');
+    const { WalletService } = require('../../functions/src/ai-credits/wallet-service');
+    const { SettlementService } = require('../../functions/src/ai-credits/settlement-service');
+
+    const localTaskDispatcher = {
+      dispatch: (assessmentId) => {
+        setImmediate(async () => {
+          try {
+            const walletService = new WalletService({ db: firebase.db });
+            const settlementService = new SettlementService({ db: firebase.db, walletService });
+            const worker = new ScoringWorker({
+              db: firebase.db,
+              settlementService,
+              storageBucket: typeof firebase.getStorageBucket === 'function' ? firebase.getStorageBucket() : null
+            });
+            await worker.processJob(assessmentId, 'local-dev-worker');
+          } catch (workerErr) {
+            console.error(`[LocalDispatcher] Error processing job ${assessmentId}:`, workerErr);
+          }
+        });
+      }
+    };
+
+    app.use('/api/ai-scoring', functionsAuthMiddleware, createAiScoringRouter({
+      db: firebase.db,
+      taskDispatcher: localTaskDispatcher
+    }));
+  }
 
   // Projects owns its own verifier-backed identity fence. It must not reuse
   // the legacy local emulator JWT decoder used by practice routes.

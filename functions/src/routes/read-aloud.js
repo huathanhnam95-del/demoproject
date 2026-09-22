@@ -23,6 +23,7 @@ const {
   extractWordsAndSyllablesFromAzure,
   buildPronunciationAssessmentHeader
 } = require('../services/pronunciation-assessment-service');
+const { readScore } = require('../services/azure-speech/normalize');
 
 const router = express.Router();
 const CONNECTED_SPEECH_INDEX_PATH = fs.existsSync(path.join(__dirname, '..', 'data', 'read-aloud-connected-speech-index.json'))
@@ -596,8 +597,8 @@ function getAzureScoreValue(node, fieldName) {
 }
 
 function normalizeRoundedAzureScore(node, fieldName) {
-  const score = getAzureScoreValue(node, fieldName);
-  return Number.isFinite(score) ? Math.round(score) : null;
+  const score = readScore(node, fieldName);
+  return score !== null ? Math.round(score) : null;
 }
 
 function getAzureWordErrorType(wordNode) {
@@ -615,15 +616,15 @@ function getAzureWordTimingMs(wordNode, fieldName) {
 function collectAzurePronunciationScores(nbest) {
   const scores = [];
   ['AccuracyScore', 'FluencyScore', 'CompletenessScore', 'PronScore'].forEach((fieldName) => {
-    const numericScore = getAzureScoreValue(nbest, fieldName);
-    if (Number.isFinite(numericScore)) {
+    const numericScore = readScore(nbest, fieldName);
+    if (numericScore !== null) {
       scores.push(numericScore);
     }
   });
   if (Array.isArray(nbest?.Words)) {
     nbest.Words.forEach((word) => {
-      const numericScore = getAzureScoreValue(word, 'AccuracyScore');
-      if (Number.isFinite(numericScore)) {
+      const numericScore = readScore(word, 'AccuracyScore');
+      if (numericScore !== null) {
         scores.push(numericScore);
       }
     });
@@ -633,11 +634,6 @@ function collectAzurePronunciationScores(nbest) {
 
 function hasAzurePronunciationScores(nbest) {
   return collectAzurePronunciationScores(nbest).length > 0;
-}
-
-function hasOnlyZeroAzurePronunciationScores(nbest) {
-  const scores = collectAzurePronunciationScores(nbest);
-  return scores.length > 0 && scores.every((score) => score === 0);
 }
 
 router.post('/read-aloud/assess', parseReadAloudUpload, async (req, res) => {
@@ -700,21 +696,6 @@ router.post('/read-aloud/assess', parseReadAloudUpload, async (req, res) => {
         }
       );
     }
-    if (hasOnlyZeroAzurePronunciationScores(nbest)) {
-      return sendError(
-        res,
-        502,
-        'AZURE_ASSESSMENT_FAILED',
-        'Pronunciation scores were unavailable for this recording.',
-        {
-          reason: 'scores_unavailable',
-          scorePattern: 'all_zero',
-          recognizedText: String(nbest.Display || ''),
-          maxDurationMs: READ_ALOUD_MAX_ASSESSMENT_DURATION_MS
-        }
-      );
-    }
-
     const accuracyScore = normalizeRoundedAzureScore(nbest, 'AccuracyScore');
     const fluencyScore = normalizeRoundedAzureScore(nbest, 'FluencyScore');
     const completenessScore = normalizeRoundedAzureScore(nbest, 'CompletenessScore');
@@ -726,7 +707,7 @@ router.post('/read-aloud/assess', parseReadAloudUpload, async (req, res) => {
       const durationMs = getAzureWordTimingMs(word, 'Duration');
       const wordObj = {
         word: word.Word,
-        accuracyScore: normalizeRoundedAzureScore(word, 'AccuracyScore') || 0,
+        accuracyScore: normalizeRoundedAzureScore(word, 'AccuracyScore'),
         errorType: getAzureWordErrorType(word),
         startMs,
         endMs: startMs != null && durationMs != null ? startMs + durationMs : null

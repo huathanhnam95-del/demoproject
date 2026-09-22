@@ -2252,3 +2252,21 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1257,2026-09-21,Batch generate and audit answers for all remaining SWT questions using 3 local LLMs,In Progress,
 1258,2026-09-21,Audit PTE Speaking shell v3 implementation against mockups and write fix handoff plan,Done,2026-09-21
 1259,2026-09-21,Enable PTE speaking shell v3 by default on production and resolve remaining UI items,Done,2026-09-21
+1260,2026-09-22,Read and analyze BEL Final Implementation Plan v3 and formulate questions,Done,2026-09-22
+1261,2026-09-22,Audit PTE speaking shell mode-entry flash and layout clipping then write fix handoff plan,Done,2026-09-22
+1262,2026-09-22,Implementation Plan for BEL Milestone 1 (P0 baseline P1 contracts P2 credits P3 playback),Done,2026-09-22
+1263,2026-09-22,PTE Speaking shell mode-entry transition and layout polish (Batches 1-6),Done,2026-09-22
+1264,2026-09-22,Milestone 1 hardening remediation and Phase 4 continuous assessment implementation,Done,2026-09-22
+1265,2026-09-22,Phase 5 Spoken-Response Modes (RL SGD RTS) Two-Pass ASR Assessment Engine and UI Transcript Disclosure,Done,2026-09-22
+1266,2026-09-22,Phase 6 (P6) V4.2 Acoustic Candidate Boundary Refinement and Pronounce Timing v2 Envelope,Done,2026-09-22
+1267,2026-09-22,Diagnose PTE practice mode UI state sizing and practice-to-coach layout gaps,Done,2026-09-22
+1268,2026-09-22,Phase 7 (P7) Word-Stress Coach Magnitude-Preserving Features and Multi-Class Evaluator,Done,2026-09-22
+1269,2026-09-22,Phase 8 (P8) Staged Release Rollout Flags and Rollback Controls,Done,2026-09-22
+1268,2026-09-22,Diagnose remaining PTE speaking modes for layout and flow defects (RS DI RL ASQ SGD RTS),Done,2026-09-22
+1270,2026-09-22,Remediate BEL Audit Batches 1 and 2 (Data Flow Concurrency Audio Playback),Done,2026-09-22
+1270,2026-09-22,Enlarge Describe Image picture and remediate PTE practice mode layout (image size grid restore mobile gutter coach rail),Done,2026-09-22
+1271,2026-09-22,Transition AI credit wallet to lifetime per-account balance model,Done,2026-09-22
+1272,2026-09-22,Frontend practice mode integration with AI credit confirmation and transcript disclosure,Done,2026-09-22
+1271,2026-09-22,Make PTE practice card full width across all seven modes and remove per-mode width caps,Done,2026-09-22
+1273,2026-09-22,Investigate entrance test 2nd listening task error and audio playback failure,Done,2026-09-22
+1274,2026-09-22,V2.0.15 release changelog documentation and selective git commit for BEL P0-P8 lifetime AI credits and frontend gating,Done,2026-09-22

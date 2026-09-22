@@ -73,7 +73,9 @@ async function transcribeOriginalSpeech({ audioBuffer, audioIdentity = null, loc
   const displayText = String(nBest?.Display || rawSttResult?.DisplayText || '').trim();
   const rawWords = Array.isArray(nBest?.Words) ? nBest.Words : [];
 
-  const tokens = rawWords.map((w, idx) => {
+  const validRawWords = rawWords.filter(w => String(w?.Word || '').trim().length > 0);
+
+  const tokens = validRawWords.map((w, idx) => {
     const wordText = String(w.Word || '').trim();
     const offsetTicks = Number(w.Offset) || 0;
     const durationTicks = Number(w.Duration) || 0;
@@ -88,7 +90,7 @@ async function transcribeOriginalSpeech({ audioBuffer, audioIdentity = null, loc
       offsetTicks,
       durationTicks
     };
-  }).filter(t => t.word.length > 0);
+  });
 
   const overallConfidence = tokens.length > 0
     ? (tokens.reduce((acc, t) => acc + t.confidence, 0) / tokens.length)
@@ -203,14 +205,39 @@ async function assessSpokenResponse({ mode, audioBuffer, audioIdentity = null, a
   }, deps);
 
   // Mark uncertain tokens in assessment words based on Pass 1 STT confidence
+  // Aligns assessment words to Pass 1 tokens accounting for insertions, omissions, and punctuation differences
+  const cleanWord = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const uncertainSet = new Set(reference.uncertainWordIndices);
+  const sttTokens = transcription.tokens || [];
+  let tokenPointer = 0;
+
   const enrichedWords = assessment.words.map((w, idx) => {
-    const isUncertain = uncertainSet.has(idx) || w.clipTiming?.isolationStatus === 'uncertain';
+    let matchedToken = null;
+    const isInsertion = w.errorType === 'Insertion';
+
+    if (!isInsertion) {
+      const wClean = cleanWord(w.word);
+      for (let t = tokenPointer; t < sttTokens.length; t++) {
+        if (cleanWord(sttTokens[t].word) === wClean) {
+          matchedToken = sttTokens[t];
+          tokenPointer = t + 1;
+          break;
+        }
+      }
+      if (!matchedToken && sttTokens[idx] && cleanWord(sttTokens[idx].word) === wClean) {
+        matchedToken = sttTokens[idx];
+      }
+    }
+
+    const tokenUncertain = matchedToken ? uncertainSet.has(matchedToken.index) : (isInsertion || uncertainSet.has(idx));
+    const isUncertain = tokenUncertain || w.clipTiming?.isolationStatus === 'uncertain';
+    const confidence = matchedToken ? matchedToken.confidence : (isInsertion ? 0.0 : (sttTokens[idx]?.confidence ?? 1.0));
+
     return {
       ...w,
       isTranscriptUncertain: isUncertain,
-      transcriptConfidence: transcription.tokens[idx]?.confidence ?? 1.0,
-      uncertainReason: isUncertain ? 'WORD_RECOGNITION_UNCERTAIN' : null
+      transcriptConfidence: confidence,
+      uncertainReason: isUncertain ? (isInsertion ? 'INSERTED_WORD' : 'WORD_RECOGNITION_UNCERTAIN') : null
     };
   });
 

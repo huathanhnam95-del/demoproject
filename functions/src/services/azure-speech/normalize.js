@@ -29,9 +29,17 @@ function readScore(node, key = 'AccuracyScore') {
 function normalizePhoneme(node) {
   const rawCandidates = readAssessmentField(node, 'NBestPhonemes');
   const candidates = Array.isArray(rawCandidates) ? rawCandidates : [];
+  const offsetTicks = finiteNumberOrNull(node?.Offset);
+  const durationTicks = finiteNumberOrNull(node?.Duration);
+  const startMs = offsetTicks !== null ? Math.round(offsetTicks / 10000) : null;
+  const endMs = (offsetTicks !== null && durationTicks !== null) ? Math.round((offsetTicks + durationTicks) / 10000) : null;
   return {
     expectedIpaRaw: typeof node?.Phoneme === 'string' ? node.Phoneme : '',
     accuracyScore: readScore(node),
+    startMs,
+    endMs,
+    rawStartMs: startMs,
+    rawEndMs: endMs,
     candidates: candidates.map(candidate => ({
       ipaRaw: typeof candidate?.Phoneme === 'string' ? candidate.Phoneme : '',
       score: finiteNumberOrNull(candidate?.Score)
@@ -73,10 +81,19 @@ function normalizeWord(rawWord, index, audio) {
     const rawPhones = Array.isArray(syl?.Phonemes) ? syl.Phonemes : [];
     const phones = rawPhones.map(normalizePhoneme);
 
+    const sylOffsetTicks = finiteNumberOrNull(syl?.Offset);
+    const sylDurationTicks = finiteNumberOrNull(syl?.Duration);
+    const sylStartMs = sylOffsetTicks !== null ? Math.round(sylOffsetTicks / 10000) : null;
+    const sylEndMs = (sylOffsetTicks !== null && sylDurationTicks !== null) ? Math.round((sylOffsetTicks + sylDurationTicks) / 10000) : null;
+
     return {
       syllableIndex: sIdx,
       syllable: sylGrapheme,
       accuracyScore: sylScore,
+      startMs: sylStartMs,
+      endMs: sylEndMs,
+      rawStartMs: sylStartMs,
+      rawEndMs: sylEndMs,
       span: sylSpan,
       phonemes: phones
     };
@@ -84,6 +101,8 @@ function normalizeWord(rawWord, index, audio) {
 
   const rawPhones = Array.isArray(rawWord?.Phonemes) ? rawWord.Phonemes : [];
   const phonemes = rawPhones.map(normalizePhoneme);
+  const startMs = offsetTicks !== null ? Math.round(offsetTicks / 10000) : null;
+  const endMs = (offsetTicks !== null && durationTicks !== null) ? Math.round((offsetTicks + durationTicks) / 10000) : null;
 
   return {
     occurrenceId: `w-${index}`,
@@ -92,8 +111,10 @@ function normalizeWord(rawWord, index, audio) {
     accuracyScore: readScore(rawWord),
     rawOffsetTicks: offsetTicks,
     rawDurationTicks: durationTicks,
-    rawStartMs: offsetTicks !== null ? Math.round(offsetTicks / 10000) : null,
-    rawEndMs: (offsetTicks !== null && durationTicks !== null) ? Math.round((offsetTicks + durationTicks) / 10000) : null,
+    rawStartMs: startMs,
+    rawEndMs: endMs,
+    startMs,
+    endMs,
     rawProviderSpan: rawSpan,
     clipSpan: rawSpan,
     syllables,

@@ -97,7 +97,8 @@
         const confirmErr = await confirmRes.json().catch(() => null);
         return {
           allowed: false,
-          error: confirmErr?.message || 'Failed to confirm credit reservation'
+          error: confirmErr?.message || confirmErr?.error || 'Failed to confirm credit reservation',
+          code: confirmErr?.error || 'CONFIRM_FAILED'
         };
       }
 
@@ -158,9 +159,14 @@
         headers: { 'Accept': 'application/json' },
         signal
       });
+      if (res.status === 401 || res.status === 403) {
+        const authErr = new Error('Authentication required for scoring status');
+        authErr.code = 'UNAUTHORIZED';
+        throw authErr;
+      }
       if (res.ok) {
         const data = await res.json();
-        if (data.status === 'completed') {
+        if (data.status === 'ready' || data.status === 'completed' || data.stage === 'completed') {
           return data.result || data;
         }
         if (data.status === 'failed') {

@@ -259,6 +259,25 @@ Still open: the `data-practice-layout` flag is genuinely lost on that transition
 shell no longer depends on it, but other fluid-layout rules (region widths, workarea
 grid) silently stop applying — worth fixing at the source.
 
+## 9c. Review and refactor pass
+
+Findings from reviewing the changes above, with what was done:
+
+| # | Finding | Action |
+|---|---|---|
+| R-1 | **The passage measure cap never worked.** `max-width` was silently dropped — even an inline `110ch` computed to `none`. Cause: `practice-fluid-layout.css:88-95`, section 5 *"Reading Region: Full Usable Width by Default"*, marks the passage `[data-practice-reading]` and forces `max-width` **and** `max-inline-size` to `none` with `!important`. | **Rule removed.** It was fighting a deliberate, documented product decision *and* the owner's "no empty space" request. Legibility is bought with type size instead: the passage steps to `1.12em` at 1280+ and `1.25em` at 1600+. |
+| R-2 | **The prose measure reached only 3 of 7 modes.** ASQ, RTS, SGD and Retell Lecture name their instruction `*-pte-instruction` with no shared class, so `.pte-instr` never matched. | All four now carry `pte-instr` as well. Measured result: **~100 characters per line in all seven modes**, from one token. |
+| R-3 | **Three hard-coded measures** (`62ch` in style.css, `90ch`/`100ch` added here). | Collapsed to `--pte-measure` / `--pte-measure-tight` on `body.pte-shell-v3`. |
+| R-4 | **Two gradient-strip rules with different scopes** (`.pte-dock .pte-btn` vs `.pte-card__body …`) — which is exactly how `#di-fb-ai-btn` kept its gradient. | Merged into one rule covering dock and card body. |
+| R-5 | **SGD leftovers**: the shell restyles `.sgd-speaker-tabs` into a wrapped pill row but left the legacy grey gradient band and underline behind it; `.sgd-topic-display` used a decorative two-stop gradient. | Band and underline cleared; topic panel flattened to `var(--blue-50)`. Remaining gradients across all modes: **`.pte-audio` only**, which is per design spec §4.5. |
+| R-6 | **Dead per-mode column rules** — `grid-template-columns: 1fr` for `.sgd-fb-grid`/`.notes-fb-grid` at ≤600px, redundant since `.pte-fb` stacks at ≤980px. | Removed; the mode-specific phone `gap` kept. |
+| R-7 | `.pte-card--wide` is now a no-op (the card is fluid in every phase) but `setPhase()` still toggles it. | Annotated as a no-op hook rather than churning the controller, which has another writer. |
+
+Verified after the pass: **0 layout issues** (no spill, clipping or horizontal scroll) across
+7 modes × {1440, 390} × 5 phases; feedback columns identical at `608/563 gap 30` in every
+mode that has them; Read Aloud coach tab 735.6px (budget 740); `npm run test:structure`
+45/45; all five edited mode scripts parse.
+
 ## 10. Verification
 
 Re-run the diagnosis sweep and assert:

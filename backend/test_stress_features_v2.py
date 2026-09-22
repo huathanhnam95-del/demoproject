@@ -287,6 +287,87 @@ class TestStressFeaturesV2(unittest.TestCase):
         self.assertIn("stressFeatures", res)
         self.assertEqual(res["stressFeatures"]["schemaVersion"], STRESS_FEATURES_SCHEMA_VERSION)
 
+    def test_evaluate_stress_v2_null_safety(self):
+        """Stress evaluation survives None values in nucleusDurationSec and logDurationRatio."""
+        from backend.local_server.stress_evaluator_v2 import evaluate_stress_v2
+
+        features_with_nones = {
+            "syllables": [
+                {
+                    "syllableIndex": 0,
+                    "syllableId": "s1",
+                    "nucleusDurationSec": None,
+                    "intensityDb": None,
+                    "f0Semitones": None,
+                    "quality": "accepted",
+                    "voicedFrameCoverage": 0.8
+                },
+                {
+                    "syllableIndex": 1,
+                    "syllableId": "s2",
+                    "nucleusDurationSec": None,
+                    "intensityDb": None,
+                    "f0Semitones": None,
+                    "quality": "accepted",
+                    "voicedFrameCoverage": 0.8
+                }
+            ],
+            "pairwiseContrasts": [
+                {
+                    "primaryIndex": 0,
+                    "competingIndex": 1,
+                    "logDurationRatio": None,
+                    "intensityDiffDb": None,
+                    "pitchDiffSemitones": None
+                }
+            ]
+        }
+
+        res = evaluate_stress_v2(features_with_nones, ["primary", "unstressed"])
+        self.assertIsNotNone(res)
+        self.assertIn(res["status"], ("verified", "incorrect", "unrateable"))
+
+    def test_evaluate_stress_v2_uncertain_voiced_coverage_none(self):
+        """Stress evaluation survives quality='uncertain' when voicedFrameCoverage is None."""
+        from backend.local_server.stress_evaluator_v2 import evaluate_stress_v2
+
+        features = {
+            "syllables": [
+                {
+                    "syllableIndex": 0,
+                    "syllableId": "s1",
+                    "nucleusDurationSec": 0.2,
+                    "intensityDb": 60.0,
+                    "f0Semitones": 2.0,
+                    "quality": "uncertain",
+                    "voicedFrameCoverage": None
+                },
+                {
+                    "syllableIndex": 1,
+                    "syllableId": "s2",
+                    "nucleusDurationSec": 0.1,
+                    "intensityDb": 50.0,
+                    "f0Semitones": 0.0,
+                    "quality": "accepted",
+                    "voicedFrameCoverage": 0.8
+                }
+            ],
+            "pairwiseContrasts": [
+                {
+                    "primaryIndex": 0,
+                    "competingIndex": 1,
+                    "logDurationRatio": 0.69,
+                    "intensityDiffDb": 10.0,
+                    "pitchDiffSemitones": 2.0
+                }
+            ]
+        }
+
+        res = evaluate_stress_v2(features, ["primary", "unstressed"])
+        self.assertIsNotNone(res)
+        self.assertEqual(res["status"], "unrateable")
+        self.assertIn("PRIMARY_NUCLEUS_UNVOICED_OR_UNCERTAIN", res["reasons"])
+
 
 if __name__ == "__main__":
     unittest.main()

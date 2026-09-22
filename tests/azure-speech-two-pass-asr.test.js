@@ -209,3 +209,52 @@ test('ScoringWorker: processes retell_lecture, summarize_group_discussion, and r
     assert.equal(job.result.overallScores.completenessScore, null);
   }
 });
+
+test('assessSpokenResponse: preserves word confidence and uncertainty across Pass 2 word insertions', async () => {
+  const dummyAudio = Buffer.alloc(32000);
+  const mockStt = {
+    DisplayText: 'hello world',
+    NBest: [{
+      Display: 'hello world',
+      Confidence: 0.9,
+      Words: [
+        { Word: 'hello', Offset: 1000000, Duration: 2000000, Confidence: 0.92 },
+        { Word: 'world', Offset: 4000000, Duration: 3000000, Confidence: 0.55 }
+      ]
+    }]
+  };
+  const mockAzurePass2 = {
+    DisplayText: 'hello beautiful world',
+    NBest: [{
+      AccuracyScore: 85,
+      Words: [
+        { Word: 'hello', Offset: 1000000, Duration: 2000000, AccuracyScore: 90 },
+        { Word: 'beautiful', Offset: 3200000, Duration: 1000000, AccuracyScore: 70, ErrorType: 'Insertion' },
+        { Word: 'world', Offset: 4500000, Duration: 3000000, AccuracyScore: 80 }
+      ]
+    }]
+  };
+
+  const res = await assessSpokenResponse({
+    mode: 'retell_lecture',
+    audioBuffer: dummyAudio
+  }, {
+    useMock: true,
+    mockSttResult: mockStt,
+    mockResult: mockAzurePass2
+  });
+
+  assert.equal(res.words.length, 3);
+  assert.equal(res.words[0].word, 'hello');
+  assert.equal(res.words[0].transcriptConfidence, 0.92);
+  assert.equal(res.words[0].isTranscriptUncertain, false);
+
+  assert.equal(res.words[1].word, 'beautiful');
+  assert.equal(res.words[1].uncertainReason, 'INSERTED_WORD');
+  assert.equal(res.words[1].isTranscriptUncertain, true);
+
+  assert.equal(res.words[2].word, 'world');
+  assert.equal(res.words[2].transcriptConfidence, 0.55);
+  assert.equal(res.words[2].isTranscriptUncertain, true);
+  assert.equal(res.words[2].uncertainReason, 'WORD_RECOGNITION_UNCERTAIN');
+});

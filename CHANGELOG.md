@@ -19,9 +19,16 @@
 - **PTE Practice Card Layout & Responsive Remediation (`public/css/pte-speaking-shell.css`, `public/css/pte-question-area.css`, `public/describe-image-mode.js`)**:
   - Reconciled `.pte-practice-card` to full width across all 7 speaking modes, removing arbitrary per-mode width caps and aligning margins.
   - Restored two-column layout for Describe Image mode with enlarged image canvas.
-- **Audit Remediation & Hardening (`tests/*`)**:
-  - Remediated data flow concurrency, optimistic lease fencing, audio player lifecycle cleanup, and LRU cache pin preservation.
-  - 35/35 Node.js test suites passing, 67/67 Python unit tests passing, and 5/5 Playwright Chrome browser check phases passing.
+- **Audit Remediation, Deep Debugging & Resiliency Hardening (`backend/*`, `functions/src/*`, `public/*`, `tests/*`)**:
+  - Python stress evaluator v2 null safety: guarded `voicedFrameCoverage: None` and non-finite prominence values against `TypeError`.
+  - Boundary refinement contract invariant: strictly clamped refined nucleus boundaries to parent syllable limits (`[syl_start, syl_end]`) on all fallback paths.
+  - Two-pass ASR token alignment: replaced naive array index mapping with token text/sequence reconciliation that flags inserted tokens as `INSERTED_WORD` without desynchronizing subsequent words.
+  - Frontend audio lifecycle: bound token click segment playback to persistent `recordingBlobUrl` across RL, SGD, and RTS, preventing object URL memory leaks and eliminating LRU cache thrashing.
+  - RL spoken response re-mount guard: preserved in-flight recording and blob state when container and entry ID match.
+  - LRU audio cache & PCM player: added maxBytes ceiling rejection to prevent working set eviction on oversized buffers, and clamped audio clip spans to `buffer.length`.
+  - Scoring worker & job service: stripped base64 data URL headers in audio resolution, fenced lease ownership in settlement transactions, and marked duplicate quote jobs consumed.
+  - Azure continuous assessment mock scaling: dynamically computed word timing bounds to audio duration, preventing out-of-bounds sample errors.
+  - Comprehensive automated test suite: 58/58 Node.js tests passing, 69/69 Python unit tests passing, and 5/5 Playwright Chrome browser check phases passing.
 
 ## [V2.0.10] - 2026-09-17
 

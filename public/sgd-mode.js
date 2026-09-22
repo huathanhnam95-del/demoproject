@@ -2322,7 +2322,17 @@
                     const disclosure = new window.TranscriptDisclosure({
                         containerEl: disclosureEl,
                         onWordClick: (w) => {
-                            console.log('[SGD Disclosure] Clicked token:', w);
+                            const blob = enhancedPlaybackBlob || originalRecordingBlob;
+                            const url = recordingBlobUrl || (blob ? (recordingBlobUrl = URL.createObjectURL(blob)) : null);
+                            if (window.SegmentPlaybackCoordinator?.defaultCoordinator && url) {
+                                const startMs = w.startMs ?? w.rawStartMs ?? 0;
+                                const endMs = w.endMs ?? w.rawEndMs ?? (startMs + 500);
+                                window.SegmentPlaybackCoordinator.defaultCoordinator.playSegment({
+                                    audioUrl: url,
+                                    startMs,
+                                    endMs
+                                });
+                            }
                         }
                     });
                     disclosure.render(assessmentResult);

@@ -34,6 +34,7 @@ export class LruAudioBufferCache {
   set(key, buffer) {
     if (!key || !buffer) return;
     const byteSize = this.computeByteSize(buffer);
+    if (byteSize > this.maxBytes) return;
 
     let wasPinned = false;
     // If already present, remove old size first and preserve pin state
@@ -255,6 +256,7 @@ export class SegmentPlaybackCoordinator {
       return true;
     } catch (err) {
       this.cache.pin(audioUrl, false);
+      this.currentPlaybackKey = null;
       this.activeSourceNode = null;
       return false;
     }

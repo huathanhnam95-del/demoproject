@@ -50,10 +50,13 @@ export class SegmentAudioPlayer {
     if (!buffer) throw new Error('AUDIO_BUFFER_REQUIRED');
 
     const start = span?.startSample;
-    const end = span?.endSample;
+    let end = span?.endSample;
     if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) ||
-        start < 0 || end <= start || end > buffer.length) {
+        start < 0 || end <= start || start >= buffer.length) {
       throw new Error('INVALID_CLIP_SPAN');
+    }
+    if (end > buffer.length) {
+      end = buffer.length;
     }
 
     this.stop();
@@ -73,8 +76,11 @@ export class SegmentAudioPlayer {
 
     // Allocate exact buffer for the slice
     const clipLength = end - start;
-    const clip = this.context.createBuffer(1, clipLength, buffer.sampleRate);
-    clip.copyToChannel(buffer.getChannelData(0).subarray(start, end), 0);
+    const channels = buffer.numberOfChannels || 1;
+    const clip = this.context.createBuffer(channels, clipLength, buffer.sampleRate);
+    for (let c = 0; c < channels; c++) {
+      clip.copyToChannel(buffer.getChannelData(c).subarray(start, end), c);
+    }
 
     const source = this.context.createBufferSource();
     source.buffer = clip;

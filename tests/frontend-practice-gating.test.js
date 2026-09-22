@@ -144,6 +144,27 @@ test('AiScoringGate: handles preflight quote, user cancellation, and unmetered 5
 
     assert.strictEqual(unmeteredResult.allowed, true);
     assert.strictEqual(unmeteredResult.unmetered, true);
+
+    // Case D: Polling succeeds when status is 'ready'
+    globalThis.fetch = async (url) => {
+      if (url.includes('/api/ai-scoring/assessments/asmt-ready-1')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            assessmentId: 'asmt-ready-1',
+            status: 'ready',
+            stage: 'completed',
+            result: { mode: 'summarize_group_discussion', overallScores: { accuracyScore: 88 } }
+          })
+        };
+      }
+      throw new Error(`Unexpected url: ${url}`);
+    };
+
+    const polledResult = await AiScoringGate.pollAssessmentResult('asmt-ready-1', { timeoutMs: 5000, intervalMs: 50 });
+    assert.strictEqual(polledResult.mode, 'summarize_group_discussion');
+    assert.strictEqual(polledResult.overallScores.accuracyScore, 88);
   } finally {
     globalThis.fetch = originalFetch;
   }

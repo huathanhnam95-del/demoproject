@@ -465,6 +465,15 @@ def refine_nucleus_edges(
             quality = "uncertain"
             reasons.append("INSUFFICIENT_FRAMES")
 
+        # Enforce contract invariant: syl_start <= refined_start < refined_end <= syl_end
+        clamped_start = max(syl_start, min(syl_end - 1, refined_start))
+        clamped_end = max(clamped_start + 1, min(syl_end, refined_end))
+        if (clamped_start != refined_start or clamped_end != refined_end) and quality == "accepted":
+            quality = "uncertain"
+            reasons.append("NUCLEUS_CLAMPED_TO_SYLLABLE")
+        refined_start = clamped_start
+        refined_end = clamped_end
+
         decisions.append(NucleusDecision(
             syllable_index=i,
             original_span=(nuc_start, nuc_end),

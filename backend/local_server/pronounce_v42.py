@@ -210,10 +210,18 @@ def build_pronounce_v42(
     refined_syllable_spans: List[Tuple[int, int]] = []
     curr_start = initial_syllable_spans[0][0]
     for i, dec in enumerate(boundary_decisions):
-        cut = dec.selected_sample
+        cut = max(curr_start + 1, dec.selected_sample)
         refined_syllable_spans.append((curr_start, cut))
         curr_start = cut
-    refined_syllable_spans.append((curr_start, initial_syllable_spans[-1][1]))
+    last_end = max(curr_start + 1, initial_syllable_spans[-1][1])
+    if last_end > sample_count:
+        last_end = sample_count
+        if curr_start >= last_end:
+            curr_start = max(0, last_end - 1)
+            if refined_syllable_spans:
+                p_start, _ = refined_syllable_spans[-1]
+                refined_syllable_spans[-1] = (p_start, curr_start)
+    refined_syllable_spans.append((curr_start, last_end))
 
     # 7. Refine Nucleus Edges
     nucleus_decisions = refine_nucleus_edges(
@@ -230,7 +238,9 @@ def build_pronounce_v42(
     for i, syl in enumerate(v41_syllables):
         s_span = refined_syllable_spans[i]
         n_dec = nucleus_decisions[i]
-        n_span = n_dec.refined_span
+        n_start = max(s_span[0], min(s_span[1] - 1, n_dec.refined_span[0]))
+        n_end = max(n_start + 1, min(s_span[1], n_dec.refined_span[1]))
+        n_span = (n_start, n_end)
 
         # Determine playback and nucleus quality
         start_dec = boundary_decisions[i - 1] if i > 0 else None

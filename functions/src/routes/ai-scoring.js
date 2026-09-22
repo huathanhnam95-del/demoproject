@@ -124,9 +124,12 @@ function createAiScoringRouter({ db, taskDispatcher = null, env = process.env })
       if (err.code === 'INSUFFICIENT_CREDITS') {
         return res.status(402).json({
           error: 'INSUFFICIENT_CREDITS',
+          message: `Insufficient AI credits: required ${err.requiredCredits}, available ${err.availableCredits}`,
           requiredCredits: err.requiredCredits,
           availableCredits: err.availableCredits,
-          renewsAt: err.renewsAt
+          isLifetime: err.isLifetime ?? true,
+          purchasable: err.purchasable ?? true,
+          renewsAt: err.renewsAt || null
         });
       }
       if (err.code === 'QUOTE_EXPIRED' || err.code === 'QUOTE_NOT_FOUND' || err.code === 'UNAUTHORIZED') {

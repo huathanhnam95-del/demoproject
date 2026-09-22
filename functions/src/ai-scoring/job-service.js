@@ -55,8 +55,9 @@ class JobService {
 
     let quoteResult;
     if (pkg.kind === 'speaking') {
-      const { sampleCount, sampleRateHz } = inputMeta;
-      if (!sampleCount || !sampleRateHz) {
+      const sampleCount = Number(inputMeta.sampleCount);
+      const sampleRateHz = Number(inputMeta.sampleRateHz);
+      if (!Number.isSafeInteger(sampleCount) || sampleCount <= 0 || !Number.isSafeInteger(sampleRateHz) || sampleRateHz <= 0) {
         throw new TypeError('AUDIO_SAMPLE_METADATA_REQUIRED');
       }
       quoteResult = quoteSpeaking({
@@ -166,6 +167,11 @@ class JobService {
           const existingJob = existingJobDoc.data();
           // Idempotent deduplication: return already confirmed if active or successfully completed
           if (existingJob.status === 'queued' || existingJob.status === 'processing' || existingJob.status === 'ready') {
+            tx.update(quoteRef, {
+              state: 'consumed',
+              assessmentId: existingJobId,
+              updatedAt: new Date().toISOString()
+            });
             return { assessmentId: existingJobId, alreadyConfirmed: true };
           }
           // If existing job reached terminal failure/refund, §13.9 authorizes a new generation to replace it
@@ -191,6 +197,7 @@ class JobService {
         packageId: quote.packageId,
         packageVersion: quote.packageVersion,
         credits: quote.credits,
+        questionId: quote.questionId || null,
         inputMeta: quote.inputMeta || null,
         referenceText: quote.inputMeta?.referenceText || null,
         status: 'queued',

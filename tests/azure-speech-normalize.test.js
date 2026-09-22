@@ -99,6 +99,10 @@ test('normalizeWord handles omission and normal word', () => {
   const normWord = normalizeWord(wordNode, 0, audio);
   assert.equal(normWord.occurrenceId, 'w-0');
   assert.equal(normWord.accuracyScore, 90);
+  assert.equal(normWord.startMs, 1000);
+  assert.equal(normWord.endMs, 1400);
+  assert.equal(normWord.rawStartMs, 1000);
+  assert.equal(normWord.rawEndMs, 1400);
   assert.deepEqual(normWord.rawProviderSpan, { startSample: 16000, endSample: 22400 });
 
   const omissionNode = {

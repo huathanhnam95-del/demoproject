@@ -18,16 +18,18 @@ const {
  * Identifies matched, omitted, and inserted words preserving order per §9.3.
  */
 function computeReferenceComparison(referenceText, words = []) {
-  const refTokens = String(referenceText || '')
+  const cleanTokens = text => String(text || '')
     .toLowerCase()
-    .replace(/[.,;:!?\u2019'"]/g, '')
+    .replace(/[—–]/g, ' ')
+    .replace(/[.,;:!?\u2019'"“”…()[\]{}]/g, '')
     .split(/\s+/)
     .filter(Boolean);
 
+  const refTokens = cleanTokens(referenceText);
+
   const recognizedTokens = words
     .filter(w => w.errorType !== 'Omission')
-    .map(w => String(w.word || '').toLowerCase().replace(/[.,;:!?\u2019'"]/g, ''))
-    .filter(Boolean);
+    .flatMap(w => cleanTokens(w.word));
 
   let refIdx = 0;
   let recIdx = 0;
@@ -129,6 +131,15 @@ async function assessFixedReference({ mode, referenceText, audioBuffer, audioIde
     rawAzureResult = await response.json();
   } else {
     // Deterministic mock fallback for tests and development without live Azure credentials
+    const wordsList = referenceText.trim().split(/\s+/).filter(Boolean);
+    const audioMs = (audioIdentity?.sampleCount && audioIdentity?.sampleRateHz)
+      ? (audioIdentity.sampleCount / audioIdentity.sampleRateHz) * 1000
+      : (audioBuffer ? (audioBuffer.length / (2 * (audioIdentity?.sampleRateHz || 16000))) * 1000 : 3000);
+    const stepMs = Math.max(50, Math.floor((audioMs - 50) / Math.max(1, wordsList.length)));
+    const durationMs = Math.max(40, Math.floor(stepMs * 0.8));
+    const stepTicks = stepMs * 10000;
+    const durationTicks = durationMs * 10000;
+
     rawAzureResult = deps.mockResult || {
       RecognitionStatus: 'Success',
       DisplayText: referenceText,
@@ -138,21 +149,21 @@ async function assessFixedReference({ mode, referenceText, audioBuffer, audioIde
         FluencyScore: 85,
         CompletenessScore: 90,
         PronScore: 87,
-        Words: referenceText.split(/\s+/).map((w, i) => ({
+        Words: wordsList.map((w, i) => ({
           Word: w,
-          Offset: i * 5000000,
-          Duration: 4000000,
+          Offset: i * stepTicks,
+          Duration: durationTicks,
           Confidence: 0.95,
           AccuracyScore: 88,
           Syllables: [{
             Syllable: w,
-            Offset: i * 5000000,
-            Duration: 4000000,
+            Offset: i * stepTicks,
+            Duration: durationTicks,
             AccuracyScore: 88,
             Phonemes: [{
               Phoneme: w.slice(0, 1) || 'p',
-              Offset: i * 5000000,
-              Duration: 2000000,
+              Offset: i * stepTicks,
+              Duration: Math.floor(durationTicks / 2),
               AccuracyScore: 88
             }]
           }]
@@ -173,7 +184,14 @@ async function assessFixedReference({ mode, referenceText, audioBuffer, audioIde
   // 2. Attach ending-safe word clip timing to every word
   const words = normalized.words || [];
   for (let i = 0; i < words.length; i++) {
-    words[i].clipTiming = resolveWordClipTiming(words[i], words[i + 1] || null, audioIdentity);
+    let nextSpokenWord = null;
+    for (let j = i + 1; j < words.length; j++) {
+      if (words[j].errorType !== 'Omission' && (words[j].startMs !== null || words[j].rawStartMs !== null)) {
+        nextSpokenWord = words[j];
+        break;
+      }
+    }
+    words[i].clipTiming = resolveWordClipTiming(words[i], nextSpokenWord, audioIdentity);
   }
 
   // 3. Compute deterministic sequence comparison against reference

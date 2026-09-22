@@ -177,13 +177,17 @@ class ScoringWorker {
       return job.inputMeta.audioBuffer;
     }
     if (typeof job.inputMeta?.audioBuffer === 'string') {
-      return Buffer.from(job.inputMeta.audioBuffer, 'base64');
+      const raw = job.inputMeta.audioBuffer;
+      const clean = raw.includes(',') ? raw.split(',')[1] : raw;
+      return Buffer.from(clean.trim(), 'base64');
     }
     if (Buffer.isBuffer(job.audioBuffer)) {
       return job.audioBuffer;
     }
     if (typeof job.audioBuffer === 'string') {
-      return Buffer.from(job.audioBuffer, 'base64');
+      const raw = job.audioBuffer;
+      const clean = raw.includes(',') ? raw.split(',')[1] : raw;
+      return Buffer.from(clean.trim(), 'base64');
     }
 
     const storagePath = job.inputMeta?.storagePath || job.storagePath;
@@ -267,19 +271,72 @@ class ScoringWorker {
       updatedAt: new Date().toISOString()
     });
 
-    return { ...job, leaseVersion: newVersion, leaseOwner: workerId };
+    return { ...job, leaseVersion: newVersion, leaseOwner: workerId, leaseExpiresAt, status: 'processing' };
+  }
+
+  /**
+   * Extends the lease for an active worker inside a transaction.
+   */
+  async extendLeaseInTx(tx, assessmentId, workerId, leaseVersion, extensionMs = 60000) {
+    const jobRef = this.getJobRef(assessmentId);
+    const doc = await tx.get(jobRef);
+    if (!doc.exists) return false;
+    const job = doc.data();
+
+    if (job.status !== 'processing' || job.leaseOwner !== workerId || job.leaseVersion !== leaseVersion) {
+      return false; // Stale lease or no longer processing
+    }
+
+    const now = Date.now();
+    const leaseExpiresAt = new Date(now + extensionMs).toISOString();
+    tx.update(jobRef, {
+      leaseExpiresAt,
+      updatedAt: new Date().toISOString()
+    });
+    return true;
+  }
+
+  /**
+   * Extends the lease outside transaction context.
+   */
+  async extendLease(assessmentId, workerId, leaseVersion, extensionMs = 60000) {
+    return this.db.runTransaction(async tx => {
+      return this.extendLeaseInTx(tx, assessmentId, workerId, leaseVersion, extensionMs);
+    });
   }
 
   /**
    * Executes a job by assessmentId.
    */
-  async processJob(assessmentId, workerId = 'worker-default') {
+  async processJob(assessmentId, workerId = 'worker-default', options = {}) {
+    const leaseDurationMs = options.leaseDurationMs || 60000;
+    const heartbeatIntervalMs = options.heartbeatIntervalMs || Math.min(25000, Math.floor(leaseDurationMs / 2));
+    const enableHeartbeat = options.enableHeartbeat !== false;
+
     const job = await this.db.runTransaction(async tx => {
-      return this.acquireLeaseInTx(tx, assessmentId, workerId);
+      return this.acquireLeaseInTx(tx, assessmentId, workerId, leaseDurationMs);
     });
 
     if (!job) {
       return { skipped: true, reason: 'LEASE_UNAVAILABLE_OR_COMPLETED' };
+    }
+
+    let heartbeatTimer = null;
+    let staleDetected = false;
+
+    if (enableHeartbeat && heartbeatIntervalMs > 0) {
+      heartbeatTimer = setInterval(async () => {
+        try {
+          const extended = await this.extendLease(assessmentId, workerId, job.leaseVersion, leaseDurationMs);
+          if (!extended) {
+            staleDetected = true;
+            if (heartbeatTimer) clearInterval(heartbeatTimer);
+          }
+        } catch (_) {}
+      }, heartbeatIntervalMs);
+      if (typeof heartbeatTimer.unref === 'function') {
+        heartbeatTimer.unref();
+      }
     }
 
     try {
@@ -313,12 +370,19 @@ class ScoringWorker {
       // Execute stages
       const assessmentResult = await executor(job);
 
+      if (staleDetected) {
+        throw new Error('STALE_LEASE_ON_COMPLETION');
+      }
+
       // Settle captured credits on success
       await this.db.runTransaction(async tx => {
         const jobRef = this.getJobRef(assessmentId);
         const currentDoc = await tx.get(jobRef);
-        if (currentDoc.exists && currentDoc.data().leaseVersion !== job.leaseVersion) {
-          throw new Error('STALE_LEASE_ON_COMPLETION');
+        if (currentDoc.exists) {
+          const cData = currentDoc.data();
+          if (cData.leaseVersion !== job.leaseVersion || cData.leaseOwner !== workerId || cData.status !== 'processing') {
+            throw new Error('STALE_LEASE_ON_COMPLETION');
+          }
         }
 
         await this.settlementService.captureCreditsInTx(tx, { assessmentId });
@@ -343,17 +407,20 @@ class ScoringWorker {
         return { status: 'aborted', reason: 'STALE_LEASE' };
       }
 
-      // Pre-check if lease version already changed
+      // Pre-check if lease version already changed or job completed by another worker
       let isStale = false;
       try {
         const checkDoc = await this.getJobRef(assessmentId).get();
-        if (checkDoc.exists && checkDoc.data().leaseVersion !== job.leaseVersion) {
-          isStale = true;
+        if (checkDoc.exists) {
+          const cData = checkDoc.data();
+          if (cData.leaseVersion !== job.leaseVersion || cData.leaseOwner !== workerId || cData.status === 'ready') {
+            isStale = true;
+          }
         }
       } catch (_) {}
 
       if (isStale) {
-        console.warn(`[Worker] Job ${assessmentId} lease version changed during execution. Aborting without refund.`);
+        console.warn(`[Worker] Job ${assessmentId} lease version or state changed during execution. Aborting without refund.`);
         return { status: 'aborted', reason: 'STALE_LEASE' };
       }
 
@@ -362,9 +429,12 @@ class ScoringWorker {
       await this.db.runTransaction(async tx => {
         const jobRef = this.getJobRef(assessmentId);
         const currentDoc = await tx.get(jobRef);
-        if (currentDoc.exists && currentDoc.data().leaseVersion !== job.leaseVersion) {
-          abortedDueToStale = true;
-          return;
+        if (currentDoc.exists) {
+          const cData = currentDoc.data();
+          if (cData.leaseVersion !== job.leaseVersion || cData.leaseOwner !== workerId || cData.status === 'ready') {
+            abortedDueToStale = true;
+            return;
+          }
         }
 
         await this.settlementService.releaseCreditsInTx(tx, {
@@ -387,6 +457,10 @@ class ScoringWorker {
       }
 
       return { status: 'failed', error: err.message };
+    } finally {
+      if (heartbeatTimer) {
+        clearInterval(heartbeatTimer);
+      }
     }
   }
 }

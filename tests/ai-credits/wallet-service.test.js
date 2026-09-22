@@ -95,6 +95,34 @@ test('WalletService: adds purchased credits to lifetime wallet', async () => {
   assert.equal(updatedWallet.isLifetime, true);
 });
 
+test('WalletService: addPurchasedCreditsInTx is idempotent on duplicate purchaseId', async () => {
+  const db = new MockDb();
+  const walletService = new WalletService({ db });
+
+  // First purchase credit
+  const first = await db.runTransaction(async tx => {
+    return walletService.addPurchasedCreditsInTx(tx, {
+      uid: 'user-topup-idem',
+      amount: 1000,
+      purchaseId: 'pi_duplicate_123'
+    });
+  });
+  assert.equal(first.purchasedCredits, 1000);
+  assert.equal(first.availableCredits, 6000);
+
+  // Duplicate webhook delivery with same purchaseId
+  const duplicate = await db.runTransaction(async tx => {
+    return walletService.addPurchasedCreditsInTx(tx, {
+      uid: 'user-topup-idem',
+      amount: 1000,
+      purchaseId: 'pi_duplicate_123'
+    });
+  });
+  assert.equal(duplicate.alreadyProcessed, true);
+  assert.equal(duplicate.purchasedCredits, 1000, 'Must not duplicate purchase credits');
+  assert.equal(duplicate.availableCredits, 6000, 'Balance must remain unchanged');
+});
+
 test('SettlementService: reserve -> capture lifecycle', async () => {
   const db = new MockDb();
   const walletService = new WalletService({ db });

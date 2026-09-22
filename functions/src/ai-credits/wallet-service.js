@@ -41,8 +41,10 @@ class WalletService {
 
     if (doc.exists) {
       const data = doc.data();
-      const initialGrant = Number(data.initialGrantCredits ?? data.grantCredits ?? 0);
       const purchased = Number(data.purchasedCredits || 0);
+      const initialGrant = data.initialGrantCredits !== undefined
+        ? Number(data.initialGrantCredits)
+        : Math.max(0, Number(data.grantCredits || 0) - purchased);
       const grant = initialGrant + purchased;
       const spent = Number(data.spentCredits || 0);
       const reserved = Number(data.reservedCredits || 0);
@@ -140,6 +142,16 @@ class WalletService {
     }
 
     const wallet = await this.getOrCreateLifetimeWalletInTx(tx, uid, 'eligible_learner', now);
+    const ledgerEventRef = this.getLedgerRef(`${uid}:purchase:${purchaseId}`);
+    const existingLedger = await tx.get(ledgerEventRef);
+    if (existingLedger.exists) {
+      // Idempotency: purchase already credited
+      return {
+        ...wallet,
+        alreadyProcessed: true
+      };
+    }
+
     const walletRef = this.getWalletRef(uid);
 
     const newPurchased = wallet.purchasedCredits + creditsToAdd;
@@ -151,7 +163,6 @@ class WalletService {
       updatedAt: now.toISOString()
     });
 
-    const ledgerEventRef = this.getLedgerRef(`${uid}:purchase:${purchaseId}`);
     tx.set(ledgerEventRef, {
       eventId: `${uid}:purchase:${purchaseId}`,
       uid,

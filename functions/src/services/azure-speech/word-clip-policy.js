@@ -36,6 +36,21 @@ function resolveWordClipTiming(rawWord, nextWord, audioIdentity = null, options 
 
   const startSample = Math.max(0, Math.round(startMs * sampleRate / 1000));
   const endSample = Math.min(sampleCount, Math.round(endMs * sampleRate / 1000));
+
+  if (startSample >= endSample || startSample >= sampleCount) {
+    return {
+      occurrenceId: rawWord.occurrenceId || `w-${rawWord.word}`,
+      word: rawWord.word,
+      wordSpan: null,
+      clipSpan: null,
+      contextSpan: null,
+      isolationStatus: 'unavailable',
+      timingSource: 'azure_provider_estimate',
+      policy,
+      reasonCodes: ['TIMING_OUT_OF_BOUNDS']
+    };
+  }
+
   const wordSpan = { startSample, endSample };
 
   // Check next word gap to determine if acoustic boundary is ambiguous
@@ -51,7 +66,7 @@ function resolveWordClipTiming(rawWord, nextWord, audioIdentity = null, options 
       isolationStatus = 'uncertain';
       reasonCodes.push('ABUTTING_OR_OVERLAPPING_NEXT_WORD');
       const nextEndMs = nextWord?.endMs ?? nextWord?.rawEndMs ?? (nextStartMs + 500);
-      const nextEndSample = Math.min(sampleCount, Math.round(nextEndMs * sampleRate / 1000));
+      const nextEndSample = Math.min(sampleCount, Math.max(endSample, Math.round(nextEndMs * sampleRate / 1000)));
       contextSpan = { startSample, endSample: nextEndSample };
     }
   }

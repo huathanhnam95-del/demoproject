@@ -223,3 +223,43 @@ test('ScoringWorker: writing modes (write_essay, swt, sst) execute correctly (H-
   assert.equal(sstJob.data().result.scores.form.score, 2);
   assert.deepEqual(sstJob.data().result.stagesCompleted, ['sst_audio_transcribe', 'sst_content', 'sst_grammar', 'sst_summary']);
 });
+
+test('ScoringWorker: extendLease extends leaseExpiresAt for matching owner and version', async () => {
+  const db = new MockDb();
+  const walletService = new WalletService({ db });
+  const settlementService = new SettlementService({ db, walletService });
+  const jobService = new JobService({ db, walletService, settlementService });
+  const worker = new ScoringWorker({ db, settlementService });
+
+  const quote = await jobService.createQuote({
+    uid: 'u-extend',
+    mode: 'read_aloud',
+    inputMeta: { sampleRateHz: 16000, sampleCount: 16000 }
+  });
+  const { assessmentId } = await jobService.confirmQuote({
+    uid: 'u-extend',
+    quoteId: quote.quoteId
+  });
+
+  // Acquire initial lease
+  const job = await db.runTransaction(async tx => {
+    return worker.acquireLeaseInTx(tx, assessmentId, 'worker-heartbeat', 30000);
+  });
+  assert.ok(job);
+  const initialExp = new Date(job.leaseExpiresAt).getTime();
+
+  // Extend lease by 60s
+  const extended = await worker.extendLease(assessmentId, 'worker-heartbeat', job.leaseVersion, 60000);
+  assert.equal(extended, true);
+
+  const updatedJobDoc = await db.collection('aiScoringJobs').doc(assessmentId).get();
+  const newExp = new Date(updatedJobDoc.data().leaseExpiresAt).getTime();
+  assert.ok(newExp > initialExp, 'Lease expiration should be extended into the future');
+
+  // Stale version or wrong owner fails
+  const staleExtended = await worker.extendLease(assessmentId, 'worker-imposter', job.leaseVersion, 60000);
+  assert.equal(staleExtended, false, 'Imposter worker should not be able to extend lease');
+
+  const staleVersionExtended = await worker.extendLease(assessmentId, 'worker-heartbeat', job.leaseVersion + 99, 60000);
+  assert.equal(staleVersionExtended, false, 'Stale version should not be able to extend lease');
+});

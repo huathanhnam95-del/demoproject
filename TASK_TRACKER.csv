@@ -2262,11 +2262,13 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1267,2026-09-22,Diagnose PTE practice mode UI state sizing and practice-to-coach layout gaps,Done,2026-09-22
 1268,2026-09-22,Phase 7 (P7) Word-Stress Coach Magnitude-Preserving Features and Multi-Class Evaluator,Done,2026-09-22
 1269,2026-09-22,Phase 8 (P8) Staged Release Rollout Flags and Rollback Controls,Done,2026-09-22
-1268,2026-09-22,Diagnose remaining PTE speaking modes for layout and flow defects (RS DI RL ASQ SGD RTS),Done,2026-09-22
+1275,2026-09-22,Diagnose remaining PTE speaking modes for layout and flow defects (RS DI RL ASQ SGD RTS),Done,2026-09-22
 1270,2026-09-22,Remediate BEL Audit Batches 1 and 2 (Data Flow Concurrency Audio Playback),Done,2026-09-22
-1270,2026-09-22,Enlarge Describe Image picture and remediate PTE practice mode layout (image size grid restore mobile gutter coach rail),Done,2026-09-22
+1276,2026-09-22,Enlarge Describe Image picture and remediate PTE practice mode layout (image size grid restore mobile gutter coach rail),Done,2026-09-22
 1271,2026-09-22,Transition AI credit wallet to lifetime per-account balance model,Done,2026-09-22
 1272,2026-09-22,Frontend practice mode integration with AI credit confirmation and transcript disclosure,Done,2026-09-22
-1271,2026-09-22,Make PTE practice card full width across all seven modes and remove per-mode width caps,Done,2026-09-22
+1277,2026-09-22,Make PTE practice card full width across all seven modes and remove per-mode width caps,Done,2026-09-22
 1273,2026-09-22,Investigate entrance test 2nd listening task error and audio playback failure,Done,2026-09-22
 1274,2026-09-22,V2.0.15 release changelog documentation and selective git commit for BEL P0-P8 lifetime AI credits and frontend gating,Done,2026-09-22
+1278,2026-09-22,Review debug and refactor PTE practice UI changes (measure token shared instruction class gradient consolidation),Done,2026-09-22
+1279,2026-09-22,Boost review debug and refactor BEL P0-P8 acoustic timing lifetime credits and frontend audio controllers,Done,2026-09-22

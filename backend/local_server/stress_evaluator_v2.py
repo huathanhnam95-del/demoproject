@@ -93,7 +93,9 @@ def evaluate_stress_v2(
 
     # 4. Check for rateable acoustic evidence on expected primary syllable
     target_syl = syllables[expected_primary_idx]
-    if target_syl.get("quality") == "uncertain" and target_syl.get("voicedFrameCoverage", 0) < 0.15:
+    v_cov = target_syl.get("voicedFrameCoverage")
+    v_cov = float(v_cov) if (isinstance(v_cov, (int, float)) and math.isfinite(v_cov)) else 0.0
+    if target_syl.get("quality") == "uncertain" and v_cov < 0.15:
         return {
             "applicable": True,
             "expected": {"primaryStress": expected_primary_idx, "pattern": target_pattern},
@@ -123,22 +125,22 @@ def evaluate_stress_v2(
         if not pair:
             continue
 
-        log_dur = pair.get("logDurationRatio", 0.0)
-        int_diff = pair.get("intensityDiffDb")
-        pitch_diff_st = pair.get("pitchDiffSemitones")
+        raw_log_dur = pair.get("logDurationRatio")
+        raw_int_diff = pair.get("intensityDiffDb")
+        raw_pitch_diff_st = pair.get("pitchDiffSemitones")
 
-        dur_comp = log_dur
-        int_comp = (int_diff / 10.0) if int_diff is not None else 0.0
-        pitch_comp = (pitch_diff_st / 6.0) if pitch_diff_st is not None else 0.0
+        dur_comp = float(raw_log_dur) if (isinstance(raw_log_dur, (int, float)) and math.isfinite(raw_log_dur)) else 0.0
+        int_comp = (float(raw_int_diff) / 10.0) if (isinstance(raw_int_diff, (int, float)) and math.isfinite(raw_int_diff)) else 0.0
+        pitch_comp = (float(raw_pitch_diff_st) / 6.0) if (isinstance(raw_pitch_diff_st, (int, float)) and math.isfinite(raw_pitch_diff_st)) else 0.0
 
         # Weighted composite prominence
         # Duration is primary acoustic anchor in English (45%), intensity (30%), pitch (25%)
         margin_j = 0.45 * dur_comp + 0.30 * int_comp + 0.25 * pitch_comp
         competing_margins.append((j, margin_j))
         competing_details[j] = {
-            "logDurationRatio": log_dur,
-            "intensityDiffDb": int_diff,
-            "pitchDiffSemitones": pitch_diff_st,
+            "logDurationRatio": dur_comp,
+            "intensityDiffDb": raw_int_diff,
+            "pitchDiffSemitones": raw_pitch_diff_st,
             "margin": margin_j
         }
 
@@ -164,9 +166,12 @@ def evaluate_stress_v2(
     # Compute absolute prominence score for each syllable
     abs_prominences: List[float] = []
     for s_idx in range(num_syllables):
-        s_dur = syllables[s_idx].get("nucleusDurationSec", 0.1)
-        s_int = syllables[s_idx].get("intensityDb") or 50.0
-        s_st = syllables[s_idx].get("f0Semitones") or 0.0
+        raw_dur = syllables[s_idx].get("nucleusDurationSec")
+        s_dur = float(raw_dur) if (isinstance(raw_dur, (int, float)) and math.isfinite(raw_dur) and raw_dur > 0) else 0.1
+        raw_int = syllables[s_idx].get("intensityDb")
+        s_int = float(raw_int) if (isinstance(raw_int, (int, float)) and math.isfinite(raw_int)) else 50.0
+        raw_st = syllables[s_idx].get("f0Semitones")
+        s_st = float(raw_st) if (isinstance(raw_st, (int, float)) and math.isfinite(raw_st)) else 0.0
         prom = 0.45 * math.log(max(1e-4, s_dur)) + 0.30 * (s_int / 10.0) + 0.25 * (s_st / 6.0)
         abs_prominences.append(prom)
 

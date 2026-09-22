@@ -47,6 +47,12 @@
 
     mount(containerEl, { entry, userNotes = '', onComplete = null } = {}) {
       if (!containerEl) return;
+      if (this.containerEl === containerEl && this.currentEntry?.id === entry?.id && (this.isRecording || this.recordingBlob)) {
+        return;
+      }
+      this.cleanup();
+      this.containerEl = containerEl;
+      this.currentEntry = entry;
       if (!this.isEnabled()) {
         containerEl.style.display = 'none';
         containerEl.innerHTML = '';
@@ -230,7 +236,18 @@
             if (disclosureEl && window.TranscriptDisclosure) {
               const disclosure = new window.TranscriptDisclosure({
                 containerEl: disclosureEl,
-                onWordClick: (w) => console.log('[RL Disclosure] Clicked token:', w)
+                onWordClick: (w) => {
+                  const url = this.recordingBlobUrl || (this.recordingBlob ? (this.recordingBlobUrl = URL.createObjectURL(this.recordingBlob)) : null);
+                  if (window.SegmentPlaybackCoordinator?.defaultCoordinator && url) {
+                    const startMs = w.startMs ?? w.rawStartMs ?? 0;
+                    const endMs = w.endMs ?? w.rawEndMs ?? (startMs + 500);
+                    window.SegmentPlaybackCoordinator.defaultCoordinator.playSegment({
+                      audioUrl: url,
+                      startMs,
+                      endMs
+                    });
+                  }
+                }
               });
               disclosure.render(assessmentResult);
             }
@@ -295,6 +312,31 @@
       if (recordBtn) recordBtn.style.display = 'inline-block';
       if (stopBtn) stopBtn.style.display = 'none';
       if (timerEl) timerEl.style.display = 'none';
+    }
+
+    cleanup() {
+      if (this.isRecording) {
+        this.stopRecording();
+      }
+      if (this.timerInterval) {
+        clearInterval(this.timerInterval);
+        this.timerInterval = null;
+      }
+      if (this.stream) {
+        try {
+          this.stream.getTracks().forEach(t => t.stop());
+        } catch (_) {}
+        this.stream = null;
+      }
+      if (this.recordingBlobUrl) {
+        try {
+          URL.revokeObjectURL(this.recordingBlobUrl);
+        } catch (_) {}
+        this.recordingBlobUrl = null;
+      }
+      this.chunks = [];
+      this.recordingBlob = null;
+      this.recordingDurationSec = 0;
     }
   }
 

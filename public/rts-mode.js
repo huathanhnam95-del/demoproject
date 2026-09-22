@@ -992,7 +992,21 @@
                         spokenAssessmentData = res;
                         const discEl = document.getElementById(v3Active ? 'rts-v3-transcript-disclosure' : 'rts-transcript-disclosure');
                         if (discEl && window.TranscriptDisclosure && res) {
-                            new window.TranscriptDisclosure({ containerEl: discEl }).render(res);
+                            new window.TranscriptDisclosure({
+                                containerEl: discEl,
+                                onWordClick: (w) => {
+                                    const url = recordingBlobUrl || (rawBlob ? (recordingBlobUrl = URL.createObjectURL(rawBlob)) : null);
+                                    if (window.SegmentPlaybackCoordinator?.defaultCoordinator && url) {
+                                        const startMs = w.startMs ?? w.rawStartMs ?? 0;
+                                        const endMs = w.endMs ?? w.rawEndMs ?? (startMs + 500);
+                                        window.SegmentPlaybackCoordinator.defaultCoordinator.playSegment({
+                                            audioUrl: url,
+                                            startMs,
+                                            endMs
+                                        });
+                                    }
+                                }
+                            }).render(res);
                         }
                     })
                     .catch(err => console.warn('[RTS] Spoken assessment polling failed:', err));

@@ -55,7 +55,9 @@
         <div class="transcript-tokens-flow" role="list">
           ${words.map((w, idx) => {
             const isUncertain = Boolean(w.isTranscriptUncertain);
-            const scoreClass = w.accuracyScore >= 80 ? 'token-pass' : (w.accuracyScore >= 60 ? 'token-amber' : 'token-red');
+            const scoreClass = typeof w.accuracyScore === 'number'
+              ? (w.accuracyScore >= 80 ? 'token-pass' : (w.accuracyScore >= 60 ? 'token-amber' : 'token-red'))
+              : 'token-unrated';
             const uncertainClass = isUncertain ? 'token-uncertain' : '';
             const title = isUncertain ? uncertainNotice : `Score: ${w.accuracyScore ?? 'N/A'}`;
 
@@ -64,8 +66,8 @@
                     role="button"
                     tabindex="0"
                     data-word-index="${idx}"
-                    data-start-ms="${w.startMs || 0}"
-                    data-end-ms="${w.endMs || 0}"
+                    data-start-ms="${w.startMs ?? w.rawStartMs ?? 0}"
+                    data-end-ms="${w.endMs ?? w.rawEndMs ?? 0}"
                     title="${escapeHtml(title)}"
                     aria-label="${escapeHtml(w.word)}, score ${w.accuracyScore ?? 'unknown'}${isUncertain ? ', recognition uncertain' : ''}">
                 ${escapeHtml(w.word)}

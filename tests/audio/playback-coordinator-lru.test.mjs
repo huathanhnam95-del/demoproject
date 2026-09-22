@@ -75,3 +75,11 @@ test('LruAudioBufferCache: respects pinned active playback', () => {
   assert.equal(cache.get('url-2'), null); // Evicted!
   assert.equal(cache.get('url-3'), buf3);
 });
+
+test('LruAudioBufferCache: ignores buffer larger than maxBytes budget', () => {
+  const cache = new LruAudioBufferCache({ maxEntries: 3, maxBytes: 1000 });
+  const giantBuf = createMockBuffer(16000); // 64,000 bytes > 1,000 bytes
+  cache.set('giant-url', giantBuf);
+  assert.equal(cache.get('giant-url'), null);
+  assert.equal(cache.currentBytes, 0);
+});

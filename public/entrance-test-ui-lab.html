@@ -26,6 +26,7 @@
   -->
 
   <script src="js/entrance-test-ui-fonts.js"></script>
+  <script src="js/media-url-resolver.js"></script>
   <script>
     // Applied before the stylesheet paints so the skin never flashes.
     (function () {
@@ -1451,7 +1452,7 @@
             '<button class="chip" type="button" data-audio="rate">1.0×</button>' +
             '<span class="plays" data-audio="plays">' + (plays ? 'NGHE ' + plays + ' LẦN' : 'CHƯA NGHE') + '</span>' +
           '</div>' +
-          '<audio preload="metadata" src="' + esc(q.audio) + '"></audio>' +
+          '<audio preload="metadata"></audio>' +
         '</div>';
       }
 
@@ -1973,9 +1974,28 @@
         audio.addEventListener('timeupdate', paint);
         audio.addEventListener('ended', () => { btn.innerHTML = ICON.play; paint(); });
         audio.addEventListener('error', () => {
+          if (!audio.src) return;
           timeEl.textContent = 'không tải được';
           wrap.style.borderColor = 'var(--danger-line)';
         });
+
+        const loadDirect = () => {
+          if (audio.src) return;
+          audio.src = q.audio;
+          audio.load();
+        };
+
+        const isAbsoluteUrl = /^(?:https?:|\/\/|blob:|data:)/i.test(q.audio);
+        if (isAbsoluteUrl) {
+          audio.src = q.audio;
+        } else if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadAudio === 'function') {
+          window.MediaUrlResolver.loadAudio(audio, q.audio, { mode: 'Entrance-Test' }).catch((err) => {
+            console.warn('[EntranceTestLab] Failed to resolve audio via MediaUrlResolver:', err);
+            loadDirect();
+          });
+        } else {
+          loadDirect();
+        }
 
         btn.addEventListener('click', () => {
           if (audio.paused) {

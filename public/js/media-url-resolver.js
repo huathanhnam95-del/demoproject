@@ -160,7 +160,17 @@
         const shardKey = modeConfig.shardKey || ('catalogs/' + publicationId + '/' + canonMode + '.json');
         const shardUrl = deliveryBaseUrl ? (deliveryBaseUrl + shardKey) : ('/' + shardKey);
 
-        const shardData = await _fetchWithRetry(shardUrl, {}, 1, 200);
+        let shardData;
+        try {
+          shardData = await _fetchWithRetry(shardUrl, {}, 1, 200);
+        } catch (fetchErr) {
+          const localShardUrl = '/' + shardKey;
+          if (deliveryBaseUrl && shardUrl !== localShardUrl) {
+            shardData = await _fetchWithRetry(localShardUrl, {}, 1, 100);
+          } else {
+            throw fetchErr;
+          }
+        }
         _shardCache.set(canonMode, shardData);
         return shardData;
       } finally {
@@ -176,7 +186,9 @@
     if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
       try {
         window.dispatchEvent(new CustomEvent('bel:media-fallback', { detail }));
-      } catch (_) {}
+      } catch (_) {
+        /* ignore event dispatch failure */
+      }
     }
   }
 

@@ -63,6 +63,15 @@
     appState.steps = buildSteps(data.session);
     hydrateQuestionProgress(appState.steps);
     hydrateSavedProgress(choosePreferredProgressDraft(data.progress, readLocalProgressDraft()));
+    if (window.MediaUrlResolver) {
+      if (typeof window.MediaUrlResolver.init === 'function') {
+        window.MediaUrlResolver.init().catch(() => {});
+      }
+      if (typeof window.MediaUrlResolver.resolveAudioUrl === 'function') {
+        window.MediaUrlResolver.resolveAudioUrl('/database/Entrance Test/Listening Q1.mp3', { mode: 'Entrance-Test' }).catch(() => {});
+        window.MediaUrlResolver.resolveAudioUrl('/database/Entrance Test/Listening Q2.mp3', { mode: 'Entrance-Test' }).catch(() => {});
+      }
+    }
     render();
   }
 
@@ -571,12 +580,15 @@
     const html = renderParts(step.parts, 'fill', step.questionId);
     const fallbackAudioUrl = LISTENING_AUDIO_BY_QUESTION[String(step.questionId || '')] || '';
     const rawAudioUrl = step.audioUrl || fallbackAudioUrl;
-    const audioSrc = rawAudioUrl ? encodeURI(String(rawAudioUrl)) : '';
-    const audioBlock = audioSrc
+    const directAudioPath = rawAudioUrl && !/^(?:[a-z]+:|\/\/|\/)/i.test(rawAudioUrl)
+      ? '/' + rawAudioUrl
+      : rawAudioUrl;
+    const audioSrc = directAudioPath ? encodeURI(String(directAudioPath)) : '';
+    const audioBlock = rawAudioUrl
       ? `
         <div class="et-audio-block">
           <div class="et-audio-title">Audio</div>
-          <audio class="et-audio-player" controls preload="none" src="${escapeHtml(audioSrc)}"></audio>
+          <audio class="et-audio-player" controls preload="none"></audio>
           <div class="et-audio-note">Bạn có thể nghe lại nhiều lần trước khi nộp.</div>
         </div>
       `
@@ -595,10 +607,38 @@
     hydrateFillDefaults(step);
 
     const audioEl = elements.card.querySelector('.et-audio-player');
-    if (audioEl && rawAudioUrl && window.MediaUrlResolver && typeof window.MediaUrlResolver.resolveAudioUrl === 'function') {
-      window.MediaUrlResolver.resolveAudioUrl(rawAudioUrl, { mode: 'Entrance-Test' }).then((resolvedUrl) => {
-        if (resolvedUrl) audioEl.src = resolvedUrl;
-      }).catch(() => {});
+    if (audioEl && rawAudioUrl) {
+      const stepQuestionId = step.questionId;
+      const loadDirect = () => {
+        if (appState.steps[appState.stepIndex]?.questionId !== stepQuestionId) return;
+        if (!audioEl.src) {
+          audioEl.src = audioSrc;
+          audioEl.load();
+        }
+      };
+
+      const isAbsoluteUrl = /^(?:https?:|\/\/|blob:|data:)/i.test(rawAudioUrl);
+      if (isAbsoluteUrl) {
+        audioEl.src = rawAudioUrl;
+        audioEl.load();
+      } else {
+        try {
+          if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadAudio === 'function') {
+            const pending = window.MediaUrlResolver.loadAudio(audioEl, rawAudioUrl, { mode: 'Entrance-Test' });
+            if (pending && typeof pending.catch === 'function') {
+              pending.catch((err) => {
+                console.warn('[EntranceTest] Failed to load resolved audio, falling back to direct:', err);
+                loadDirect();
+              });
+            }
+          } else {
+            loadDirect();
+          }
+        } catch (err) {
+          console.warn('[EntranceTest] Error invoking MediaUrlResolver:', err);
+          loadDirect();
+        }
+      }
     }
 
     elements.card.querySelector('#btn-submit').addEventListener('click', () => {

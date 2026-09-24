@@ -251,3 +251,55 @@ test('MediaUrlResolver: abort signal cancels in-flight resolution', async () => 
   controller.abort();
   await assert.rejects(promise, { name: 'AbortError' });
 });
+
+test('MediaUrlResolver: falls back to local same-origin shard when remote bucket shard fetch fails', async () => {
+  const { resolver, context } = createResolverContext();
+
+  const testConfig = {
+    publicationId: 'pub-test',
+    deliveryBaseUrl: 'https://storage.googleapis.com/test-bucket/',
+    modes: {
+      'Entrance-Test': { state: 'remote-only', shardKey: 'catalogs/pub-test/Entrance-Test.json' }
+    }
+  };
+
+  const mockLocalShard = {
+    mode: 'Entrance-Test',
+    assets: {
+      'public/database/Entrance Test/Listening Q2.mp3': {
+        key: 'media/sha256/7faae63f5f8abe88694547aada408c98e24e4d12bcf7196c070f3e71e60ddba2.mp3'
+      }
+    }
+  };
+
+  const fetchedUrls = [];
+  context.fetch = async (url) => {
+    fetchedUrls.push(url);
+    if (url.startsWith('https://storage.googleapis.com/')) {
+      // Simulate CORS block or network failure on remote bucket
+      throw new Error('Failed to fetch (CORS block)');
+    }
+    if (url === '/catalogs/pub-test/Entrance-Test.json') {
+      return {
+        ok: true,
+        json: async () => mockLocalShard
+      };
+    }
+    throw new Error('Unexpected URL: ' + url);
+  };
+
+  const resolved = await resolver.resolveAudioUrl('/database/Entrance Test/Listening Q2.mp3', {
+    config: testConfig,
+    mode: 'Entrance-Test'
+  });
+
+  assert.equal(
+    resolved,
+    'https://storage.googleapis.com/test-bucket/media/sha256/7faae63f5f8abe88694547aada408c98e24e4d12bcf7196c070f3e71e60ddba2.mp3'
+  );
+  assert.equal(fetchedUrls.length, 3, '2 attempts on remote URL + 1 local fallback attempt');
+  assert.equal(fetchedUrls[0], 'https://storage.googleapis.com/test-bucket/catalogs/pub-test/Entrance-Test.json');
+  assert.equal(fetchedUrls[1], 'https://storage.googleapis.com/test-bucket/catalogs/pub-test/Entrance-Test.json');
+  assert.equal(fetchedUrls[2], '/catalogs/pub-test/Entrance-Test.json');
+});
+

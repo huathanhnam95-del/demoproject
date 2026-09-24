@@ -1,3 +1,13 @@
+## [V2.0.16] - 2026-09-24
+
+### Fixed
+- **Entrance Test Listening Audio Resolution & Playback (`public/entrance-test.html`, `public/entrance-test.js`, `public/entrance-test-ui-lab.html`, `public/js/media-url-resolver.js`)**:
+  - Loaded `js/media-url-resolver.js` in `public/entrance-test.html` and `public/entrance-test-ui-lab.html` before `entrance-test.js`.
+  - Resolved student audio playback failure on Section IV (Listen & Write questions `listen_write_q1` and `listen_write_q2`) by pre-warming and routing audio through `window.MediaUrlResolver.loadAudio(audioEl, rawAudioUrl, { mode: 'Entrance-Test' })`.
+  - Removed initial unresolvable `src` attribute from `<audio>` HTML template, eliminating premature browser 404 requests and console format errors.
+  - Added resilient local catalog shard fallback in `MediaUrlResolver._loadShard()` (`/' + shardKey`) whenever remote GCS bucket fetches face CORS restrictions or network disruptions.
+  - Added automated Playwright browser test suite (`tests/browser/entrance-test-audio-browser-check.js`) and unit test suite verifying zero 404 errors, proper GCS resolution, and clean audio metadata/duration decoding.
+
 ## [V2.0.15] - 2026-09-22
 
 ### Added & Enhanced

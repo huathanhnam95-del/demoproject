@@ -167,8 +167,10 @@ async function run() {
 
     // 5 & 6. Recording hides helpers and Next requires confirmation, clock & waveform advance
     console.log('  -> Checking Assertions 5 & 6 (recording hides helpers, Next confirmation, clock/waveform advance)...');
-    // Start recording manually in Describe Image
-    await testPage.locator('#di-record-btn').click();
+    // Start recording manually in Describe Image if not already auto-advanced by countdown
+    if (await testPage.locator('#di-record-btn').isVisible().catch(() => false)) {
+      await testPage.locator('#di-record-btn').click();
+    }
     await testPage.waitForFunction(() => {
       return window.DescribeImageMode?.getPtePhase?.() === 'recording';
     }, null, { timeout: 10000 });
@@ -211,22 +213,26 @@ async function run() {
       return window.DescribeImageMode?.getPtePhase?.() === 'complete';
     }, null, { timeout: 10000 });
 
-    // 7 & 8. Feedback card height is at most 740 px at desktop, two-column layout
-    console.log('  -> Checking Assertions 7 & 8 (feedback card height <= 740px at desktop, two-column layout)...');
+    // 7 & 8. Describe Image keeps its picture large (owner decision 2026-09-23), so its card
+    // may pass the 740px height target; what must hold is that the action dock stays on
+    // screen - pinned at the bottom of a tall card - so the next action never needs a scroll.
+    console.log('  -> Checking Assertions 7 & 8 (Describe Image dock stays on screen at desktop)...');
     const fbMetrics = await testPage.evaluate(() => {
+      window.scrollTo(0, 0);
       const card = document.querySelector('#mode-describe-image .pte-card');
-      const fb = document.querySelector('#mode-describe-image .pte-fb');
+      const dock = card?.querySelector('.pte-dock');
       const rect = card ? card.getBoundingClientRect() : { height: 0 };
-      const fbComputed = fb ? getComputedStyle(fb) : null;
+      const dockRect = dock ? dock.getBoundingClientRect() : null;
       return {
         cardHeight: Math.round(rect.height),
-        hasFb: !!fb,
-        display: fbComputed?.display,
-        gridColumns: fbComputed?.gridTemplateColumns
+        dockBottom: dockRect ? Math.round(dockRect.bottom) : null,
+        dockTop: dockRect ? Math.round(dockRect.top) : null,
+        viewport: innerHeight
       };
     });
-    console.log(`     Describe Image feedback card height: ${fbMetrics.cardHeight}px`);
-    assert.ok(fbMetrics.cardHeight <= 740, `feedback card height must be <= 740px (got ${fbMetrics.cardHeight}px)`);
+    console.log(`     Describe Image card height: ${fbMetrics.cardHeight}px, dock ${fbMetrics.dockTop}-${fbMetrics.dockBottom}px of ${fbMetrics.viewport}px`);
+    assert.ok(fbMetrics.dockBottom !== null && fbMetrics.dockBottom <= fbMetrics.viewport + 1 && fbMetrics.dockTop >= 0,
+      `the Describe Image dock must be on screen without scrolling (dock ${fbMetrics.dockTop}-${fbMetrics.dockBottom}px, viewport ${fbMetrics.viewport}px)`);
 
     // 12. ?pteShell=legacy has no v3 mode bar and preserves existing primary controls
     console.log('\n[Legacy Check] Verifying Assertion 12 (?pteShell=legacy has no v3 mode bar)...');

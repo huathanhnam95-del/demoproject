@@ -7,6 +7,10 @@ These tests validate packaging artifacts without requiring Docker.
 import os
 import pathlib
 import re
+import shutil
+import subprocess
+import sys
+import tempfile
 import unittest
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -241,6 +245,55 @@ class PronunciationPackagingTest(unittest.TestCase):
         self.assertIn("phoneme_client.py", source)
         self.assertIn("pronunciation_verifier.py", source)
         self.assertIn("pronunciation-verifier-v1.json", source)
+
+    def test_v42_runtime_modules_are_in_image_and_importable(self):
+        dockerfile = pathlib.Path(_BACKEND, "Dockerfile").read_text(encoding="utf-8")
+        ignore = pathlib.Path(_PROJECT_ROOT, ".gcloudignore").read_text(encoding="utf-8")
+        package_files = (
+            "backend/__init__.py",
+            "backend/local_server/__init__.py",
+            "backend/local_server/pronounce_v42.py",
+            "backend/local_server/segment_contract.py",
+            "backend/local_server/stress_evaluator_v2.py",
+            "backend/local_server/stress_features_v2.py",
+            "backend/phoneme_service/__init__.py",
+            "backend/phoneme_service/boundary_refinement.py",
+        )
+        for path in package_files:
+            self.assertTrue(pathlib.Path(_PROJECT_ROOT, path).is_file(), path)
+            self.assertIn(f"COPY {path} ./{path}", dockerfile, f"Praat image omits {path}")
+        for path in package_files:
+            if path.startswith("backend/local_server/"):
+                self.assertIn(f"!{path}", ignore, f"Cloud Build omits {path}")
+        self.assertIn("!backend/phoneme_service/*.py", ignore)
+
+        copy_rules = re.findall(r"(?m)^COPY\s+(\S+\.py)\s+\./(\S+\.py)\s*$", dockerfile)
+        with tempfile.TemporaryDirectory() as image_root:
+            for source, destination in copy_rules:
+                target = pathlib.Path(image_root, destination)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(pathlib.Path(_PROJECT_ROOT, source), target)
+            smoke = """
+import importlib
+import pathlib
+import sys
+root = pathlib.Path(sys.argv[1]).resolve()
+sys.path.insert(0, str(root))
+for name in (
+    'backend.local_server.pronounce_v42',
+    'backend.local_server.segment_contract',
+    'backend.local_server.stress_evaluator_v2',
+    'backend.local_server.stress_features_v2',
+    'backend.phoneme_service.boundary_refinement',
+):
+    module = importlib.import_module(name)
+    assert pathlib.Path(module.__file__).resolve().is_relative_to(root), name
+"""
+            result = subprocess.run(
+                [sys.executable, "-I", "-c", smoke, image_root],
+                cwd=image_root, capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_v3_degraded_response_is_always_unrateable(self):
         from backend.local_server.server import _build_v3_degraded_response

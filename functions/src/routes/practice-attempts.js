@@ -1675,6 +1675,12 @@ module.exports = function createPracticeAttemptsRouter(deps) {
                     responseSnapshot: attempt.responseSnapshot || null,
                     answerSnapshot: attempt.answerSnapshot || null,
                     resultSnapshot: attempt.resultSnapshot || null,
+                    v3: attempt.v3AssessmentId ? {
+                        assessmentId: attempt.v3AssessmentId,
+                        status: attempt.v3AssessmentState || null,
+                        audioId: attempt.v3AudioId || null,
+                        audioManifest: attempt.v3AudioManifest || null
+                    } : null,
                     timingSnapshot: attempt.timingSnapshot || null,
                     scoringSnapshot: attempt.scoringSnapshot || null,
                     status: attempt.status || null,

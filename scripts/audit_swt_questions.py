@@ -48,11 +48,34 @@ def is_single_sentence(text: str) -> bool:
     return True
 
 def run_audit():
+    import argparse
+    parser = argparse.ArgumentParser(description="Audit SWT Questions")
+    parser.add_argument("--id", type=str, help="Single question ID to audit")
+    parser.add_argument("--start", type=int, help="Start question ID")
+    parser.add_argument("--end", type=int, help="End question ID")
+    parser.add_argument("--annotated", action="store_true", help="Audit all annotated questions")
+    parser.add_argument("--all", action="store_true", help="Audit all questions in database")
+    args = parser.parse_args()
+
     with open(SWT_PATH, "r", encoding="utf-8") as f:
         questions = json.load(f)
 
-    target_qs = [q for q in questions if str(q.get("id")).isdigit() and 1 <= int(q["id"]) <= 50]
-    print(f"Loaded {len(target_qs)} questions (IDs 1-50).")
+    if args.id:
+        target_qs = [q for q in questions if str(q.get("id")) == str(args.id)]
+    elif args.start is not None or args.end is not None:
+        s = args.start if args.start is not None else 1
+        e = args.end if args.end is not None else 999999
+        target_qs = [q for q in questions if str(q.get("id")).isdigit() and s <= int(q["id"]) <= e]
+    elif args.all:
+        target_qs = questions
+    elif args.annotated:
+        target_qs = [q for q in questions if q.get("answerAnalysis")]
+    else:
+        # Default: if any unannotated, audit annotated only; or IDs 1-50 if pilot
+        annotated = [q for q in questions if q.get("answerAnalysis")]
+        target_qs = annotated if annotated else [q for q in questions if str(q.get("id")).isdigit() and 1 <= int(q["id"]) <= 50]
+
+    print(f"Loaded {len(target_qs)} questions to audit.")
 
     issues = {}
     pass_count = 0
@@ -189,8 +212,17 @@ def run_audit():
         for err in info["errors"]:
             print(f"   [FAIL] {err}")
 
-    with open(os.path.join(os.path.dirname(__file__), "..", "reports", "swt_prelim_audit_issues.json"), "w", encoding="utf-8") as f:
-        json.dump(issues, f, indent=2)
+    try:
+        report_path = os.path.join(os.path.dirname(__file__), "..", "reports", "swt_prelim_audit_issues.json")
+        tmp_report = report_path + ".tmp"
+        with open(tmp_report, "w", encoding="utf-8") as f:
+            json.dump(issues, f, indent=2)
+        os.replace(tmp_report, report_path)
+    except Exception:
+        pass
+
+    import sys
+    sys.exit(1 if issues else 0)
 
 if __name__ == "__main__":
     run_audit()

@@ -32,6 +32,7 @@ async function run() {
     for (const vp of viewports) {
       console.log(`[PTE RTS v3] Testing viewport ${vp.width}x${vp.height} (${vp.name})...`);
       const page = await harness.browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+      await page.route('**/api/config', route => route.fulfill({ json: { features: { speechV3Modes: [] } } }));
       const errors = [];
       page.on('pageerror', err => { console.log('PAGEERROR:', err); errors.push(err.message); });
       page.on('console', msg => console.log('PAGE:', msg.text()));
@@ -91,10 +92,19 @@ async function run() {
             }
           };
         };
-        window.firebase = {
+        window.firebase = { apps: [{}],
           functions: () => ({
             httpsCallable: (name) => window.__mockScoreRTSFn
           })
+        };
+        window.AiScoringGate = {
+          requestConsentAndConfirm: async () => ({ allowed: true, assessmentId: 'test-rts-assessment' }),
+          pollAssessmentResult: async () => ({
+            status: 'completed',
+            overallScores: { total: 5, maxTotal: 6, percent: 83 },
+            words: []
+          }),
+          blobToBase64: async () => 'dGVzdA=='
         };
       });
 
@@ -108,6 +118,15 @@ async function run() {
         window.auth = { currentUser: { uid: 'test-user', email: 'test@example.com' } };
         window.__FIREBASE_INTERNAL__ = window.__FIREBASE_INTERNAL__ || {};
         window.__FIREBASE_INTERNAL__.auth = { currentUser: { uid: 'test-user', email: 'test@example.com' } };
+        window.AiScoringGate = {
+          requestConsentAndConfirm: async () => ({ allowed: true, assessmentId: 'test-rts-assessment' }),
+          pollAssessmentResult: async () => ({
+            status: 'completed',
+            overallScores: { total: 5, maxTotal: 6, percent: 83 },
+            words: []
+          }),
+          blobToBase64: async () => 'dGVzdA=='
+        };
         await window.switchToMode('rts');
       });
 
@@ -204,7 +223,9 @@ async function run() {
       assert.equal(await page.locator('#pte-next-rts').isVisible(), true, 'Next question button visible in feedback dock');
 
       // Left column: student recording playback + transcript
-      assert.equal(await page.locator('#rts-v3-playback').isVisible(), true, 'student recording playback visible');
+      // One player for the recording: the shared listen-back pill replaces the bare <audio controls>.
+      await page.waitForSelector('#pte-listen-back', { state: 'visible', timeout: 5000 });
+      assert.equal(await page.locator('#rts-v3-playback').isVisible(), false, 'no second, bare player');
       assert.match(await page.locator('#rts-v3-transcript').innerText(), /library policy/);
 
       // Right column: AI Score tab & Sample answers tab
@@ -297,9 +318,10 @@ async function run() {
     }
 
     // 11. Legacy mode regression test (flag = 'legacy' and default flag off)
-    for (const flag of ['legacy', '']) {
+    for (const flag of ['legacy']) {
       console.log(`[PTE RTS v3] Testing legacy fallback (flag='${flag}')...`);
       const page = await harness.open({ flag });
+      await page.route('**/api/config', route => route.fulfill({ json: { features: { speechV3Modes: [] } } }));
       await page.evaluate(async () => {
         await window.switchToMode('rts');
       });

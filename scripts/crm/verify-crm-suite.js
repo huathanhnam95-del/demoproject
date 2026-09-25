@@ -84,6 +84,8 @@ function buildLegacyChecks() {
         ['node', ['tests/crm/scheduling-operation-service.test.js']],
         ['node', ['tests/crm/classroom-api-operation-id.test.js']],
         ['node', ['tests/crm/teacher-scheduler-router-contract.test.js']],
+        ['node', ['tests/crm/teacher-scheduler-presentation.test.cjs']],
+        ['node', ['tests/crm/teacher-scheduler-colors.test.cjs']],
         ['node', ['tests/crm/teacher-scheduler-behavior.test.js']],
         ['node', ['tests/crm/teacher-scheduler-series-route.test.js']],
         ['node', ['tests/crm/teacher-scheduler-client-controller.test.js']],

@@ -48,6 +48,7 @@ const SUPPORTED_FIREBASE_VERSIONS = new Set(['15.2.1', '15.29.0']);
 const SHA_RE = /^[0-9a-f]{40}$/i;
 const PROJECT_ID_RE = /^[a-z][a-z0-9-]{4,62}$/;
 const PROFILE_NAMES = Object.freeze(['hosting', 'functions', 'full']);
+const FUNCTION_TARGET_RE = /^[A-Za-z][A-Za-z0-9_]*$/;
 const PROFILE_CONFIG = Object.freeze({
   hosting: Object.freeze({
     selector: 'hosting',
@@ -66,10 +67,43 @@ const PROFILE_CONFIG = Object.freeze({
   })
 });
 
+function validatedFunctionTargets(value) {
+  if (value == null) return null;
+  const targets = typeof value === 'string' ? value.split(',') : value;
+  if (!Array.isArray(targets) || !targets.length ||
+      targets.some((target) => typeof target !== 'string' || !FUNCTION_TARGET_RE.test(target)) ||
+      new Set(targets).size !== targets.length) {
+    fail('FUNCTION_TARGETS', 'Function targets must be unique, comma-separated simple export names.');
+  }
+  return [...targets];
+}
+
+function selectedProfileConfig(profile, functionTargets) {
+  if (!PROFILE_CONFIG[profile]) fail('PROFILE', `Unsupported release profile: ${profile}.`);
+  if (functionTargets == null) return PROFILE_CONFIG[profile];
+  if (profile !== 'functions') fail('FUNCTION_TARGETS', 'Function targets require the functions profile.');
+  const targets = validatedFunctionTargets(functionTargets);
+  return { ...PROFILE_CONFIG.functions, selector: targets.map((name) => `functions:${name}`).join(',') };
+}
+
+function sealedSelection(receipt, profile) {
+  if (!receipt || receipt.profile !== profile || !Object.prototype.hasOwnProperty.call(receipt, 'selector') ||
+      !Object.prototype.hasOwnProperty.call(receipt, 'functionTargets')) {
+    fail('SELECTION_CHANGED', 'Release receipt has no sealed Firebase selection.');
+  }
+  const targets = validatedFunctionTargets(receipt.functionTargets);
+  const selected = selectedProfileConfig(profile, targets);
+  if (receipt.selector !== selected.selector || receipt.context?.selector !== selected.selector) {
+    fail('SELECTION_CHANGED', 'Release selector and target list differ from the sealed receipt.');
+  }
+  return { ...selected, functionTargets: targets };
+}
+
 const HOOK_CONTEXT_FIELDS = Object.freeze([
   'BEL_FIREBASE_RELEASE_CONTEXT',
   'BEL_FIREBASE_RELEASE_RECEIPT',
   'BEL_FIREBASE_RELEASE_PROFILE',
+  'BEL_FIREBASE_RELEASE_SELECTOR',
   'BEL_FIREBASE_RELEASE_CANDIDATE_ROOT',
   'BEL_FIREBASE_RELEASE_SOURCE_SHA',
   'BEL_FIREBASE_RELEASE_PROJECT_ID',
@@ -81,6 +115,7 @@ const HOOK_REQUIRED_FIELDS = Object.freeze([
   'BEL_FIREBASE_RELEASE_CONTEXT',
   'BEL_FIREBASE_RELEASE_RECEIPT',
   'BEL_FIREBASE_RELEASE_PROFILE',
+  'BEL_FIREBASE_RELEASE_SELECTOR',
   'BEL_FIREBASE_RELEASE_CANDIDATE_ROOT',
   'BEL_FIREBASE_RELEASE_SOURCE_SHA',
   'BEL_FIREBASE_RELEASE_PROJECT_ID',
@@ -104,6 +139,7 @@ const RELEASE_INPUTS = Object.freeze([
   'public/js/read-aloud-linking.js',
   'scripts/segmentation-study/sync-manifest.js',
   'scripts/release/firebase-release.cjs',
+  'scripts/release/preserved-hosting.cjs',
   'scripts/release/release-input-policy.json',
   'scripts/release/lib/release-input-policy.cjs',
   'config/media-release.lock.json',
@@ -743,6 +779,7 @@ function validateSelectedReleaseWiring(root, sourceSha, config, configRelative, 
     fail('SOURCE_WIRING', 'Selected source has no usable package scripts.');
   }
   const required = ['package.json', configRelative, 'scripts/release/firebase-release.cjs', 'scripts/structure/policy.json'];
+  if (options.preserveManifest) required.push('scripts/release/preserved-hosting.cjs');
   if (profile === 'hosting' || profile === 'full') required.push('scripts/sync-version.js');
   if (profile === 'hosting' || profile === 'functions' || profile === 'full') {
     required.push('scripts/read-aloud/build-connected-speech-index.js', 'scripts/read-aloud/connected-speech-index-core.js');
@@ -2043,6 +2080,8 @@ function verifyAndSeal(ctx) {
   const receipt = {
     schemaVersion: 1,
     profile: ctx.profile,
+    functionTargets: ctx.functionTargets,
+    selector: ctx.profileConfig.selector,
     sourceSha: ctx.sourceSha,
     committerEpoch: ctx.committerEpoch,
     project: { id: ctx.project.id, alias: ctx.project.alias, configPath: path.relative(ctx.candidateRoot, ctx.candidateConfigPath).replace(/\\/g, '/') },
@@ -2071,6 +2110,7 @@ function verifyAndSeal(ctx) {
     context: {
       marker: 'BEL_FIREBASE_RELEASE_CONTEXT',
       profile: ctx.profile,
+      selector: ctx.profileConfig.selector,
       sourceSha: ctx.sourceSha,
       projectId: ctx.project.id,
       projectAlias: ctx.project.alias || null,
@@ -2105,6 +2145,7 @@ function buildHookEnvironment(ctx) {
     BEL_FIREBASE_RELEASE_CONTEXT: '1',
     BEL_FIREBASE_RELEASE_RECEIPT: ctx.receiptPath,
     BEL_FIREBASE_RELEASE_PROFILE: ctx.profile,
+    BEL_FIREBASE_RELEASE_SELECTOR: ctx.receipt.selector,
     BEL_FIREBASE_RELEASE_CANDIDATE_ROOT: ctx.candidateRoot,
     BEL_FIREBASE_RELEASE_SOURCE_SHA: ctx.sourceSha,
     BEL_FIREBASE_RELEASE_PROJECT_ID: ctx.project.id,
@@ -2142,6 +2183,11 @@ function validateHookReceipt(env, receipt, state, product) {
   }
   if (receipt.profile !== state.profile || !PROFILE_CONFIG[state.profile].products.includes(product)) {
     fail('INVALID_HOOK_CONTEXT', 'release context profile does not match the Firebase product.');
+  }
+  const selection = sealedSelection(receipt, state.profile);
+  if (selection.selector !== String(env.BEL_FIREBASE_RELEASE_SELECTOR) ||
+      (product !== 'functions' && selection.functionTargets !== null)) {
+    fail('INVALID_HOOK_CONTEXT', 'release context selector does not match its receipt.');
   }
   const receiptRoot = path.resolve(String(receipt.candidateRoot || ''));
   const contextRoot = path.resolve(String(env.BEL_FIREBASE_RELEASE_CANDIDATE_ROOT || ''));
@@ -2190,7 +2236,8 @@ function validateHookReceipt(env, receipt, state, product) {
   if (env.GCLOUD_PROJECT && normalizeProjectId(env.GCLOUD_PROJECT) !== projectId) {
     fail('INVALID_HOOK_CONTEXT', 'Firebase project environment does not match its receipt.');
   }
-  return { sourceSha, projectId, projectAlias: receiptAlias, candidateRoot: receiptRoot, candidateConfigPath: receiptConfig };
+  return { sourceSha, projectId, projectAlias: receiptAlias, candidateRoot: receiptRoot,
+    candidateConfigPath: receiptConfig, profileConfig: selection, functionTargets: selection.functionTargets };
 }
 
 function assertReceiptOutsideCandidate(candidateRoot, receiptPathValue) {
@@ -2261,7 +2308,8 @@ function runHook(options = {}) {
   const project = { id: identity.projectId, alias: identity.projectAlias };
   const ctx = {
     profile: state.profile,
-    profileConfig: PROFILE_CONFIG[state.profile],
+    profileConfig: identity.profileConfig,
+    functionTargets: identity.functionTargets,
     candidateRoot,
     candidateConfigPath: identity.candidateConfigPath,
     config: readJson(identity.candidateConfigPath, 'candidate Firebase config'),
@@ -2329,7 +2377,8 @@ function buildReleaseContext(options = {}) {
     project = { ...selectedProject, id: originalProject.id, alias: originalProject.alias, config: selectedConfig };
   }
   const profile = String(options.profile || '').trim();
-  if (!PROFILE_CONFIG[profile]) fail('PROFILE', `Unsupported release profile: ${profile}.`);
+  const profileConfig = selectedProfileConfig(profile, options.functionTargets);
+  const functionTargets = validatedFunctionTargets(options.functionTargets);
   const metrics = options.metrics || ACTIVE_METRICS;
   if (metrics) metrics.startPhase('git-inventory');
   const trackedInventoryRaw = Array.isArray(options.trackedInventory)
@@ -2485,7 +2534,8 @@ function buildReleaseContext(options = {}) {
     ...source,
     ...candidate,
     profile,
-    profileConfig: PROFILE_CONFIG[profile],
+    profileConfig,
+    functionTargets,
     project,
     candidateConfigPath,
     config: project.config,
@@ -2579,7 +2629,8 @@ function dispatchFirebase(ctx, options = {}) {
     fail('VERIFY_ONLY_DISPATCH', 'dispatchFirebase must not be invoked when verifyOnly is active.');
   }
   compareSealedSurface(ctx);
-  const selector = ctx.profileConfig.selector;
+  const selector = sealedSelection(ctx.receipt, ctx.profile).selector;
+  if (selector !== ctx.profileConfig.selector) fail('SELECTION_CHANGED', 'Release selection changed after sealing.');
   const invocation = resolveFirebaseInvocation(options, ctx);
   const projectSelector = ctx.project.alias || ctx.project.id;
   const channel = options.channel || ctx.channel || null;
@@ -2606,6 +2657,13 @@ function dispatchFirebase(ctx, options = {}) {
 }
 
 function runRelease(options = {}) {
+  if (options.preserveManifest || options.publishPreservedHosting) {
+    fail('PRESERVATION_OPTIONS', 'Use the separate preserved Hosting runner for preservation.');
+  }
+  selectedProfileConfig(String(options.profile || '').trim(), options.functionTargets);
+  if (options.functionTargets != null && options.channel) {
+    fail('FUNCTION_TARGETS', 'Function targets cannot be used with a channel.');
+  }
   const metrics = options.metrics || new ReleaseMetrics(options);
   setActiveMetrics(metrics);
   let ctx = null;
@@ -2633,7 +2691,7 @@ function runRelease(options = {}) {
         verified: true,
         published: false,
         profile: ctx.profile,
-        selector: ctx.profileConfig.selector,
+        selector: ctx.receipt.selector,
         channel: ctx.channel || null,
         sourceSha: ctx.sourceSha,
         project: { id: ctx.project.id, alias: ctx.project.alias },
@@ -2665,7 +2723,7 @@ function runRelease(options = {}) {
       verified: true,
       published: true,
       profile: ctx.profile,
-      selector: ctx.profileConfig.selector,
+      selector: ctx.receipt.selector,
       channel: publication.channel || ctx.channel || null,
       sourceSha: ctx.sourceSha,
       project: { id: ctx.project.id, alias: ctx.project.alias },
@@ -2693,6 +2751,57 @@ function runRelease(options = {}) {
   }
 }
 
+async function runPreservedRelease(options = {}) {
+  if (!options.preserveManifest || !path.isAbsolute(options.preserveManifest) ||
+      options.profile !== 'hosting' || options.channel || options.functionTargets != null ||
+      (options.verifyOnly && options.publishPreservedHosting)) {
+    fail('PRESERVATION_OPTIONS', 'Preserved Hosting requires an absolute manifest path, hosting profile, no channel, and no verify-only/publish combination.');
+  }
+  const preserved = require('./preserved-hosting.cjs');
+  const metrics = options.metrics || new ReleaseMetrics(options);
+  setActiveMetrics(metrics);
+  let ctx = null;
+  try {
+    ctx = buildReleaseContext({ ...options, metrics });
+    ctx.metrics = metrics;
+    metrics.setContextMetadata(ctx);
+    ctx.preparation = prepareOnce(ctx);
+    verifyAndSeal(ctx);
+    ctx.env = { ...(ctx.env || process.env), ...buildHookEnvironment(ctx) };
+    runHook({ product: 'hosting', env: ctx.env });
+    compareSealedSurface(ctx);
+    const prepared = preserved.preparePreservation(ctx, options.preserveManifest);
+    const preservationReceiptPath = path.join(ctx.externalRoot,
+      `preserved-hosting-${ctx.sourceSha.slice(0, 12)}-${ctx.runId}.receipt.json`);
+    fs.writeFileSync(preservationReceiptPath, `${JSON.stringify(prepared.receipt, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
+    const journalPath = `${preservationReceiptPath}.journal.jsonl`;
+    const record = stage => fs.appendFileSync(journalPath, `${JSON.stringify({ ...stage, at: new Date().toISOString() })}\n`);
+    if (!options.publishPreservedHosting) {
+      metrics.recordSuccess({ verified: true, published: false });
+      return { ok: true, verified: true, published: false, profile: 'hosting',
+        sourceSha: ctx.sourceSha, project: { id: ctx.project.id, alias: ctx.project.alias },
+        candidateRoot: ctx.candidateRoot, preservationReceiptPath, plan: prepared.receipt };
+    }
+    // Only this explicit branch may obtain credentials or make Hosting API calls.
+    const transport = options.preservationTransport || preserved.createRestTransport({
+      projectId: prepared.plan.projectId, siteId: prepared.plan.siteId, firebaseCli: ctx.firebaseCli,
+      credentialMode: prepared.plan.credentialMode || 'adc'
+    });
+    compareSealedSurface(ctx);
+    const publication = await preserved.publishPreservation(prepared, transport, { record,
+      sleep: options.preservationSleep, checkSource: () => compareSealedSurface(ctx) });
+    metrics.recordSuccess({ verified: true, published: true, publication });
+    return { ok: true, verified: true, published: true, profile: 'hosting',
+      sourceSha: ctx.sourceSha, project: { id: ctx.project.id, alias: ctx.project.alias },
+      candidateRoot: ctx.candidateRoot, preservationReceiptPath, publication };
+  } catch (error) {
+    metrics.recordFailure(error);
+    throw error;
+  } finally {
+    setActiveMetrics(null);
+  }
+}
+
 function parseArgs(argv = process.argv.slice(2)) {
   const args = { json: false, nonInteractive: false, verifyOnly: false };
   const tokens = [...argv];
@@ -2702,14 +2811,20 @@ function parseArgs(argv = process.argv.slice(2)) {
     if (token === '--json') args.json = true;
     else if (token === '--non-interactive') args.nonInteractive = true;
     else if (token === '--verify-only') args.verifyOnly = true;
+    else if (token === '--publish-preserved-hosting') args.publishPreservedHosting = true;
     else if (token === '--allow-pilot-media') args.allowPilot = true;
     else if (token === '--no-selective-source-export') args.selectiveSourceExport = false;
-    else if (['--sha', '--project', '--config', '--firebase-cli', '--npm-cli', '--external-root', '--cohort', '--policy', '--channel'].includes(token)) {
+    else if (['--sha', '--project', '--config', '--firebase-cli', '--npm-cli', '--external-root', '--cohort', '--policy', '--channel', '--preserve-live-hosting-manifest', '--function-targets'].includes(token)) {
       if (!tokens[index + 1] || tokens[index + 1].startsWith('--')) fail('CLI_ARGUMENT', `${token} requires a value.`);
       if (token === '--policy') {
         args.policyPath = tokens[++index];
       } else if (token === '--channel') {
         args.channel = tokens[++index];
+      } else if (token === '--preserve-live-hosting-manifest') {
+        args.preserveManifest = tokens[++index];
+      } else if (token === '--function-targets') {
+        if (args.functionTargets != null) fail('FUNCTION_TARGETS', 'Function targets may be supplied only once.');
+        args.functionTargets = validatedFunctionTargets(tokens[++index]);
       } else {
         args[token.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())] = tokens[++index];
       }
@@ -2722,6 +2837,15 @@ function parseArgs(argv = process.argv.slice(2)) {
   }
   if (args.profile === 'hook') { args.hook = true; delete args.profile; }
   if (args.hook && args.profile) fail('CLI_ARGUMENT', 'Hook mode cannot include a release profile.');
+  if (args.functionTargets != null && (args.hook || args.profile !== 'functions' ||
+      args.preserveManifest || args.publishPreservedHosting || args.channel)) {
+    fail('FUNCTION_TARGETS', 'Function targets require the functions profile without a channel or preservation route.');
+  }
+  if ((args.preserveManifest || args.publishPreservedHosting) &&
+      (!args.preserveManifest || !path.isAbsolute(args.preserveManifest) || args.profile !== 'hosting' ||
+       args.channel || (args.verifyOnly && args.publishPreservedHosting))) {
+    fail('PRESERVATION_OPTIONS', 'Preservation requires hosting, an absolute manifest, no channel, and an explicit publish flag separate from verify-only.');
+  }
   return args;
 }
 
@@ -2735,7 +2859,9 @@ function publicResult(result) {
     selector: result && result.selector,
     sourceSha: result && result.sourceSha,
     project: result && result.project,
-    releaseInputPolicy: result && result.releaseInputPolicy
+    releaseInputPolicy: result && result.releaseInputPolicy,
+    preservationReceiptPath: result && result.preservationReceiptPath,
+    preservationPublication: result && result.preservationReceiptPath ? result.publication : undefined
   };
 }
 
@@ -2747,7 +2873,7 @@ function main(argv = process.argv.slice(2)) {
     return result;
   }
   if (!args.profile) fail('CLI_ARGUMENT', 'A release profile is required: hosting, functions, or full.');
-  const result = runRelease({
+  const releaseOptions = {
     profile: args.profile,
     sha: args.sha,
     project: args.project,
@@ -2760,13 +2886,22 @@ function main(argv = process.argv.slice(2)) {
     externalRoot: args.externalRoot,
     cohort: args.cohort,
     allowPilot: args.allowPilot,
-    policyPath: args.policyPath
-  });
-  if (args.json) console.log(JSON.stringify(publicResult(result)));
-  else if (args.verifyOnly) console.log(`${args.profile} Firebase release verified without publication.`);
-  else if (args.channel) console.log(`${args.profile} Firebase release deployed to channel ${args.channel} successfully.`);
-  else console.log(`${args.profile} Firebase release succeeded.`);
-  return result;
+    policyPath: args.policyPath,
+    preserveManifest: args.preserveManifest,
+    publishPreservedHosting: args.publishPreservedHosting,
+    functionTargets: args.functionTargets
+  };
+  const result = args.preserveManifest ? runPreservedRelease(releaseOptions) : runRelease(releaseOptions);
+  const report = completed => {
+    if (args.json) console.log(JSON.stringify(publicResult(completed)));
+    else if (args.preserveManifest && !args.publishPreservedHosting) console.log('Preserved Hosting candidate verified without publication.');
+    else if (args.preserveManifest) console.log('Preserved Hosting release verified live.');
+    else if (args.verifyOnly) console.log(`${args.profile} Firebase release verified without publication.`);
+    else if (args.channel) console.log(`${args.profile} Firebase release deployed to channel ${args.channel} successfully.`);
+    else console.log(`${args.profile} Firebase release succeeded.`);
+    return completed;
+  };
+  return result && typeof result.then === 'function' ? result.then(report) : report(result);
 }
 
 module.exports = {
@@ -2826,6 +2961,7 @@ module.exports = {
   buildReleaseContext,
   dispatchFirebase,
   runRelease,
+  runPreservedRelease,
   parseArgs,
   main,
   classifyTrackedPath,
@@ -2834,7 +2970,10 @@ module.exports = {
 
 if (require.main === module) {
   try {
-    main();
+    Promise.resolve(main()).catch(error => {
+      console.error(error instanceof ReleaseError || error.code ? `${error.code}: ${error.message}` : error.message || String(error));
+      process.exitCode = 1;
+    });
   } catch (error) {
     console.error(error instanceof ReleaseError ? `${error.code}: ${error.message}` : error.message || String(error));
     process.exitCode = 1;

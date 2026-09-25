@@ -27,7 +27,10 @@
   render(assessmentResult) {
     if (!this.container || !assessmentResult) return;
 
-    const { transcription, words = [], transcriptDisclosure } = assessmentResult;
+    const { transcription, transcriptDisclosure } = assessmentResult;
+    const isV3 = assessmentResult.schemaVersion === 'bel.speech.v3';
+    const words = isV3 && Array.isArray(assessmentResult.wordResults)
+      ? assessmentResult.wordResults : (assessmentResult.words || []);
     const headline = transcriptDisclosure?.headline || 'Pronunciation of your response';
     const subtitle = transcriptDisclosure?.subtitle || 'Based on the words recognized in your recording. View transcript';
     const uncertainNotice = transcriptDisclosure?.uncertainWordNotice || 'Word recognition uncertain. Listen to this section and check the transcript.';
@@ -59,19 +62,33 @@
               ? (w.accuracyScore >= 80 ? 'token-pass' : (w.accuracyScore >= 60 ? 'token-amber' : 'token-red'))
               : 'token-unrated';
             const uncertainClass = isUncertain ? 'token-uncertain' : '';
-            const title = isUncertain ? uncertainNotice : `Score: ${w.accuracyScore ?? 'N/A'}`;
+            const title = w.presence === 'omitted' ? 'Word not detected in the recording'
+              : isUncertain ? uncertainNotice : `Score: ${w.accuracyScore ?? 'unavailable'}`;
+            const playbackLabel = w.isBoundaryUncertain || w.clipTiming?.isolationStatus === 'uncertain'
+              ? ' (context playback)' : '';
+            const syllables = isV3 && w.presence !== 'omitted' && Array.isArray(w.syllables)
+              ? w.syllables : [];
 
             return `
               <span class="word-token ${scoreClass} ${uncertainClass}"
                     role="button"
                     tabindex="0"
                     data-word-index="${idx}"
+                    data-occurrence-id="${escapeHtml(w.occurrenceId || '')}"
                     data-start-ms="${w.startMs ?? w.rawStartMs ?? 0}"
                     data-end-ms="${w.endMs ?? w.rawEndMs ?? 0}"
                     title="${escapeHtml(title)}"
-                    aria-label="${escapeHtml(w.word)}, score ${w.accuracyScore ?? 'unknown'}${isUncertain ? ', recognition uncertain' : ''}">
-                ${escapeHtml(w.word)}
+                    aria-label="${escapeHtml(w.word)}, score ${w.accuracyScore ?? 'unavailable'}${isUncertain ? ', recognition uncertain' : ''}${playbackLabel}">
+                ${escapeHtml(w.displayText || w.word)}${playbackLabel ? '<small>Context</small>' : ''}
               </span>
+              ${syllables.length ? `<span class="syllable-chips" aria-label="Syllable breakdown">${syllables.map((s, syllableIndex) => {
+                const score = typeof s.accuracyScore === 'number' ? s.accuracyScore : null;
+                const state = score === null ? 'token-unrated' : score >= 80 ? 'token-pass' : score >= 60 ? 'token-amber' : 'token-red';
+                const ipaRaw = (s.phonemes || []).map(p => p.ipaRaw || '').join('');
+                const normalize = typeof window !== 'undefined' && window.Phonetics?.normalizeIPA;
+                const ipa = normalize ? normalize(ipaRaw) : ipaRaw;
+                return `<button type="button" class="syllable-chip ${state}" data-word-index="${idx}" data-syllable-index="${syllableIndex}" title="${escapeHtml(ipa ? `/${ipa}/ · ${score ?? 'unavailable'}` : `${score ?? 'unavailable'}`)}">${escapeHtml(s.syllable || '')}</button>`;
+              }).join('')}</span>` : ''}
             `;
           }).join(' ')}
         </div>
@@ -100,13 +117,23 @@
       tokens.forEach(tok => {
         tok.addEventListener('click', (e) => {
           const idx = parseInt(tok.getAttribute('data-word-index'), 10);
-          this.onWordClick(words[idx], tok, e);
+          this.onWordClick(words[idx], idx, tok, e);
         });
         tok.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             tok.click();
           }
+        });
+      });
+      this.container.querySelectorAll('.syllable-chip').forEach(chip => {
+        chip.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const idx = Number(chip.dataset.wordIndex);
+          const syllable = words[idx]?.syllables?.[Number(chip.dataset.syllableIndex)];
+          if (!syllable) return;
+          const span = syllable.span;
+          this.onWordClick({ ...words[idx], clip: span, clipTiming: { clipSpan: span } }, idx, chip, event);
         });
       });
     }

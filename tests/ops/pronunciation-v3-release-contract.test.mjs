@@ -108,29 +108,52 @@ test('active V3 is opt-in for a zero-traffic praat-api candidate only', () => {
 });
 
 test('candidate source SHA and image digest are validated before gcloud', () => {
-    assert.match(code, /\$Sha\s+-notmatch\s+'\^\[0-9a-f\]\{7,40\}\$'/,
-        'candidate source SHA must be constrained to lowercase hexadecimal');
+    assert.match(code, /\$Sha\s+-notmatch\s+'\^\[0-9a-f\]\{40\}\$'/,
+        'candidate source SHA must be a full lowercase Git commit SHA');
     assert.match(code, /\$Digest\s+-notmatch\s+'\^sha256:\[0-9a-f\]\{64\}\$'/,
         'candidate digest must be an immutable sha256 digest');
     const deploy = code.slice(code.indexOf("  'DeployCandidate' {"), code.indexOf("  'Promote' {"));
-    assert.ok(deploy.indexOf('$Sha -notmatch') < deploy.indexOf('Assert-AccessUnchanged'),
-        'source validation must happen before any gcloud-backed access check');
-    assert.ok(deploy.indexOf('$Digest -notmatch') < deploy.indexOf('Assert-AccessUnchanged'),
-        'digest validation must happen before any gcloud-backed access check');
+    assert.match(deploy, /-not\s+\$BuildId\s+-or\s+-not\s+\$SourceRoot/);
+    assert.ok(deploy.indexOf('$Sha -notmatch') < deploy.indexOf('Assert-CleanSourceRoot') &&
+        deploy.indexOf('$Digest -notmatch') < deploy.indexOf('Assert-BuildImage') &&
+        deploy.indexOf('Assert-BuildImage') < deploy.indexOf('Assert-AccessUnchanged'),
+    'identity checks must precede the first Cloud Run mutation');
+    assert.match(code, /git -C \$Root status --porcelain=v1 --untracked-files=all/);
+    assert.match(code, /gcloud meta list-files-for-upload/);
+    assert.match(code, /git ls-files --error-unmatch/);
+    assert.match(code, /verify-pronunciation-source\.py/);
+    assert.match(code, /& python \$helper --project \$cfg\.project --build-id \$Id --source-root \$Root/);
+    const promote = code.slice(code.indexOf("  'Promote' {"), code.indexOf("  'Rollback' {"));
+    assert.match(promote, /-not \$SourceRoot/);
+    assert.match(promote, /Assert-BuildImage[^\n]*-Root \$SourceRoot[\s\S]*Assert-AccessUnchanged[\s\S]*Invoke-Gcloud/);
 });
 
 test('full source SHA keeps full provenance but uses a bounded candidate tag', () => {
-  assert.match(
-    script,
-    /\$candidateTagSuffix\s*=\s*\$Sha\.Substring\(0,\s*\[Math\]::Min\(12,\s*\$Sha\.Length\)\)/,
-    'candidate tag suffix must be bounded for Cloud Run while accepting a full SHA'
-  );
-  assert.match(script, /--tag=\$candidateTag/);
-  assert.match(script, /GIT_SHA=\$Sha,BUILD_SHA=\$Sha/);
+    const builder = code.slice(code.indexOf('function Get-SafeCandidateTag'), code.indexOf('function Invoke-Gcloud'));
+    assert.match(builder, /^function Get-SafeCandidateTag\s*\{/);
+    assert.match(builder, /\$combinedNameLimit\s*=\s*46\b/);
+    assert.match(builder, /\$tagServiceSeparatorLength\s*=\s*3\b/);
+    assert.match(builder, /\$tagPrefix\s*=\s*'cand'/);
+    assert.match(builder, /\$maxTagLength\s*=\s*\$combinedNameLimit\s*-\s*\$ServiceName\.Length\s*-\s*\$tagServiceSeparatorLength/);
+    assert.match(builder, /\$shaLength\s*=\s*\[Math\]::Min\(12,\s*\$SourceSha\.Length\)/);
+    assert.match(builder, /\$shaLength\s*=\s*\[Math\]::Min\(\$shaLength,\s*\$maxTagLength\s*-\s*\$tagPrefix\.Length\)/);
+    assert.match(builder, /if\s*\(\$shaLength\s+-lt\s+1\)\s*\{\s*throw\s+"/, 'a service name without tag room must be rejected');
+    assert.match(builder, /return\s+"\$tagPrefix\$\(\$SourceSha\.Substring\(0,\s*\$shaLength\)\)"/);
+
+    const deploy = code.slice(code.indexOf("  'DeployCandidate' {"), code.indexOf("  'Promote' {"));
+    const tagCall = deploy.indexOf('$candidateTag = Get-SafeCandidateTag -ServiceName $Service -SourceSha $Sha');
+    const shaCheck = deploy.indexOf('$Sha -notmatch');
+    const digestCheck = deploy.indexOf('$Digest -notmatch');
+    assert.ok(shaCheck >= 0 && digestCheck >= 0 && tagCall > shaCheck && tagCall > digestCheck,
+        'SHA and digest must be validated before deriving a tag');
+    assert.match(code, /ValidateSet\('praat-api','phoneme-recognizer'\)\]\[string\]\$Service/);
+    assert.match(deploy, /--tag=\$candidateTag/);
+    assert.match(deploy, /--remove-env-vars=GIT_SHA,BUILD_SHA/,
+        'service-level SHA labels must not override source labels baked into the image');
 });
 
 test('praat-api candidate environment stays one quoted compound argument', () => {
-    assert.match(code, /\$envFlag\s*=\s*"--update-env-vars=PRONUNCIATION_V3_MODE=\$effectiveV3Mode,PHONEME_SERVICE_URL=\$recognizerUrl,PHONEME_SERVICE_AUTH=\$recognizerAuth,GIT_SHA=\$Sha,BUILD_SHA=\$Sha"/,
+    assert.match(code, /\$envFlag\s*=\s*"--update-env-vars=PRONUNCIATION_V3_MODE=\$effectiveV3Mode,PHONEME_SERVICE_URL=\$recognizerUrl,PHONEME_SERVICE_AUTH=\$recognizerAuth"/,
         'the complete candidate environment must be one quoted PowerShell string');
     assert.match(code, /\$deployArgs\s*\+=\s*\$envFlag/,
         'the compound environment string must be appended as one argument');
@@ -141,6 +164,21 @@ test('recognizer startup probe gates on /readyz, not a TCP bind', () => {
     assert.equal(probe.httpGet.path, '/readyz');
     assert.ok(probe.failureThreshold * probe.periodSeconds >= 60,
         'probe budget must exceed the observed ~50s model load');
+});
+
+test('candidate and rollback retain the current concurrency and readiness shape', () => {
+    assert.equal(config.services['phoneme-recognizer'].containerConcurrency, 1);
+    assert.equal(config.services['praat-api'].containerConcurrency, 80);
+    const deploy = code.slice(code.indexOf("  'DeployCandidate' {"), code.indexOf("  'Promote' {"));
+    assert.match(deploy, /--concurrency=\$\(\$svc\.containerConcurrency\)/);
+    assert.match(deploy, /--startup-probe=httpGet\.path=\$\(\$probe\.httpGet\.path\),initialDelaySeconds=/);
+    const shape = code.slice(code.indexOf('function Assert-RevisionCompatible'), code.indexOf('switch ($Action)'));
+    assert.match(shape, /\$revision\.spec\.containerConcurrency -ne \[int\]\$service\.containerConcurrency/);
+    assert.match(shape, /\$have\.httpGet\.path -ne \$want\.httpGet\.path/);
+    const promote = code.slice(code.indexOf("  'Promote' {"), code.indexOf("  'Rollback' {"));
+    assert.match(promote, /Assert-BuildImage[\s\S]*Assert-RevisionCompatible[\s\S]*Invoke-Gcloud/);
+    const rollback = code.slice(code.indexOf("  'Rollback' {"));
+    assert.match(rollback, /Assert-AccessUnchanged[\s\S]*Assert-RevisionCompatible[\s\S]*Invoke-Gcloud/);
 });
 
 test('scheduler OIDC audience is the base service URL, not a tag URL', () => {

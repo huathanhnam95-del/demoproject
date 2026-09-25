@@ -115,7 +115,8 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
 
 (async () => {
   const { createApp } = require(path.join(process.cwd(), 'src/server/app.js'));
-  const connectedSpeechStorage = require(path.join(process.cwd(), 'src/read-aloud/connected-speech-storage.js'));
+  const routeSourceRoot = process.env.READ_ALOUD_ROUTE_SOURCE === 'functions' ? 'functions/src' : 'src';
+  const connectedSpeechStorage = require(path.join(process.cwd(), routeSourceRoot, 'read-aloud/connected-speech-storage.js'));
   const originalUpload = connectedSpeechStorage.uploadConnectedSpeechAudio;
   const originalPersist = connectedSpeechStorage.persistConnectedSpeechAttempt;
   const persistedAttempts = [];
@@ -128,7 +129,7 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
     persistedAttempts.push(JSON.parse(JSON.stringify(record)));
     return { status: 'complete', attemptId: record.attemptId };
   };
-  const readAloudRoutes = require(path.join(process.cwd(), 'src/routes/read-aloud.js'));
+  const readAloudRoutes = require(path.join(process.cwd(), routeSourceRoot, 'routes/read-aloud.js'));
   const originalMock = process.env.READ_ALOUD_AZURE_MOCK_RESPONSE;
   const originalWorkerUrl = process.env.CONNECTED_SPEECH_API_URL;
   const originalWorkerTimeout = process.env.CONNECTED_SPEECH_TIMEOUT_MS;

@@ -14,6 +14,7 @@ const createProjectsRouter = require('./routes/crm/projects');
 const createTeacherSchedulerRouter = require('./routes/teacher/scheduler');
 const createStudentClassroomsRouter = require('./routes/student/classrooms');
 const entranceTestRoutes = require('./routes/entrance-tests');
+const { getEntranceV3Status } = require('./entrance-test/v3-assessment');
 const createPracticeAttemptsRouter = require('./routes/practice-attempts');
 const createSharedPracticeAttemptsRouter = require('./routes/shared-practice-attempts');
 const createEssayAiAdminRouter = require('./essay-ai/admin-routes');
@@ -339,6 +340,17 @@ const crmRouter = createCrmRouter({
                 if (!testSnap.exists) return deps.sendError(res, 404, 'TEST_NOT_FOUND', 'Entrance test not found.');
 
                 const test = testSnap.data() || {};
+                if (Object.values(test.speaking || {}).some(entry => entry?.v3?.status === 'ready')) {
+                    const bucket = await getStorageBucket();
+                    test.speaking = { ...test.speaking };
+                    for (const [questionId, entry] of Object.entries(test.speaking)) {
+                        if (entry?.v3?.status !== 'ready') continue;
+                        const state = await getEntranceV3Status({ db: deps.db, bucket, testId, questionId });
+                        test.speaking[questionId] = { ...entry, assessment: state.result,
+                            words: state.result?.wordResults || null,
+                            transcript: state.result?.recognizedText || entry.transcript };
+                    }
+                }
                 const studentId = String(test.studentId || '').trim();
                 const studentSnap = studentId ? await deps.db.collection('crmStudents').doc(studentId).get() : null;
                 const student = studentSnap && studentSnap.exists ? (studentSnap.data() || {}) : null;
@@ -435,15 +447,17 @@ const cloudTasksDispatcher = {
   dispatch: async (assessmentId) => {
     try {
       const { getFunctions } = require('firebase-admin/functions');
-      const queue = getFunctions().taskQueue('scoreWorkerTask', 'asia-southeast1');
+      const queue = getFunctions().taskQueue('locations/asia-southeast1/functions/scoreWorkerTask');
       await queue.enqueue({ assessmentId });
     } catch (err) {
-      console.warn('[CloudTasksDispatcher] Failed to enqueue task:', err.message);
+      console.error('[CloudTasksDispatcher] Failed to enqueue task:', err.message);
+      throw err;
     }
   }
 };
 
-app.use('/api/ai-scoring', authMiddleware, createAiScoringRouter({ db, taskDispatcher: cloudTasksDispatcher }));
+app.use('/api/ai-scoring', authMiddleware, createAiScoringRouter({ db, taskDispatcher: cloudTasksDispatcher, getStorageBucket }));
+app.use('/api', pronunciationReferenceAudioRouter);
 
 
 // --- Reading Journey Endpoints ---

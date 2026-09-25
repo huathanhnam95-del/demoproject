@@ -40,7 +40,7 @@ async function main() {
 
   const page = await context.newPage();
   try {
-    await page.goto(`http://127.0.0.1:${server.address().port}/index.html?speakingController=v2`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`http://127.0.0.1:${server.address().port}/index.html?speakingController=v2&pteShell=legacy`, { waitUntil: 'domcontentloaded' });
     await dismissBlockingOverlays(page);
 
     const result = await page.evaluate(async () => {

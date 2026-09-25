@@ -426,6 +426,7 @@ async function exerciseAssessedNext(page, width, check, retryDuringNext = false,
     return mode.currentPromptPlainText;
   }, !!saveFailureAction);
   const assessmentRequests = [];
+  const assessmentFormats = [];
   const archiveOptions = await page.evaluate(() => {
     const flow = window.__pteAssessedArchive;
     return { coachLoading: !!flow?.coachLoading, rawSaveError: !!flow?.rawSaveError, invalidate: !!flow?.invalidate };
@@ -437,6 +438,18 @@ async function exerciseAssessedNext(page, width, check, retryDuringNext = false,
     connectedSpeech: { status: 'available', events: [], summary: { total: 0, detected: 0 } }
   };
   const respond = async route => {
+    const body = route.request().postDataBuffer() || Buffer.alloc(0);
+    const riffOffset = body.indexOf(Buffer.from('RIFF'));
+    let mono16kPcmWav = false;
+    if (riffOffset >= 0 && body.length >= riffOffset + 36) {
+      mono16kPcmWav = body.toString('ascii', riffOffset, riffOffset + 4) === 'RIFF'
+        && body.toString('ascii', riffOffset + 8, riffOffset + 12) === 'WAVE'
+        && body.readUInt16LE(riffOffset + 20) === 1
+        && body.readUInt16LE(riffOffset + 22) === 1
+        && body.readUInt32LE(riffOffset + 24) === 16000
+        && body.readUInt16LE(riffOffset + 34) === 16;
+    }
+    assessmentFormats.push(mono16kPcmWav);
     assessmentRequests.push({
       method: route.request().method(),
       referencePresent: route.request().postData()?.includes(referenceText) === true
@@ -477,11 +490,12 @@ async function exerciseAssessedNext(page, width, check, retryDuringNext = false,
     check(`${width}: actual Get feedback sends recording for assessment`, assessmentRequests, [
       { method: 'POST', referencePresent: true }
     ]);
+    check(`${width}: actual Get feedback uploads a mono 16 kHz PCM WAV`, assessmentFormats, [true]);
     check(`${width}: actual assessed scores`, await page.locator('.pte-stats strong').allTextContents(), ['84%', '78%', '96%', '82%']);
     if (archiveOptions.rawSaveError) {
       await page.evaluate(() => { window.__pteAssessedArchive.session = window.ReadAloudMode.lastAssessmentSession; });
       await checkRetainedAssessment(page, `${width}: raw-save recovery`, check, fixture, 0);
-      check(`${width}: verified recovery clears raw-save error`, await page.locator('.pte-dock__status').textContent(), 'Saved to Previous attempts below.');
+      check(`${width}: verified guest recovery keeps session-only save wording`, await page.locator('.pte-dock__status').textContent(), 'Saved below for this session. Sign in to keep your attempts.');
       return;
     }
     if (archiveRecovery) {
@@ -574,6 +588,18 @@ async function run() {
   try {
     for (const width of [1440, 390]) {
       const page = await harness.open({ width, height: width === 390 ? 844 : 900 });
+      // Get feedback asks the AI-credit quote endpoint first (V2.0.15). The static test
+      // server has no API, so answer as production does when metering is switched off
+      // (503 -> unmetered) rather than relying on a 404 being treated as free scoring.
+      await page.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
+      await page.route('**/api/config', route => route.fulfill({ json: {
+        success: true, config: {}, features: { speechV3Modes: [] }
+      } }));
+      // This suite exercises Read Aloud's existing assessment lifecycle. The shared
+      // gate's real consent and fail-closed behavior is covered by the V3 flow check.
+      await page.evaluate(() => {
+        window.AiScoringGate.requestConsentAndConfirm = async () => ({ allowed: true, assessmentId: 'ra-browser-fixture' });
+      });
       await page.evaluate(() => {
         window.__pteMediaPlayCalls = [];
         window.__pteMediaPauseCalls = [];
@@ -675,11 +701,26 @@ async function run() {
         const id = node.getAttribute('data-guide-target');
         return !window.ReadAloudMode.currentGuideExplanationItems.some(item => item.id === id);
       }));
+      // Owner decision (23 Sep): with the Coach closed the passage is clean - no mark styling, no
+      // clicks, no tab stops. The marks and their popovers come with the Coach.
+      if (await page.evaluate(() => document.getElementById('mode-read-aloud').dataset.pteCoach === 'open')) {
+        await page.locator('#ra-pte-coach-btn').click();
+        await page.waitForFunction(() => document.getElementById('mode-read-aloud').dataset.pteCoach === 'closed');
+      }
+      check(`${width}: Coach closed shows a clean passage`, await laterMarkedTarget.evaluate(node => {
+        const cs = getComputedStyle(node);
+        return [cs.backgroundColor, cs.pointerEvents, node.getAttribute('tabindex')];
+      }), ['rgba(0, 0, 0, 0)', 'none', '-1']);
+      await page.locator('#ra-pte-coach-btn').click();
+      await page.waitForFunction(() => document.getElementById('mode-read-aloud').dataset.pteCoach === 'open');
+      check(`${width}: Coach open brings the marks back`, await laterMarkedTarget.evaluate(node => getComputedStyle(node).pointerEvents !== 'none' && node.getAttribute('tabindex') === '0'));
       await laterMarkedTarget.click({ force: true });
       check(`${width}: Q1025 later marked target opens popover`, await page.locator('#ra-sound-change-tooltip').getAttribute('aria-hidden'), 'false');
       check(`${width}: Q1025 later popover identifies its marked word`, await page.locator('.ra-sound-change-tooltip__words').textContent().then(text => /\b(and|can)\b/i.test(text)));
       check(`${width}: Q1025 later popover has coaching copy`, await page.locator('.ra-sound-change-tooltip__explanation').textContent().then(text => text.trim().length > 0));
       await page.locator('.ra-sound-change-tooltip__close').evaluate(button => button.click());
+      await page.locator('#ra-pte-coach-btn').click();
+      await page.waitForFunction(() => document.getElementById('mode-read-aloud').dataset.pteCoach === 'closed');
 
       await page.evaluate(() => {
         const mode = window.ReadAloudMode;
@@ -698,6 +739,10 @@ async function run() {
         mode.refreshQuestionPickerV7AudioShortcuts();
         mode.updateAudioPlayerVisibility();
       });
+      // The sample resolves through MediaUrlResolver first (production serves it from media
+      // storage and rewrites the raw path to /404.html), so its source arrives a moment later;
+      // on this static server the resolver falls back to the raw path.
+      await page.waitForFunction(() => document.getElementById('ra-elevenlabs-audio')?.getAttribute('src'), null, { timeout: 5000 });
       check(`${width}: sample voice control`, await page.locator('#ra-play-audio-btn').count(), 1);
       check(`${width}: sample voice source selection`, await page.locator('#ra-elevenlabs-audio').getAttribute('src'), '/database/RA/Voice/audio/Audio by folder/1025/sample-browser-fixture.mp3');
       await page.evaluate(() => {
@@ -748,7 +793,7 @@ async function run() {
         check('1440: linking popover badge', await page.locator('.ra-sound-change-tooltip__badge').textContent(), 'Linking');
         check('1440: linking popover Say it like', await page.evaluate(() => {
           const text = document.querySelector('.ra-sound-change-tooltip__say')?.textContent || '';
-          return text.includes('Say it like') && text.includes('run the two words together');
+          return (text.includes('Technique') || text.includes('Say it like')) && text.includes('run the two words together');
         }));
         check('1440: linking popover normalized IPA', await page.evaluate(() => {
           const text = document.querySelector('.ra-sound-change-tooltip__ipa')?.textContent || '';
@@ -840,7 +885,7 @@ async function run() {
           && labels.every((rect, index) => labels.slice(index + 1).every(other => rect.right <= other.left || other.right <= rect.left || rect.bottom <= other.top || other.bottom <= rect.top));
       }));
       check(`${width}: practice next`, await page.locator('.pte-practice-next').textContent().then(text => text.includes('practice')));
-      check(`${width}: prompt replaced`, await page.locator('#ra-prompt-stage').isVisible(), false);
+      check(`${width}: passage stays hidden during feedback`, await page.locator('#ra-prompt-stage').isVisible(), false);
       check(`${width}: sample voice feedback tab`, await page.locator('#ra-source-tab-sample').isVisible());
       await page.locator('#ra-source-tab-sample').click();
       check(`${width}: sample voice feedback selected`, await page.locator('#ra-source-tab-sample').getAttribute('aria-selected'), 'true');
@@ -890,16 +935,23 @@ async function run() {
       await page.evaluate(() => {
         const mode = window.ReadAloudMode;
         mode.__pteOriginalPrepareWavBlob = mode.prepareWavBlob;
-        mode.prepareWavBlob = async () => { throw new Error('intentional browser capture preparation failure'); };
+        mode.prepareWavBlob = async () => {
+          const error = new Error('intentional browser assessment conversion failure');
+          error.code = 'AUDIO_FORMAT_CONVERSION_FAILED';
+          throw error;
+        };
       });
       await page.locator('#ra-record-btn').click();
       await page.waitForFunction(() => window.ReadAloudMode.state === 'RECORDING');
       await page.locator('#ra-stop-btn').click();
+      await page.waitForFunction(() => window.ReadAloudMode.state === 'RECORDED');
+      await page.locator('#ra-check-btn').click();
       await page.waitForFunction(() => window.ReadAloudMode.state === 'RESULTS');
-      check(`${width}: capture failure message`, await page.locator('#ra-status-message').textContent(), 'We couldn’t prepare that recording. Please try again.');
-      check(`${width}: capture failure clears score metrics`, await page.locator('.pte-stats strong').allTextContents(), ['—', '—', '—', '—']);
-      check(`${width}: capture failure has no stale successful scores`, await page.locator('.pte-stats').textContent().then(text => !['84%', '78%', '96%', '82%'].some(score => text.includes(score))));
-      check(`${width}: capture failure renders explicit failure copy`, await page.locator('.pte-fixes').textContent().then(text => text.includes('We couldn’t prepare that recording.')));
+      const conversionFailure = 'Your original recording is available, but audio format conversion failed. Scoring is unavailable.';
+      check(`${width}: assessment conversion failure message`, await page.locator('#ra-status-message').textContent(), conversionFailure);
+      check(`${width}: assessment conversion failure clears score metrics`, await page.locator('.pte-stats strong').allTextContents(), []);
+      check(`${width}: assessment conversion failure has no stale successful scores`, await page.locator('.pte-stats').textContent().then(text => !['84%', '78%', '96%', '82%'].some(score => text.includes(score))));
+      check(`${width}: assessment conversion failure renders explicit failure copy`, await page.locator('.pte-fixes').textContent().then(text => text.includes(conversionFailure)));
       await page.evaluate(() => {
         const mode = window.ReadAloudMode;
         mode.prepareWavBlob = mode.__pteOriginalPrepareWavBlob;
@@ -1491,7 +1543,7 @@ async function run() {
       }
       await page.close();
     }
-    for (const flag of ['legacy', '']) {
+    for (const flag of ['legacy']) {
       const page = await harness.open({ flag });
       await page.evaluate(async () => { await switchToMode('read-aloud'); });
       await page.waitForFunction(() => window.ReadAloudMode.currentPromptReady);

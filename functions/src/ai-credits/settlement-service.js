@@ -106,14 +106,17 @@ class SettlementService {
     const walletRef = this.walletService.getWalletRef(uid);
     const walletDoc = await tx.get(walletRef);
 
-    if (walletDoc.exists) {
-      const w = walletDoc.data();
-      tx.update(walletRef, {
-        reservedCredits: Math.max(0, (w.reservedCredits || 0) - credits),
-        spentCredits: (w.spentCredits || 0) + credits,
-        updatedAt: now.toISOString()
-      });
+    if (!walletDoc.exists) throw new Error('WALLET_NOT_FOUND_FOR_RESERVATION');
+    const w = walletDoc.data();
+    if (!Number.isSafeInteger(credits) || credits <= 0 || !Number.isSafeInteger(w.reservedCredits) ||
+        w.reservedCredits < credits || !Number.isSafeInteger(w.spentCredits)) {
+      throw new Error('WALLET_RESERVATION_INCONSISTENT');
     }
+    tx.update(walletRef, {
+      reservedCredits: w.reservedCredits - credits,
+      spentCredits: w.spentCredits + credits,
+      updatedAt: now.toISOString()
+    });
 
     tx.update(reservationRef, {
       status: 'captured',
@@ -156,13 +159,15 @@ class SettlementService {
     const walletRef = this.walletService.getWalletRef(uid);
     const walletDoc = await tx.get(walletRef);
 
-    if (walletDoc.exists) {
-      const w = walletDoc.data();
-      tx.update(walletRef, {
-        reservedCredits: Math.max(0, (w.reservedCredits || 0) - credits),
-        updatedAt: now.toISOString()
-      });
+    if (!walletDoc.exists) throw new Error('WALLET_NOT_FOUND_FOR_RESERVATION');
+    const w = walletDoc.data();
+    if (!Number.isSafeInteger(credits) || credits <= 0 || !Number.isSafeInteger(w.reservedCredits) || w.reservedCredits < credits) {
+      throw new Error('WALLET_RESERVATION_INCONSISTENT');
     }
+    tx.update(walletRef, {
+      reservedCredits: w.reservedCredits - credits,
+      updatedAt: now.toISOString()
+    });
 
     tx.update(reservationRef, {
       status: 'released',
@@ -184,6 +189,41 @@ class SettlementService {
     });
 
     return { status: 'released', credits, reason };
+  }
+
+  /**
+   * Releases reserved credits outside transaction context.
+   * Supports both (uid, assessmentId, reason) and ({ assessmentId, reason }) signatures.
+   */
+  async releaseCredits(arg1, arg2, arg3) {
+    let assessmentId;
+    let reason = 'MANUAL_RELEASE';
+    if (typeof arg1 === 'object' && arg1 !== null) {
+      assessmentId = arg1.assessmentId;
+      reason = arg1.reason || reason;
+    } else if (typeof arg2 === 'string' && (typeof arg3 === 'string' || arg3 === undefined)) {
+      // releaseCredits(uid, assessmentId, reason)
+      assessmentId = arg2;
+      reason = arg3 || reason;
+    } else {
+      // releaseCredits(assessmentId, reason)
+      assessmentId = arg1;
+      reason = arg2 || reason;
+    }
+
+    return this.db.runTransaction(async tx => {
+      return this.releaseCreditsInTx(tx, { assessmentId, reason });
+    });
+  }
+
+  /**
+   * Captures reserved credits outside transaction context.
+   */
+  async captureCredits(arg1, arg2) {
+    const assessmentId = (typeof arg1 === 'object' && arg1 !== null) ? arg1.assessmentId : (arg2 || arg1);
+    return this.db.runTransaction(async tx => {
+      return this.captureCreditsInTx(tx, { assessmentId });
+    });
   }
 }
 

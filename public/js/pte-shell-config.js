@@ -30,7 +30,9 @@
     fetch('/api/config')
       .then(res => res.json())
       .then(data => {
-        const flag = data?.featureFlags?.rlSpokenAssessment ?? data?.capabilities?.rlSpokenAssessment;
+        const flag = data?.features?.rlSpokenAssessment
+          ?? data?.featureFlags?.rlSpokenAssessment
+          ?? data?.capabilities?.rlSpokenAssessment;
         if (typeof flag === 'boolean') {
           rlSpokenAssessment = flag;
         }

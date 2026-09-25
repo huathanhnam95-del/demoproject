@@ -1,3 +1,13 @@
+## [V2.0.17] - 2026-09-25 (prepared; not deployed)
+
+### Approved release candidate
+- Prepare the selected security, teacher scheduler and calendar fixes, Summarize Written Text content and mode repairs, and PTE speaking interface, recording, playback and scoring work.
+- Include Retell Lecture V3 for activation during release and subsequent user acceptance. Projects V2 rollout and later phone Coach optimization remain outside this batch.
+- Restore the deployed pronunciation reference-audio route and Read Aloud unavailable-score handling while retaining the approved speaking assessment behavior.
+- Prepare pronunciation service packaging and release checks, including current-source and runtime preservation.
+- Preserve existing live website files and configuration while applying only the reviewed page and asset changes. Bind the final cache version and file list to the committed release source.
+- Remove approved generated files from Git tracking while retaining local copies; record the approved temporary exact-file placement exceptions for review on October 2.
+
 ## [V2.0.16] - 2026-09-24
 
 ### Fixed

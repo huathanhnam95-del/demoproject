@@ -82,6 +82,19 @@ body.pte-shell-v3 .pte-dock .pte-btn--stop { background: var(--text-primary) !im
 .pte-tabs { display: inline-flex; width: auto; padding: 3px; gap: 2px; background: var(--gray-100); border-radius: 999px; border: 1px solid var(--border-default); margin-bottom: 16px; }
 .pte-tabs button, .pte-tabs .pte-btn { height: auto; min-height: 32px; padding: 6px 14px; border: 0; background: transparent; font: 500 14px var(--font-body); color: var(--text-secondary); border-radius: 999px; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; box-shadow: none; }
 .pte-tabs button[aria-selected="true"], .pte-tabs button.active, .pte-tabs .pte-btn[aria-selected="true"], .pte-tabs .pte-btn.active { background: #fff !important; color: var(--text-primary) !important; font-weight: 600; box-shadow: var(--shadow-sm) !important; }
+/* Shared listen-back pill (public/js/pte-listen-back.js). Design plan 4.8: round play
+   button, slim track, m:ss / m:ss. Mounted in Complete and Feedback for every speaking
+   mode; Read Aloud uses its own richer player with source tabs. */
+.pte-listen--back { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; margin: 16px 0 0; padding: 6px 12px; max-width: 520px; min-width: 0; border: 1px solid var(--border-default); border-radius: 999px; background: var(--bg-surface); }
+.pte-listen--back .pte-listen__label { font-size: 13px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+.pte-listen--back .pte-listen__play { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex: 0 0 auto; padding: 0; border: 0; border-radius: 999px; background: var(--blue-600); color: #fff; font-size: 13px; line-height: 1; cursor: pointer; }
+.pte-listen--back .pte-listen__play:hover { background: var(--blue-700); }
+.pte-listen--back .pte-listen__play:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.pte-listen--back .pte-listen__seek { flex: 1 1 90px; width: auto; min-width: 60px; margin: 0; accent-color: var(--blue-600); }
+.pte-listen--back .pte-listen__label { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; }
+.pte-listen--back .pte-listen__time { font-size: 12px; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+@media (max-width: 600px) { .pte-listen--back { max-width: 100%; } }
+
 .pte-stats { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); border: 1px solid var(--border-default); border-radius: 16px; overflow: hidden; }
 .pte-stats--2 { grid-template-columns: repeat(2,minmax(0,1fr)); }
 .pte-stats--3 { grid-template-columns: repeat(3,minmax(0,1fr)); }
@@ -199,11 +212,11 @@ body.pte-shell-v3.pte-focus .site-header { display: none; }
 /* Read Aloud keeps its existing DOM/renderers; only the opted-in panel changes layout. */
 #mode-read-aloud.ra-pte-v3 .ra-workbench { display: block; margin-bottom: 0; }
 #mode-read-aloud.ra-pte-v3 .ra-split { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
-/* The rail flexes instead of taking a fixed 360px, which squeezed the passage to 414px
-   on a 1024 screen. It keeps a 300px floor so the hint cards stay readable. */
-#mode-read-aloud.ra-pte-v3[data-pte-coach="open"]:not([data-pte-phase="recording"]):not([data-pte-phase="feedback"]) .ra-split { grid-template-columns: minmax(0, 1.35fr) minmax(300px, 420px); }
+/* The rail takes a fixed 360px side drawer per v3 specification. */
+#mode-read-aloud.ra-pte-v3[data-pte-coach="open"]:not([data-pte-phase="recording"]):not([data-pte-phase="feedback"]) .ra-split { grid-template-columns: minmax(0, 1fr) 360px; }
 /* Below this the passage matters more than side-by-side: the rail stacks underneath. */
 @media (max-width: 1100px) {
+  #mode-read-aloud.ra-pte-v3[data-pte-coach="open"]:not([data-pte-phase="recording"]):not([data-pte-phase="feedback"]) .ra-split,
   #mode-read-aloud.ra-pte-v3[data-pte-coach="open"]:not([data-pte-phase="recording"]) .ra-split { grid-template-columns: minmax(0, 1fr); }
 }
 #mode-read-aloud.ra-pte-v3 .ra-split.pte-fb { grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); }
@@ -281,15 +294,59 @@ body.pte-shell-v3 .pte-dock #ra-play-recording-btn,
 #mode-read-aloud.ra-pte-v3 #ra-play-recording-btn { position: static !important; opacity: 1 !important; width: auto !important; height: 44px !important; overflow: visible !important; pointer-events: auto !important; }
 #mode-read-aloud.ra-pte-v3 #ra-audio-player { display: none !important; }
 #mode-read-aloud.ra-pte-v3[data-pte-phase="feedback"]:has(#ra-source-tab-sample.active) #ra-audio-player { display: block !important; }
-#mode-read-aloud.ra-pte-v3:not([data-pte-phase="feedback"]) #ra-real-audio-player-wrapper { display: none !important; }
-/* The spec puts the passage in the feedback left column ("what you said"), and the coach
-   annotates the one passage the learner already read. Hiding it left that column empty:
-   144px of content in a 455px column, 311-567px of dead white space. */
-#mode-read-aloud.ra-pte-v3[data-pte-phase="feedback"] #ra-prompt-stage { display: block; margin-top: 18px; }
+/* Complete is the phase where the learner wants to listen back, but the player was
+   hidden everywhere except Feedback, leaving only a dock "Play your recording" button
+   with no progress, scrub or duration. The mode already builds a full player here.
+   The wrapper also carries an inline display:none from index.html that nothing clears in
+   v3, so it needs !important to appear at all - it was invisible in Feedback too. */
+#mode-read-aloud.ra-pte-v3:not([data-pte-phase="feedback"]):not([data-pte-phase="complete"]) #ra-real-audio-player-wrapper { display: none !important; }
+#mode-read-aloud.ra-pte-v3[data-pte-phase="complete"] #ra-real-audio-player-wrapper,
+#mode-read-aloud.ra-pte-v3[data-pte-phase="feedback"] #ra-real-audio-player-wrapper { display: flex !important; }
+#mode-read-aloud.ra-pte-v3[data-pte-phase="complete"] #ra-player-section,
+#mode-read-aloud.ra-pte-v3[data-pte-phase="feedback"] #ra-player-section { display: flex !important; }
+/* No model/sample reading to compare against until the attempt has been scored. */
+#mode-read-aloud.ra-pte-v3[data-pte-phase="complete"] #ra-audio-source-tabs { display: none; }
+/* Listen-back is not the question audio, so it does not wear the blue PTE player box.
+   Design plan 4.8: a compact pill - round play button, slim track, m:ss / m:ss. */
+#mode-read-aloud.ra-pte-v3[data-pte-phase="complete"] #ra-player-section,
+#mode-read-aloud.ra-pte-v3[data-pte-phase="feedback"] #ra-player-section {
+  background: var(--bg-surface, #fff) !important;
+  background-image: none !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  color: var(--text-primary) !important;
+  max-width: 520px;
+  padding: 6px 12px !important;
+  gap: 10px !important;
+  align-items: center;
+}
+#mode-read-aloud.ra-pte-v3[data-pte-phase="complete"] #ra-player-section .ra-play-btn,
+#mode-read-aloud.ra-pte-v3[data-pte-phase="feedback"] #ra-player-section .ra-play-btn {
+  background: var(--blue-600) !important;
+  background-image: none !important;
+  color: #fff !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  min-height: 34px;
+  padding: 0 14px !important;
+}
+#mode-read-aloud.ra-pte-v3[data-pte-phase="complete"] #ra-player-section .ra-progress-wrap,
+#mode-read-aloud.ra-pte-v3[data-pte-phase="feedback"] #ra-player-section .ra-progress-wrap {
+  display: block !important;
+  flex: 1 1 auto;
+  min-width: 90px;
+}
+#mode-read-aloud.ra-pte-v3[data-pte-phase="complete"] #ra-player-section .ra-audio-time,
+#mode-read-aloud.ra-pte-v3[data-pte-phase="feedback"] #ra-player-section .ra-audio-time {
+  color: var(--text-muted) !important;
+  font-size: 12px;
+  white-space: nowrap;
+}
+#mode-read-aloud.ra-pte-v3[data-pte-phase="feedback"] #ra-prompt-stage { display: none; }
 #mode-read-aloud.ra-pte-v3 .ra-results-block { margin: 0; padding: 0; border: 0; }
 #mode-read-aloud.ra-pte-v3 .pte-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 #mode-read-aloud.ra-pte-v3 .pte-stats > div { min-width: 0; padding: 12px 8px; }
-#mode-read-aloud.ra-pte-v3 .pte-stats small { font-size: 9.5px; letter-spacing: -0.01em; }
 #mode-read-aloud.ra-pte-v3 .pte-stats strong { font-size: 22px; }
 #mode-read-aloud.ra-pte-v3 .ra-pte-next-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 20px 0 8px; font-size: 14px; }
 #mode-read-aloud.ra-pte-v3 #ra-show-advanced-container { margin: 0; }
@@ -307,6 +364,7 @@ body.pte-shell-v3 .pte-dock #ra-play-recording-btn,
 #mode-read-aloud.ra-pte-v3 .ra-audio-time { font-size: 12px; }
 @media (max-width: 980px) {
   #mode-read-aloud.ra-pte-v3 .ra-split,
+  #mode-read-aloud.ra-pte-v3[data-pte-coach="open"]:not([data-pte-phase="recording"]):not([data-pte-phase="feedback"]) .ra-split,
   #mode-read-aloud.ra-pte-v3[data-pte-coach="open"]:not([data-pte-phase="recording"]) .ra-split,
   #mode-read-aloud.ra-pte-v3 .ra-split.pte-fb { grid-template-columns: minmax(0, 1fr); }
   #mode-read-aloud.ra-pte-v3 .ra-pte-fix { grid-template-columns: 18px minmax(0, 1fr); }
@@ -328,6 +386,45 @@ body.pte-shell-v3 .pte-dock #ra-play-recording-btn,
   body.pte-shell-v3 .mode-panel.active { padding-left: 0; padding-right: 0; }
   body.pte-shell-v3 .pte-card,
   body.pte-shell-v3 .pte-attempts { width: calc(100% - 20px); }
+  /* Keep the open Filters/More menu inside the screen and above the fixed site header
+     (1100), below dialogs. Was Repeat Sentence and Describe Image only. */
+  body.pte-shell-v3 .pte-modebar:has(.pte-popover) { z-index: 1200; }
+  body.pte-shell-v3 .pte-popover {
+    position: fixed; inset: 16px 16px auto; width: auto; max-width: none;
+    max-height: calc(100dvh - 32px); overflow-y: auto;
+  }
+}
+
+/* The mobile toolbar (style.css, <=767px: fixed, 60px, z-index 998) owns the bottom of the
+   screen. The dock rides above it, as the legacy .spc-footer does, instead of sliding
+   under it with its buttons hidden. One rule for all seven modes: the per-mode copies
+   applied only at <=600px, missed Read Aloud and Retell Lecture, and sat under the toolbar. */
+@media (max-width: 767px) {
+  body.pte-shell-v3 .pte-dock { bottom: calc(var(--mobile-toolbar-height, 60px) + env(safe-area-inset-bottom, 0px)); z-index: 999; }
+}
+
+/* "Ask me!" on speaking practice (design plan O-8): a 48px round chat button that sits above
+   the dock, instead of a 160px mascot over the dock's right-hand buttons. Same element and
+   click; the mascot comes back outside practice. --pte-dock-height is published by the
+   shell controller. */
+body.pte-shell-v3 #bel-chat-trigger.bel-chat-trigger {
+  width: 48px; height: 48px; padding: 0; right: 16px;
+  bottom: calc(var(--pte-dock-height, 76px) + 16px);
+  justify-content: center; align-items: center;
+  border-radius: 50%; background: var(--blue-600, #2563eb); filter: none;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, .35);
+}
+body.pte-shell-v3 #bel-chat-trigger .bel-chat-speech-bubble,
+body.pte-shell-v3 #bel-chat-trigger .bel-chat-avatar { display: none !important; }
+body.pte-shell-v3 #bel-chat-trigger::before {
+  content: ''; width: 22px; height: 22px; background: #fff;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+body.pte-shell-v3 #bel-chat-trigger.bel-chat-trigger:hover { transform: none; background: var(--blue-700, #1d4ed8); }
+body.pte-shell-v3 #bel-chat-trigger.bel-chat-trigger:focus-visible { outline: var(--focus-ring, 2px solid #2563eb); outline-offset: 3px; }
+@media (max-width: 767px) {
+  body.pte-shell-v3 #bel-chat-trigger.bel-chat-trigger { right: 12px; bottom: calc(var(--mobile-toolbar-height, 60px) + var(--pte-dock-height, 110px) + 12px); }
 }
 
 /* Repeat Sentence: restore all legacy presentation simply by removing the mode class. */
@@ -357,7 +454,6 @@ body.pte-shell-v3 .pte-dock #ra-play-recording-btn,
 #mode-speak.speak-pte-v3 .pte-tabs button { font-size: 12px; }
 #mode-speak.speak-pte-v3 .pte-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 #mode-speak.speak-pte-v3 .pte-stats > div { min-width: 0; padding: 10px 6px; }
-#mode-speak.speak-pte-v3 .pte-stats small { font-size: 9px; }
 #mode-speak.speak-pte-v3 .pte-stats strong { font-size: 22px; }
 #mode-speak.speak-pte-v3 .speak-pte-fix { border-bottom: 1px solid var(--border-default); padding: 8px 0; font-size: 14px; }
 #mode-speak.speak-pte-v3 .speak-pte-fix p { margin: 0 0 6px; }
@@ -381,15 +477,6 @@ body.pte-shell-v3 .pte-dock #ra-play-recording-btn,
 #mode-speak.speak-pte-v3 #same-vocab-speak { display: none !important; }
 #mode-speak.speak-pte-v3 .pte-attempts { max-width: none; }
 body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: hidden; pointer-events: none; }
-@media (max-width: 600px) {
-  #mode-speak.speak-pte-v3 .pte-dock { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
-  /* Keep the open menu above the fixed site header (1100), below dialogs. */
-  #mode-speak.speak-pte-v3 .pte-modebar:has(.pte-popover) { z-index: 1200; }
-  #mode-speak.speak-pte-v3 .pte-popover {
-    position: fixed; inset: 16px 16px auto; width: auto; max-width: none;
-    max-height: calc(100dvh - 32px); overflow-y: auto;
-  }
-}
 
 /* Describe Image v3 */
 #mode-describe-image.di-pte-v3 .question-selector,
@@ -445,8 +532,9 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
   justify-content: center;
 }
 
-/* Sized by the column it is in and by the viewport, so it never needs the zoom step
-   and the dock stays reachable on a laptop. */
+/* Sized by the column it is in and by the viewport, so it never needs the zoom step.
+   Owner decision (2026-09-23): the picture keeps this size even when the card grows past
+   the 740px height target; the sticky dock keeps the actions reachable. */
 #mode-describe-image.di-pte-v3 .di-image-container img {
   display: block;
   width: auto;
@@ -461,8 +549,8 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
   position: absolute;
   top: 18px;
   right: 18px;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(0, 0, 0, 0.15);
@@ -475,6 +563,17 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
   font-size: 15px;
   padding: 0;
   transition: background 0.15s ease, transform 0.15s ease;
+}
+
+#mode-describe-image.di-pte-v3 .di-image-container[data-image-state="loading"] .di-zoom-btn,
+#mode-describe-image.di-pte-v3 .di-image-container[data-image-state="error"] .di-zoom-btn {
+  display: none;
+}
+
+#mode-notes .pte-card.pte-listen-back-mounted #notes-v3-audio-preview,
+#mode-sgd .pte-card.pte-listen-back-mounted #sgd-v3-playback,
+#mode-rts .pte-card.pte-listen-back-mounted #rts-v3-playback {
+  display: none !important;
 }
 
 #mode-describe-image.di-pte-v3 .di-zoom-btn:hover {
@@ -558,7 +657,7 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 #mode-describe-image.di-pte-v3 .di-fb-time {
   font-size: 13px;
   color: var(--text-muted, #64748b);
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--font-mono, ui-monospace, monospace);
 }
 
 #mode-describe-image.di-pte-v3 .di-fb-heading {
@@ -637,14 +736,6 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
   }
 }
 
-@media (max-width: 600px) {
-  #mode-describe-image.di-pte-v3 .pte-dock { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
-  #mode-describe-image.di-pte-v3 .pte-modebar:has(.pte-popover) { z-index: 1200; }
-  #mode-describe-image.di-pte-v3 .pte-popover {
-    position: fixed; inset: 16px 16px auto; width: auto; max-width: none;
-    max-height: calc(100dvh - 32px); overflow-y: auto;
-  }
-}
 
 /* ==========================================================================
    Phase 5 — Answer Short Question v3
@@ -670,10 +761,6 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 }
 
 #mode-asq.asq-pte-v3 .asq-pte-instruction {
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--text-main, #0f172a);
   margin-bottom: 8px;
 }
 
@@ -689,12 +776,6 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
   flex-direction: column;
   gap: 20px;
   width: 100%;
-}
-
-#mode-asq.asq-pte-v3 .asq-fb-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
 }
 
 #mode-asq.asq-pte-v3 .asq-fb-left,
@@ -766,13 +847,6 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 }
 
 @media (max-width: 600px) {
-  #mode-asq.asq-pte-v3 .asq-fb-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  #mode-asq.asq-pte-v3 .pte-dock {
-    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-  }
 }
 
 /* Respond to a Situation v3 */
@@ -796,10 +870,6 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 }
 
 #mode-rts.rts-pte-v3 .rts-pte-instruction {
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--text-main, #0f172a);
   margin-bottom: 8px;
 }
 
@@ -811,13 +881,11 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 }
 
 #mode-rts.rts-pte-v3 .rts-pte-prompt-text {
-  font-size: 1.15rem;
-  line-height: 1.6;
-  color: var(--text-main, #0f172a);
+  font: 400 17px/1.9 Arial, Helvetica, sans-serif;
+  color: #222;
   background: transparent;
   padding: 0;
   border: none;
-  font-weight: 500;
 }
 
 #mode-rts.rts-pte-v3 .rts-pte-feedback {
@@ -825,12 +893,6 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
   flex-direction: column;
   gap: 20px;
   width: 100%;
-}
-
-#mode-rts.rts-pte-v3 .rts-fb-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
 }
 
 #mode-rts.rts-pte-v3 .rts-fb-left,
@@ -847,32 +909,6 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
   letter-spacing: 0.05em;
   color: var(--text-muted, #64748b);
   margin: 0;
-}
-
-#mode-rts.rts-pte-v3 .rts-v3-fb-tabs {
-  display: flex;
-  gap: 8px;
-  border-bottom: 1px solid var(--border-light, #e2e8f0);
-  padding-bottom: 8px;
-}
-
-#mode-rts.rts-pte-v3 .rts-v3-fb-tab {
-  padding: 6px 14px;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  background: transparent;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-muted, #64748b);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-#mode-rts.rts-pte-v3 .rts-v3-fb-tab.active {
-  background: var(--bg-primary, #ffffff);
-  color: var(--primary, #2563eb);
-  border-color: var(--border-light, #e2e8f0);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 #mode-rts.rts-pte-v3 .rts-v3-fb-panel {
@@ -904,13 +940,6 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 }
 
 @media (max-width: 600px) {
-  #mode-rts.rts-pte-v3 .rts-fb-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  #mode-rts.rts-pte-v3 .pte-dock {
-    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-  }
 }
 
 /* ==========================================================================
@@ -943,9 +972,6 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 }
 
 .sgd-pte-instruction {
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: var(--text-main, #0f172a);
   margin: 0 0 4px 0;
 }
 
@@ -1006,6 +1032,9 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 #mode-sgd.sgd-pte-v3 .sgd-topic-display {
   background: var(--blue-50);
   border-color: var(--border-default);
+}
+#mode-sgd.sgd-pte-v3 .sgd-topic-display:empty {
+  display: none !important;
 }
 
 #mode-sgd.sgd-pte-v3 .sgd-speaker-tab {
@@ -1076,32 +1105,6 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
   margin: 0;
 }
 
-#mode-sgd.sgd-pte-v3 .sgd-v3-fb-tabs {
-  display: flex;
-  gap: 8px;
-  border-bottom: 1px solid var(--border-light, #e2e8f0);
-  padding-bottom: 8px;
-}
-
-#mode-sgd.sgd-pte-v3 .sgd-v3-fb-tab {
-  padding: 6px 14px;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  background: transparent;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-muted, #64748b);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-#mode-sgd.sgd-pte-v3 .sgd-v3-fb-tab.active {
-  background: var(--bg-primary, #ffffff);
-  color: var(--primary, #2563eb);
-  border-color: var(--border-light, #e2e8f0);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
 #mode-sgd.sgd-pte-v3 .sgd-v3-fb-panel {
   display: flex;
   flex-direction: column;
@@ -1120,9 +1123,6 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
   /* .pte-fb already stacks at <=980px; only the tighter phone gap is mode-specific. */
   #mode-sgd.sgd-pte-v3 .sgd-fb-grid {
     gap: 16px;
-  }
-  #mode-sgd.sgd-pte-v3 .pte-dock {
-    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -1147,14 +1147,7 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 }
 
 #mode-notes.notes-pte-v3 .notes-pte-instruction {
-  font-size: 1rem;
-  line-height: 1.5;
-  color: var(--text-primary, #1e293b);
   margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  background: var(--bg-secondary, #f8fafc);
-  border-left: 4px solid var(--primary, #2563eb);
-  border-radius: 4px;
 }
 
 #mode-notes.notes-pte-v3 .notes-pte-stage {
@@ -1166,12 +1159,7 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 #mode-notes.notes-pte-v3 .notes-audio-row {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-light, #e2e8f0);
-  border-radius: 12px;
-  padding: 12px 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  justify-content: center;
 }
 
 #mode-notes.notes-pte-v3 .notes-lecture-icon {
@@ -1209,10 +1197,7 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 }
 
 #mode-notes.notes-pte-v3 .notes-v3-spoken-transcript {
-  background: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-light, #e2e8f0);
-  border-radius: 10px;
-  padding: 12px 14px;
+  padding: 0;
 }
 
 #mode-notes.notes-pte-v3 .notes-v3-spoken-text {
@@ -1298,43 +1283,10 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 }
 
 #mode-notes.notes-pte-v3 .notes-v3-matched-notes {
-  background: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-light, #e2e8f0);
-  border-radius: 10px;
-  padding: 14px;
   font-size: 0.95rem;
   line-height: 1.6;
-  min-height: 120px;
-  max-height: 480px;
-  overflow-y: auto;
   white-space: pre-wrap;
   word-break: break-word;
-}
-
-#mode-notes.notes-pte-v3 .notes-v3-fb-tabs {
-  display: flex;
-  gap: 8px;
-  border-bottom: 1px solid var(--border-light, #e2e8f0);
-  padding-bottom: 8px;
-}
-
-#mode-notes.notes-pte-v3 .notes-v3-fb-tab {
-  padding: 6px 14px;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  background: transparent;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-muted, #64748b);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-#mode-notes.notes-pte-v3 .notes-v3-fb-tab.active {
-  background: var(--bg-primary, #ffffff);
-  color: var(--primary, #2563eb);
-  border-color: var(--border-light, #e2e8f0);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 #mode-notes.notes-pte-v3 .notes-v3-fb-panel {
@@ -1353,14 +1305,8 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 }
 
 #mode-notes.notes-pte-v3 .notes-transcript-display {
-  background: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-light, #e2e8f0);
-  border-radius: 10px;
-  padding: 14px;
   font-size: 0.95rem;
   line-height: 1.6;
-  max-height: 480px;
-  overflow-y: auto;
 }
 
 .notes-matched {
@@ -1679,13 +1625,13 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 }
 
 .ai-credit-btn.primary {
-  background: #4f46e5;
+  background: var(--blue-600, #2563eb);
   color: #ffffff;
-  box-shadow: 0 1px 3px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
 }
 
 .ai-credit-btn.primary:hover {
-  background: #4338ca;
+  background: var(--blue-700, #1d4ed8);
 }
 
 .ai-credit-btn:disabled {
@@ -1696,6 +1642,147 @@ body:has(#mode-speak.speak-pte-v3) .spc-sheet[aria-hidden="true"] { visibility: 
 .ai-credit-notice {
   margin: 12px 0 0 0;
   font-size: 0.78rem;
-  color: #94a3b8;
+  color: var(--text-muted, #5d6b7f);
   text-align: center;
 }
+
+
+/* ═════════════════ 2026-09-23 audit: layout, states and polish (task 1285) ═════════════════ */
+
+/* M4 - score tiles go 2x2 when their column is too narrow for four labels at a readable size. */
+body.pte-shell-v3 .pte-fb__right { container-type: inline-size; }
+@container (max-width: 520px) {
+  body.pte-shell-v3 .pte-stats,
+  #mode-read-aloud.ra-pte-v3 .pte-stats,
+  #mode-speak.speak-pte-v3 .pte-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.pte-shell-v3 .pte-stats > div:nth-child(odd) { border-left: 0; }
+  body.pte-shell-v3 .pte-stats > div:nth-child(n + 3) { border-top: 1px solid var(--border-default); }
+}
+
+/* M6 - one player for the learner's recording: in feedback the shared pill takes the place of
+   these bare <audio controls> players and their headings. */
+#mode-notes.notes-pte-v3 #notes-v3-audio-preview,
+#mode-sgd.sgd-pte-v3 #sgd-v3-playback,
+#mode-sgd.sgd-pte-v3 .sgd-fb-left > .sgd-fb-heading:first-of-type,
+#mode-rts.rts-pte-v3 #rts-v3-playback,
+#mode-rts.rts-pte-v3 .rts-fb-left > .rts-fb-heading:first-of-type { display: none !important; }
+#mode-rts.rts-pte-v3 #rts-v3-transcript { background: none !important; border: 0 !important; padding: 0 !important; }
+#mode-notes.notes-pte-v3 .pte-listen--back,
+#mode-sgd.sgd-pte-v3 .pte-listen--back,
+#mode-rts.rts-pte-v3 .pte-listen--back { margin: 0 0 8px; }
+/* The generic .pte-listen rule above (flex-wrap: wrap) outranked the pill's nowrap, so on phones
+   the time dropped onto a second line. Now the track gives way first (down to its 60px minimum),
+   and the label shortens only on the narrowest phones. */
+.pte-listen.pte-listen--back { flex-wrap: nowrap; }
+.pte-listen.pte-listen--back .pte-listen__seek { flex-basis: 0; }
+/* RL, SGD and RTS lay their feedback columns out as flex columns, which stretched the pill tabs to
+   the full column width. They stay as wide as their buttons, as in the other modes. */
+.pte-tabs { align-self: flex-start; }
+#mode-sgd.sgd-pte-v3 .sgd-v3-ai-scoring-section { margin: 4px 0 12px; }
+#mode-sgd.sgd-pte-v3 .sgd-v3-ai-status { margin-top: 6px; font-size: 13px; color: var(--text-muted); }
+#mode-notes.notes-pte-v3 .notes-lecture-icon { display: none; }
+/* The speaking-shell spec hides each mode's old Play/Volume player: the audio box plays the clip
+   once, with no replays. In SGD Feedback the listen-back pill offers "Your recording | Discussion"
+   instead (spec 7.4), so the old player is not needed in any phase. */
+#mode-sgd.sgd-pte-v3 .sgd-audio.practice-audio-player { display: none !important; }
+.pte-listen--back .pte-listen__label[hidden], .pte-listen--back .pte-listen__sources[hidden] { display: none; }
+.pte-listen--back .pte-listen__sources { display: inline-flex; flex: 0 0 auto; gap: 2px; padding: 2px; background: var(--gray-100); border: 1px solid var(--border-default); border-radius: 999px; }
+.pte-listen--back .pte-listen__sources button { min-height: 28px; padding: 3px 10px; border: 0; border-radius: 999px; background: transparent; font: 600 12.5px var(--font-body); color: var(--text-secondary); white-space: nowrap; cursor: pointer; }
+.pte-listen--back .pte-listen__sources button[aria-pressed="true"] { background: #fff; color: var(--text-primary); box-shadow: var(--shadow-sm); }
+.pte-listen--back .pte-listen__sources button:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+/* Phones: the switch takes its own row above play, track and time. */
+@media (max-width: 600px) {
+  .pte-listen.pte-listen--back.pte-listen--sources { display: grid; grid-template-columns: auto minmax(60px, 1fr) auto; row-gap: 8px; border-radius: 20px; }
+  .pte-listen--sources .pte-listen__sources { grid-column: 1 / -1; justify-self: start; }
+}
+
+/* Legacy .modern-btn buttons moved into a v3 card lose their gradient (see the strip above),
+   which left white text on nothing: RTS's "Submit to AI Scoring" was invisible. They take the
+   shell's secondary button look instead. */
+body.pte-shell-v3 .pte-card__body .modern-btn {
+  min-height: 44px; padding: 0 20px; border: 1px solid var(--border-default); border-radius: 12px;
+  background-color: var(--bg-surface) !important; color: var(--text-primary) !important;
+  font: 600 15px var(--font-body); box-shadow: none; cursor: pointer;
+}
+body.pte-shell-v3 .pte-card__body .modern-btn:hover:not(:disabled) { background-color: var(--bg-hover, #f1f5f9) !important; }
+body.pte-shell-v3 .pte-card__body .modern-btn:disabled { opacity: .5; cursor: default; }
+
+/* Repeat Sentence's Shadow helper kept its legacy link look in the dock; it is a helper button
+   like Replay. */
+body.pte-shell-v3 .pte-dock #shadow-mode-btn {
+  height: 44px; padding: 0 16px; border: 1px solid var(--border-default); border-radius: 12px;
+  background: var(--bg-surface); color: var(--text-primary); font: 500 15px var(--font-body); box-shadow: none;
+}
+
+/* M3 - Describe Image: the picture's space is kept while it loads, a failed picture says so and
+   offers Try again, and zoom waits for a picture to enlarge. */
+#mode-describe-image.di-pte-v3 .di-image-container[data-image-state="loading"] { min-height: min(46vh, 410px); background: var(--gray-100, #f1f5f9); }
+#mode-describe-image.di-pte-v3 .di-image-container[data-image-state="loading"] img,
+#mode-describe-image.di-pte-v3 .di-image-container[data-image-state="error"] img { position: absolute; width: 1px; height: 1px; opacity: 0; }
+#mode-describe-image.di-pte-v3 .di-image-container[data-image-state]:not([data-image-state="ready"]) .di-zoom-btn { display: none; }
+#mode-describe-image.di-pte-v3 .di-image-error { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: min(40vh, 320px); color: var(--text-secondary); text-align: center; }
+#mode-describe-image.di-pte-v3 .di-image-error p { margin: 0; font-size: 15px; }
+#mode-describe-image.di-pte-v3 .di-image-container:not([data-image-state="error"]) .di-image-error { display: none; }
+/* The cancelled-scoring note (describe-image-mode.js) used amber text on amber, about 1.6:1. */
+.di-scoring-note { padding: 10px 12px; border-radius: 8px; background: var(--amber-50, #fffbeb); border: 1px solid #fcd34d; color: #92400e; font-size: 14px; }
+
+/* L1 - the question arrows are quiet chevrons beside the picker (mockup), not the gray and
+   purple gradient squares speaking-practice-controller.css gives the older Reading-aligned bar. */
+body.pte-shell-v3 .pte-modebar .spc-picker-prev,
+body.pte-shell-v3 .pte-modebar .spc-picker-next {
+  width: 40px; height: 40px; min-height: 40px; border-radius: 50%;
+  border: 1px solid var(--border-default); background: var(--bg-surface); color: var(--text-secondary); box-shadow: none;
+}
+body.pte-shell-v3 .pte-modebar .spc-picker-prev:hover:not(:disabled),
+body.pte-shell-v3 .pte-modebar .spc-picker-next:hover:not(:disabled) {
+  background: var(--gray-100); color: var(--text-primary); border-color: var(--border-default); box-shadow: none; transform: none;
+}
+
+/* L2 - one calm style for the level chip in the mode bar. Green/yellow/red made B1 look like an
+   error, and levels above it fell back to neon gradients and a pulse. The text names the level. */
+body.pte-shell-v3 .pte-modebar #difficulty-badge {
+  background: var(--blue-50) !important; color: var(--blue-700) !important; border: 1px solid var(--blue-200, #bfdbfe);
+  box-shadow: none !important; animation: none !important; text-shadow: none;
+}
+body.pte-shell-v3 .pte-modebar #difficulty-badge::before { display: none; }
+
+/* M8 - phones: the site header and mode bar took ~300px before a timed task. The header folds
+   to one row (the mode bar's Back button and the bottom toolbar cover navigation), Filters
+   becomes an icon, and the level chip drops its icons, so the mode bar is two rows not three. */
+@media (max-width: 640px) {
+  body.pte-shell-v3 { --site-header-height: 60px; }
+  body.pte-shell-v3 .site-header__inner { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; padding-block: 8px; }
+  body.pte-shell-v3 .site-header__brand,
+  body.pte-shell-v3 .site-header__links { width: auto; }
+  body.pte-shell-v3 .site-header__link { display: none; }
+}
+@media (max-width: 600px) {
+  body.pte-shell-v3 .pte-modebar { margin-bottom: 12px; row-gap: 8px; }
+  body.pte-shell-v3 .pte-modebar #difficulty-badge .diff-icon,
+  body.pte-shell-v3 .pte-modebar #difficulty-badge .diff-settings-hint { display: none; }
+  body.pte-shell-v3 .pte-modebar #difficulty-badge { padding: 4px 10px; font-size: 12px; }
+  body.pte-shell-v3 .pte-modebar > .pte-btn[aria-haspopup="dialog"]:not(.pte-btn--icon) {
+    width: 40px; padding: 0; font-size: 0; justify-content: center;
+  }
+  body.pte-shell-v3 .pte-modebar > .pte-btn[aria-haspopup="dialog"]:not(.pte-btn--icon)::before {
+    content: ''; width: 18px; height: 18px; background: currentColor; color: var(--text-primary);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 6h16M7 12h10M10 18h4'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 6h16M7 12h10M10 18h4'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+}
+
+/* L4 - Read Aloud Speech Coach guides open in the shell dialog (read-aloud-mode.js). */
+.sc-info-dialog { width: 480px; }
+.sc-info-dialog__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.sc-info-dialog__head h3 { margin: 0; font-size: 20px; font-weight: 600; color: var(--text-primary); }
+.sc-info-dialog__close { flex: 0 0 auto; width: 36px; height: 36px; border: 0; border-radius: 999px; background: transparent; color: var(--text-secondary); font-size: 22px; line-height: 1; cursor: pointer; }
+.sc-info-dialog__close:hover { background: var(--gray-100); color: var(--text-primary); }
+.sc-info-dialog__close:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.sc-info-dialog__body { font-size: 15px; line-height: 1.55; color: var(--text-secondary); }
+
+/* Owner decision (23 Sep): with the Coach closed the Read Aloud passage is clean, as in the mockup.
+   The reduced-word, sound-change and linking marks, and clicking them, come with the Coach
+   (read-aloud-mode.js syncPteGuideTokens also takes the words out of the tab order). The border
+   stays, transparent, so words do not shift when the Coach opens. */
+#mode-read-aloud.ra-pte-v3:not([data-pte-coach="open"]) #ra-prompt-stage :is(.ra-connected-speech-token, .ra-sound-change-word) { background: none !important; border-bottom-color: transparent !important; outline: none !important; box-shadow: none !important; cursor: text !important; pointer-events: none !important; }
+#mode-read-aloud.ra-pte-v3:not([data-pte-coach="open"]) #ra-prompt-stage :is(.ra-linking-overlay, .ra-connected-speech-badges) { visibility: hidden !important; }

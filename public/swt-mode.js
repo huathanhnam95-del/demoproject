@@ -1129,7 +1129,9 @@
       scoreForm,
       formatTime,
       mountReview,
-      destroyReview
+      destroyReview,
+      getCurrentQuestion: () => questions[currentIndex],
+      getQuestions: () => questions
     }
   };
 

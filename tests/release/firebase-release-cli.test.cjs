@@ -505,6 +505,7 @@ function hookEnvironment(receipt) {
     BEL_FIREBASE_RELEASE_CONTEXT: '1',
     BEL_FIREBASE_RELEASE_RECEIPT: receipt.path,
     BEL_FIREBASE_RELEASE_PROFILE: receipt.value.profile,
+    BEL_FIREBASE_RELEASE_SELECTOR: receipt.value.selector,
     BEL_FIREBASE_RELEASE_CANDIDATE_ROOT: receipt.value.candidateRoot,
     BEL_FIREBASE_RELEASE_SOURCE_SHA: receipt.value.sourceSha,
     BEL_FIREBASE_RELEASE_PROJECT_ID: receipt.value.project.id,
@@ -670,6 +671,114 @@ test('release CLI prepares and publishes each supported profile from committed s
     const receiptText = fs.readFileSync(receipt.path, 'utf8');
     assert.equal(receiptText.includes(PRIVATE_VALUE), false, 'private dotenv bytes must not enter the receipt');
   }
+});
+
+test('Functions target selection publishes exactly five exports and seals the predeploy selection', (t) => {
+  const fixture = createFixture();
+  t.after(() => fs.rmSync(fixture.root, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(fixture.externalRoot, { recursive: true, force: true }));
+  const targets = ['api', 'scoreWorkerTask', 'aiScoringOutboxReconciler',
+    'entranceSpeechWorkerTask', 'entranceSpeechOutboxReconciler'];
+  const selector = targets.map((name) => `functions:${name}`).join(',');
+  const profileRoot = path.join(fixture.externalRoot, 'selected-functions');
+  fs.mkdirSync(profileRoot, { recursive: true });
+  const run = runChild(fixture, ['functions', '--sha', fixture.sourceASha,
+    '--firebase-cli', fixture.fakeCli.entrypoint, '--npm-cli', fixture.fakeNpm,
+    '--external-root', profileRoot, '--function-targets', targets.join(','), '--json'], {
+    env: baseEnvironment(fixture, profileRoot, { expectDotenv: true })
+  });
+  const output = jsonOutput(run);
+  assert.equal(output.selector, selector);
+  assert.equal(output.published, true);
+  const receipt = receiptFor({ profileRoot }, 'functions', fixture.sourceASha);
+  assert.deepEqual(receipt.value.functionTargets, targets);
+  assert.equal(receipt.value.selector, selector);
+  assert.equal(receipt.value.context.selector, selector);
+  assert.deepEqual(receipt.value.prepared.commands.map((item) => item.kind),
+    ['npm-version', 'npm-root', 'npm-functions', 'connectedSpeech', 'segmentationV2']);
+  const publications = readJsonLines(path.join(profileRoot, 'publisher.jsonl'));
+  assert.equal(publications.length, 1);
+  assert.equal(publications[0].selector, selector);
+  assert.deepEqual(publications[0].hookCalls.map((item) => item.product), ['functions', 'functions']);
+  assert.equal(publications[0].selector.split(',').length, 5);
+  assert.equal(publications[0].selector.split(',').includes('functions'), false);
+});
+
+test('invalid Function selections fail before preparation, receipt, or publication', (t) => {
+  const fixture = createFixture();
+  t.after(() => fs.rmSync(fixture.root, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(fixture.externalRoot, { recursive: true, force: true }));
+  const invalid = [
+    ['functions', '--function-targets', ''],
+    ['functions', '--function-targets', 'api,'],
+    ['functions', '--function-targets', ',api'],
+    ['functions', '--function-targets', 'api,,scoreWorkerTask'],
+    ['functions', '--function-targets', 'api,api'],
+    ['functions', '--function-targets', '1api'],
+    ['functions', '--function-targets', 'api-worker'],
+    ['functions', '--function-targets', 'api, scoreWorkerTask'],
+    ['functions', '--function-targets', 'functions:api'],
+    ['functions', '--function-targets', 'api', '--function-targets', 'scoreWorkerTask'],
+    ['hosting', '--function-targets', 'api'],
+    ['full', '--function-targets', 'api'],
+    ['hook', '--product', 'functions', '--function-targets', 'api'],
+    ['hosting', '--preserve-live-hosting-manifest', path.join(fixture.externalRoot, 'manifest.json'), '--function-targets', 'api']
+  ];
+  for (const [index, args] of invalid.entries()) {
+    const profileRoot = path.join(fixture.externalRoot, `invalid-selection-${index}`);
+    fs.mkdirSync(profileRoot, { recursive: true });
+    const result = runChild(fixture, [...args, '--sha', fixture.sourceASha,
+      '--firebase-cli', fixture.fakeCli.entrypoint, '--npm-cli', fixture.fakeNpm,
+      '--external-root', profileRoot, '--json'], {
+      env: baseEnvironment(fixture, profileRoot, { expectDotenv: true })
+    });
+    assert.notEqual(result.status, 0, `${args.join(' ')} must fail`);
+    assert.match(result.stderr, /FUNCTION_TARGETS|CLI_ARGUMENT|function targets/i);
+    assert.deepEqual(receiptFiles({ profileRoot }), [], 'invalid selection must not seal a receipt');
+    assert.deepEqual(readJsonLines(path.join(profileRoot, 'preparation.jsonl')), []);
+    assert.deepEqual(readJsonLines(path.join(profileRoot, 'publisher.jsonl')), []);
+  }
+});
+
+test('Functions target receipt and hook selector drift fail without publication', (t) => {
+  const fixture = createFixture();
+  t.after(() => fs.rmSync(fixture.root, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(fixture.externalRoot, { recursive: true, force: true }));
+  const profileRoot = path.join(fixture.externalRoot, 'selection-drift');
+  fs.mkdirSync(profileRoot, { recursive: true });
+  const run = runChild(fixture, ['functions', '--sha', fixture.sourceASha,
+    '--firebase-cli', fixture.fakeCli.entrypoint, '--npm-cli', fixture.fakeNpm,
+    '--external-root', profileRoot, '--function-targets', 'api,scoreWorkerTask',
+    '--verify-only', '--json'], {
+    env: baseEnvironment(fixture, profileRoot, { expectDotenv: true })
+  });
+  assert.equal(jsonOutput(run).published, false);
+  const receipt = receiptFor({ profileRoot }, 'functions', fixture.sourceASha);
+  const original = structuredClone(receipt.value);
+  const env = { ...baseEnvironment(fixture, profileRoot, { expectDotenv: true }),
+    ...hookEnvironment(receipt) };
+  const valid = runChild(fixture, ['hook', '--product', 'functions', '--json'], { env });
+  assert.equal(jsonOutput(valid).mode, 'verified');
+  for (const mutate of [
+    (value) => { value.selector = 'functions:api'; },
+    (value) => { value.functionTargets = ['api']; },
+    (value) => { value.context.selector = 'functions:api'; },
+    (value) => { value.functionTargets = ['api', 'api']; }
+  ]) {
+    const altered = structuredClone(original);
+    mutate(altered);
+    writeJson(receipt.path, altered);
+    const result = runChild(fixture, ['hook', '--product', 'functions', '--json'], { env });
+    assert.notEqual(result.status, 0, 'altered selection must fail the predeploy hook');
+    assert.match(result.stderr, /SELECTION_CHANGED|FUNCTION_TARGETS|INVALID_HOOK_CONTEXT/i);
+    assert.deepEqual(readJsonLines(path.join(profileRoot, 'publisher.jsonl')), []);
+  }
+  writeJson(receipt.path, original);
+  const wrongEnv = runChild(fixture, ['hook', '--product', 'functions', '--json'], {
+    env: { ...env, BEL_FIREBASE_RELEASE_SELECTOR: 'functions:api' }
+  });
+  assert.notEqual(wrongEnv.status, 0);
+  assert.deepEqual(readJsonLines(path.join(profileRoot, 'publisher.jsonl')), []);
 });
 
 test('release CLI exports the selected Git tree while HEAD points at another commit', (t) => {

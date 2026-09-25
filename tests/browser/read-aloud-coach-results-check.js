@@ -38,7 +38,7 @@ function ok(label, pass, detail) {
       window.localStorage.setItem('userStatus', 'guest');
       window.localStorage.setItem('hasSeenScopeTutorial', 'true');
     });
-    await page.goto(`${baseUrl}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${baseUrl}/index.html?pteShell=legacy`, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => typeof window.switchToMode === 'function', { timeout: 30000 });
     const guest = page.locator('#guest-mode-btn');
     if (await guest.isVisible().catch(() => false)) await guest.click();

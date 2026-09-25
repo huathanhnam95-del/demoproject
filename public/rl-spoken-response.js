@@ -35,9 +35,17 @@
       this.mediaRecorder = null;
       this.stream = null;
       this.chunks = [];
+      this.rawRecordingBlob = null;
+      this.processedRecordingBlob = null;
       this.recordingBlob = null;
       this.recordingBlobUrl = null;
       this.recordingDurationSec = 0;
+      this.recordingGeneration = 0;
+      this.recordingProcessingStatus = null;
+      this.recordingSampleRateHz = null;
+      this.recordingSampleCount = null;
+      this.recordingFormat = null;
+      this.recordingPlaybackTimeline = null;
       this.timerInterval = null;
     }
 
@@ -111,6 +119,32 @@
       this.bindControls(containerEl, { entry, userNotes, onComplete });
     }
 
+    async playAssessmentWordSegment(word, statusMsg) {
+      const timeline = this.recordingPlaybackTimeline;
+      const rawBlob = this.rawRecordingBlob;
+      const startMs = Number(word?.startMs);
+      const endMs = Number(word?.endMs);
+      if (!timeline || timeline.rawBlob !== rawBlob || timeline.offsetKnown !== true
+        || !Number.isFinite(timeline.removedLeadingMs) || timeline.removedLeadingMs < 0
+        || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) {
+        if (statusMsg) statusMsg.textContent = 'Word replay is unavailable because this recording has no verified timing map. The full original recording is still available.';
+        return false;
+      }
+
+      const start = startMs + timeline.removedLeadingMs;
+      const end = endMs + timeline.removedLeadingMs;
+      const url = this.recordingBlobUrl || (rawBlob ? (this.recordingBlobUrl = URL.createObjectURL(rawBlob)) : null);
+      const coordinator = window.SegmentPlaybackCoordinator?.defaultCoordinator;
+      if (!url || !coordinator) return false;
+      const audioBuffer = await coordinator.getDecodedBuffer(url);
+      const durationMs = Number(audioBuffer?.duration) * 1000;
+      if (!Number.isFinite(durationMs) || end > durationMs + 20) {
+        if (statusMsg) statusMsg.textContent = 'This word segment falls outside the original recording, so replay is unavailable.';
+        return false;
+      }
+      return coordinator.playSegment({ audioUrl: url, startMs: start, endMs: end });
+    }
+
     bindControls(containerEl, { entry, userNotes, onComplete }) {
       const recordBtn = containerEl.querySelector('#rl-spoken-record-btn');
       const stopBtn = containerEl.querySelector('#rl-spoken-stop-btn');
@@ -123,10 +157,19 @@
       const disclosureEl = containerEl.querySelector('#rl-spoken-disclosure-container');
 
       recordBtn?.addEventListener('click', async () => {
+        const captureGeneration = ++this.recordingGeneration;
         try {
-          this.chunks = [];
+          const captureChunks = [];
+          this.chunks = captureChunks;
+          this.rawRecordingBlob = null;
+          this.processedRecordingBlob = null;
           this.recordingBlob = null;
           this.recordingDurationSec = 0;
+          this.recordingProcessingStatus = 'processing';
+          this.recordingSampleRateHz = null;
+          this.recordingSampleCount = null;
+          this.recordingFormat = null;
+          this.recordingPlaybackTimeline = null;
           if (this.recordingBlobUrl) {
             URL.revokeObjectURL(this.recordingBlobUrl);
             this.recordingBlobUrl = null;
@@ -137,31 +180,70 @@
           if (disclosureEl) disclosureEl.innerHTML = '';
           if (statusMsg) statusMsg.textContent = '';
 
-          this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          if (captureGeneration !== this.recordingGeneration) {
+            stream.getTracks().forEach(track => track.stop());
+            return;
+          }
+          this.stream = stream;
           const mimeType = (typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))
             ? 'audio/webm;codecs=opus' : 'audio/webm';
-          this.mediaRecorder = new MediaRecorder(this.stream, { mimeType });
+          const recorder = new MediaRecorder(stream, { mimeType });
+          this.mediaRecorder = recorder;
 
-          this.mediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) this.chunks.push(e.data);
+          recorder.ondataavailable = (e) => {
+            if (e.data.size > 0) captureChunks.push(e.data);
           };
 
-          this.mediaRecorder.onstop = () => {
-            if (this.stream) {
-              this.stream.getTracks().forEach(t => t.stop());
+          recorder.onstop = async () => {
+            if (stream) {
+              stream.getTracks().forEach(t => t.stop());
+            }
+            if (this.stream === stream) {
               this.stream = null;
             }
-            if (this.chunks.length > 0) {
-              const blob = new Blob(this.chunks, { type: this.mediaRecorder?.mimeType || 'audio/webm' });
-              this.recordingBlob = blob;
-              this.recordingBlobUrl = URL.createObjectURL(blob);
+            if (captureChunks.length > 0) {
+              const rawBlob = new Blob(captureChunks, { type: recorder.mimeType || mimeType || 'audio/webm' });
+              let prepared = null;
+              try {
+                const pipeline = window.AudioDspPipeline;
+                if (!pipeline || typeof pipeline.prepareForAssessment !== 'function') throw new Error('Audio format conversion is unavailable.');
+                prepared = await pipeline.prepareForAssessment(rawBlob);
+              } catch (err) {
+                console.warn('[RL Spoken] Audio format conversion failed; keeping the original recording playable:', err);
+              }
+
+              if (captureGeneration !== this.recordingGeneration) return;
+              const outputBlob = prepared?.outputBlob || null;
+              const isProcessedWav = typeof window.AudioDspPipeline?.isValidMono16kWav === 'function'
+                && await window.AudioDspPipeline.isValidMono16kWav(prepared);
+              if (captureGeneration !== this.recordingGeneration) return;
+              this.rawRecordingBlob = rawBlob;
+              this.processedRecordingBlob = isProcessedWav ? outputBlob : null;
+              this.recordingBlob = rawBlob;
+              this.recordingProcessingStatus = isProcessedWav
+                ? (prepared.processingStatus || 'format-only')
+                : 'format-conversion-failed';
+              this.recordingSampleRateHz = isProcessedWav ? (prepared.audioBuffer?.sampleRate || 16000) : null;
+              this.recordingSampleCount = isProcessedWav ? (prepared.sampleCount || prepared.audioBuffer?.length || null) : null;
+              this.recordingFormat = isProcessedWav ? 'wav' : 'unavailable';
+              const removedLeadingMs = prepared?.stats?.removedLeadingMs;
+              this.recordingPlaybackTimeline = {
+                rawBlob,
+                offsetKnown: Number.isFinite(removedLeadingMs) && removedLeadingMs >= 0,
+                removedLeadingMs: Number.isFinite(removedLeadingMs) && removedLeadingMs >= 0 ? removedLeadingMs : null
+              };
+              this.recordingBlobUrl = URL.createObjectURL(rawBlob);
               if (audioEl) audioEl.src = this.recordingBlobUrl;
               if (playbackWrap) playbackWrap.style.display = 'block';
               if (actionsWrap) actionsWrap.style.display = 'block';
+              if (statusMsg && !isProcessedWav) {
+                statusMsg.textContent = 'Your original recording is available for playback, but format conversion failed. Record again before assessment.';
+              }
             }
           };
 
-          this.mediaRecorder.start(250);
+          recorder.start(250);
           this.isRecording = true;
 
           recordBtn.style.display = 'none';
@@ -192,19 +274,48 @@
 
       assessBtn?.addEventListener('click', async () => {
         if (!this.recordingBlob) return;
+        if (this.recordingProcessingStatus === 'processing') {
+          if (statusMsg) statusMsg.textContent = 'Preparing your recording…';
+          return;
+        }
+        if (this.recordingFormat !== 'wav'
+          || this.recordingSampleRateHz !== 16000
+          || !Number.isInteger(this.recordingSampleCount)
+          || this.recordingSampleCount <= 0) {
+          if (statusMsg) statusMsg.textContent = 'Audio preparation failed. Record again before assessment.';
+          return;
+        }
         if (assessBtn) assessBtn.disabled = true;
         if (statusMsg) statusMsg.textContent = 'Calculating credit quote...';
 
+        const assessmentGeneration = this.recordingGeneration;
+        const originalBlob = this.recordingBlob;
+        const isCurrent = () => assessmentGeneration === this.recordingGeneration && originalBlob === this.recordingBlob;
         try {
-          const sampleRate = 16000;
-          const durationSec = Math.max(1, Math.round(this.recordingDurationSec || 40));
-          const sampleCount = Math.max(16000, durationSec * sampleRate);
+          const speechV3 = await window.AiScoringGate?.speechV3Enabled?.('retell_lecture');
+          if (!isCurrent()) return;
+          let flow = null;
+          let gateResult = null;
+          let assessmentResult = null;
+          if (speechV3) {
+            flow = await window.AiScoringGate.assessV3Recording({
+              mode: 'retell_lecture', originalBlob: this.recordingBlob,
+              questionId: entry?.id || null,
+              promptSnapshot: { promptId: entry?.id || null, title: entry?.title || '',
+                text: entry?.transcript || '' },
+              responseSnapshot: { notes: userNotes, responseKind: 'spoken_retelling' }
+            });
+            gateResult = flow;
+            assessmentResult = flow.result || null;
+          } else {
+          const sampleRate = this.recordingSampleRateHz;
+          const sampleCount = this.recordingSampleCount;
           let base64Audio = null;
           if (window.AiScoringGate?.blobToBase64) {
-            base64Audio = await window.AiScoringGate.blobToBase64(this.recordingBlob);
+                    base64Audio = await window.AiScoringGate.blobToBase64(this.processedRecordingBlob);
           }
 
-          const gateResult = await window.AiScoringGate.requestConsentAndConfirm({
+          gateResult = await window.AiScoringGate.requestConsentAndConfirm({
             mode: 'retell_lecture',
             inputMeta: {
               sampleCount,
@@ -214,6 +325,8 @@
             questionId: entry?.id || null
           });
 
+          }
+          if (!isCurrent()) return;
           if (!gateResult.allowed) {
             if (gateResult.cancelled) {
               if (statusMsg) statusMsg.textContent = 'AI assessment cancelled. No credits charged.';
@@ -225,29 +338,28 @@
 
           if (statusMsg) statusMsg.textContent = 'Analyzing retelling with Azure Speech AI...';
 
-          let assessmentResult = null;
-          if (gateResult.assessmentId) {
+          if (!speechV3 && gateResult.assessmentId) {
             assessmentResult = await window.AiScoringGate.pollAssessmentResult(gateResult.assessmentId);
-          } else if (gateResult.unmetered) {
+          } else if (!speechV3 && gateResult.unmetered) {
             assessmentResult = gateResult.result || null;
           }
 
+          if (!isCurrent()) return;
           if (assessmentResult) {
             if (disclosureEl && window.TranscriptDisclosure) {
               const disclosure = new window.TranscriptDisclosure({
                 containerEl: disclosureEl,
                 onWordClick: (w) => {
-                  const url = this.recordingBlobUrl || (this.recordingBlob ? (this.recordingBlobUrl = URL.createObjectURL(this.recordingBlob)) : null);
-                  if (window.SegmentPlaybackCoordinator?.defaultCoordinator && url) {
-                    const startMs = w.startMs ?? w.rawStartMs ?? 0;
-                    const endMs = w.endMs ?? w.rawEndMs ?? (startMs + 500);
-                    window.SegmentPlaybackCoordinator.defaultCoordinator.playSegment({
-                      audioUrl: url,
-                      startMs,
-                      endMs
-                    });
+                  if (speechV3 && flow?.canonicalBlob) {
+                    const span = w.clip || w.clipTiming?.clipSpan;
+                    if (span) window.AiScoringGate.playV3Span({ canonicalBlob: flow.canonicalBlob,
+                      manifest: flow.manifest, span });
+                    return;
                   }
-                }
+                this.playAssessmentWordSegment(w, statusMsg).catch(() => {
+                  if (statusMsg) statusMsg.textContent = 'The original recording is available, but this word could not be replayed.';
+                });
+              }
               });
               disclosure.render(assessmentResult);
             }
@@ -256,8 +368,9 @@
             if (assessBtn) assessBtn.style.display = 'none';
 
             // Archive attempt with responseKind: 'spoken_retelling'
-            window.PTEAttemptArchive?.saveAttempt?.({
+            const archiveInput = {
               practiceMode: 'notes',
+              attemptId: flow?.attemptId || undefined,
               promptSnapshot: {
                 promptId: entry?.id || null,
                 title: entry?.title || '',
@@ -276,22 +389,39 @@
                 lectureTranscript: entry?.transcript || ''
               },
               resultSnapshot: {
-                spokenAssessment: assessmentResult
+                spokenAssessment: speechV3 ? { schemaVersion: 'bel.speech.v3',
+                  assessmentId: gateResult.assessmentId,
+                  overallScores: assessmentResult.overallScores } : assessmentResult
               },
-              scoringSource: 'ai',
+              scoringSource: speechV3 ? 'bel.speech.v3' : 'ai',
               media: this.recordingBlob ? [{
                 slot: 'student_retelling',
                 label: 'Student spoken retelling',
                 blob: this.recordingBlob,
                 contentType: this.recordingBlob.type || 'audio/webm'
               }] : []
-            }).catch(err => console.warn('[PTE Archive] RL spoken attempt save failed:', err));
+            };
+            const save = speechV3
+              ? window.PTEAttemptArchive?.patchAttempt?.(flow.attemptId, {
+                responseSnapshot: archiveInput.responseSnapshot, answerSnapshot: archiveInput.answerSnapshot,
+                resultSnapshot: archiveInput.resultSnapshot,
+                scoringSnapshot: { source: 'bel.speech.v3', success: true, status: 'completed',
+                  pronunciationAssessmentId: flow.assessmentId }
+              })
+              : window.PTEAttemptArchive?.saveAttempt?.(archiveInput);
+            Promise.resolve(save).catch(err => console.warn('[PTE Archive] RL spoken attempt save failed:', err));
 
             if (typeof onComplete === 'function') {
               onComplete(assessmentResult);
             }
+          } else {
+            // Unmetered with no result (scoring switched off): say so instead of leaving
+            // "Analyzing…" on screen with the button disabled.
+            if (statusMsg) statusMsg.textContent = "AI scoring isn't available right now. Please try again later.";
+            if (assessBtn) assessBtn.disabled = false;
           }
         } catch (err) {
+          if (!isCurrent()) return;
           console.error('[RL Spoken Assess] Error:', err);
           if (statusMsg) statusMsg.textContent = err.message || 'Scoring failed. Please try again.';
           if (assessBtn) assessBtn.disabled = false;
@@ -315,6 +445,7 @@
     }
 
     cleanup() {
+      this.recordingGeneration += 1;
       if (this.isRecording) {
         this.stopRecording();
       }
@@ -335,8 +466,15 @@
         this.recordingBlobUrl = null;
       }
       this.chunks = [];
+      this.rawRecordingBlob = null;
+      this.processedRecordingBlob = null;
       this.recordingBlob = null;
       this.recordingDurationSec = 0;
+      this.recordingProcessingStatus = null;
+      this.recordingSampleRateHz = null;
+      this.recordingSampleCount = null;
+      this.recordingFormat = null;
+      this.recordingPlaybackTimeline = null;
     }
   }
 

@@ -44,7 +44,7 @@ async function main() {
         localStorage.setItem('userStatus', 'guest');
         localStorage.setItem('hasSeenScopeTutorial', 'true');
       });
-      await page.goto(`http://127.0.0.1:${server.address().port}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`http://127.0.0.1:${server.address().port}/index.html?pteShell=legacy`, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => !!window.SpeakingPracticeController, { timeout: 30000 });
 
       for (const mode of SHARED_MODES) {

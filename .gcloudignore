@@ -15,6 +15,10 @@ backend/local_server/*
 # context excludes it and the image build fails on a missing path.
 !backend/local_server/phoneme_client.py
 !backend/local_server/pronunciation_verifier.py
+!backend/local_server/pronounce_v42.py
+!backend/local_server/segment_contract.py
+!backend/local_server/stress_evaluator_v2.py
+!backend/local_server/stress_features_v2.py
 !backend/local_server/models
 backend/local_server/models/*
 !backend/local_server/models/pronunciation-verifier-v1.json

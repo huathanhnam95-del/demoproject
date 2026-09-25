@@ -61,6 +61,7 @@
     let mediaRecorder = null;
     let recordedChunks = [];
     let recordingBlob = null;
+    let processedRecordingBlob = null;
     let recordingBlobUrl = null;
     let dspPromise = null;
     let speechRecognition = null;
@@ -290,6 +291,7 @@
             recordingBlobUrl = null;
         }
         recordingBlob = null;
+        processedRecordingBlob = null;
         dspPromise = null;
         transcriptText = '';
         recordedChunks = [];
@@ -1191,14 +1193,8 @@
             return;
         }
 
-        let finalBlob = recordingBlob;
-        if (dspPromise) {
-            try {
-                finalBlob = await dspPromise;
-            } catch (_) {
-                finalBlob = recordingBlob;
-            }
-        }
+        if (dspPromise) await dspPromise.catch(() => processedRecordingBlob);
+        const finalBlob = recordingBlob;
         if (isV3() && (qGen !== questionGen || aGen !== attemptGen || currentToken !== recordingSessionToken || !v3Active)) {
             return;
         }
@@ -1637,17 +1633,18 @@
             feedback.appendChild(grid);
             elements.practiceArea.appendChild(feedback);
 
-            const tabButtons = feedback.querySelectorAll('.notes-v3-fb-tab');
-            tabButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const tab = btn.dataset.v3Tab;
-                    v3ActiveTab = tab;
-                    tabButtons.forEach(b => b.classList.toggle('active', b === btn));
-                    const matchP = document.getElementById('notes-v3-match-panel');
-                    const transP = document.getElementById('notes-v3-transcript-panel');
-                    if (matchP) matchP.style.display = tab === 'notes-match' ? 'flex' : 'none';
-                    if (transP) transP.style.display = tab === 'transcript' ? 'flex' : 'none';
-                });
+            // The shell's pill tabs (roles, keyboard) instead of a one-off underline strip.
+            const showPanel = (tab) => {
+                v3ActiveTab = tab;
+                const matchP = document.getElementById('notes-v3-match-panel');
+                const transP = document.getElementById('notes-v3-transcript-panel');
+                if (matchP) matchP.style.display = tab === 'notes-match' ? 'flex' : 'none';
+                if (transP) transP.style.display = tab === 'transcript' ? 'flex' : 'none';
+            };
+            feedback.querySelector('#notes-v3-match-panel')?.setAttribute('role', 'tabpanel');
+            feedback.querySelector('#notes-v3-transcript-panel')?.setAttribute('role', 'tabpanel');
+            window.SpeakingPracticeController?.wireTabs?.(feedback.querySelector('.notes-v3-fb-tabs'), {
+                onSelect: (btn) => showPanel(btn.dataset.v3Tab)
             });
         }
 
@@ -1732,6 +1729,7 @@
             recordingBlobUrl = null;
         }
         recordingBlob = null;
+        processedRecordingBlob = null;
         dspPromise = null;
         transcriptText = '';
         recordedChunks = [];
@@ -1799,6 +1797,7 @@
             recordingBlobUrl = null;
         }
         recordingBlob = null;
+        processedRecordingBlob = null;
         dspPromise = null;
         transcriptText = '';
 
@@ -1853,6 +1852,7 @@
             recordingBlobUrl = null;
         }
         recordingBlob = null;
+        processedRecordingBlob = null;
         dspPromise = null;
         transcriptText = '';
 
@@ -1862,6 +1862,7 @@
         try {
             if (window.AudioDspPipeline && typeof window.AudioDspPipeline.createRecorder === 'function') {
                 recorder = window.AudioDspPipeline.createRecorder({
+                    audioPreparation: 'raw-only',
                     onStream: (st) => {
                         stream = st;
                         activeMediaStream = st;
@@ -1871,7 +1872,9 @@
                         if (chunk && chunk.size > 0) recordedChunks.push(chunk);
                     }
                 });
-                await recorder.start();
+                const starting = recorder.start();
+                pteRecorderWidget?.waitForMic?.(starting);
+                await starting;
                 activeRecorder = recorder;
                 if (!stream && typeof recorder.getStream === 'function') {
                     stream = recorder.getStream();
@@ -1881,7 +1884,9 @@
                     }
                 }
             } else {
-                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const micRequest = navigator.mediaDevices.getUserMedia({ audio: true });
+                pteRecorderWidget?.waitForMic?.(micRequest);
+                stream = await micRequest;
                 activeMediaStream = stream;
                 pteRecorderWidget?.attachStream(stream);
                 const mimeType = (typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))
@@ -1896,11 +1901,19 @@
         } catch (err) {
             console.warn('[TakeNotes v3] Microphone access error:', err);
             if (qGen !== questionGen || aGen !== attemptGen || !v3Active || myToken !== recordingSessionToken) return;
-            showToast('Microphone access was denied or unavailable. You can review your notes and get feedback.');
+            // Notes can still be scored without a recording, so the attempt carries on to
+            // Complete. The recorder says why nothing was recorded, and the dock keeps it on
+            // screen (it was a toast that vanished).
+            const info = window.PteRecorderWidget?.describeMicError?.(err);
             v3Phase = 'complete';
             syncPteShell();
             syncPteV3UI();
-            pteRecorderWidget?.showComplete();
+            if (info) {
+                pteRecorderWidget?.showMicError?.(info);
+                window.SpeakingPracticeController?.setNotice?.('notes', `${info.title}. You can still get feedback on your notes, or fix the microphone and press Record again.`);
+            } else {
+                pteRecorderWidget?.showComplete();
+            }
             return;
         }
 
@@ -1913,6 +1926,9 @@
         }
 
         pteRecorderWidget?.showRecording(RECORD_SECONDS);
+        // The stream callbacks above fire before the widget is in its recording state, and
+        // attachStream ignores a stream then, so the waveform never showed the live voice.
+        if (activeMediaStream) pteRecorderWidget?.attachStream(activeMediaStream);
         startSpeechRecognition(myToken);
 
         v3RecordStartTime = performance.now();
@@ -1968,37 +1984,23 @@
 
     function onV3RecordingComplete(stopResult) {
         const currentToken = recordingSessionToken;
-        let blob = stopResult?.wavBlob || stopResult?.rawBlob || null;
-        if (!blob && recordedChunks.length > 0) {
-            blob = new Blob(recordedChunks, { type: 'audio/webm' });
+        const blob = stopResult?.rawBlob || (recordedChunks.length > 0
+            ? new Blob(recordedChunks, { type: 'audio/webm' })
+            : null);
+        if (stopResult?.audioUrl) {
+            try { URL.revokeObjectURL(stopResult.audioUrl); } catch (_) { /* ignore unused recorder URL */ }
         }
 
         recordingBlob = blob;
+        processedRecordingBlob = stopResult?.outputBlob || stopResult?.wavBlob || null;
         if (blob) {
-            recordingBlobUrl = stopResult?.audioUrl || URL.createObjectURL(blob);
+            recordingBlobUrl = URL.createObjectURL(blob);
             const userAudio = document.getElementById('notes-v3-student-audio');
             if (userAudio) userAudio.src = recordingBlobUrl;
         }
 
-        if (blob && !stopResult && window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
-            dspPromise = window.AudioDspPipeline.enhance(blob).then((res) => {
-                if (currentToken !== recordingSessionToken) return blob;
-                if (res?.wavBlob) {
-                    if (recordingBlobUrl && !stopResult?.audioUrl) URL.revokeObjectURL(recordingBlobUrl);
-                    recordingBlob = res.wavBlob;
-                    recordingBlobUrl = res.audioUrl || URL.createObjectURL(res.wavBlob);
-                    const userAudio = document.getElementById('notes-v3-student-audio');
-                    if (userAudio) userAudio.src = recordingBlobUrl;
-                    return res.wavBlob;
-                }
-                return blob;
-            }).catch((err) => {
-                console.warn('[TakeNotes v3] DSP enhancement fallback to raw:', err);
-                return blob;
-            });
-        } else {
-            dspPromise = Promise.resolve(blob);
-        }
+        // This flow scores transcript and notes text only; keep captured audio as-is.
+        dspPromise = Promise.resolve(blob);
     }
 
     function cancelRecording() {
@@ -2013,6 +2015,7 @@
         recordingSessionToken++;
         recordedChunks = [];
         recordingBlob = null;
+        processedRecordingBlob = null;
         dspPromise = null;
         transcriptText = '';
         startV3Prep();
@@ -2028,6 +2031,7 @@
             recordingBlobUrl = null;
         }
         recordingBlob = null;
+        processedRecordingBlob = null;
         dspPromise = null;
         transcriptText = '';
         startV3Prep();
@@ -2271,6 +2275,7 @@
             recordingBlobUrl = null;
         }
         recordingBlob = null;
+        processedRecordingBlob = null;
         dspPromise = null;
         transcriptText = '';
         recordedChunks = [];

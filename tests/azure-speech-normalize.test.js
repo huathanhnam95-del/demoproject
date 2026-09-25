@@ -117,7 +117,7 @@ test('normalizeWord handles omission and normal word', () => {
   assert.equal(normOmission.clipSpan, null);
 });
 
-test('normalizeFinalResult returns complete v2 envelope', () => {
+test('normalizeFinalResult returns complete envelope with bel.speech.v3 schema by default', () => {
   const audio = { sampleRateHz: 16000, sampleCount: 32000 };
   const rawResult = {
     NBest: [{
@@ -135,9 +135,13 @@ test('normalizeFinalResult returns complete v2 envelope', () => {
     }]
   };
   const finalResult = normalizeFinalResult({ rawResult, audio, mode: 'read_aloud' });
-  assert.equal(finalResult.schemaVersion, 'practice-pronunciation-v2');
+  assert.equal(finalResult.schemaVersion, 'bel.speech.v3');
   assert.equal(finalResult.status, 'ready');
   assert.equal(finalResult.scores.pronunciationAccuracy, 85);
   assert.equal(finalResult.coverage.scoredWordCount, 1);
   assert.equal(finalResult.words.length, 1);
+
+  // Backward compatibility: explicit schemaVersion option
+  const legacyResult = normalizeFinalResult({ rawResult, audio, mode: 'read_aloud', schemaVersion: 'practice-pronunciation-v2' });
+  assert.equal(legacyResult.schemaVersion, 'practice-pronunciation-v2');
 });

@@ -107,7 +107,7 @@ function startHarnessServer() {
   app.use(express.static(publicDir));
   app.get('/', (_req, res) => {
     res.setHeader('Cache-Control', 'no-store');
-    res.sendFile(path.join(publicDir, 'index.html'));
+    res.sendFile('index.html', { root: publicDir });
   });
   app.get('/favicon.ico', (_req, res) => {
     res.status(204).end();
@@ -117,7 +117,7 @@ function startHarnessServer() {
       return next();
     }
     res.setHeader('Cache-Control', 'no-store');
-    res.sendFile(path.join(publicDir, 'index.html'));
+    res.sendFile('index.html', { root: publicDir });
   });
 
   return new Promise((resolve) => {
@@ -1183,14 +1183,23 @@ function startHarnessServer() {
     assert.strictEqual(afterRetry.practiceHidden, true, 'Practice area should be reset');
     assert.strictEqual(afterRetry.startVisible, true, 'Start button should be visible');
 
-    console.log('Step 11: Verifying fallback for Question without answerAnalysis (Question #101)...');
+    console.log('Step 11: Verifying fallback for a legacy question without answerAnalysis...');
     await page.click('#swt-v7-question-pill');
     await page.waitForSelector('#swt-v7-sheet.is-open', { state: 'visible' });
     await page.fill('#swt-v7-jump-search', '101');
-    await page.click('.ra-v7-list-item[data-index="99"]'); // Question #101 (no answerAnalysis)
+    await page.click('.ra-v7-list-item[data-index="99"]'); // Question #101
     await page.waitForFunction(() => {
       const pill = document.getElementById('swt-v7-question-pill');
       return pill && pill.textContent.includes('#101');
+    });
+
+    // All 404 published questions now have analysis. Simulate an older record so
+    // the no-analysis fallback remains covered without weakening that data gate.
+    await page.evaluate(() => {
+      const question = window.SWTMode.__debug.getCurrentQuestion();
+      if (!question?.answerAnalysis) throw new Error('Expected annotated Question #101');
+      window.__swtSavedQuestion101Analysis = question.answerAnalysis;
+      question.answerAnalysis = null;
     });
 
     await page.click('#start-swt-btn');
@@ -1209,6 +1218,10 @@ function startHarnessServer() {
     });
     assert.strictEqual(qFallbackState.mountDisplay, 'none', 'Question without answerAnalysis must hide parallel review');
     assert.strictEqual(qFallbackState.controllerActive, false, 'Review controller should not be active for question without answerAnalysis');
+    await page.evaluate(() => {
+      window.SWTMode.__debug.getCurrentQuestion().answerAnalysis = window.__swtSavedQuestion101Analysis;
+      delete window.__swtSavedQuestion101Analysis;
+    });
 
     console.log('Step 12: Verifying AI scoring integration and review preservation...');
     await page.click('#swt-retry-btn');

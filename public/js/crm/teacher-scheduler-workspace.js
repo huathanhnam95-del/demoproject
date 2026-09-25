@@ -236,6 +236,8 @@ window.TeacherSchedulerWorkspace = (function () {
             teachers: [],
             teacherMap: new Map(),
             classrooms: [],
+            colorPlans: {},
+            colorTags: { revision: 0, tags: {} },
             sessions: [],
             fromDate: null,
             toDate: null,
@@ -264,6 +266,56 @@ window.TeacherSchedulerWorkspace = (function () {
         };
         state.focusedDate = null;
         state.scheduleRangeSpanDays = null;
+
+        const presentation = window.TeacherSchedulerPresentation;
+        let colorPicker = null;
+        const splitTitle = (value) => presentation?.classTitle(value) || { full: value, primary: value, secondary: '' };
+        function sessionTheme(session, teacherColor) {
+            return presentation?.customTheme(presentation.resolveColor(state.colorPlans[session?.classId], session))
+                || resolveEventTheme(teacherColor.key, state.appearance);
+        }
+        function repositionColorPanel() {
+            const bubble = state.sessionBubble;
+            if (bubble && elements.teacherSchedulerSessionBubble) {
+                positionFixedPopover(elements.teacherSchedulerSessionBubble, bubble.anchorRect || { left: bubble.anchorLeft, top: bubble.anchorTop, bottom: bubble.anchorTop }, 6);
+            }
+        }
+        function initColorPicker() {
+            if (colorPicker || !window.TeacherSchedulerColors || typeof document === 'undefined') return;
+            colorPicker = window.TeacherSchedulerColors.create({
+                button: document.getElementById('teacher-scheduler-color-button'),
+                panel: document.getElementById('teacher-scheduler-color-panel'),
+                getContext() {
+                    const session = state.sessions.find((item) => item.sessionId === state.sessionBubble?.sessionId);
+                    if (!session || state._deactivated) return null;
+                    return {
+                        key: `${getDraftOwnerUid()}|${state.lifecycleGeneration}|${session.sessionId}`,
+                        owner: getDraftOwnerUid(), lifecycle: state.lifecycleGeneration,
+                        sessionId: session.sessionId, classId: session.classId,
+                        className: getClassroomById(session.classId)?.name || session.classId,
+                        dateLabel: `${formatSessionDateDisplay(getSessionLocalDate(session))}, ${getSessionLocalTime(session)}`,
+                        color: presentation.resolveColor(state.colorPlans[session.classId], session),
+                        plan: state.colorPlans[session.classId] || { revision: 0, rules: [] }, tags: state.colorTags
+                    };
+                },
+                async save(kind, context, payload) {
+                    const response = kind === 'color'
+                        ? await window.ClassroomAPI.saveTeacherSessionColor(context.sessionId, payload)
+                        : await window.ClassroomAPI.saveTeacherColorTag(payload);
+                    if (state._deactivated || context.owner !== getDraftOwnerUid() || context.lifecycle !== state.lifecycleGeneration) return;
+                    // A newer workspace response or save may have arrived while this request waited.
+                    if (kind === 'color' && response.colorPlan?.revision >= (state.colorPlans[context.classId]?.revision || 0)) {
+                        state.colorPlans[context.classId] = response.colorPlan;
+                    } else if (kind === 'tag' && response.colorTags?.revision >= state.colorTags.revision) {
+                        state.colorTags = response.colorTags;
+                    }
+                    renderActiveView();
+                    renderSessionBubble();
+                },
+                refresh: refreshActive,
+                reposition: repositionColorPanel
+            });
+        }
 
         function getDraftOwnerUid() {
             try {
@@ -677,19 +729,19 @@ window.TeacherSchedulerWorkspace = (function () {
                 if (state.selectedTeacherUid === 'all') {
                     elements.teacherSchedulerRailTitle.textContent = 'All Classes';
                     if (elements.teacherSchedulerRailDesc) {
-                        elements.teacherSchedulerRailDesc.textContent = 'Showing classes across all teachers. Choose a time to schedule.';
+                        elements.teacherSchedulerRailDesc.textContent = 'All teachers · Choose a class, then a time.';
                     }
                 } else {
                     const teacherName = resolveTeacherDisplayName(state.selectedTeacherUid) || 'Teacher';
                     elements.teacherSchedulerRailTitle.textContent = `${teacherName}'s Classes`;
                     if (elements.teacherSchedulerRailDesc) {
-                        elements.teacherSchedulerRailDesc.textContent = `Showing classes for ${teacherName}. Choose a time to schedule.`;
+                        elements.teacherSchedulerRailDesc.textContent = `Choose a class, then a time.`;
                     }
                 }
             } else {
                 elements.teacherSchedulerRailTitle.textContent = 'Your Classes';
                 if (elements.teacherSchedulerRailDesc) {
-                    elements.teacherSchedulerRailDesc.textContent = 'Click a class, then click any time slot to schedule.';
+                    elements.teacherSchedulerRailDesc.textContent = 'Choose a class, then a time.';
                 }
             }
         }
@@ -752,7 +804,7 @@ window.TeacherSchedulerWorkspace = (function () {
                         ? false
                         : (state.selectedTeacherUids.size === 0 || state.selectedTeacherUids.has(t.uid));
                     return `
-                        <label class="ts-checkbox-row" data-teacher-uid="${escapeHtml(t.uid)}" data-ts-color="${escapeHtml(teacherColor.key)}" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;font-size:12px;border-radius:4px;">
+                        <label class="ts-checkbox-row" data-teacher-uid="${escapeHtml(t.uid)}" data-ts-color="${escapeHtml(teacherColor.key)}" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;font-size:14px;min-height:36px;border-radius:6px;">
                             <input type="checkbox" class="ts-teacher-checkbox" value="${escapeHtml(t.uid)}" ${isChecked ? 'checked' : ''} style="accent-color:${teacherColor.fill};width:15px;height:15px;cursor:pointer;">
                             <span class="ts-color-swatch" data-ts-color="${escapeHtml(teacherColor.key)}" style="width:10px;height:10px;border-radius:2px;background-color:${teacherColor.fill};flex-shrink:0;"></span>
                             <span class="ts-checkbox-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ts-ink);">${escapeHtml(t.name)}</span>
@@ -1139,12 +1191,13 @@ window.TeacherSchedulerWorkspace = (function () {
                 const teacherBadge = teacherName
                     ? `<span class="ts-repair-class-teacher ts-class-teacher">${escapeHtml(teacherName)}</span>`
                     : '';
-                const countText = target > 0 ? `${assigned}/${target} scheduled · ${remaining} remaining` : `${assigned} scheduled`;
+                const countText = target > 0 ? `${assigned}/${target} scheduled${remaining > 0 ? ` · ${remaining} left` : ''}` : `${assigned} scheduled`;
                 return `
                     <button type="button" class="scheduler-class-card teacher-scheduler-class-card ts-repair-class-row ts-class-row ${activeClass}" data-classroom-id="${escapeHtml(classId)}" data-ts-color="${escapeHtml(teacherColor.key)}" aria-pressed="${isArmed ? 'true' : 'false'}" title="${escapeHtml(classroom.name || classId)}">
                         <span class="scheduler-class-card-pip ts-class-dot ts-repair-color-dot" aria-hidden="true" data-ts-color="${escapeHtml(teacherColor.key)}" style="--dot-color:${eventTheme.accent};--ts-event-accent:${eventTheme.accent};"></span>
                         <span class="ts-repair-class-body">
-                            <span class="ts-repair-class-title name">${escapeHtml(classroom.name || classId)}</span>
+                            <span class="ts-repair-class-title name">${escapeHtml(splitTitle(classroom.name || classId).primary)}</span>
+                            <span class="ts-class-course">${escapeHtml(splitTitle(classroom.name || classId).secondary)}</span>
                             ${teacherBadge}
                             <span class="ts-repair-class-progress">${escapeHtml(countText)}</span>
                         </span>
@@ -1341,7 +1394,7 @@ window.TeacherSchedulerWorkspace = (function () {
                     const geo = pillLayoutStyle(duration, layoutMap.get(sessionId));
                     const { teacherUid, teacherName } = getEffectiveTeacherForSession(session);
                     const teacherColor = resolveTeacherColor(teacherUid, teacherName);
-                    const eventTheme = resolveEventTheme(teacherColor.key, state.appearance);
+                    const eventTheme = sessionTheme(session, teacherColor);
                     if (pill.setAttribute) {
                         pill.setAttribute('data-ts-color', teacherColor.key);
                     }
@@ -1368,10 +1421,15 @@ window.TeacherSchedulerWorkspace = (function () {
                     const classroom = getClassroomById(session.classId);
                     const title = classroom?.name || session.classId || 'Class';
                     const timeRange = formatTimeRange(timeStr, duration);
-                    const displayTitle = isCompact ? `${title} · ${timeRange}` : title;
+                    const parts = splitTitle(title);
+                    const displayTitle = isCompact ? `${parts.primary} · ${timeRange}` : parts.primary;
 
                     const titleEl = pill.querySelector?.('.pill-title');
                     if (titleEl) titleEl.textContent = displayTitle;
+                    pill.setAttribute?.('aria-label', `${title} · ${timeRange}${teacherName ? ` · ${teacherName}` : ''}`);
+                    pill.setAttribute?.('title', `${title} · ${timeRange}${teacherName ? ` · ${teacherName}` : ''}`);
+                    const courseEl = pill.querySelector?.('.pill-course');
+                    if (courseEl) { courseEl.textContent = parts.secondary; courseEl.style.display = isFull && geo.heightPx >= 88 && parts.secondary ? '' : 'none'; }
 
                     const timeEl = pill.querySelector?.('.pill-time');
                     if (timeEl) timeEl.textContent = timeRange;
@@ -1384,7 +1442,7 @@ window.TeacherSchedulerWorkspace = (function () {
                     if (!teacherEl && showTeacherLine && typeof document !== 'undefined' && typeof pill.appendChild === 'function') {
                         teacherEl = document.createElement('span');
                         teacherEl.className = 'pill-teacher';
-                        teacherEl.style.cssText = 'display:block;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+                        teacherEl.style.display = 'block';
                         pill.appendChild(teacherEl);
                     }
                     if (teacherEl) {
@@ -1468,10 +1526,10 @@ window.TeacherSchedulerWorkspace = (function () {
                         const locked = isLockedSession(session);
                         const { teacherUid, teacherName } = getEffectiveTeacherForSession(session);
                         const teacherColor = resolveTeacherColor(teacherUid, teacherName);
-                        const eventTheme = resolveEventTheme(teacherColor.key, state.appearance);
+                        const eventTheme = sessionTheme(session, teacherColor);
                         const showTeacherLine = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName);
                         const teacherPill = showTeacherLine
-                            ? `<span class="pill-teacher" style="display:block;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(teacherName)}</span>`
+                            ? `<span class="pill-teacher">${escapeHtml(teacherName)}</span>`
                             : '';
                         const layout = sessionLayoutMap.get(sessionId) || (totalSessions > 1 ? { col: idx, totalCols: totalSessions } : { col: 0, totalCols: 1 });
                         const col = layout.col;
@@ -1486,9 +1544,11 @@ window.TeacherSchedulerWorkspace = (function () {
                             layoutStyle += 'left:2px;right:2px;';
                         }
                         layoutStyle += `${serializeEventTheme(eventTheme)}--color:${eventTheme.accent};`;
-                        const displayTitle = isCompact ? `${title} · ${timeRange}` : title;
-                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${pending} ${completedClass} ${densityClasses}" data-session-id="${escapeHtml(sessionId)}" data-ts-color="${escapeHtml(teacherColor.key)}" style="${layoutStyle}">`
+                        const parts = splitTitle(title);
+                        const displayTitle = isCompact ? `${parts.primary} · ${timeRange}` : parts.primary;
+                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${pending} ${completedClass} ${densityClasses}" data-session-id="${escapeHtml(sessionId)}" aria-label="${escapeHtml(`${title} · ${timeRange}${teacherName ? ` · ${teacherName}` : ''}`)}" title="${escapeHtml(`${title} · ${timeRange}`)}" data-ts-color="${escapeHtml(teacherColor.key)}" style="${layoutStyle}">`
                             + `<div class="pill-header"><span class="pill-title">${escapeHtml(displayTitle)}</span>${isCompact ? compactBadge : ''}</div>`
+                            + `<span class="pill-course"${isFull && heightPx >= 88 && parts.secondary ? '' : ' style="display:none"'}>${escapeHtml(parts.secondary)}</span>`
                             + (isCompact ? '' : `<div class="pill-meta-row"><span class="pill-time">${escapeHtml(timeRange)}</span>${completedBadge}</div>`)
                             + (isCompact ? '' : teacherPill)
                             + (locked ? '' : '<div class="scheduler-session-resize-handle is-top" data-resize="top" title="Drag to adjust start time"></div><div class="scheduler-session-resize-handle is-bottom" data-resize="bottom" title="Drag to adjust duration"></div>')
@@ -1560,7 +1620,7 @@ window.TeacherSchedulerWorkspace = (function () {
                                 const title = classroom?.name || session.classId || 'Class';
                                 const { teacherUid, teacherName } = getEffectiveTeacherForSession(session);
                                 const teacherColor = resolveTeacherColor(teacherUid, teacherName);
-                                const eventTheme = resolveEventTheme(teacherColor.key, state.appearance);
+                                const eventTheme = sessionTheme(session, teacherColor);
                                 const timeRange = formatTimeRange(getSessionLocalTime(session), session.durationMinutes);
                                 return `
                                     <div class="ts-schedule-row" data-session-id="${escapeHtml(session.sessionId)}" data-ts-color="${escapeHtml(teacherColor.key)}" style="${serializeEventTheme(eventTheme)}">
@@ -1961,6 +2021,7 @@ window.TeacherSchedulerWorkspace = (function () {
         }
 
         function closeSessionBubble() {
+            colorPicker?.close();
             if (typeof state._stopVoiceRecognition === 'function') state._stopVoiceRecognition();
             // Abort any in-flight LLM request
             if (state._voiceDraftAbort) {
@@ -2003,6 +2064,7 @@ window.TeacherSchedulerWorkspace = (function () {
         }
 
         function renderSessionBubble() {
+            colorPicker?.sync();
             if (!elements.teacherSchedulerSessionBubble) return;
             const bubble = state.sessionBubble;
             const session = bubble ? state.sessions.find((item) => String(item.sessionId || '') === bubble.sessionId) : null;
@@ -2033,7 +2095,7 @@ window.TeacherSchedulerWorkspace = (function () {
             }
             const bubbleDot = (typeof document !== 'undefined') ? document.getElementById('teacher-scheduler-bubble-color-dot') : null;
             if (bubbleDot) {
-                bubbleDot.style.backgroundColor = teacherColor.fill;
+                bubbleDot.style.backgroundColor = sessionTheme(session, teacherColor).accent;
                 bubbleDot.setAttribute('data-ts-color', teacherColor.key);
             }
             const popoverDot = (typeof document !== 'undefined') ? document.getElementById('ts-popover-color-dot') : null;
@@ -2043,7 +2105,10 @@ window.TeacherSchedulerWorkspace = (function () {
             }
 
             if (elements.teacherSchedulerSessionBubbleTitle) {
-                elements.teacherSchedulerSessionBubbleTitle.textContent = classroom?.name || session.classId || 'Class';
+                const parts = splitTitle(classroom?.name || session.classId || 'Class');
+                elements.teacherSchedulerSessionBubbleTitle.textContent = parts.primary;
+                const subtitle = typeof document !== 'undefined' ? document.getElementById('teacher-scheduler-session-subtitle') : null;
+                if (subtitle) { subtitle.textContent = parts.secondary; subtitle.hidden = !parts.secondary; }
             }
             if (elements.teacherSchedulerSessionBubbleMeta) {
                 const datePart = formatSessionDateDisplay(getSessionLocalDate(session));
@@ -2311,6 +2376,11 @@ window.TeacherSchedulerWorkspace = (function () {
             if (state._deactivated || currentLifecycle !== state.lifecycleGeneration) return;
             state.classrooms = Array.isArray(payload?.classrooms) ? payload.classrooms : [];
             state.sessions = Array.isArray(payload?.sessions) ? payload.sessions : [];
+            const incomingPlans = payload?.colorPlans || {};
+            state.colorPlans = Object.fromEntries(Object.entries(incomingPlans).map(([id, plan]) => [id,
+                (state.colorPlans[id]?.revision || 0) > (plan?.revision || 0) ? state.colorPlans[id] : plan]));
+            const incomingTags = payload?.colorTags || { revision: 0, tags: {} };
+            if (incomingTags.revision >= state.colorTags.revision) state.colorTags = incomingTags;
             const nextFrom = from || payload?.from || null;
             const nextTo = to || payload?.to || null;
             if (state.fromDate !== nextFrom || state.toDate !== nextTo || state._lastScrolledTeacherUid !== state.selectedTeacherUid) {
@@ -3843,14 +3913,14 @@ window.TeacherSchedulerWorkspace = (function () {
 
                 const { teacherUid, teacherName } = getEffectiveTeacherForSession(session);
                 const teacherColor = resolveTeacherColor(teacherUid, teacherName);
-                const eventTheme = resolveEventTheme(teacherColor.key, state.appearance);
+                const eventTheme = sessionTheme(session, teacherColor);
                 ghost.dataset.tsColor = teacherColor.key;
                 applyEventTheme(ghost, eventTheme);
                 ghost.style.backgroundColor = eventTheme.background;
                 ghost.style.color = eventTheme.title;
                 ghost.style.opacity = '1';
 
-                ghost.innerHTML = `<div class="pill-title" style="font-weight:600;font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(title)}</div>`
+                ghost.innerHTML = `<div class="pill-title" style="font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(title)}</div>`
                     + `<div class="drag-ghost-chip pill-time">${escapeHtml(timeRange)}</div>`;
 
                 document.body.appendChild(ghost);
@@ -4476,6 +4546,7 @@ window.TeacherSchedulerWorkspace = (function () {
             initWeekStartSetting();
             initTimeFormatSetting();
             initPatternDayChips();
+            initColorPicker();
             bindEvents();
             await loadTeachersList();
             await refresh().catch((error) => {

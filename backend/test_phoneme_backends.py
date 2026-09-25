@@ -876,8 +876,63 @@ class TestThreadSafety(unittest.TestCase):
 
 
 # ===================================================================
-# Test: singleton / reset
+# Test: inference gate observability
 # ===================================================================
+
+class TestInferenceGate(unittest.TestCase):
+    """InferenceGate acquire, release, age tracking, and structured logging."""
+
+    def test_gate_acquire_and_release_lifecycle(self):
+        from backend.phoneme_service.recognizer import InferenceGate
+        gate = InferenceGate()
+        acq = gate.try_acquire(endpoint="/recognize/v2", request_id="req-123")
+        self.assertTrue(acq.acquired)
+        self.assertEqual(acq.request_id, "req-123")
+        self.assertEqual(gate.active_request_id, "req-123")
+        self.assertIsNotNone(gate.active_request_age_ms)
+
+        # Second acquire while active must fail and report active request age
+        acq2 = gate.try_acquire(endpoint="/recognize/v2", request_id="req-456")
+        self.assertFalse(acq2.acquired)
+        self.assertEqual(acq2.request_id, "req-456")
+        self.assertGreaterEqual(acq2.active_request_age_ms, 0.0)
+
+        # Release frees the gate
+        gate.release(outcome="completed")
+        self.assertIsNone(gate.active_request_id)
+        self.assertIsNone(gate.active_request_age_ms)
+
+        # Subsequent acquire succeeds
+        acq3 = gate.try_acquire(endpoint="/recognize", request_id="req-789")
+        self.assertTrue(acq3.acquired)
+        gate.release(outcome="completed")
+
+    def test_gate_structured_logs_contain_only_sanctioned_fields(self):
+        import logging
+        from backend.phoneme_service.recognizer import InferenceGate
+
+        gate = InferenceGate()
+        with self.assertLogs("backend.phoneme_service.recognizer", level=logging.INFO) as log_ctx:
+            acq = gate.try_acquire(endpoint="/recognize/v2", request_id="req-safe")
+            self.assertTrue(acq.acquired)
+            gate.release(outcome="completed", inference_duration_ms=45.2)
+
+        records = [json.loads(line.getMessage()) for line in log_ctx.records if line.getMessage().startswith("{")]
+        self.assertGreaterEqual(len(records), 2)
+        acquire_log = records[0]
+        release_log = records[1]
+
+        expected_keys = {
+            "event", "requestId", "endpoint", "outcome",
+            "activeRequestAgeMs", "inferenceDurationMs", "revision", "instanceId",
+        }
+        self.assertEqual(set(acquire_log.keys()), expected_keys)
+        self.assertEqual(set(release_log.keys()), expected_keys)
+        self.assertEqual(acquire_log["event"], "INFERENCE_ACQUIRED")
+        self.assertEqual(release_log["event"], "INFERENCE_RELEASED")
+        self.assertEqual(release_log["outcome"], "completed")
+        self.assertEqual(release_log["inferenceDurationMs"], 45.2)
+
 
 class TestSingleton(unittest.TestCase):
     """Singleton get_recognizer and reset."""

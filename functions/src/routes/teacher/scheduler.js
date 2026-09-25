@@ -1,4 +1,6 @@
 const express = require('express');
+const { loadColors } = require('../../crm/scheduler-color-service');
+const registerSchedulerColors = require('./scheduler-colors');
 const {
     CRM_CLASSROOMS,
     CRM_SCHEDULED_SESSIONS
@@ -486,6 +488,7 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
     }
 
     const requireTeacherHandlers = [deps.authMiddleware, requireTeacherAccess].filter(Boolean);
+    registerSchedulerColors(router, { db, requireTeacherHandlers, sendSuccess, sendError, serverTimestamp });
 
     router.get('/status', ...requireTeacherHandlers, (req, res) => {
         return sendSuccess(res, {
@@ -551,6 +554,7 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                     id: entry.id,
                     data: () => entry.data
                 }, entry.id)),
+                ...(await loadColors(db, classrooms.map((entry) => entry.id))),
                 sessions: filteredSessions,
                 teacherUid: targetTeacherUid,
                 from,

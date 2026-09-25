@@ -9,8 +9,8 @@
 .pte-rec__ring--done { border: 2.5px solid #2eb82e; }
 .pte-rec__ring--done i { background: #2eb82e; }
 .pte-rec__col { display: flex; flex-direction: column; gap: 5px; }
-.pte-rec__elapsed { font-size: 12.5px; color: #8a8a8a; font-variant-numeric: tabular-nums; }
-.pte-rec__total { font-size: 13px; color: #8a8a8a; font-variant-numeric: tabular-nums; }
+.pte-rec__elapsed { font-size: 12.5px; color: #6b6b6b; font-variant-numeric: tabular-nums; }
+.pte-rec__total { font-size: 13px; color: #6b6b6b; font-variant-numeric: tabular-nums; }
 .pte-rec__wave { display: flex; align-items: center; gap: 1px; width: 200px; max-width: 40vw; height: 28px; min-width: 0; }
 .pte-rec__wave i { height: 1px; flex: 1; background: #c9ced6; }
 .pte-rec__wave i.is-recorded { background: #4aa3df; }
@@ -25,6 +25,21 @@
 .pte-audio[role="button"] { cursor: pointer; }
 @keyframes pte-rec-pulse { 50% { transform: scale(.82); } }
 @keyframes pte-wave { from { transform: scaleY(.45); } to { transform: scaleY(1.15); } }
+/* Question audio that could not play stops and asks; it never moves the learner on silently. */
+.pte-audio__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.pte-audio__actions[hidden] { display: none; }
+.pte-audio__btn { min-height: 32px; padding: 4px 12px; border: 1px solid rgba(255, 255, 255, .85); border-radius: 3px; background: transparent; color: #fff; font: 700 13px Arial, Helvetica, sans-serif; cursor: pointer; }
+.pte-audio__btn:hover { background: rgba(255, 255, 255, .14); }
+.pte-audio__btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.pte-audio__btn--retry { background: #fff; color: #1c4675; }
+.pte-audio__btn--retry:hover { background: #e8f0fa; }
+/* Recorder: waiting for microphone permission, and why recording could not start. */
+.pte-rec__ring--wait { border-style: dashed; }
+.pte-rec__ring--wait i { width: 10px; height: 10px; background: #7a7a7a; animation: pte-rec-pulse 1.2s infinite; }
+.pte-rec[data-state="error"] { align-items: flex-start; }
+.pte-rec__ring--error { border: 2.5px solid #c5221f; color: #c5221f; font: 700 20px Arial, Helvetica, sans-serif; }
+.pte-rec__error-title { font: 700 14px Arial, Helvetica, sans-serif; color: #a50e0e; }
+.pte-rec__error-detail { font: 14px/1.45 Arial, Helvetica, sans-serif; color: #3c4043; max-width: 52ch; }
 @media (max-width: 600px) { .pte-rec { gap: 8px; } .pte-rec__wave { width: 110px; } }
 @media (prefers-reduced-motion: reduce) { .pte-rec i { animation: none !important; } }
 

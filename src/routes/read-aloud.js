@@ -633,6 +633,11 @@ function hasAzurePronunciationScores(nbest) {
   return collectAzurePronunciationScores(nbest).length > 0;
 }
 
+function hasOnlyZeroAzurePronunciationScores(nbest) {
+  const scores = collectAzurePronunciationScores(nbest);
+  return scores.length > 0 && scores.every((score) => score === 0);
+}
+
 router.post('/read-aloud/assess', parseReadAloudUpload, async (req, res) => {
   try {
     if (!req.file || !Buffer.isBuffer(req.file.buffer)) {
@@ -688,6 +693,20 @@ router.post('/read-aloud/assess', parseReadAloudUpload, async (req, res) => {
         'Pronunciation scores were unavailable for this recording.',
         {
           reason: 'scores_unavailable',
+          recognizedText: String(nbest.Display || ''),
+          maxDurationMs: READ_ALOUD_MAX_ASSESSMENT_DURATION_MS
+        }
+      );
+    }
+    if (hasOnlyZeroAzurePronunciationScores(nbest)) {
+      return sendError(
+        res,
+        502,
+        'AZURE_ASSESSMENT_FAILED',
+        'Pronunciation scores were unavailable for this recording.',
+        {
+          reason: 'scores_unavailable',
+          scorePattern: 'all_zero',
           recognizedText: String(nbest.Display || ''),
           maxDurationMs: READ_ALOUD_MAX_ASSESSMENT_DURATION_MS
         }

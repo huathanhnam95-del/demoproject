@@ -31,7 +31,6 @@ class AsqMode {
     this.v3SelectedListenSource = 'question';
     this.v3AudioElement = null;
     this.v3RecordingBlob = null;
-    this.v3DspPromise = null;
     this.v3TranscriptText = '';
     this.v3PrepStartTime = 0;
     this.v3RecordStartTime = 0;
@@ -105,6 +104,9 @@ class AsqMode {
       };
     });
 
+    // A recognition error (for example "not-allowed") can reject this before anyone awaits it;
+    // waitForTranscript() still receives the rejection, it just is not reported as unhandled.
+    this.pendingTranscriptPromise.catch(() => {});
     this.speechRecognition = recognition;
     try {
       recognition.start();
@@ -368,11 +370,27 @@ class AsqMode {
 
     this.pausePromptAudio();
     const src = this.getAudioSrcForId(this.currentId);
-    if (src && window.MediaUrlResolver && typeof window.MediaUrlResolver.loadAudio === 'function') {
-      window.MediaUrlResolver.loadAudio(audioEl, src, { mode: 'quiz' });
-    } else {
-      audioEl.src = src || '';
+    // Resolve first: production serves practice audio from media storage and rewrites the
+    // raw /database path to /404.html (firebase.json), so the raw path is only a fallback
+    // for when the resolver is missing or fails. The previous clip is cleared so a play()
+    // that starts before resolution cannot replay the last question.
+    const questionId = this.currentId;
+    const loadDirect = () => {
+      if (!src || this.currentId !== questionId) return;
+      audioEl.src = src;
       audioEl.load();
+    };
+    audioEl.removeAttribute('src');
+    audioEl.load();
+    try {
+      if (src && window.MediaUrlResolver && typeof window.MediaUrlResolver.loadAudio === 'function') {
+        const pending = window.MediaUrlResolver.loadAudio(audioEl, src, { mode: 'quiz' });
+        if (pending && typeof pending.catch === 'function') pending.catch(loadDirect);
+      } else {
+        loadDirect();
+      }
+    } catch (_) {
+      loadDirect();
     }
     this.hasAudioSrc = !!src;
     this.audioPlayer?.reset();
@@ -635,18 +653,6 @@ class AsqMode {
         const rawBlob = new Blob(recordedChunks, { type: recorder.mimeType || 'audio/webm' });
         this.showRecordedAudio(rawBlob);
 
-        const dspPromise = (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function')
-          ? window.AudioDspPipeline.enhance(rawBlob).then((result) => {
-              if (this.isAttemptCurrent(attemptId) && result?.wavBlob) {
-                this.showRecordedAudio(result.wavBlob);
-              }
-              return result?.wavBlob || rawBlob;
-            }).catch((err) => {
-              console.warn('[ASQ] AudioDspPipeline enhancement failed, keeping raw audio:', err);
-              return rawBlob;
-            })
-          : Promise.resolve(rawBlob);
-
         try {
           this.setStatus('Transcribing...', 'muted');
           const transcript = await this.waitForTranscript({ timeoutMs: 5000 });
@@ -677,8 +683,6 @@ class AsqMode {
             xpEarned
           });
 
-          const finalBlob = await dspPromise.catch(() => rawBlob);
-
           window.PTEAttemptArchive?.saveAttempt?.({
             practiceMode: 'asq',
             promptSnapshot: {
@@ -701,8 +705,8 @@ class AsqMode {
             media: [{
               slot: 'student',
               label: 'Student answer',
-              blob: finalBlob,
-              contentType: finalBlob.type || 'audio/wav'
+              blob: rawBlob,
+              contentType: rawBlob.type || 'application/octet-stream'
             }]
           }).catch((archiveError) => console.warn('[PTE Archive] ASQ save failed:', archiveError));
 
@@ -1026,18 +1030,21 @@ class AsqMode {
     const support = this.getRecordingSupportState();
     if (!support.supported) {
       console.warn('[ASQ v3] Recording not supported');
+      this.failV3Recording({ name: 'NotSupportedError' });
       return;
     }
 
     this.isRecording = true;
     this.v3RecordedDurationSec = 0;
     this.v3RecordingBlob = null;
-    this.v3DspPromise = null;
     this.v3TranscriptText = '';
+    this.clearRecordedAudio();
 
     try {
       this.startSpeechRecognition();
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const micRequest = navigator.mediaDevices.getUserMedia({ audio: true });
+      this.pteRecorderWidget?.waitForMic?.(micRequest);
+      const stream = await micRequest;
       if (qGen !== this.questionGen || aGen !== this.attemptGen || this.v3Phase !== 'recording' || !this.v3Active) {
         this.stopTracks(stream);
         return;
@@ -1057,11 +1064,10 @@ class AsqMode {
         if (this.mediaRecorder === recorder) this.mediaRecorder = null;
         if (qGen !== this.questionGen || aGen !== this.attemptGen) return;
         if (chunks.length > 0) {
-          const rawBlob = new Blob(chunks, { type: recorder.mimeType || 'audio/wav' });
+          const rawBlob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
           this.v3RecordingBlob = rawBlob;
-          this.v3DspPromise = (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function')
-            ? window.AudioDspPipeline.enhance(rawBlob).then(res => res?.wavBlob || rawBlob).catch(() => rawBlob)
-            : Promise.resolve(rawBlob);
+          this.clearRecordedAudio();
+          this.recordedBlobUrl = URL.createObjectURL(rawBlob);
         }
       };
       recorder.start();
@@ -1087,7 +1093,18 @@ class AsqMode {
       this.mediaRecorder = null;
       this.stopSpeechRecognition();
       this.isRecording = false;
+      if (qGen === this.questionGen && aGen === this.attemptGen && this.v3Active) this.failV3Recording(err);
     }
+  }
+
+  // Recording could not start: back to prep with the reason on screen. It used to stay in
+  // "recording" with nothing recording, and the message went to a hidden status line.
+  failV3Recording(error) {
+    const info = window.PteRecorderWidget?.describeMicError?.(error);
+    this.v3Phase = 'prep';
+    this.syncPteShell();
+    this.pteRecorderWidget?.showMicError?.(info || error);
+    if (info) window.SpeakingPracticeController?.setNotice?.('asq', info.notice);
   }
 
   stopV3Recording() {
@@ -1114,7 +1131,6 @@ class AsqMode {
     this.stopMediaStream();
     this.mediaRecorder = null;
     this.v3RecordingBlob = null;
-    this.v3DspPromise = null;
     this.startV3Prep();
   }
 
@@ -1132,7 +1148,7 @@ class AsqMode {
         if (playBtn) playBtn.textContent = 'Play';
       });
     }
-    const url = this.recordedBlobUrl || (this.v3RecordingBlob ? URL.createObjectURL(this.v3RecordingBlob) : null);
+    const url = this.recordedBlobUrl || (this.v3RecordingBlob ? (this.recordedBlobUrl = URL.createObjectURL(this.v3RecordingBlob)) : null);
     if (!url) return;
     if (this.v3AudioElement.src !== url) {
       this.v3AudioElement.src = url;
@@ -1181,7 +1197,6 @@ class AsqMode {
       : null;
     const isCorrect = canonicalIsCorrect === null ? localCheck.ok : canonicalIsCorrect;
 
-    const finalBlob = this.v3DspPromise ? await this.v3DspPromise.catch(() => this.v3RecordingBlob) : this.v3RecordingBlob;
     if (qGen !== this.questionGen || aGen !== this.attemptGen || !this.v3Active) return;
 
     this.v3LastResult = {
@@ -1213,11 +1228,11 @@ class AsqMode {
           scoringResult
         },
         scoringSource: scoringResult?.success ? 'dual-track' : 'client',
-        media: finalBlob ? [{
+        media: this.v3RecordingBlob ? [{
           slot: 'student',
           label: 'Student answer',
-          blob: finalBlob,
-          contentType: finalBlob.type || 'audio/wav'
+          blob: this.v3RecordingBlob,
+          contentType: this.v3RecordingBlob.type || 'application/octet-stream'
         }] : []
       });
     } catch (archiveError) {
@@ -1241,7 +1256,7 @@ class AsqMode {
     };
 
     const questionAudioSrc = this.getAudioSrcForId(this.currentId) || '';
-    const userAudioUrl = this.recordedBlobUrl || (this.v3RecordingBlob ? URL.createObjectURL(this.v3RecordingBlob) : '');
+    const userAudioUrl = this.recordedBlobUrl || (this.v3RecordingBlob ? (this.recordedBlobUrl = URL.createObjectURL(this.v3RecordingBlob)) : '');
 
     feedbackEl.innerHTML = `
       <div class="pte-tabs" role="tablist" aria-label="Feedback">
@@ -1311,7 +1326,6 @@ class AsqMode {
       try { this.mediaRecorder.stop(); } catch (_) {}
     }
     this.mediaRecorder = null;
-    const finalBlob = this.v3DspPromise ? await this.v3DspPromise.catch(() => this.v3RecordingBlob) : this.v3RecordingBlob;
     if (qGen !== this.questionGen || aGen !== this.attemptGen) return;
     const item = this.getCurrentItem();
     if (item) {
@@ -1330,11 +1344,11 @@ class AsqMode {
           },
           resultSnapshot: { submitted: true, score: null },
           scoringSource: 'client',
-          media: finalBlob ? [{
+          media: this.v3RecordingBlob ? [{
             slot: 'student',
             label: 'Student answer',
-            blob: finalBlob,
-            contentType: finalBlob.type || 'audio/wav'
+            blob: this.v3RecordingBlob,
+            contentType: this.v3RecordingBlob.type || 'application/octet-stream'
           }] : []
         });
       } catch (_) {}
@@ -1358,7 +1372,6 @@ class AsqMode {
     this.v3Phase = 'loading';
     this.v3LastResult = null;
     this.v3RecordingBlob = null;
-    this.v3DspPromise = null;
     this.v3TranscriptText = '';
   }
 

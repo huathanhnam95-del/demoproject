@@ -13,6 +13,11 @@
     'use strict';
 
     const FIRESTORE_LOAD_TIMEOUT_MS = 8000;
+    // Prep before the recorder opens, as the task instruction states ("10 seconds to
+    // prepare"). startV3Prep() read this name without it ever being declared, so at real
+    // speed the prep phase threw a ReferenceError and the recorder never appeared; the
+    // browser suite only ran at 20x, where the lookup was skipped.
+    const PREP_SECONDS = 10;
     const MAX_RECORDING_SECONDS = 120; // 2 minutes
     const STEPS = ['listen', 'record', 'results'];
 
@@ -41,10 +46,13 @@
     let recordingBlobUrl = null;
     let recordingBlob = null;
     let originalRecordingBlob = null;
-    let enhancedPlaybackBlob = null;
+    let processedRecordingBlob = null;
     let acceptedTranscription = null;
     let pronunciationAssessmentId = null;
     let dspPromise = null;
+    let assessmentWavBlob = null;
+    let assessmentWavSampleCount = 0;
+    let assessmentPlaybackTimeline = null;
     let recordingSessionToken = 0;
 
     // PTE Speaking Shell v3 state
@@ -59,10 +67,75 @@
     let v3PrepStartTime = 0;
     let v3RecordStartTime = 0;
     let v3RecordedDurationSec = 0;
+
+    function clearPreparedAssessmentAudio() {
+        processedRecordingBlob = null;
+        assessmentWavBlob = null;
+        assessmentWavSampleCount = 0;
+        assessmentPlaybackTimeline = null;
+    }
+
+    async function prepareRecordingAudio(rawBlob, sessionToken) {
+        const pipeline = window.AudioDspPipeline;
+        clearPreparedAssessmentAudio();
+        if (!rawBlob || !pipeline || typeof pipeline.prepareForAssessment !== 'function') return null;
+
+        try {
+            const result = await pipeline.prepareForAssessment(rawBlob);
+            if (sessionToken !== recordingSessionToken) return null;
+            const isValidWav = typeof pipeline.isValidMono16kWav === 'function'
+                && await pipeline.isValidMono16kWav(result);
+            if (sessionToken !== recordingSessionToken) return null;
+            if (!isValidWav || !result.outputBlob) throw new Error('Audio conversion did not produce scorer-compatible WAV.');
+
+            processedRecordingBlob = result.outputBlob;
+            assessmentWavBlob = result.outputBlob;
+            assessmentWavSampleCount = result.sampleCount || result.audioBuffer?.length || 0;
+            const removedLeadingMs = result.stats?.removedLeadingMs;
+            assessmentPlaybackTimeline = {
+                rawBlob,
+                offsetKnown: Number.isFinite(removedLeadingMs) && removedLeadingMs >= 0,
+                removedLeadingMs: Number.isFinite(removedLeadingMs) && removedLeadingMs >= 0 ? removedLeadingMs : null
+            };
+            return result.outputBlob;
+        } catch (err) {
+            if (sessionToken === recordingSessionToken) clearPreparedAssessmentAudio();
+            console.warn('[SGD] Audio format conversion failed; keeping the original recording playable:', err);
+            return null;
+        }
+    }
+
+    async function playAssessmentWordSegment(word) {
+        const timeline = assessmentPlaybackTimeline;
+        const rawBlob = originalRecordingBlob || recordingBlob;
+        const startMs = Number(word?.startMs);
+        const endMs = Number(word?.endMs);
+        if (!timeline || timeline.rawBlob !== rawBlob || timeline.offsetKnown !== true
+            || !Number.isFinite(timeline.removedLeadingMs) || timeline.removedLeadingMs < 0
+            || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) {
+            showToast('Word replay is unavailable because this recording has no verified timing map. The full original recording is still available.', 5000);
+            return false;
+        }
+
+        const start = startMs + timeline.removedLeadingMs;
+        const end = endMs + timeline.removedLeadingMs;
+        const url = recordingBlobUrl || (rawBlob ? (recordingBlobUrl = URL.createObjectURL(rawBlob)) : null);
+        const coordinator = window.SegmentPlaybackCoordinator?.defaultCoordinator;
+        if (!url || !coordinator) return false;
+        const audioBuffer = await coordinator.getDecodedBuffer(url);
+        const durationMs = Number(audioBuffer?.duration) * 1000;
+        if (!Number.isFinite(durationMs) || end > durationMs + 20) {
+            showToast('This word segment falls outside the original recording, so replay is unavailable.', 5000);
+            return false;
+        }
+        return coordinator.playSegment({ audioUrl: url, startMs: start, endMs: end });
+    }
     let v3ActiveTab = 'stats'; // 'stats' | 'transcript'
     let v3ActiveSpeakerIndex = 0;
     let v3LastResult = null;
     let v3LastNotes = null;
+    let v3ArchiveAttemptId = null;
+    let v3ArchiveSavePromise = null;
     let activeMediaStream = null;
 
     // Recommendation engine state
@@ -232,7 +305,11 @@
             recordingBlobUrl = null;
         }
         recordingBlob = null;
+        originalRecordingBlob = null;
+        clearPreparedAssessmentAudio();
         dspPromise = null;
+        v3ArchiveAttemptId = null;
+        v3ArchiveSavePromise = null;
         recordingSessionToken++;
         if (el.recordingPlayback) {
             el.recordingPlayback.removeAttribute('src');
@@ -1237,7 +1314,11 @@
         hide(el.submitBtn);
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        originalRecordingBlob = null;
+        clearPreparedAssessmentAudio();
         dspPromise = null;
+        v3ArchiveAttemptId = null;
+        v3ArchiveSavePromise = null;
         recordingSessionToken++;
 
         // Remove recording-active indicator
@@ -1264,22 +1345,31 @@
             if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
             recordingBlob = null;
             originalRecordingBlob = null;
-            enhancedPlaybackBlob = null;
+            clearPreparedAssessmentAudio();
             dspPromise = null;
+            v3ArchiveAttemptId = null;
+            v3ArchiveSavePromise = null;
             const currentToken = ++recordingSessionToken;
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            if (currentToken !== recordingSessionToken) {
+                stream.getTracks().forEach(t => t.stop());
+                return;
+            }
             recordedChunks = [];
             const recorder = new window.MediaRecorder(stream);
 
             recorder.addEventListener('dataavailable', (e) => {
+                if (currentToken !== recordingSessionToken) return;
                 if (e.data.size > 0) recordedChunks.push(e.data);
             });
 
             recorder.addEventListener('stop', () => {
                 stream.getTracks().forEach(t => t.stop());
+                if (currentToken !== recordingSessionToken) return;
                 if (recordedChunks.length > 0) {
-                    const blob = new Blob(recordedChunks, { type: recorder.mimeType || 'audio/webm' });
+                    const rawMimeType = recorder.mimeType || recordedChunks.find(chunk => chunk.type)?.type || 'application/octet-stream';
+                    const blob = new Blob(recordedChunks, { type: rawMimeType });
                     originalRecordingBlob = blob;
                     recordingBlob = blob;
                     recordingBlobUrl = URL.createObjectURL(blob);
@@ -1287,22 +1377,10 @@
                     show(el.playbackArea);
                     showInline(el.submitBtn);
 
-                    dspPromise = (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function')
-                        ? window.AudioDspPipeline.enhance(blob).then((result) => {
-                            if (currentToken !== recordingSessionToken) return blob;
-                            if (result && result.wavBlob) {
-                                if (recordingBlobUrl) URL.revokeObjectURL(recordingBlobUrl);
-                                enhancedPlaybackBlob = result.wavBlob;
-                                recordingBlobUrl = result.audioUrl || URL.createObjectURL(result.wavBlob);
-                                if (el.recordingPlayback) el.recordingPlayback.src = recordingBlobUrl;
-                                return result.wavBlob;
-                            }
-                            return blob;
-                        }).catch((err) => {
-                            console.warn('[SGD] AudioDspPipeline enhancement failed, keeping raw audio:', err);
-                            return blob;
-                        })
-                        : Promise.resolve(blob);
+                    dspPromise = prepareRecordingAudio(blob, currentToken).then((preparedBlob) => {
+                        if (currentToken !== recordingSessionToken) return blob;
+                        return preparedBlob;
+                    });
                 } else {
                     dspPromise = Promise.resolve(null);
                 }
@@ -1343,6 +1421,7 @@
 
     function stopRecording(silent) {
         if (recordingTimerId) { clearInterval(recordingTimerId); recordingTimerId = null; }
+        if (silent) recordingSessionToken++;
         if (mediaRecorder && mediaRecorder.state === 'recording') {
             mediaRecorder.stop(); // 'stop' event handler will update UI
         }
@@ -1395,7 +1474,8 @@
             saveProgress(userNotes, result);
 
             const currentToken = recordingSessionToken;
-            const finalBlob = dspPromise ? await dspPromise.catch(() => recordingBlob) : recordingBlob;
+            if (dspPromise) await dspPromise.catch(() => assessmentWavBlob);
+            const finalBlob = originalRecordingBlob || recordingBlob;
             if (currentToken !== recordingSessionToken) return;
 
             window.PTEAttemptArchive?.saveAttempt?.({
@@ -1424,7 +1504,7 @@
                     slot: 'student',
                     label: 'Student summary',
                     blob: finalBlob,
-                    contentType: finalBlob.type || 'audio/webm'
+                    contentType: finalBlob.type || 'application/octet-stream'
                 }] : []
             }).catch((error) => console.warn('[PTE Archive] SGD save failed:', error));
 
@@ -1753,7 +1833,11 @@
         sgdAttemptStartTime = null;
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        originalRecordingBlob = null;
+        clearPreparedAssessmentAudio();
         dspPromise = null;
+        v3ArchiveAttemptId = null;
+        v3ArchiveSavePromise = null;
         recordingSessionToken++;
         startPractice();
     }
@@ -1855,10 +1939,8 @@
                     <audio id="sgd-v3-student-audio" controls style="width: 100%;"></audio>
                 </div>
                 <div id="sgd-v3-ai-scoring-section" class="sgd-v3-ai-scoring-section" style="margin-top: 14px; margin-bottom: 16px;">
-                    <button type="button" id="sgd-v3-ai-score-btn" class="pte-btn pte-btn--primary" style="width: 100%; padding: 10px 14px; font-weight: 600; border-radius: 8px;">
-                        ⚡ Get AI Pronunciation Assessment
-                    </button>
-                    <div id="sgd-v3-ai-status" style="font-size: 13px; color: #64748b; margin-top: 6px; text-align: center;"></div>
+                    <button type="button" id="sgd-v3-ai-score-btn" class="pte-btn sgd-v3-ai-score-btn">Get AI pronunciation assessment</button>
+                    <div id="sgd-v3-ai-status" class="sgd-v3-ai-status" role="status"></div>
                 </div>
                 <div id="sgd-v3-transcript-disclosure" class="sgd-v3-transcript-disclosure" style="margin-bottom: 16px;"></div>
                 <h4 class="sgd-fb-heading">Your Notes</h4>
@@ -1887,17 +1969,18 @@
                 aiScoreBtn.addEventListener('click', requestSgdAiScoring);
             }
 
-            const tabButtons = feedback.querySelectorAll('.sgd-v3-fb-tab');
-            tabButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const tab = btn.dataset.v3Tab;
-                    v3ActiveTab = tab;
-                    tabButtons.forEach(b => b.classList.toggle('active', b === btn));
-                    const statsP = document.getElementById('sgd-v3-stats-panel');
-                    const transP = document.getElementById('sgd-v3-transcript-panel');
-                    if (statsP) statsP.style.display = tab === 'stats' ? 'flex' : 'none';
-                    if (transP) transP.style.display = tab === 'transcript' ? 'flex' : 'none';
-                });
+            // The shell's pill tabs (roles, keyboard) instead of a one-off underline strip.
+            const showPanel = (tab) => {
+                v3ActiveTab = tab;
+                const statsP = document.getElementById('sgd-v3-stats-panel');
+                const transP = document.getElementById('sgd-v3-transcript-panel');
+                if (statsP) statsP.style.display = tab === 'stats' ? 'flex' : 'none';
+                if (transP) transP.style.display = tab === 'transcript' ? 'flex' : 'none';
+            };
+            feedback.querySelector('#sgd-v3-stats-panel')?.setAttribute('role', 'tabpanel');
+            feedback.querySelector('#sgd-v3-transcript-panel')?.setAttribute('role', 'tabpanel');
+            window.SpeakingPracticeController?.wireTabs?.(feedback.querySelector('.sgd-v3-fb-tabs'), {
+                onSelect: (btn) => showPanel(btn.dataset.v3Tab)
             });
         }
 
@@ -1985,7 +2068,11 @@
         mediaRecorder = null;
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        originalRecordingBlob = null;
+        clearPreparedAssessmentAudio();
         dspPromise = null;
+        v3ArchiveAttemptId = null;
+        v3ArchiveSavePromise = null;
 
         const qGen = ++questionGen;
         const aGen = ++attemptGen;
@@ -2044,7 +2131,11 @@
         v3RecordedDurationSec = 0;
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        originalRecordingBlob = null;
+        clearPreparedAssessmentAudio();
         dspPromise = null;
+        v3ArchiveAttemptId = null;
+        v3ArchiveSavePromise = null;
 
         const recHost = document.getElementById('sgd-pte-rec-host');
         if (recHost) recHost.style.display = '';
@@ -2095,14 +2186,28 @@
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
         originalRecordingBlob = null;
-        enhancedPlaybackBlob = null;
+        clearPreparedAssessmentAudio();
         dspPromise = null;
+        v3ArchiveAttemptId = null;
+        v3ArchiveSavePromise = null;
 
         let stream;
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const micRequest = navigator.mediaDevices.getUserMedia({ audio: true });
+            pteRecorderWidget?.waitForMic?.(micRequest);
+            stream = await micRequest;
         } catch (err) {
             console.error('[SGD v3] Mic access error:', err);
+            if (qGen !== questionGen || aGen !== attemptGen || !v3Active || myToken !== recordingSessionToken) return;
+            // Back to prep with the reason on screen; it used to stay in "recording" with
+            // nothing recording and no message. Start recording is the retry.
+            const info = window.PteRecorderWidget?.describeMicError?.(err);
+            v3Phase = 'prep';
+            syncPteShell();
+            const notesSub = document.getElementById('sgd-notes-subtitle');
+            if (notesSub) notesSub.textContent = '· type while you listen';
+            pteRecorderWidget?.showMicError?.(info || err);
+            if (info) window.SpeakingPracticeController?.setNotice?.('sgd', info.notice);
             return;
         }
 
@@ -2118,14 +2223,25 @@
         const mimeType = (typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))
             ? 'audio/webm;codecs=opus' : 'audio/webm';
         const recorder = new MediaRecorder(stream, { mimeType });
+        const chunks = [];
         mediaRecorder = recorder;
         recorder.ondataavailable = (e) => {
-            if (e.data.size > 0) recordedChunks.push(e.data);
+            if (e.data?.size > 0
+                && qGen === questionGen
+                && aGen === attemptGen
+                && myToken === recordingSessionToken
+                && mediaRecorder === recorder
+                && v3Phase === 'recording'
+                && v3Active) {
+                chunks.push(e.data);
+            }
         };
         recorder.onstop = () => {
-            stopMediaStream();
-            if (qGen !== questionGen || aGen !== attemptGen || myToken !== recordingSessionToken) return;
-            onV3RecordingComplete();
+            try { stream.getTracks().forEach(track => track.stop()); } catch (_) {}
+            if (activeMediaStream === stream) activeMediaStream = null;
+            if (mediaRecorder === recorder) mediaRecorder = null;
+            if (qGen !== questionGen || aGen !== attemptGen || myToken !== recordingSessionToken || !v3Active) return;
+            onV3RecordingComplete(chunks, recorder.mimeType || mimeType, myToken);
         };
         recorder.start(250);
 
@@ -2160,8 +2276,10 @@
         recordedChunks = [];
         recordingBlob = null;
         originalRecordingBlob = null;
-        enhancedPlaybackBlob = null;
+        clearPreparedAssessmentAudio();
         dspPromise = null;
+        v3ArchiveAttemptId = null;
+        v3ArchiveSavePromise = null;
         startV3Prep();
     }
 
@@ -2172,29 +2290,21 @@
         }
     }
 
-    async function onV3RecordingComplete() {
-        const myToken = recordingSessionToken;
-        const blob = recordedChunks.length > 0 ? new Blob(recordedChunks, { type: mediaRecorder?.mimeType || 'audio/webm' }) : null;
+    async function onV3RecordingComplete(chunks, rawMimeType, myToken) {
+        if (myToken !== recordingSessionToken) return;
+        const blob = chunks.length > 0
+            ? new Blob(chunks, { type: rawMimeType || chunks.find(chunk => chunk.type)?.type || 'application/octet-stream' })
+            : null;
         originalRecordingBlob = blob;
         recordingBlob = blob;
         if (blob) {
             recordingBlobUrl = URL.createObjectURL(blob);
         }
 
-        if (blob && window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
-            dspPromise = window.AudioDspPipeline.enhance(blob).then((res) => {
-                if (myToken !== recordingSessionToken) return blob;
-                if (res?.wavBlob) {
-                    if (recordingBlobUrl) URL.revokeObjectURL(recordingBlobUrl);
-                    enhancedPlaybackBlob = res.wavBlob;
-                    recordingBlobUrl = res.audioUrl || URL.createObjectURL(res.wavBlob);
-                    return res.wavBlob;
-                }
-                return blob;
-            }).catch(() => blob);
-        } else {
-            dspPromise = Promise.resolve(blob);
-        }
+        dspPromise = blob ? prepareRecordingAudio(blob, myToken).then((preparedBlob) => {
+            if (myToken !== recordingSessionToken) return blob;
+            return preparedBlob;
+        }) : Promise.resolve(null);
 
         v3Phase = 'complete';
         syncPteShell();
@@ -2228,11 +2338,14 @@
         renderV3Feedback();
 
         const currentToken = recordingSessionToken;
-        const finalBlob = dspPromise ? await dspPromise.catch(() => recordingBlob) : recordingBlob;
+        if (dspPromise) await dspPromise.catch(() => assessmentWavBlob);
+        const finalBlob = originalRecordingBlob || recordingBlob;
         if (qGen !== questionGen || aGen !== attemptGen || currentToken !== recordingSessionToken) return;
 
         try {
-            await window.PTEAttemptArchive?.saveAttempt?.({
+            v3ArchiveAttemptId = null;
+            const archiveBlob = originalRecordingBlob || finalBlob;
+            v3ArchiveSavePromise = window.PTEAttemptArchive?.saveAttempt?.({
                 practiceMode: 'sgd',
                 promptSnapshot: {
                     promptId: currentEntry?.id || null,
@@ -2255,13 +2368,15 @@
                 },
                 resultSnapshot: result,
                 scoringSource: 'client',
-                media: finalBlob ? [{
+                media: archiveBlob ? [{
                     slot: 'student',
                     label: 'Student summary',
-                    blob: finalBlob,
-                    contentType: finalBlob.type || 'audio/webm'
+                    blob: archiveBlob,
+                    contentType: archiveBlob.type || 'audio/webm'
                 }] : []
             });
+            const saved = await v3ArchiveSavePromise;
+            if (qGen === questionGen && aGen === attemptGen) v3ArchiveAttemptId = saved?.attemptId || null;
         } catch (err) {
             console.warn('[PTE Archive] SGD v3 save failed:', err);
         }
@@ -2277,16 +2392,47 @@
             return;
         }
 
+        const scoringSessionToken = recordingSessionToken;
+        if (dspPromise) await dspPromise.catch(() => rawBlob);
+        if (scoringSessionToken !== recordingSessionToken) return;
+        const scoringBlob = assessmentWavBlob;
+        const sampleCount = assessmentWavSampleCount;
+        if (!scoringBlob || !Number.isInteger(sampleCount) || sampleCount <= 0) {
+            if (aiStatus) aiStatus.textContent = 'Audio processing did not produce a valid 16 kHz mono WAV. Please record again before AI scoring.';
+            return;
+        }
+
         if (aiBtn) aiBtn.disabled = true;
         if (aiStatus) aiStatus.textContent = 'Calculating credit quote...';
+        const qGen = questionGen;
+        const aGen = attemptGen;
 
         try {
+            const speechV3 = await window.AiScoringGate?.speechV3Enabled?.('summarize_group_discussion');
+            let flow = null;
+            let gateResult = null;
+            let assessmentResult = null;
+            if (speechV3) {
+                const saved = await v3ArchiveSavePromise;
+                if (qGen !== questionGen || aGen !== attemptGen) return;
+                const ownedAttemptId = saved?.attemptId || v3ArchiveAttemptId;
+                if (!ownedAttemptId) throw new Error('Save the recording before scoring.');
+                flow = await window.AiScoringGate.assessV3Recording({
+                    mode: 'summarize_group_discussion', originalBlob: rawBlob,
+                    attemptId: ownedAttemptId,
+                    questionId: currentEntry?.id || null,
+                    promptSnapshot: { promptId: currentEntry?.id || null,
+                        title: currentEntry?.title || '', text: currentEntry?.narration || '' }
+                });
+                if (qGen !== questionGen || aGen !== attemptGen) return;
+                gateResult = flow;
+                assessmentResult = flow.result || null;
+            } else {
             const sampleRate = 16000;
-            const durationSec = Math.max(1, Math.round(v3RecordedDurationSec || recordingSeconds || 30));
-            const sampleCount = Math.max(16000, durationSec * sampleRate);
-            const base64Audio = await window.AiScoringGate?.blobToBase64?.(rawBlob);
+            const base64Audio = await window.AiScoringGate?.blobToBase64?.(scoringBlob);
+            if (scoringSessionToken !== recordingSessionToken) return;
 
-            const gateResult = await window.AiScoringGate.requestConsentAndConfirm({
+            gateResult = await window.AiScoringGate.requestConsentAndConfirm({
                 mode: 'summarize_group_discussion',
                 inputMeta: {
                     sampleCount,
@@ -2296,6 +2442,8 @@
                 questionId: currentEntry?.id || null
             });
 
+            }
+            if (qGen !== questionGen || aGen !== attemptGen || scoringSessionToken !== recordingSessionToken) return;
             if (!gateResult.allowed) {
                 if (gateResult.cancelled) {
                     if (aiStatus) aiStatus.textContent = 'AI assessment cancelled. No credits charged.';
@@ -2307,13 +2455,14 @@
 
             if (aiStatus) aiStatus.textContent = 'Analyzing response with Azure Speech AI...';
 
-            let assessmentResult = null;
-            if (gateResult.assessmentId) {
+            if (!speechV3 && gateResult.assessmentId) {
                 assessmentResult = await window.AiScoringGate.pollAssessmentResult(gateResult.assessmentId);
-            } else if (gateResult.unmetered) {
+            } else if (!speechV3 && gateResult.unmetered) {
                 assessmentResult = gateResult.result || null;
             }
+            if (scoringSessionToken !== recordingSessionToken) return;
 
+            if (qGen !== questionGen || aGen !== attemptGen || scoringSessionToken !== recordingSessionToken) return;
             if (assessmentResult) {
                 acceptedTranscription = assessmentResult.transcription || null;
                 pronunciationAssessmentId = gateResult.assessmentId || null;
@@ -2322,17 +2471,13 @@
                     const disclosure = new window.TranscriptDisclosure({
                         containerEl: disclosureEl,
                         onWordClick: (w) => {
-                            const blob = enhancedPlaybackBlob || originalRecordingBlob;
-                            const url = recordingBlobUrl || (blob ? (recordingBlobUrl = URL.createObjectURL(blob)) : null);
-                            if (window.SegmentPlaybackCoordinator?.defaultCoordinator && url) {
-                                const startMs = w.startMs ?? w.rawStartMs ?? 0;
-                                const endMs = w.endMs ?? w.rawEndMs ?? (startMs + 500);
-                                window.SegmentPlaybackCoordinator.defaultCoordinator.playSegment({
-                                    audioUrl: url,
-                                    startMs,
-                                    endMs
-                                });
+                            if (speechV3 && flow?.canonicalBlob) {
+                                const span = w.clip || w.clipTiming?.clipSpan;
+                                if (span) window.AiScoringGate.playV3Span({ canonicalBlob: flow.canonicalBlob,
+                                    manifest: flow.manifest, span });
+                                return;
                             }
+                            playAssessmentWordSegment(w).catch(() => showToast('The original recording is available, but this word could not be replayed.', 5000));
                         }
                     });
                     disclosure.render(assessmentResult);
@@ -2341,10 +2486,11 @@
                 if (aiStatus) aiStatus.textContent = 'Pronunciation assessment complete.';
                 if (aiBtn) aiBtn.style.display = 'none';
 
-                // Patch attempt archive with real transcript and assessment id
+                // Keep the first recording upload immutable; only patch result snapshots.
                 const userNotes = v3LastNotes || collectSpeakerNotes();
-                window.PTEAttemptArchive?.saveAttempt?.({
+                const archiveInput = {
                     practiceMode: 'sgd',
+                    attemptId: flow?.attemptId || undefined,
                     promptSnapshot: {
                         promptId: currentEntry?.id || null,
                         title: currentEntry?.title || '',
@@ -2364,17 +2510,47 @@
                         keyPoints: currentEntry?.keyPoints || [],
                         sampleAnswer: currentEntry?.sampleAnswer || null
                     },
-                    resultSnapshot: v3LastResult,
-                    scoringSource: 'ai',
-                    media: rawBlob ? [{
+                    resultSnapshot: speechV3 ? {
+                        schemaVersion: 'bel.speech.v3',
+                        assessmentId: flow.assessmentId,
+                        resultRef: assessmentResult.resultRef || null,
+                        recognizedText: assessmentResult.recognizedText || acceptedTranscription?.rawTranscript || '',
+                        score: assessmentResult.overallScores?.pronunciationScore ?? null,
+                        overallScores: assessmentResult.overallScores || null,
+                        words: assessmentResult.wordResults || []
+                    } : v3LastResult,
+                    scoringSource: speechV3 ? 'bel.speech.v3' : 'ai',
+                    media: !speechV3 && rawBlob ? [{
                         slot: 'student',
                         label: 'Student summary',
                         blob: rawBlob,
-                        contentType: rawBlob.type || 'audio/webm'
+                        contentType: rawBlob.type || 'application/octet-stream'
                     }] : []
-                }).catch(err => console.warn('[PTE Archive] SGD patch failed:', err));
+                };
+                if (speechV3) {
+                    await window.PTEAttemptArchive?.patchAttempt?.(flow.attemptId, {
+                        responseSnapshot: archiveInput.responseSnapshot,
+                        answerSnapshot: archiveInput.answerSnapshot,
+                        resultSnapshot: archiveInput.resultSnapshot,
+                        scoringSnapshot: { source: 'bel.speech.v3', success: true,
+                            status: 'completed', pronunciationAssessmentId: flow.assessmentId }
+                    });
+                    window.PTEAttemptArchive?.invalidateHistoryCache?.();
+                    window.dispatchEvent(new CustomEvent('pte-attempt-archive:saved', {
+                        detail: { attemptId: flow.attemptId, practiceMode: 'sgd', promptId: currentEntry?.id || null }
+                    }));
+                } else {
+                    window.PTEAttemptArchive?.saveAttempt?.(archiveInput)
+                        .catch(err => console.warn('[PTE Archive] SGD save failed:', err));
+                }
+            } else {
+                // Unmetered with no result (scoring switched off): say so instead of leaving
+                // "Analyzing…" on screen with the button disabled.
+                if (aiStatus) aiStatus.textContent = "AI scoring isn't available right now. Please try again later.";
+                if (aiBtn) aiBtn.disabled = false;
             }
         } catch (err) {
+            if (qGen !== questionGen || aGen !== attemptGen || scoringSessionToken !== recordingSessionToken) return;
             console.error('[SGD AI Scoring] Error:', err);
             if (aiStatus) aiStatus.textContent = err.message || 'Scoring failed. Please try again.';
             if (aiBtn) aiBtn.disabled = false;
@@ -2505,7 +2681,8 @@
             try { mediaRecorder.stop(); } catch (_) {}
         }
         mediaRecorder = null;
-        const finalBlob = dspPromise ? await dspPromise.catch(() => recordingBlob) : recordingBlob;
+        if (dspPromise) await dspPromise.catch(() => assessmentWavBlob);
+        const finalBlob = originalRecordingBlob || recordingBlob;
         if (qGen !== questionGen || aGen !== attemptGen) return;
         if (currentEntry) {
             const userNotes = collectSpeakerNotes();
@@ -2531,7 +2708,7 @@
                         slot: 'student',
                         label: 'Student summary',
                         blob: finalBlob,
-                        contentType: finalBlob.type || 'audio/webm'
+                        contentType: finalBlob.type || 'application/octet-stream'
                     }] : []
                 });
             } catch (_) {}

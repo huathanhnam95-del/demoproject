@@ -19,7 +19,7 @@ const PACKAGES = {
     packageVersion: '1.0.0',
     rateCardVersion: RATE_CARD_VERSION,
     kind: 'speaking',
-    allowedModes: ['retell_lecture', 'summarize_group_discussion', 'respond_to_situation', 'respond_to_a_situation'],
+    allowedModes: ['retell_lecture', 'summarize_group_discussion', 'respond_to_situation', 'respond_to_a_situation', 'describe_image', 'di'],
     creditsPerMinute: 25,
     fixedComponentCredits: 0,
     status: 'active',

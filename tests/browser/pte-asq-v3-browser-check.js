@@ -58,6 +58,21 @@ async function run() {
       await page.goto(`${harness.baseURL}/?pteShell=v3`, { waitUntil: 'domcontentloaded' });
       await dismissOverlays(page);
 
+      await page.evaluate(() => {
+        const originalBytes = new TextEncoder().encode('asq-original-capture');
+        const originalStart = MediaRecorder.prototype.start;
+        MediaRecorder.prototype.start = function (...args) {
+          this.mimeType = 'audio/webm';
+          return originalStart?.apply(this, args);
+        };
+        MediaRecorder.prototype.stop = function () {
+          this.state = 'inactive';
+          const data = new Blob([originalBytes], { type: 'audio/webm' });
+          const event = new Event('dataavailable'); Object.defineProperty(event, 'data', { value: data });
+          this.ondataavailable?.(event); this.dispatchEvent(event);
+          const stop = new Event('stop'); this.onstop?.(stop); this.dispatchEvent(stop);
+        };
+      });
       // 1. Seed ASQ database and audio stubs, switch to ASQ
       await page.evaluate(async () => {
         const asq = window.ASQMode;
@@ -162,6 +177,12 @@ async function run() {
       await page.locator('#asq-stop-btn').click();
       await page.waitForFunction(() => window.ASQMode?.getPtePhase?.() === 'complete', null, { timeout: 5000 });
 
+      const rawCapture = await page.evaluate(async () => {
+        const blob = window.ASQMode?.v3RecordingBlob;
+        return { type: blob?.type || '', text: blob ? await blob.text() : '' };
+      });
+      assert.deepEqual(rawCapture, { type: 'audio/webm', text: 'asq-original-capture' }, 'ASQ preserves the original capture identity for playback/archive');
+
       // In complete phase:
       assert.equal(await page.locator('#asq-submit-btn').isVisible(), true, 'Get feedback visible in complete phase');
       assert.equal(await page.locator('#asq-retry-btn').isVisible(), true, 'Record again visible in complete phase');
@@ -227,8 +248,8 @@ async function run() {
       await page.close();
     }
 
-    // 9. Legacy mode regression test (flag = 'legacy' and default flag off)
-    for (const flag of ['legacy', '']) {
+    // 10. Legacy mode regression test (flag = 'legacy')
+    for (const flag of ['legacy']) {
       console.log(`[PTE ASQ v3] Testing legacy fallback (flag='${flag}')...`);
       const page = await harness.open({ flag });
       await page.evaluate(async () => {

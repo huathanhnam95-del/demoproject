@@ -1,9 +1,11 @@
 {
   "$comment": [
     "Declarative production state for the V3 pronunciation services.",
-    "Consumed by scripts/release/pronunciation-v3.ps1. Every value here was",
-    "applied by ad-hoc gcloud during the 2026-08-03 incident; codifying it makes",
-    "production reproducible and auditable from the repository.",
+    "Consumed by scripts/release/pronunciation-v3.ps1. Current revisions and",
+    "declared nonsecret settings were rechecked in parselmouth/us-central1 on",
+    "2026-09-25. Image-to-source equivalence remains unproved; see the external",
+    "acoustic handoff. Historical rollback targets need review before use.",
+    "currentRevision is descriptive and is not an action guard in the script.",
     "Invariants encoded below are load-bearing - see docs/plans/2026-08-03-v3-production-issues-and-keepalive-plan.md."
   ],
   "project": "parselmouth",
@@ -17,6 +19,7 @@
       "imageRepository": "gcr.io/parselmouth/phoneme-recognizer",
       "cpu": "2",
       "memory": "4Gi",
+      "containerConcurrency": 1,
       "maxScale": 2,
       "minScale": null,
       "$minScaleNote": "null by design. Setting it pins an always-billed instance (~$37/mo) to remove a cold start the keep-alive already covers.",
@@ -30,7 +33,7 @@
         "$note": "HTTP, not tcpSocket. Gunicorn binds the port in under a second, so a TCP probe marked the instance ready before the model loaded and put the whole ~50s load inside a learner's request."
       },
       "rollbackRevision": "phoneme-recognizer-00004-bbc",
-      "currentRevision": "phoneme-recognizer-00010-rir"
+      "currentRevision": "phoneme-recognizer-00018-dis"
     },
     "praat-api": {
       "access": "public",
@@ -38,6 +41,7 @@
       "imageRepository": "us-central1-docker.pkg.dev/parselmouth/cloud-run-source-deploy/praat-api",
       "cpu": "1",
       "memory": "2Gi",
+      "containerConcurrency": 80,
       "maxScale": 3,
       "minScale": null,
       "timeoutSeconds": 120,
@@ -48,7 +52,7 @@
         "PHONEME_SERVICE_AUTH": "google"
       },
       "rollbackRevision": "praat-api-00064-coh",
-      "currentRevision": "praat-api-00066-ruy"
+      "currentRevision": "praat-api-00074-zuv"
     }
   },
   "scheduler": {

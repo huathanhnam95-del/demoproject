@@ -26,6 +26,7 @@
         "firebase-admin": "^12.7.0",
         "firebase-functions": "^7.3.2",
         "multer": "^2.0.0-rc.4",
+        "microsoft-cognitiveservices-speech-sdk": "1.51.0",
         "sharp": "0.35.4",
         "unpdf": "^1.8.1"
     },

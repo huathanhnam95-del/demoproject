@@ -160,11 +160,11 @@ async function main() {
         const rawHtml = fs.readFileSync(path.join(PUBLIC_DIR, 'crm-admin.html'), 'utf8');
         api.get('/crm-admin.html', (_req, res) => {
             const document = buildLocalCrmAdminDocument(rawHtml, process.env, DEMO_PROJECT_ID);
-            if (process.env.CRM_PROJECTS_V2_PRESENTATION === 'true') {
-                document.html = document.html.replace(
-                    'window.__CRM_PRESENTATION_CONFIG__ = Object.freeze({ projectsV2: false });',
-                    'window.__CRM_PRESENTATION_CONFIG__ = Object.freeze({ projectsV2: true });'
-                );
+            const defaultFlag = "window.__CRM_PRESENTATION_CONFIG__ = Object.freeze({ projectsV2: projectsV2Query !== '0' });";
+            if (!document.html.includes(defaultFlag)) throw new Error('Projects presentation flag is missing from CRM HTML.');
+            if (!presentationV2) {
+                document.html = document.html.replace(defaultFlag,
+                    'window.__CRM_PRESENTATION_CONFIG__ = Object.freeze({ projectsV2: false });');
             }
             res.setHeader('Content-Security-Policy', document.policy);
             res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');

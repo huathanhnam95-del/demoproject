@@ -90,6 +90,7 @@ def create_app(
         "manifest_checksum": None,
         "ready": False,
     }
+    app.extensions["phoneme_service_state"] = _state
 
     # ---------------------------------------------------------------
     # Lazy initialisation
@@ -286,16 +287,21 @@ def create_app(
 
         recognizer: PhonemeRecognizer = _state["recognizer"]
         syllabifier: IndependentSyllabifier = _state["syllabifier"]
+        gate = getattr(recognizer, "_gate", None)
 
-        # --- Run inference (with semaphore busy check) ---
-        if not recognizer._semaphore.acquire(blocking=False):
+        # --- Run inference (with gate busy check) ---
+        acq = gate.try_acquire(endpoint="/recognize/v1") if gate is not None else None
+        if acq is not None and not acq.acquired:
             return _error_response(
                 "RECOGNIZER_BUSY",
                 "The recognizer is currently processing another request. "
                 "Please retry shortly.",
                 503,
+                details={"active_request_age_ms": acq.active_request_age_ms},
             )
 
+        outcome = "completed"
+        inference_ms = 0.0
         try:
             t_infer_start = time.monotonic()
             try:
@@ -303,12 +309,14 @@ def create_app(
                     *_preprocess_wav(wav_bytes)
                 )
             except ValueError as exc:
+                outcome = "invalid_audio"
                 return _error_response(
                     "INVALID_AUDIO",
                     str(exc),
                     400,
                 )
             except Exception as exc:
+                outcome = "inference_error"
                 logger.exception("Inference error")
                 return _error_response(
                     "INFERENCE_ERROR",
@@ -326,7 +334,8 @@ def create_app(
             syllabification_ms = round((t_syl_end - t_syl_start) * 1000, 2)
 
         finally:
-            recognizer._semaphore.release()
+            if gate is not None:
+                gate.release(outcome=outcome, inference_duration_ms=inference_ms)
 
         t_total_end = time.monotonic()
         total_ms = round((t_total_end - t_total_start) * 1000, 2)
@@ -432,18 +441,33 @@ def create_app(
         except Exception as exc:
             return _error_response("SERVICE_UNAVAILABLE", str(exc), 503)
         recognizer: PhonemeRecognizer = _state["recognizer"]
-        if not recognizer._semaphore.acquire(blocking=False):
-            return _error_response("RECOGNIZER_BUSY", "Recognizer is busy.", 503)
+        gate = getattr(recognizer, "_gate", None)
+        acq = gate.try_acquire(endpoint="/recognize/v2") if gate is not None else None
+        if acq is not None and not acq.acquired:
+            return _error_response(
+                "RECOGNIZER_BUSY",
+                "Recognizer is busy.",
+                503,
+                details={"active_request_age_ms": acq.active_request_age_ms},
+            )
+
+        outcome = "completed"
+        inference_ms = 0.0
         try:
+            t_infer_start = time.monotonic()
             backend = recognizer._backend
             recognize_with_logits = getattr(backend, "recognize_with_logits", None)
             if recognize_with_logits is None:
+                outcome = "unrateable_no_logits"
                 return _error_response("UNRATEABLE", "Backend does not expose alignment probabilities.", 200)
             result = recognize_with_logits(samples, sample_rate)
+            t_infer_end = time.monotonic()
+            inference_ms = round((t_infer_end - t_infer_start) * 1000, 2)
             symbol_table = result.get("symbol_table") or []
             blank_id = int(result.get("blank_id", getattr(backend, "_blank_id", 0)))
             log_probs = result.get("log_probs")
             if log_probs is None or not symbol_table:
+                outcome = "unrateable_missing_resources"
                 return _error_response("UNRATEABLE", "Recognizer did not return alignment resources.", 200)
             canonical_ids: list[int] = []
             ranges: list[tuple[int, int]] = []
@@ -452,6 +476,7 @@ def create_app(
                 canonical_ids.extend(tokenize_ipa(ipa, symbol_table))
                 ranges.append((start, len(canonical_ids)))
             if len(canonical_ids) > 128:
+                outcome = "resource_limit_tokens"
                 return _error_response("RESOURCE_LIMIT", "Reference contains too many phoneme tokens.", 200)
             syl_result = _state["syllabifier"].syllabify(result.get("phonemes", []))
             aligned = align_reference_syllables(
@@ -506,12 +531,15 @@ def create_app(
                 ).to_dict()
             return jsonify(response), 200
         except (ValueError, KeyError) as exc:
+            outcome = "unrateable_exception"
             return _error_response("UNRATEABLE", str(exc), 200)
         except Exception as exc:
+            outcome = "inference_error"
             logger.exception("V2 alignment error")
             return _error_response("INFERENCE_ERROR", str(exc), 500)
         finally:
-            recognizer._semaphore.release()
+            if gate is not None:
+                gate.release(outcome=outcome, inference_duration_ms=inference_ms)
 
     # ---------------------------------------------------------------
     # Eager initialisation
@@ -571,14 +599,22 @@ def _preprocess_wav(wav_bytes: bytes):
 # Error helper
 # ---------------------------------------------------------------------------
 
-def _error_response(code: str, message: str, status: int) -> tuple:
+def _error_response(
+    code: str,
+    message: str,
+    status: int,
+    details: Optional[Dict[str, Any]] = None,
+) -> tuple:
     """Return a structured JSON error response."""
-    return jsonify({
+    payload: Dict[str, Any] = {
         "error": {
             "code": code,
             "message": message,
         }
-    }), status
+    }
+    if details:
+        payload["error"]["details"] = details
+    return jsonify(payload), status
 
 
 # ---------------------------------------------------------------------------

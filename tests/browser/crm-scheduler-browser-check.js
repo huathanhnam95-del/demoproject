@@ -664,6 +664,10 @@ function createFirebaseStubScript() {
 function startHarnessServer() {
   const state = buildHarnessState();
   const requestLog = [];
+  const colorService = require('../../functions/src/crm/scheduler-color-service');
+  const { createColorDb } = require('../crm/teacher-scheduler-colors.test.cjs');
+  const { CRM_CLASSROOMS, CRM_SCHEDULED_SESSIONS } = require('../../functions/src/crm/collections');
+  const colorDb = createColorDb();
   const app = express();
   const publicDir = path.join(__dirname, '..', '..', 'public');
   app.use(express.json());
@@ -730,7 +734,7 @@ function startHarnessServer() {
     });
   });
 
-  app.get('/api/teacher/scheduler/workspace', (req, res) => {
+  app.get('/api/teacher/scheduler/workspace', async (req, res) => {
     const from = String(req.query?.from || '').trim();
     const to = String(req.query?.to || '').trim();
     state.refreshSummaries();
@@ -743,6 +747,7 @@ function startHarnessServer() {
       success: true,
       classrooms: state.classrooms,
       sessions,
+      ...(await colorService.loadColors(colorDb, state.classrooms.map((c) => c.classroomId))),
       from,
       to
     });
@@ -1124,6 +1129,20 @@ function startHarnessServer() {
     responseJson(res, { success: true, sessionId: `${req.body?.scheduledSessionId || 'scheduled'}-attendance` });
   });
 
+  const colorRouter = express.Router();
+  require('../../functions/src/routes/teacher/scheduler-colors')(colorRouter, {
+    db: colorDb, serverTimestamp: () => 'isolated-browser-fixture',
+    requireTeacherHandlers: [(req, res, next) => {
+      req.user = { uid: 'admin-1' }; req.teacherAccess = { isAdmin: true };
+      for (const classroom of state.classrooms) colorDb.docs.set(`${CRM_CLASSROOMS}/${classroom.classroomId}`, classroom);
+      for (const session of state.sessions) colorDb.docs.set(`${CRM_SCHEDULED_SESSIONS}/${session.sessionId}`, session);
+      requestLog.push({ method: req.method, path: req.path, body: req.body || {} });
+      next();
+    }],
+    sendSuccess: (res, data) => responseJson(res, { success: true, ...data }),
+    sendError: (res, status, error, message) => responseJson(res, { success: false, error, message }, status)
+  });
+  app.use('/api/teacher', colorRouter);
   app.use('/api', (req, res) => {
     responseJson(res, { success: true });
   });
@@ -1136,13 +1155,14 @@ function startHarnessServer() {
         server,
         origin: `http://127.0.0.1:${address.port}`,
         requestLog,
+        colorDb,
         state
       });
     });
   });
 }
 
-(async () => {
+if (require.main === module) (async () => {
   const { server, origin, requestLog, state } = await startHarnessServer();
   const browser = await chromium.launch({ headless: true, channel: 'chrome' });
   const context = await browser.newContext({
@@ -1298,6 +1318,7 @@ function startHarnessServer() {
     await page.goto(`${origin}/crm-admin.html#courses/teacher-schedule`, { waitUntil: 'domcontentloaded' });
 
     // The teacher scheduler defaults to the current week; switch to the seeded range.
+    await page.locator('#teacher-scheduler-range-control').evaluate((el) => { el.open = true; });
     await page.locator('#teacher-scheduler-from-date').fill(conflictDate);
     await page.locator('#teacher-scheduler-to-date').fill(weekEnd);
     // Custom ranges intentionally enter Schedule view. Return to Week before
@@ -1354,6 +1375,7 @@ function startHarnessServer() {
     await page.click('#btn-ts-settings');
     await page.selectOption('#ts-setting-appearance', 'pastel');
     await page.click('#btn-ts-save-settings');
+    await page.locator('#teacher-scheduler-range-control').evaluate((el) => { el.open = true; });
     await page.locator('#teacher-scheduler-from-date').fill(conflictDate);
     await page.locator('#teacher-scheduler-to-date').fill(weekEnd);
     await page.click('#btn-ts-view-grid');
@@ -1513,3 +1535,5 @@ function startHarnessServer() {
   console.error(error.stack || error.message || String(error));
   process.exit(1);
 });
+
+module.exports = { startHarnessServer, createFirebaseStubScript };

@@ -29,6 +29,17 @@ COPY backend/local_server/pronunciation_reference.py ./local_server/pronunciatio
 COPY backend/local_server/pitch_processing.py ./local_server/pitch_processing.py
 COPY backend/local_server/phoneme_client.py ./local_server/phoneme_client.py
 COPY backend/local_server/pronunciation_verifier.py ./local_server/pronunciation_verifier.py
+# V4.2 server routes import these modules through the backend package. Keep
+# their package layout, rather than relying on the workstation's source tree.
+RUN mkdir -p ./backend/local_server ./backend/phoneme_service
+COPY backend/__init__.py ./backend/__init__.py
+COPY backend/local_server/__init__.py ./backend/local_server/__init__.py
+COPY backend/local_server/pronounce_v42.py ./backend/local_server/pronounce_v42.py
+COPY backend/local_server/segment_contract.py ./backend/local_server/segment_contract.py
+COPY backend/local_server/stress_evaluator_v2.py ./backend/local_server/stress_evaluator_v2.py
+COPY backend/local_server/stress_features_v2.py ./backend/local_server/stress_features_v2.py
+COPY backend/phoneme_service/__init__.py ./backend/phoneme_service/__init__.py
+COPY backend/phoneme_service/boundary_refinement.py ./backend/phoneme_service/boundary_refinement.py
 RUN mkdir -p ./local_server/models
 COPY backend/local_server/models/pronunciation-verifier-v1.json ./local_server/models/pronunciation-verifier-v1.json
 COPY public/cmudict.json ./local_server/cmudict.json

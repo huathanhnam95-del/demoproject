@@ -77,6 +77,9 @@ async function waitForReadAloudState(page, state) {
 (async () => {
   const browser = await launchPracticeChrome({ headless: true });
   const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1440, height: 1200 } });
+  // Since the V2.0.15 AI-credit gate a missing quote endpoint (404) blocks scoring; 503 means
+  // "credits off", which scores unmetered like the tests expect.
+  await context.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
   await context.addInitScript(() => {
     localStorage.setItem('userStatus', 'guest');
     localStorage.setItem('hasSeenScopeTutorial', 'true');
@@ -152,7 +155,7 @@ async function waitForReadAloudState(page, state) {
   });
 
   try {
-    await page.goto(`${baseUrl}/?speakingController=v2`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${baseUrl}/?speakingController=v2&pteShell=legacy`, { waitUntil: 'domcontentloaded' });
     await dismissBlockingOverlays(page);
     await page.evaluate(async () => {
       if (typeof window.switchToMode !== 'function') throw new Error('switchToMode is unavailable');

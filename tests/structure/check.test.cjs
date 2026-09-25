@@ -857,6 +857,48 @@ test('mixed index cleanup audits retained dependency and removed cache while rej
   assert.equal(negative.report.blocking.some((finding) => finding.ruleId === 'R1.UNDECLARED_CHANGE' && finding.path === newDependencyPath), false, negative.stdout);
 });
 
+test('retained index deletion of unchanged ignored Python cache passes local completion', () => {
+  const cachePath = '__pycache__/module.pyc';
+  const p = policy();
+  const prior = checker.analyzePaths([cachePath], p, { treeSha: ADOPTION }).findings;
+  const root = validFixture({ policy: p, baseline: baseline(prior.map((item) => checker.toBaselineEntry(item))) });
+  writeFile(root, '.gitignore', '__pycache__/\n');
+  writeFile(root, cachePath, 'original bytecode\n');
+  git(root, ['add', '--force', '--', cachePath]);
+  const baseSha = commitAll(root, 'retained cache base');
+  const external = externalContractAndSnapshot(root, baseSha, {
+    changes: { create: [], modify: ['scripts/structure/legacy-baseline.json'], delete: [cachePath], rename: [] }
+  });
+  writeFile(root, 'scripts/structure/legacy-baseline.json', `${JSON.stringify(baseline(), null, 2)}\n`);
+  git(root, ['add', 'scripts/structure/legacy-baseline.json']);
+  git(root, ['rm', '--cached', '--quiet', '--', cachePath]);
+  assert.equal(fs.existsSync(path.join(root, cachePath)), true);
+
+  const retained = runCli(root, ['check', '--base', baseSha, '--contract', external.contractPath, '--snapshot', external.snapshotPath, '--json']);
+  assert.equal(retained.status, 0, retained.stdout);
+  assert.ok(retained.report.analysis.scannedPaths.includes(cachePath), retained.stdout);
+  assert.equal(retained.report.analysis.index.status, 'evaluated');
+
+  writeFile(root, cachePath, 'changed bytecode\n');
+  const changed = runCli(root, ['check', '--base', baseSha, '--contract', external.contractPath, '--snapshot', external.snapshotPath, '--json']);
+  assert.equal(changed.status, 1, changed.stdout);
+  assert.ok(changed.report.blocking.some((item) => item.ruleId === 'R4.TRACKED_CACHE' && item.path === cachePath), changed.stdout);
+});
+
+test('retained index deletion of a public source still receives placement checks', () => {
+  const publicPath = 'public/retained.js';
+  const root = validFixture({ policy: policy({ registeredRootEntries: [] }) });
+  writeFile(root, publicPath, 'window.retained = true;\n');
+  const baseSha = commitAll(root, 'retained public source base');
+  const external = externalContractAndSnapshot(root, baseSha, {
+    changes: { create: [], modify: [], delete: [publicPath], rename: [] }
+  });
+  git(root, ['rm', '--cached', '--quiet', '--', publicPath]);
+  const result = runCli(root, ['check', '--base', baseSha, '--contract', external.contractPath, '--snapshot', external.snapshotPath, '--json']);
+  assert.equal(result.status, 1, result.stdout);
+  assert.ok(result.report.blocking.some((item) => item.ruleId === 'R1.PUBLIC_ROOT_ENTRY' && item.path === publicPath), result.stdout);
+});
+
 test('pre-existing staged state is captured without being discarded by snapshot', () => {
   const root = validFixture();
   const baseSha = commitAll(root, 'pre-staged base');

@@ -67,7 +67,7 @@ test('actual CRM composition wires one workspace, scope and flag with ordered sc
     const scriptNames = ['projects/workspace.js', 'projects/presentation/field-feedback.js', 'projects/presentation/ui-preferences.js', 'projects/presentation/shell.js', 'projects/presentation/entry.js', 'src="crm-admin.js'];
     const positions = scriptNames.map(name => html.indexOf(name));
     assert.ok(positions.every((position, index) => position > 0 && (!index || position > positions[index - 1])));
-    assert.match(html, /__CRM_PRESENTATION_CONFIG__ = Object.freeze\(\{ projectsV2: false \}\)/);
+    assert.match(html, /__CRM_PRESENTATION_CONFIG__ = Object.freeze\(\{ projectsV2: projectsV2Query !== '0' \}\)/);
     assert.match(shell, /onFieldSaveEvent: event => projectsWorkspaceController\?\.onFieldSaveEvent\?\.\(event\)/);
     assert.match(shell, /onFieldSaveScopeChanged: scope => projectsWorkspaceController\?\.setFieldSaveScope\?\.\(scope\)/);
     for (const enabled of [false, true]) {
@@ -87,21 +87,22 @@ test('actual CRM composition wires one workspace, scope and flag with ordered sc
     }
 });
 
-test('actual inline presentation flag defaults loopback to V2 with explicit legacy rollback', () => {
+test('actual inline presentation flag defaults every host to V2 with explicit legacy rollback', () => {
     const html = fs.readFileSync(path.join(root, 'public/crm-admin.html'), 'utf8');
     const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]).find(script => script.includes('window.__CRM_PRESENTATION_CONFIG__'));
     assert.ok(inline);
     for (const hostname of ['localhost', '127.0.0.1', '[::1]', 'example.com', 'localhost.example.com', '127.0.0.2', '::1']) {
-        for (const [search, localEnabled] of [
+        for (const [search, enabled] of [
             ['', true], ['?other=x', true], ['?projectsV2=0', false],
-            ['?projectsV2=true', false], ['?projectsV2=', false],
+            ['?projectsV2=true', true], ['?projectsV2=', true],
             ['?projectsV2=1', true], ['?other=x&projectsV2=1', true],
-            ['?other=x&projectsV2=0', false]
+            ['?other=x&projectsV2=0', false],
+            ['?projectsV2=0&projectsV2=1', false],
+            ['?projectsV2=1&projectsV2=0', true]
         ]) {
             const context = { window: {}, location: { hostname, search }, URLSearchParams };
             vm.runInNewContext(inline, context);
-            assert.equal(context.window.__CRM_PRESENTATION_CONFIG__.projectsV2,
-                ['localhost', '127.0.0.1', '[::1]'].includes(hostname) && localEnabled, `${hostname}${search}`);
+            assert.equal(context.window.__CRM_PRESENTATION_CONFIG__.projectsV2, enabled, `${hostname}${search}`);
             assert.ok(Object.isFrozen(context.window.__CRM_PRESENTATION_CONFIG__));
         }
     }

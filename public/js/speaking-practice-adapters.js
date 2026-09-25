@@ -355,7 +355,13 @@
       },
       sourceSelectId: 'question-select-sgd',
       previousButtonId: 'back-btn-sgd',
-      nextButtonId: 'next-btn-sgd'
+      nextButtonId: 'next-btn-sgd',
+      // Options read "[Lvl 1] 2 - #2 Writing an Essay" and are valued by list position:
+      // show the question id and the title, without the title's own "#2".
+      formatItem: ({ label }) => {
+        const match = /^\[Lvl[^\]]*\]\s*(\S+)\s*-\s*(.*)$/.exec(String(label || '').trim());
+        return match ? { displayId: match[1], label: match[2].replace(/^#\d+\s*[-\u2013\u2014:]?\s*/, '') } : null;
+      }
     },
     controls: [
       { sourceId: 'play-sgd-btn', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
@@ -451,7 +457,11 @@
     picker: {
       sourceSelectId: 'question-select-di',
       previousButtonId: 'back-btn-di',
-      nextButtonId: 'next-btn-di'
+      nextButtonId: 'next-btn-di',
+      formatItem: ({ label }) => {
+        const match = /^#(\d+)\s*[-\u2013\u2014:]?\s*(.*)$/.exec(String(label || '').trim());
+        return match ? { displayId: match[1], label: match[2] } : null;
+      }
     },
     legacyContainerSelector: '#mode-describe-image > .question-selector',
     controls: [
@@ -523,6 +533,7 @@
             id: 'notes-intro-video-btn',
             label: 'Intro video',
             phases: ['listen', 'complete'],
+            hideWhenZero: true,
             count: () => (window.TakeNotesMode?.hasGuidingVideo?.() ? 1 : 0),
             onClick: () => window.TakeNotesMode?.openIntroVideoModal?.()
           }
@@ -671,7 +682,7 @@
         helpers: [{ id: 'speak-pte-replay', label: 'Replay', phases: ['prep', 'complete'],
           count: () => window.RepeatSentenceV3?.replaysLeft(), onClick: () => window.RepeatSentenceV3?.replay() }],
         actions: [
-          { sourceId: 'shadow-mode-btn', label: 'Shadow · 5c', phases: ['prep'], variant: 'helper' },
+          { sourceId: 'shadow-mode-btn', label: 'Shadow · 5 coins', phases: ['prep'], variant: 'helper' },
           { sourceId: 'record-btn', label: 'Start recording', phases: ['prep'], variant: 'primary' },
           { sourceId: 'speak-pte-cancel', label: 'Cancel', phases: ['recording'], variant: 'ghost' },
           { sourceId: 'speak-pte-stop', label: 'Finish recording', phases: ['recording'], variant: 'stop' },
@@ -842,7 +853,7 @@
           options: [{ value: 'random', label: 'Random' }, { value: 'sequential', label: 'In order' }] }
       ],
       dock: {
-        helpers: [{ id: 'ra-pte-coach-btn', label: 'Coach', phases: ['prep', 'complete', 'feedback'],
+        helpers: [{ id: 'ra-pte-coach-btn', label: 'Coach', phases: ['prep', 'complete', 'feedback'], hideWhenZero: true,
           count: () => {
             const mode = window.ReadAloudMode;
             if (!mode) return 0;

@@ -3,7 +3,7 @@
   'use strict';
 
   const ENABLE_LINK_LABELS = false;
-  const DESKTOP_MIN_WIDTH = 560;
+  const DESKTOP_MIN_WIDTH = 520;
   const LINE_TOLERANCE_PX = 8;
   const VOWEL_LETTERS = /[aeiou]/i;
   const OBVIOUS_WORD_PATTERN = /^[a-z]+(?:['-][a-z]+)*$/i;
@@ -26,12 +26,12 @@
     from: { strongAs: '/frʌm/ or /frɑːm/', spokenAs: '/frəm/', sayItLike: 'frum', explanation: 'Use the weak vowel in unstressed connected speech.' }
   };
   const SOUND_CHANGE_GUIDE_COPY = {
-    coalescent_dj: { spokenAs: '/dʒ/', arrow: 'd + y → /dʒ/', sayItLike: 'like a j', explanation: 'Let the final d slide into the y sound so it blends more like j.' },
-    coalescent_tj: { spokenAs: '/tʃ/', arrow: 't + y → /tʃ/', sayItLike: 'like a ch', explanation: 'Let the final t blend into the y sound so it comes out more like ch.' },
-    coalescent_sj: { spokenAs: '/ʃ/', arrow: 's + y → /ʃ/', sayItLike: 'like a sh', explanation: 'Let the s slide into the y sound so the pair softens toward sh.' },
-    coalescent_zj: { spokenAs: '/ʒ/', arrow: 'z + y → /ʒ/', sayItLike: 'like a zh (the s in "measure")', explanation: 'Let the z slide into the y sound so it blends into a softer zh sound.' },
-    n_bilabial_assimilation: { spokenAs: '/m/', arrow: 'n → /m/', sayItLike: 'like an m', explanation: 'Let the n blend into the next bilabial sound so it comes out closer to m.' },
-    yod_coalescence: { spokenAs: '/dʒ/', arrow: 'sound change', sayItLike: 'blended, like a j', explanation: 'Let the sound blend smoothly into the following y sound.' }
+    coalescent_dj: { spokenAs: '/dʒ/', arrow: 'd + y → /dʒ/', sayItLike: 'a j', explanation: 'Let the final d slide into the y sound so it blends more like j.' },
+    coalescent_tj: { spokenAs: '/tʃ/', arrow: 't + y → /tʃ/', sayItLike: 'a ch', explanation: 'Let the final t blend into the y sound so it comes out more like ch.' },
+    coalescent_sj: { spokenAs: '/ʃ/', arrow: 's + y → /ʃ/', sayItLike: 'a sh', explanation: 'Let the s slide into the y sound so the pair softens toward sh.' },
+    coalescent_zj: { spokenAs: '/ʒ/', arrow: 'z + y → /ʒ/', sayItLike: 'a zh (the s in "measure")', explanation: 'Let the z slide into the y sound so it blends into a softer zh sound.' },
+    n_bilabial_assimilation: { spokenAs: '/m/', arrow: 'n → /m/', sayItLike: 'an m', explanation: 'Let the n blend into the next bilabial sound so it comes out closer to m.' },
+    yod_coalescence: { spokenAs: '/dʒ/', arrow: 'sound change', sayItLike: 'blended, as a j', explanation: 'Let the sound blend smoothly into the following y sound.' }
   };
   const LINKING_GUIDE_COPY = {
     consonant_to_vowel: 'Carry the last consonant straight into the next vowel without adding a pause.',
@@ -45,6 +45,11 @@
     linking: 'Linking',
     reduced_words: 'Reduced words',
     sound_changes: 'Sound changes'
+  };
+  const LEARNER_CONNECTED_SPEECH_LEAD_LABELS = {
+    linking: 'Technique',
+    reduced_words: 'Weak form',
+    sound_changes: 'Sounds like'
   };
   const LEARNER_CONNECTED_SPEECH_CATEGORY_ALIASES = {
     off: 'off',
@@ -397,6 +402,8 @@
         id: `token-${annotation.id || annotation.wordIndex}`,
         category: 'reduced_words',
         layer: 'weak_forms',
+        subtype: annotation.subtype || normalized,
+        word: annotation.word || normalized,
         startWordIndex: annotation.wordIndex,
         endWordIndex: annotation.wordIndex,
         label: annotation.display || annotation.word || normalized,
@@ -796,6 +803,11 @@
     return LEARNER_CONNECTED_SPEECH_CATEGORY_LABELS[category] || 'Linking';
   }
 
+  function getCategoryLeadLabel(value) {
+    const category = normalizeConnectedSpeechCategory(value);
+    return LEARNER_CONNECTED_SPEECH_LEAD_LABELS[category] || 'Technique';
+  }
+
   function normalizeConnectedSpeechLevel(level, enabledRuleSet) {
     const candidate = normalizeConnectedSpeechCategory(level);
     if (String(level || '').trim()) {
@@ -1069,6 +1081,8 @@
     normalizeConnectedSpeechLevel,
     getLearnerConnectedSpeechCategory: normalizeConnectedSpeechCategory,
     getLearnerConnectedSpeechCategoryLabel,
+    getCategoryLeadLabel,
+    LEARNER_CONNECTED_SPEECH_LEAD_LABELS,
     buildAccessibleSummary,
     buildGuideExplanationItems,
     hasVisibleAssimilation,

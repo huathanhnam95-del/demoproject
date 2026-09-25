@@ -143,7 +143,16 @@
     tooltip.style.visibility = 'visible';
   }
 
+  function getPlaybackCoordinator() {
+    const g = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
+    return g?.SegmentPlaybackCoordinator?.defaultCoordinator || null;
+  }
+
   function stopSegmentPlayback() {
+    const coordinator = getPlaybackCoordinator();
+    if (coordinator) {
+      coordinator.stopAll();
+    }
     if (activeAudioTimer) {
       clearTimeout(activeAudioTimer);
       activeAudioTimer = null;
@@ -164,6 +173,10 @@
   }
 
   function getAudioContext() {
+    const coordinator = getPlaybackCoordinator();
+    if (coordinator && typeof coordinator.getAudioContext === 'function') {
+      return coordinator.getAudioContext();
+    }
     if (!activeAudioContext || activeAudioContext.state === 'closed') {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) {
@@ -200,8 +213,29 @@
       || (audioSource && typeof audioSource.getChannelData === 'function')
       || (audioSource && typeof audioSource.duration === 'number' && typeof audioSource.sampleRate === 'number');
     if (isAudioBuffer) {
+      const coordinator = getPlaybackCoordinator();
+      if (coordinator && typeof coordinator.playBoundedBuffer === 'function') {
+        const ok = await coordinator.playBoundedBuffer({
+          buffer: audioSource,
+          startMs: start,
+          endMs: end,
+          onEnded: () => {
+            if (activePlayingElement === triggerEl) {
+              stopSegmentPlayback();
+            }
+          }
+        });
+        if (!ok && activePlayingElement === triggerEl) {
+          stopSegmentPlayback();
+        }
+        return ok;
+      }
+
       const ctx = getAudioContext();
-      if (!ctx) return false;
+      if (!ctx) {
+        stopSegmentPlayback();
+        return false;
+      }
       if (ctx.state === 'suspended' && typeof ctx.resume === 'function') {
         await ctx.resume();
       }
@@ -239,6 +273,10 @@
 
     // Case 2: HTMLAudioElement
     if (audioSource && typeof audioSource.play === 'function') {
+      const coordinator = getPlaybackCoordinator();
+      if (coordinator && typeof coordinator.stopAll === 'function') {
+        coordinator.stopAll();
+      }
       try {
         audioSource.currentTime = startSec;
         await audioSource.play();

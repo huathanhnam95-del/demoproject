@@ -1,9 +1,11 @@
 'use strict';
 
 /**
- * Two-Pass ASR Assessment Engine for Spoken-Response Modes (RL, SGD, RTS)
- * Per BEL Spec §11:
+ * Two-Pass ASR Assessment Engine for Spoken-Response Modes (RL, SGD, RTS, Describe Image)
+ * Per BEL Spec §11 & Plan V3:
  * Pass 1: Unscripted, faithful Speech-to-Text producing a transcript hypothesis without answer-key conditioning.
+ *         Uses Groq-hosted Whisper (whisper-large-v3) as primary interchangeable provider.
+ * Uncertainty: Discloses known material minimal pairs without rewriting the recognized transcript.
  * Freeze: Validates speech presence and reliability, freezing an immutable reference.
  * Pass 2: Forced-alignment pronunciation assessment of original audio against the frozen transcript.
  * Completeness: Marked null (not applicable for unscripted speech).
@@ -12,67 +14,65 @@
 const crypto = require('crypto');
 const { assessFixedReference } = require('./continuous-assessment');
 const { getAzureSpeechCredentials } = require('../pronunciation-assessment-service');
+const { getReconstructionProvider } = require('../practice-pronunciation/reference-reconstruction');
+const { detectMaterialAmbiguities } = require('../practice-pronunciation/ambiguity-detector');
 
 /**
  * Pass 1: Transcribes learner audio without conditioning on prompt or answer key.
+ * Defaults to Groq-hosted Whisper (whisper-large-v3).
+ * Strictly avoids silent fallback to paid Azure STT on quota exhaustion.
  */
 async function transcribeOriginalSpeech({ audioBuffer, audioIdentity = null, locale = 'en-US' }, deps = {}) {
   if (!audioBuffer || !Buffer.isBuffer(audioBuffer) || audioBuffer.length === 0) {
     throw new TypeError('VALID_AUDIO_BUFFER_REQUIRED');
   }
 
-  const audioHash = crypto.createHash('sha256').update(audioBuffer).digest('hex');
-  const credentials = deps.credentials || getAzureSpeechCredentials();
-
-  let rawSttResult = null;
-
-  if (credentials?.key && !deps.useMock) {
-    const endpoint = `https://${credentials.region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=${encodeURIComponent(locale)}&format=detailed`;
-    const fetchFn = deps.fetch || globalThis.fetch;
-    const response = await fetchFn(endpoint, {
-      method: 'POST',
-      headers: {
-        'Ocp-Apim-Subscription-Key': credentials.key,
-        'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000',
-        'Accept': 'application/json'
-      },
-      body: audioBuffer
-    });
-
-    if (!response.ok) {
-      const err = new Error(`AZURE_STT_ERROR_${response.status}`);
-      err.status = response.status;
-      throw err;
-    }
-    rawSttResult = await response.json();
-  } else {
-    // Deterministic mock fallback for tests and development
-    rawSttResult = deps.mockSttResult || {
-      RecognitionStatus: 'Success',
-      DisplayText: 'The lecture discussed renewable energy sources and their environmental impact.',
-      NBest: [{
-        Confidence: 0.92,
-        Display: 'The lecture discussed renewable energy sources and their environmental impact.',
-        Words: [
-          { Word: 'The', Offset: 1000000, Duration: 2000000, Confidence: 0.95 },
-          { Word: 'lecture', Offset: 3500000, Duration: 4500000, Confidence: 0.91 },
-          { Word: 'discussed', Offset: 8500000, Duration: 5000000, Confidence: 0.89 },
-          { Word: 'renewable', Offset: 14000000, Duration: 6000000, Confidence: 0.93 },
-          { Word: 'energy', Offset: 20500000, Duration: 4000000, Confidence: 0.94 },
-          { Word: 'sources', Offset: 25000000, Duration: 5000000, Confidence: 0.90 },
-          { Word: 'and', Offset: 30500000, Duration: 2000000, Confidence: 0.95 },
-          { Word: 'their', Offset: 33000000, Duration: 3000000, Confidence: 0.92 },
-          { Word: 'environmental', Offset: 36500000, Duration: 7000000, Confidence: 0.88 },
-          { Word: 'impact', Offset: 44000000, Duration: 5000000, Confidence: 0.91 }
-        ]
-      }]
-    };
+  // Handle mock STT result directly (e.g. from existing unit tests using Azure STT format)
+  if (deps.mockSttResult) {
+    return _normalizeAzureSttResult(deps.mockSttResult, audioBuffer);
   }
 
+  // Explicit legacy Azure STT opt-in ONLY (never as automatic fallback)
+  if (deps.useLegacyAzureStt) {
+    const credentials = deps.credentials || getAzureSpeechCredentials();
+    if (credentials?.key && !deps.useMock) {
+      const endpoint = `https://${credentials.region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=${encodeURIComponent(locale)}&format=detailed`;
+      const fetchFn = deps.fetch || globalThis.fetch;
+      const response = await fetchFn(endpoint, {
+        method: 'POST',
+        headers: {
+          'Ocp-Apim-Subscription-Key': credentials.key,
+          'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000',
+          'Accept': 'application/json'
+        },
+        body: audioBuffer
+      });
+
+      if (!response.ok) {
+        const err = new Error(`AZURE_STT_ERROR_${response.status}`);
+        err.status = response.status;
+        throw err;
+      }
+      const rawSttResult = await response.json();
+      return _normalizeAzureSttResult(rawSttResult, audioBuffer);
+    }
+  }
+
+  // Primary: Groq-hosted Whisper unconditioned transcription
+  const provider = deps.provider || getReconstructionProvider(deps.providerName || 'default');
+  return provider.transcribe({
+    audioBuffer,
+    audioIdentity,
+    locale,
+    options: deps
+  });
+}
+
+function _normalizeAzureSttResult(rawSttResult, audioBuffer) {
+  const audioHash = crypto.createHash('sha256').update(audioBuffer).digest('hex');
   const nBest = rawSttResult?.NBest?.[0];
   const displayText = String(nBest?.Display || rawSttResult?.DisplayText || '').trim();
   const rawWords = Array.isArray(nBest?.Words) ? nBest.Words : [];
-
   const validRawWords = rawWords.filter(w => String(w?.Word || '').trim().length > 0);
 
   const tokens = validRawWords.map((w, idx) => {
@@ -105,7 +105,7 @@ async function transcribeOriginalSpeech({ audioBuffer, audioIdentity = null, loc
     tokens,
     confidence: Math.round(overallConfidence * 100) / 100,
     detectedSpeechDurationMs,
-    transcriptRevision: `asr-${crypto.randomBytes(8).toString('hex')}`
+    transcriptRevision: `azure-stt-${crypto.randomBytes(8).toString('hex')}`
   };
 }
 
@@ -114,10 +114,9 @@ async function transcribeOriginalSpeech({ audioBuffer, audioIdentity = null, loc
  * Rejects empty recordings and flags low-confidence speech.
  */
 function buildScoringReference(transcription, policy = {}) {
-  const minConfidence = policy.minConfidenceThreshold ?? 0.50;
   const uncertainTokenThreshold = policy.uncertainTokenThreshold ?? 0.60;
 
-  if (!transcription || !transcription.rawTranscript || transcription.tokens.length === 0) {
+  if (!transcription || !transcription.rawTranscript || (transcription.tokens.length === 0 && !transcription.segments?.length)) {
     return {
       status: 'unrateable',
       reason: 'NO_SPEECH_DETECTED',
@@ -129,20 +128,8 @@ function buildScoringReference(transcription, policy = {}) {
     };
   }
 
-  if (transcription.confidence < minConfidence) {
-    return {
-      status: 'transcript_uncertain',
-      reason: 'LOW_ASR_CONFIDENCE',
-      scoringText: transcription.rawTranscript,
-      audioHash: transcription.audioHash,
-      transcriptRevision: transcription.transcriptRevision,
-      uncertainWordIndices: transcription.tokens.map(t => t.index),
-      uncertainWords: transcription.tokens.map(t => t.word)
-    };
-  }
-
-  // Identify individual words with low confidence
-  const uncertainTokens = transcription.tokens.filter(t => t.confidence < uncertainTokenThreshold);
+  // Low confidence is evidence to disclose, not a learner confirmation gate.
+  const uncertainTokens = transcription.tokens.filter(t => t.confidence === null || t.confidence < uncertainTokenThreshold);
   const uncertainWordIndices = uncertainTokens.map(t => t.index);
   const uncertainWords = uncertainTokens.map(t => t.word);
 
@@ -150,6 +137,11 @@ function buildScoringReference(transcription, policy = {}) {
     status: 'accepted',
     reason: null,
     scoringText: transcription.rawTranscript,
+    text: transcription.rawTranscript,
+    displayText: transcription.rawTranscript,
+    hash: crypto.createHash('sha256').update(transcription.rawTranscript).digest('hex'),
+    kind: 'attempted_words',
+    source: transcription.provider || 'groq-whisper',
     audioHash: transcription.audioHash,
     transcriptRevision: transcription.transcriptRevision,
     uncertainWordIndices,
@@ -158,20 +150,23 @@ function buildScoringReference(transcription, policy = {}) {
 }
 
 /**
- * Assesses an unscripted spoken response (Retell Lecture, SGD, RTS).
- * Executes Pass 1 STT -> Freeze Reference -> Pass 2 Forced Alignment.
+ * Assesses an unscripted spoken response (Retell Lecture, SGD, RTS, Describe Image).
+ * Executes Pass 1 STT -> Ambiguity Check -> Freeze Reference -> Pass 2 Forced Alignment.
  */
 async function assessSpokenResponse({ mode, audioBuffer, audioIdentity = null, attemptId = null, questionId = null }, deps = {}) {
-  if (!['retell_lecture', 'summarize_group_discussion', 'respond_to_a_situation'].includes(mode)) {
+  const SPOKEN_MODES = ['retell_lecture', 'summarize_group_discussion', 'respond_to_situation', 'respond_to_a_situation', 'describe_image'];
+  if (!SPOKEN_MODES.includes(mode)) {
     throw new Error(`INVALID_SPOKEN_RESPONSE_MODE: ${mode}`);
   }
 
   // Pass 1: Verbatim speech-to-text without answer-key priming
-  const transcription = await transcribeOriginalSpeech({
+  const transcription = deps.frozenTranscription || await transcribeOriginalSpeech({
     audioBuffer,
     audioIdentity,
     locale: deps.locale || 'en-US'
   }, deps);
+
+  const ambiguityCheck = detectMaterialAmbiguities(transcription.tokens, deps.ambiguityOptions);
 
   // Freeze: Validate speech presence and freeze reference text
   const reference = buildScoringReference(transcription, deps.policy);
@@ -230,27 +225,41 @@ async function assessSpokenResponse({ mode, audioBuffer, audioIdentity = null, a
     }
 
     const tokenUncertain = matchedToken ? uncertainSet.has(matchedToken.index) : (isInsertion || uncertainSet.has(idx));
-    const isUncertain = tokenUncertain || w.clipTiming?.isolationStatus === 'uncertain';
-    const confidence = matchedToken ? matchedToken.confidence : (isInsertion ? 0.0 : (sttTokens[idx]?.confidence ?? 1.0));
+    const boundaryUncertain = w.clipTiming?.isolationStatus === 'uncertain';
+    const confidence = matchedToken ? matchedToken.confidence : null;
 
     return {
       ...w,
-      isTranscriptUncertain: isUncertain,
+      isTranscriptUncertain: tokenUncertain,
+      isBoundaryUncertain: boundaryUncertain,
       transcriptConfidence: confidence,
-      uncertainReason: isUncertain ? (isInsertion ? 'INSERTED_WORD' : 'WORD_RECOGNITION_UNCERTAIN') : null
+      uncertainReason: tokenUncertain ? (isInsertion ? 'INSERTED_WORD' : 'WORD_RECOGNITION_UNCERTAIN') : null
     };
   });
 
   return {
+    ...assessment,
     mode,
     attemptId,
     status: 'completed',
     transcription,
+    transcriptUncertainty: { ambiguousCandidates: ambiguityCheck.ambiguities || [],
+      uncertainWordIndices: reference.uncertainWordIndices },
     reference,
+    wordResults: assessment.wordResults.map(word => {
+      const enriched = enrichedWords.find(candidate => candidate.occurrenceId === word.occurrenceId);
+      return enriched ? { ...word, isTranscriptUncertain: enriched.isTranscriptUncertain,
+        isBoundaryUncertain: enriched.isBoundaryUncertain,
+        transcriptConfidence: enriched.transcriptConfidence } : word;
+    }),
+    utterances: assessment.utterances,
+    coverage: { ...assessment.coverage, completeness: null },
+    provenance: { ...assessment.provenance, transcriptionProvider: transcription.provider,
+      transcriptionModel: transcription.model, transcriptRevision: reference.transcriptRevision },
     overallScores: {
       accuracyScore: assessment.overallScores.accuracyScore,
       fluencyScore: assessment.overallScores.fluencyScore,
-      completenessScore: null, // Public completeness is null/not_applicable for RL/SGD/RTS per §9.4
+      completenessScore: null, // Public completeness is null/not_applicable for RL/SGD/RTS/DI per §9.4
       pronunciationScore: assessment.overallScores.pronunciationScore
     },
     words: enrichedWords,
@@ -259,7 +268,7 @@ async function assessSpokenResponse({ mode, audioBuffer, audioIdentity = null, a
       subtitle: 'Based on the words recognized in your recording. View transcript',
       uncertainWordNotice: 'Word recognition uncertain. Listen to this section and check the transcript.'
     },
-    timingSource: 'azure_two_pass_asr_v1'
+    timingSource: 'two_pass_asr_v2'
   };
 }
 

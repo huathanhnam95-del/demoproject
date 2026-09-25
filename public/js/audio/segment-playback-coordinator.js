@@ -234,7 +234,12 @@ export class SegmentPlaybackCoordinator {
     const clipLength = endSample - startSample;
     const clip = ctx.createBuffer(buffer.numberOfChannels, clipLength, sampleRate);
     for (let c = 0; c < buffer.numberOfChannels; c++) {
-      clip.copyToChannel(buffer.getChannelData(c).subarray(startSample, endSample), c);
+      const sub = buffer.getChannelData(c).subarray(startSample, endSample);
+      if (typeof clip.copyToChannel === 'function') {
+        clip.copyToChannel(sub, c);
+      } else {
+        clip.getChannelData(c).set(sub);
+      }
     }
 
     const source = ctx.createBufferSource();
@@ -261,16 +266,119 @@ export class SegmentPlaybackCoordinator {
       return false;
     }
   }
+
+  /**
+   * Plays a bounded slice directly from an in-memory AudioBuffer using unified mutual exclusion.
+   */
+  async playBoundedBuffer({ buffer, startMs, endMs, onEnded = null }) {
+    this.unlockUserGesture();
+    this.stopAll();
+
+    const ticket = this.activeToken;
+    if (!buffer) return false;
+
+    const sampleRate = buffer.sampleRate;
+    const startSample = Math.max(0, Math.floor(startMs * sampleRate / 1000));
+    const endSample = Math.min(buffer.length, Math.ceil(endMs * sampleRate / 1000));
+    if (endSample <= startSample) return false;
+
+    const ctx = this.getAudioContext();
+    if (!ctx) return false;
+    if (ctx && ctx.state === 'suspended') {
+      try { await ctx.resume(); } catch (_) {}
+    }
+    if (ticket !== this.activeToken) return false;
+
+    const clipLength = endSample - startSample;
+    const clip = ctx.createBuffer(buffer.numberOfChannels, clipLength, sampleRate);
+    for (let c = 0; c < buffer.numberOfChannels; c++) {
+      const sub = buffer.getChannelData(c).subarray(startSample, endSample);
+      if (typeof clip.copyToChannel === 'function') {
+        clip.copyToChannel(sub, c);
+      } else {
+        clip.getChannelData(c).set(sub);
+      }
+    }
+
+    const source = ctx.createBufferSource();
+    source.buffer = clip;
+    source.connect(ctx.destination);
+    this.activeSourceNode = source;
+
+    source.onended = () => {
+      if (this.activeToken === ticket) {
+        this.activeSourceNode = null;
+        if (typeof onEnded === 'function') onEnded();
+      }
+    };
+
+    try {
+      source.start();
+      return true;
+    } catch (err) {
+      this.activeSourceNode = null;
+      return false;
+    }
+  }
+
+  async playSampleSpan({ buffer, manifest, span, onEnded = null }) {
+    this.unlockUserGesture();
+    this.stopAll();
+    const ticket = this.activeToken;
+    const context = this.getAudioContext();
+    if (!context || !globalThis.BoundedClipPlayer?.makeBoundedClip) return false;
+    if (context.state === 'suspended') {
+      try { await context.resume(); } catch (_) { return false; }
+    }
+    if (ticket !== this.activeToken) return false;
+    let clip;
+    try { clip = globalThis.BoundedClipPlayer.makeBoundedClip(context, buffer, manifest, span); }
+    catch (_) { return false; }
+    if (ticket !== this.activeToken) return false;
+    const source = context.createBufferSource();
+    source.buffer = clip;
+    source.connect(context.destination);
+    this.activeSourceNode = source;
+    source.onended = () => {
+      if (ticket !== this.activeToken) return;
+      this.activeSourceNode = null;
+      try { source.disconnect(); } catch (_) {}
+      if (typeof onEnded === 'function') onEnded();
+    };
+    try { source.start(); return true; }
+    catch (_) {
+      if (this.activeSourceNode === source) this.activeSourceNode = null;
+      try { source.disconnect(); } catch (_) {}
+      return false;
+    }
+  }
 }
 
 export const defaultCoordinator = new SegmentPlaybackCoordinator();
 
-if (typeof window !== 'undefined') {
-  window.SegmentPlaybackCoordinator = {
-    SegmentPlaybackCoordinator,
-    LruAudioBufferCache,
-    defaultCoordinator,
-    MAX_CACHED_RECORDINGS,
-    MAX_CACHE_BYTES
-  };
+const SegmentPlaybackCoordinatorModule = {
+  SegmentPlaybackCoordinator,
+  LruAudioBufferCache,
+  defaultCoordinator,
+  MAX_CACHED_RECORDINGS,
+  MAX_CACHE_BYTES
+};
+
+if (typeof globalThis !== 'undefined') {
+  globalThis.SegmentPlaybackCoordinator = SegmentPlaybackCoordinatorModule;
 }
+
+if (typeof window !== 'undefined') {
+  window.SegmentPlaybackCoordinator = SegmentPlaybackCoordinatorModule;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = SegmentPlaybackCoordinatorModule;
+  module.exports.SegmentPlaybackCoordinator = SegmentPlaybackCoordinator;
+  module.exports.LruAudioBufferCache = LruAudioBufferCache;
+  module.exports.defaultCoordinator = defaultCoordinator;
+  module.exports.MAX_CACHED_RECORDINGS = MAX_CACHED_RECORDINGS;
+  module.exports.MAX_CACHE_BYTES = MAX_CACHE_BYTES;
+}
+
+export default SegmentPlaybackCoordinatorModule;

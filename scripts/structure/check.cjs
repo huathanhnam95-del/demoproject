@@ -784,12 +784,17 @@ function checkLocal(options) {
   // The last condition matters for ignored dependency bytes: listFiles omits
   // node_modules even when an index-only removal leaves those bytes installed,
   // while a retained public/source file must remain covered by placement rules.
+  // Other ignored generated files, such as Python bytecode, remain in the file
+  // scan after index-only removal. Exclude only a generated artifact that the
+  // base policy already classified and whose retained bytes match the snapshot.
   const snapshotIndex = snapshot.index && typeof snapshot.index === 'object' && !Array.isArray(snapshot.index) ? snapshot.index : null;
+  const baseGeneratedPaths = new Set(baseFindings.filter((item) => item.ruleId === 'R4.TRACKED_DEPENDENCY' || item.ruleId === 'R4.TRACKED_CACHE').map((item) => item.path));
   const placementPaths = changedPaths.filter((rel) => {
     const wasIndexed = Boolean(snapshotIndex && Object.prototype.hasOwnProperty.call(snapshotIndex, rel));
     const isIndexed = Boolean(currentIndex && Object.prototype.hasOwnProperty.call(currentIndex, rel));
-    const indexDeleted = wasIndexed && currentIndex && staged.has(rel) && !isIndexed && !tree.has(rel);
-    if (indexDeleted) return false;
+    const indexDeleted = wasIndexed && currentIndex && staged.has(rel) && !isIndexed;
+    if (indexDeleted && !tree.has(rel)) return false;
+    if (indexDeleted && baseGeneratedPaths.has(rel) && before.has(rel) && entryHash(root, rel, tree.get(rel)) === before.get(rel).sha256) return false;
     if (isIndexed) return true;
     return tree.has(rel);
   });

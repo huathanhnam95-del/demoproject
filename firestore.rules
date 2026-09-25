@@ -457,5 +457,57 @@ service cloud.firestore {
     match /crmAiVoiceSessions/{document=**} { allow read, write: if false; }
     match /crmAiVoiceUtterances/{document=**} { allow read, write: if false; }
     match /crmAiVoiceAttestations/{document=**} { allow read, write: if false; }
+    // Every named map field is accessed below; exact size also rejects unknown keys.
+    // Demo D shared admin feedback. Ratings and learner namespaces are independent.
+    match /entranceTestUiAnnotations/demo-d/items/{annotationId} {
+      function text(v, low, high) { return v is string && v.size() >= low && v.size() <= high; }
+      function number(v, low, high) { return v >= low && v <= high; }
+      function actor(a) { return (a.size() == 3) && a.uid.matches('[\\s\\S]{1,128}') && a.raterId.matches('[\\s\\S]{1,60}') && a.name.matches('[\\s\\S]{2,80}'); }
+      function uid(v) { return v.matches('[a-fA-F0-9]{8}(-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}'); }
+      function context(c) {
+        return (c.size() == 4) && c.componentState.matches('[\\s\\S]{0,160}')
+          && ((c.view in ['intro','miccheck','review','done'] && c.page == c.view && c.questionId == null)
+          || (c.view == 'question' && ((c.page == 'speaking' && c.questionId in ['speaking_q1','speaking_q2','speaking_q3'])
+          || (c.page == 'vocab' && c.questionId in ['vocab_q1','vocab_q2','vocab_q3','vocab_q4'])
+          || (c.page == 'grammar' && c.questionId in ['grammar_q1','grammar_q2','grammar_q3','grammar_q4'])
+          || (c.page == 'listening' && c.questionId in ['listen_write_q1','listen_write_q2']))));
+      }
+      function fragment(f) {
+        let r = f.rect;
+        let t = f.text;
+        return (f.size() == 4) && f.kind in ['element','text','layout'] && f.targetId.matches('[a-zA-Z0-9_/-]{1,200}')
+          && (r.size() == 4) && r.x0 >= 0 && r.y0 >= 0 && r.x1 <= 1 && r.y1 <= 1 && r.x1 > r.x0 && r.y1 > r.y0
+          && (f.kind == 'text' ? ((t.size() == 5) && t.runId == f.targetId && t.start is int && t.end is int && t.start >= 0 && t.end > t.start && t.end <= 20000 && t.fingerprint.matches('[\\s\\S]{1,32}') && t.quote.matches('[\\s\\S]{0,160}')) : t == null);
+      }
+      function anchor(a) {
+        let f = a.fragments;
+        return (a.size() == 4) && a.kind in ['content','layout'] && a.layoutSignature.matches('[\\s\\S]{1,240}') && a.label.matches('[\\s\\S]{1,160}') && f is map && f.size() >= 1 && f.keys().hasOnly(['f0','f1','f2'])
+          && (('f0' in f) ? fragment(f.f0) : true) && (('f1' in f) ? fragment(f.f1) : true) && (('f2' in f) ? fragment(f.f2) : true);
+      }
+      function capture(c) {
+        return (c.size() == 12)
+          && number(c.frameWidth,1,20000) && number(c.frameHeight,1,20000) && number(c.scrollX,-100000,100000) && number(c.scrollY,-100000,100000) && number(c.visualOffsetX,-100000,100000) && number(c.visualOffsetY,-100000,100000) && number(c.visualScale,0.1,10) && c.locale in ['en','vi'] && number(c.textScale,50,300) && c.fontEn.matches('[\\s\\S]{0,100}') && c.fontVi.matches('[\\s\\S]{0,100}') && c.buildId.matches('[\\s\\S]{1,100}');
+      }
+      function payload(d) {
+        return d.size() == 18 && uid(annotationId) && d.schemaVersion == 1 && d.anchorSchemaVersion == 1 && d.skin == 'd' && d.contentVersion == 'entrance_test_36plus_v1' && d.visualRevision == 'signal-noto-v2'
+          && context(d.context) && anchor(d.anchor) && capture(d.capture) && text(d.body,1,2000) && d.body.matches('[\\s\\S]*[^\\s][\\s\\S]*')
+          && uid(d.lastMutationId) && d.updatedAt == request.time;
+      }
+      function create(d) {
+        return payload(d) && actor(d.author) && d.author.uid == request.auth.uid && d.lastEditor == d.author
+          && d.createdAt == request.time && d.version == 1 && d.version is int && d.deleted == false && d.deletedAt == null && d.deletedBy == null;
+      }
+      function update(d, old) {
+        return payload(d) && d.author == old.author && d.createdAt == old.createdAt
+          && actor(d.lastEditor) && d.lastEditor.uid == request.auth.uid && d.version is int && d.version == old.version + 1 && d.lastMutationId != old.lastMutationId
+          && d.deleted is bool && (d.deleted
+            ? (old.deleted ? (d.deletedAt == old.deletedAt && d.deletedBy == old.deletedBy) : (d.deletedAt == request.time && d.deletedBy == d.lastEditor))
+            : (d.deletedAt == null && d.deletedBy == null));
+      }
+      allow read: if isAdmin();
+      allow create: if isAdmin() && create(request.resource.data);
+      allow update: if isAdmin() && update(request.resource.data, resource.data);
+      allow delete: if false;
+    }
   }
 }

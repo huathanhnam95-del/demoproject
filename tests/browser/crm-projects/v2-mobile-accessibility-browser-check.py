@@ -57,6 +57,7 @@ def mount(page,source,markup,bindings,hold_initial_view=False):
 
 
 def assert_predecessor_name(page,out,label):
+    page.evaluate('()=>{const d=document.querySelector("#projects-task-predecessor-picker")?.closest("details");if(d)d.open=true;}')
     cdp=page.context.new_cdp_session(page)
     tree=cdp.send('DOM.getDocument')
     node=cdp.send('DOM.querySelector',{'nodeId':tree['root']['nodeId'],'selector':'#projects-task-predecessor-picker'})
@@ -67,6 +68,7 @@ def assert_predecessor_name(page,out,label):
     return {'name':control['name']['value'],'disabled':page.locator('#projects-task-predecessor-picker').is_disabled()}
 
 def assert_disclosure_keys(page,out,label):
+    page.evaluate('()=>{const d=document.querySelector("#projects-task-predecessors")?.closest("details.crm-detail-disclosure");if(d)d.open=true;}')
     dialog=page.locator('#projects-board-detail');summary=dialog.get_by_text('Manual task ID entry',exact=True)
     textarea=dialog.locator('#projects-task-predecessors');save=dialog.get_by_role('button',name='Save dependencies',exact=True)
     page.wait_for_function('!document.querySelector("#projects-task-predecessors").disabled')
@@ -82,8 +84,16 @@ def assert_disclosure_keys(page,out,label):
     ax=page.context.new_cdp_session(page).send('Accessibility.getFullAXTree')
     (out/f'ax-disclosure-{label}.json').write_text(json.dumps(ax,ensure_ascii=False,indent=2),encoding='utf-8')
     page.keyboard.press('Enter');page.keyboard.press('Tab');assert save.evaluate('e=>e===document.activeElement')
+    page.keyboard.press('Tab')
+    assert dialog.locator('summary', has_text='CRM Links').evaluate('e=>e===document.activeElement')
+    page.keyboard.press('Tab')
+    assert dialog.locator('summary', has_text='Task info').evaluate('e=>e===document.activeElement')
     if dialog.evaluate('e=>e.matches(":modal")'):
         page.keyboard.press('Tab');assert dialog.get_by_role('button',name='Close task details').evaluate('e=>e===document.activeElement')
+        page.keyboard.press('Shift+Tab')
+        assert dialog.locator('summary', has_text='Task info').evaluate('e=>e===document.activeElement')
+        page.keyboard.press('Shift+Tab')
+        assert dialog.locator('summary', has_text='CRM Links').evaluate('e=>e===document.activeElement')
         page.keyboard.press('Shift+Tab');assert save.evaluate('e=>e===document.activeElement')
     else:
         page.keyboard.press('Tab');assert not dialog.evaluate('e=>e.contains(document.activeElement)')

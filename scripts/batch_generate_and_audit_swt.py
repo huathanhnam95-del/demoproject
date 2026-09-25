@@ -78,7 +78,7 @@ def call_ollama(model: str, prompt: str, temperature: float = 0.2, num_predict: 
 
     for attempt in range(1, retries + 1):
         try:
-            resp = requests.post(OLLAMA_URL, json=payload, timeout=120)
+            resp = requests.post(OLLAMA_URL, json=payload, timeout=180)
             if resp.status_code == 200:
                 body = resp.json()
                 raw = body.get("response", "")
@@ -506,6 +506,24 @@ def extract_point_highlights(text: str, raw_highlights: List[Dict[str, Any]], co
         while words and words[0].strip(".,;:!?\"'()").lower() in DISALLOWED_STARTINGS:
             words = words[1:]
             trimmed = " ".join(words).strip(' ,;:.-')
+        # Balance unclosed single or double quotes using text
+        no_paired_sq = re.sub(r"'[^']+'", "", trimmed)
+        no_apostrophes = re.sub(r"\b[a-zA-Z]+'[a-zA-Z]+\b", "", no_paired_sq)
+        no_possessives = re.sub(r"\b[a-zA-Z]+s'(?=\s|$|[.,;:!?])", "", no_apostrophes)
+        if no_possessives.count("'") > 0:
+            c_pos = text.find(trimmed)
+            if c_pos != -1:
+                after_pos = c_pos + len(trimmed)
+                next_q = text.find("'", after_pos)
+                if next_q != -1 and (next_q - after_pos) <= 40:
+                    trimmed = text[c_pos:next_q + 1].strip(' ,;:.-')
+        if trimmed.count('"') % 2 != 0:
+            c_pos = text.find(trimmed)
+            if c_pos != -1:
+                after_pos = c_pos + len(trimmed)
+                next_q = text.find('"', after_pos)
+                if next_q != -1 and (next_q - after_pos) <= 40:
+                    trimmed = text[c_pos:next_q + 1].strip(' ,;:.-')
         return trimmed
 
     def phrase_overlaps(cand_phrase: str, existing_list: List[Dict[str, Any]]) -> bool:
@@ -756,6 +774,15 @@ def validate_and_assemble_analysis(source_text: str, raw_data: Dict[str, Any], m
     for h in highlights_a:
         if not is_valid_semantic_phrase(h["phrase"]):
             errors.append(f"Version A highlight for {h['pointId']} is degraded non-semantic fragment: '{h['phrase']}'")
+        no_paired_sq = re.sub(r"'[^']+'", "", h["phrase"])
+        no_apostrophes = re.sub(r"\b[a-zA-Z]+'[a-zA-Z]+\b", "", no_paired_sq)
+        no_possessives = re.sub(r"\b[a-zA-Z]+s'(?=\s|$|[.,;:!?])", "", no_apostrophes)
+        if no_possessives.count("'") > 0:
+            errors.append(f"Version A highlight for {h['pointId']} ('{h['phrase']}') has unclosed single quote")
+        if h["phrase"].count('"') % 2 != 0:
+            errors.append(f"Version A highlight for {h['pointId']} ('{h['phrase']}') has unclosed double quote")
+        if h["phrase"].count("(") != h["phrase"].count(")"):
+            errors.append(f"Version A highlight for {h['pointId']} ('{h['phrase']}') has unbalanced parentheses")
     if len(highlights_a) < len(core_points):
         missing = [cp["id"] for cp in core_points if not any(h["pointId"] == cp["id"] for h in highlights_a)]
         errors.append(f"Version A is missing highlights for core points: {missing}")
@@ -811,6 +838,15 @@ def validate_and_assemble_analysis(source_text: str, raw_data: Dict[str, Any], m
     for h in highlights_b:
         if not is_valid_semantic_phrase(h["phrase"]):
             errors.append(f"Version B highlight for {h['pointId']} is degraded non-semantic fragment: '{h['phrase']}'")
+        no_paired_sq = re.sub(r"'[^']+'", "", h["phrase"])
+        no_apostrophes = re.sub(r"\b[a-zA-Z]+'[a-zA-Z]+\b", "", no_paired_sq)
+        no_possessives = re.sub(r"\b[a-zA-Z]+s'(?=\s|$|[.,;:!?])", "", no_apostrophes)
+        if no_possessives.count("'") > 0:
+            errors.append(f"Version B highlight for {h['pointId']} ('{h['phrase']}') has unclosed single quote")
+        if h["phrase"].count('"') % 2 != 0:
+            errors.append(f"Version B highlight for {h['pointId']} ('{h['phrase']}') has unclosed double quote")
+        if h["phrase"].count("(") != h["phrase"].count(")"):
+            errors.append(f"Version B highlight for {h['pointId']} ('{h['phrase']}') has unbalanced parentheses")
     if len(highlights_b) < len(core_points):
         missing = [cp["id"] for cp in core_points if not any(h["pointId"] == cp["id"] for h in highlights_b)]
         errors.append(f"Version B is missing highlights for core points: {missing}")
@@ -1135,8 +1171,10 @@ def main():
             questions[idx]["answerAnalysis"] = res["analysis"]
 
         # Write progress incrementally to prevent data loss
-        with open(SWT_JSON_PATH, "w", encoding="utf-8") as f:
+        tmp_json = SWT_JSON_PATH + ".tmp"
+        with open(tmp_json, "w", encoding="utf-8") as f:
             json.dump(questions, f, indent=2, ensure_ascii=False)
+        os.replace(tmp_json, SWT_JSON_PATH)
         print(f"  [Saved] Updated swt-questions.json for Question #{q['id']}")
 
         # Save reports incrementally

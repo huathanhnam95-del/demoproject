@@ -105,7 +105,7 @@ test('buildScoringReference: rejects empty or inaudible recordings as unrateable
   assert.equal(silentRes.reason, 'NO_SPEECH_DETECTED');
 });
 
-test('buildScoringReference: flags low-confidence speech as transcript_uncertain', () => {
+test('buildScoringReference: scores the best hypothesis while retaining low-confidence words', () => {
   const lowConfTranscription = {
     audioHash: 'hash-low',
     rawTranscript: 'muffled sound maybe',
@@ -118,8 +118,9 @@ test('buildScoringReference: flags low-confidence speech as transcript_uncertain
   };
 
   const ref = buildScoringReference(lowConfTranscription);
-  assert.equal(ref.status, 'transcript_uncertain');
-  assert.equal(ref.reason, 'LOW_ASR_CONFIDENCE');
+  assert.equal(ref.status, 'accepted');
+  assert.equal(ref.reason, null);
+  assert.equal(ref.scoringText, 'muffled sound maybe');
   assert.equal(ref.uncertainWords.length, 3);
 });
 
@@ -180,9 +181,12 @@ test('ScoringWorker: processes retell_lecture, summarize_group_discussion, and r
   const walletService = new WalletService({ db });
   const settlementService = new SettlementService({ db, walletService });
   const jobService = new JobService({ db, walletService, settlementService });
-  const worker = new ScoringWorker({ db, settlementService });
-
   const modes = ['retell_lecture', 'summarize_group_discussion', 'respond_to_a_situation'];
+  const worker = new ScoringWorker({ db, settlementService,
+    stageExecutors: Object.fromEntries(modes.map(mode => [mode === 'respond_to_a_situation' ? 'respond_to_situation' : mode, () => assessSpokenResponse({
+      mode, audioBuffer: Buffer.alloc(32000),
+      audioIdentity: { sampleRateHz: 16000, sampleCount: 16000 }
+    }, { useMock: true })])) });
 
   for (const mode of modes) {
     const quote = await jobService.createQuote({
@@ -237,7 +241,8 @@ test('assessSpokenResponse: preserves word confidence and uncertainty across Pas
 
   const res = await assessSpokenResponse({
     mode: 'retell_lecture',
-    audioBuffer: dummyAudio
+    audioBuffer: dummyAudio,
+    audioIdentity: { sampleRateHz: 16000, sampleCount: 16000 }
   }, {
     useMock: true,
     mockSttResult: mockStt,

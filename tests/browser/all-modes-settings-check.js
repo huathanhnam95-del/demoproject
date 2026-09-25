@@ -45,7 +45,7 @@ const path = require('path');
           window.localStorage.setItem(`${mode}ModeFirstUse`, 'true');
         });
       });
-      await page.goto(`${baseUrl}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${baseUrl}/index.html?pteShell=legacy`, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => typeof window.switchToMode === 'function', { timeout: 30000 });
       const guestButton = page.locator('#guest-mode-btn');
       if (await guestButton.isVisible().catch(() => false)) await guestButton.click();

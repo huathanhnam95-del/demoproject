@@ -1,0 +1,135 @@
+{
+  "version": "canonical-weak-forms-v1",
+  "voice": "af_heart",
+  "format": "mp3",
+  "sampleRate": 24000,
+  "generatedAt": "2026-09-22T12:40:50.697Z",
+  "items": {
+    "to": {
+      "key": "to",
+      "phrase": "to go",
+      "targetIpa": "/tə/",
+      "fullIpa": "/tə ɡoʊ/",
+      "controlledPhonemes": "tə ɡˌO",
+      "file": "/database/RA/weak-forms/canonical/to.mp3",
+      "sizeBytes": 18188
+    },
+    "the-consonant": {
+      "key": "the-consonant",
+      "phrase": "the book",
+      "targetIpa": "/ðə/",
+      "fullIpa": "/ðə bʊk/",
+      "controlledPhonemes": "ðə bˈʊk",
+      "file": "/database/RA/weak-forms/canonical/the-consonant.mp3",
+      "sizeBytes": 17324
+    },
+    "the-vowel": {
+      "key": "the-vowel",
+      "phrase": "the apple",
+      "targetIpa": "/ði/",
+      "fullIpa": "/ði ˈæp.əl/",
+      "controlledPhonemes": "ði ˈæpᵊl",
+      "file": "/database/RA/weak-forms/canonical/the-vowel.mp3",
+      "sizeBytes": 18764
+    },
+    "a": {
+      "key": "a",
+      "phrase": "a book",
+      "targetIpa": "/ə/",
+      "fullIpa": "/ə bʊk/",
+      "controlledPhonemes": "ə bˈʊk",
+      "file": "/database/RA/weak-forms/canonical/a.mp3",
+      "sizeBytes": 17612
+    },
+    "an": {
+      "key": "an",
+      "phrase": "an hour",
+      "targetIpa": "/ən/",
+      "fullIpa": "/ən ˈaʊ.ər/",
+      "controlledPhonemes": "ən ˈWəɹ",
+      "file": "/database/RA/weak-forms/canonical/an.mp3",
+      "sizeBytes": 18476
+    },
+    "of": {
+      "key": "of",
+      "phrase": "cup of tea",
+      "targetIpa": "/əv/",
+      "fullIpa": "/kʌp əv tiː/",
+      "controlledPhonemes": "kˈʌp əv tˈi",
+      "file": "/database/RA/weak-forms/canonical/of.mp3",
+      "sizeBytes": 20204
+    },
+    "and": {
+      "key": "and",
+      "phrase": "bread and butter",
+      "targetIpa": "/ən/",
+      "fullIpa": "/bɹɛd ən ˈbʌt.ər/",
+      "controlledPhonemes": "bɹˈɛd ən bˈʌTəɹ",
+      "file": "/database/RA/weak-forms/canonical/and.mp3",
+      "sizeBytes": 20204
+    },
+    "for": {
+      "key": "for",
+      "phrase": "wait for me",
+      "targetIpa": "/fər/",
+      "fullIpa": "/weɪt fər miː/",
+      "controlledPhonemes": "wˈAt fər mˌi",
+      "file": "/database/RA/weak-forms/canonical/for.mp3",
+      "sizeBytes": 18764
+    },
+    "can": {
+      "key": "can",
+      "phrase": "you can go",
+      "targetIpa": "/kən/",
+      "fullIpa": "/juː kən ɡoʊ/",
+      "controlledPhonemes": "ju kən ɡˌO",
+      "file": "/database/RA/weak-forms/canonical/can.mp3",
+      "sizeBytes": 20492
+    },
+    "have": {
+      "key": "have",
+      "phrase": "we have seen",
+      "targetIpa": "/həv/",
+      "fullIpa": "/wiː həv siːn/",
+      "controlledPhonemes": "wi həv sˈin",
+      "file": "/database/RA/weak-forms/canonical/have.mp3",
+      "sizeBytes": 20492
+    },
+    "has": {
+      "key": "has",
+      "phrase": "she has done",
+      "targetIpa": "/həz/",
+      "fullIpa": "/ʃiː həz dʌn/",
+      "controlledPhonemes": "ʃi həz dˈʌn",
+      "file": "/database/RA/weak-forms/canonical/has.mp3",
+      "sizeBytes": 19916
+    },
+    "was": {
+      "key": "was",
+      "phrase": "it was good",
+      "targetIpa": "/wəz/",
+      "fullIpa": "/ɪt wəz ɡʊd/",
+      "controlledPhonemes": "ɪt wəz ɡˈʊd",
+      "file": "/database/RA/weak-forms/canonical/was.mp3",
+      "sizeBytes": 19628
+    },
+    "were": {
+      "key": "were",
+      "phrase": "they were here",
+      "targetIpa": "/wər/",
+      "fullIpa": "/ðeɪ wər hɪr/",
+      "controlledPhonemes": "ðA wər hˈɪɹ",
+      "file": "/database/RA/weak-forms/canonical/were.mp3",
+      "sizeBytes": 19340
+    },
+    "from": {
+      "key": "from",
+      "phrase": "away from home",
+      "targetIpa": "/frəm/",
+      "fullIpa": "/əˈweɪ frəm hoʊm/",
+      "controlledPhonemes": "əwˈA frəm hˈOm",
+      "file": "/database/RA/weak-forms/canonical/from.mp3",
+      "sizeBytes": 21644
+    }
+  }
+}

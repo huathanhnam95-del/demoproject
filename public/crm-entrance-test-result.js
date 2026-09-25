@@ -20,6 +20,7 @@
 
   // Cached data for PDF export (set after renderResult)
   let _cachedResultData = null;
+  const v3AudioBlobCache = new Map();
 
   // ==================== INIT ====================
 
@@ -438,7 +439,7 @@
     }
     if (Array.isArray(entry.words) && entry.words.length > 0) {
       const validScores = entry.words
-        .map((w) => (typeof w === 'object' && w != null && Number.isFinite(Number(w.accuracyScore))) ? Number(w.accuracyScore) : null)
+        .map((w) => (typeof w === 'object' && w != null && w.accuracyScore != null && Number.isFinite(Number(w.accuracyScore))) ? Number(w.accuracyScore) : null)
         .filter((n) => n !== null);
       if (validScores.length > 0) {
         const avg = validScores.reduce((a, b) => a + b, 0) / validScores.length;
@@ -469,6 +470,8 @@
     const out = {};
     await Promise.all(
       questionIds.map(async (questionId) => {
+        // V3 clips use the authenticated canonical-audio endpoint directly.
+        if (speaking?.[questionId]?.v3?.status === 'ready') return;
         const storagePath = speaking?.[questionId]?.audio?.storagePath || null;
         if (!storagePath) return;
         try {
@@ -615,13 +618,13 @@
     if (Array.isArray(words) && words.length > 0) {
       bWords = words.map((w, idx) => {
         const next = words[idx + 1];
-        const nextStart = next && Number.isFinite(Number(next.startMs)) ? Number(next.startMs) : null;
+        const nextStart = next && next.startMs != null && Number.isFinite(Number(next.startMs)) ? Number(next.startMs) : null;
         return {
           text: typeof w === 'string' ? w : String(w.word || w.text || ''),
-          startMs: Number(w.startMs),
-          endMs: Number(w.endMs),
+          startMs: w.startMs == null ? null : Number(w.startMs),
+          endMs: w.endMs == null ? null : Number(w.endMs),
           nextStartMs: nextStart,
-          accuracyScore: (typeof w === 'object' && w != null && Number.isFinite(Number(w.accuracyScore))) ? Math.round(Number(w.accuracyScore)) : null,
+          accuracyScore: (typeof w === 'object' && w != null && w.accuracyScore != null && Number.isFinite(Number(w.accuracyScore))) ? Math.round(Number(w.accuracyScore)) : null,
           errorType: (typeof w === 'object' && w != null && w.errorType) ? String(w.errorType) : 'None',
           syllables: (typeof w === 'object' && w != null && Array.isArray(w.syllables)) ? w.syllables : null
         };
@@ -1197,7 +1200,8 @@
 
     // Calculate syllable average / status
     const sylScores = Array.isArray(syllables)
-      ? syllables.map(s => Math.round(Number(s.accuracyScore ?? 0)))
+      ? syllables.filter(s => s.accuracyScore != null && Number.isFinite(Number(s.accuracyScore)))
+        .map(s => Math.round(Number(s.accuracyScore)))
       : [];
     const avgSylScore = sylScores.length > 0
       ? Math.round(sylScores.reduce((a, b) => a + b, 0) / sylScores.length)
@@ -1212,16 +1216,17 @@
     let syllablesHtml = '';
     if (Array.isArray(syllables) && syllables.length > 1) {
       const chips = syllables.map((s) => {
-        const score = Math.round(Number(s.accuracyScore ?? 0));
-        let chipClass = 'syl-green';
-        if (score < 60) chipClass = 'syl-red';
-        else if (score < 80) chipClass = 'syl-amber';
+        const score = s.accuracyScore != null && Number.isFinite(Number(s.accuracyScore))
+          ? Math.round(Number(s.accuracyScore)) : null;
+        let chipClass = score == null ? 'syl-unrated' : 'syl-green';
+        if (score != null && score < 60) chipClass = 'syl-red';
+        else if (score != null && score < 80) chipClass = 'syl-amber';
         const sText = escapeHtml(s.text || normalizeToOxfordAmericanIPA(s.ipa) || '');
         const timeAttr = (s.startMs != null && s.endMs != null)
           ? ` data-start-ms="${s.startMs}" data-end-ms="${s.endMs}" title="Click to listen to '${sText}'"`
           : '';
         const playIcon = (s.startMs != null && s.endMs != null) ? '<span class="crm-syl-play">🔊</span> ' : '';
-        return `<span class="crm-syl-chip ${chipClass}" role="button" tabindex="0"${timeAttr}>${playIcon}<span class="crm-syl-text">${sText}</span> <span class="crm-syl-score">${score}%</span></span>`;
+        return `<span class="crm-syl-chip ${chipClass}" role="button" tabindex="0"${timeAttr}>${playIcon}<span class="crm-syl-text">${sText}</span> <span class="crm-syl-score">${score == null ? 'unavailable' : `${score}%`}</span></span>`;
       }).join('');
       syllablesHtml = `
         <div class="crm-tooltip-section">
@@ -1384,6 +1389,31 @@
         return;
       }
 
+      const v3Token = e.target.closest('.crm-v3-token, .crm-v3-syllable');
+      if (v3Token) {
+        const startSample = Number(v3Token.dataset.v3Start);
+        const endSample = Number(v3Token.dataset.v3End);
+        const card = v3Token.closest('.crm-result-question');
+        const questionId = card?.dataset.questionId;
+        const entry = _cachedResultData?.test?.speaking?.[questionId];
+        const audioEl = card?.querySelector('audio.crm-result-audio');
+        if (!Number.isInteger(startSample) || !Number.isInteger(endSample) ||
+            endSample <= startSample || !entry?.assessment?.audio) return;
+        audioEl?.pause();
+        const audioKey = `${_cachedResultData.testId}:${questionId}:${entry.v3?.revisionId}`;
+        let blob = v3AudioBlobCache.get(audioKey);
+        if (!blob) {
+          const idToken = await firebase.auth().currentUser.getIdToken();
+          const response = await fetch(`/api/admin/entrance-tests/${encodeURIComponent(_cachedResultData.testId)}/speaking/${encodeURIComponent(questionId)}/canonical-audio`,
+            { headers: { Authorization: `Bearer ${idToken}` }, cache: 'no-store' });
+          if (!response.ok) throw new Error('CANONICAL_AUDIO_FETCH_FAILED');
+          blob = await response.blob();
+          v3AudioBlobCache.set(audioKey, blob);
+        }
+        await window.AiScoringGate.playV3Span({ canonicalBlob: blob,
+          manifest: entry.assessment.audio, span: { startSample, endSample } });
+        return;
+      }
       const token = e.target.closest('.crm-word-token');
       if (!token || token.dataset.playable !== 'true') return;
       const questionCard = token.closest('.crm-result-question');
@@ -1408,6 +1438,32 @@
 
   // ==================== SECTION RENDERERS ====================
 
+  function renderV3SpeakingWords(assessment) {
+    const words = Array.isArray(assessment?.wordResults) ? assessment.wordResults : [];
+    return words.slice().sort((a, b) => (a.displayStart ?? 1e9) - (b.displayStart ?? 1e9))
+      .map(word => {
+        const score = typeof word.accuracyScore === 'number' ? word.accuracyScore : null;
+        const status = word.presence === 'omitted' ? 'crm-transcript-missing'
+          : score == null ? 'crm-transcript-uncertain'
+            : score < 60 ? 'crm-transcript-error' : score < 80 ? 'crm-transcript-uncertain' : 'crm-transcript-correct';
+        const span = word.clip || word.clipTiming?.clipSpan;
+        const playable = span && Number.isInteger(span.startSample) && Number.isInteger(span.endSample);
+        const context = word.isBoundaryUncertain || word.clipTiming?.isolationStatus === 'uncertain';
+        const label = `${word.displayText || word.word}, ${score == null ? 'score unavailable' : `score ${score}`}${context ? ', context playback' : ''}`;
+        const syllables = (word.syllables || []).map(syllable => {
+          const s = syllable.span;
+          const sScore = typeof syllable.accuracyScore === 'number' ? syllable.accuracyScore : null;
+          const ipaRaw = (syllable.phonemes || []).map(p => p.ipaRaw || '').join('');
+          const ipa = window.Phonetics?.normalizeIPA ? window.Phonetics.normalizeIPA(ipaRaw) : ipaRaw;
+          const sAttrs = s && Number.isInteger(s.startSample) && Number.isInteger(s.endSample)
+            ? ` data-v3-start="${s.startSample}" data-v3-end="${s.endSample}"` : '';
+          return `<button type="button" class="crm-v3-syllable"${sAttrs} title="${escapeHtml(`${ipa ? `/${ipa}/ · ` : ''}${sScore ?? 'unavailable'}`)}">${escapeHtml(syllable.syllable || '')}</button>`;
+        }).join('');
+        const attrs = playable ? ` data-v3-start="${span.startSample}" data-v3-end="${span.endSample}"` : '';
+        return `<span class="crm-v3-word-group"><button type="button" class="crm-v3-token crm-word-token ${status}"${attrs} aria-label="${escapeHtml(label)}">${escapeHtml(word.displayText || word.word)}${context ? ' <small>Context</small>' : ''}</button>${syllables ? `<span class="crm-v3-syllables">${syllables}</span>` : ''}</span>`;
+      }).join(' ');
+  }
+
   function renderSpeakingSection({ test, session, audioUrls }) {
     const speakingSession = findSection(session, 'speaking');
     const questions = Array.isArray(speakingSession?.questions) ? speakingSession.questions : [];
@@ -1425,15 +1481,21 @@
             const asrError = entry?.asrError ? String(entry.asrError) : '';
             const audioUrl = audioUrls?.[qId] ? String(audioUrls[qId]) : '';
             const expectedText = q?.text ? String(q.text) : '';
+            const v3 = entry?.assessment?.schemaVersion === 'bel.speech.v3';
             const words = Array.isArray(entry?.words) ? entry.words : null;
-            const hasPlayableWords = Array.isArray(words) && words.length > 0;
+            const hasPlayableWords = v3
+              ? Array.isArray(entry.assessment.wordResults) && entry.assessment.wordResults.length > 0
+              : Array.isArray(words) && words.length > 0;
 
-            const audioHtml = audioUrl
+            const audioHtml = v3
+              ? '<div class="crm-result-muted">Click a word or syllable to play saved audio.</div>'
+              : audioUrl
               ? `<audio class="crm-result-audio" controls preload="metadata" src="${escapeHtml(audioUrl)}"></audio>`
               : '<div class="crm-result-muted">Audio not available.</div>';
 
-            const diffedTranscript = (transcript || hasPlayableWords) ? computeTranscriptDiffHtml(expectedText, transcript, words) : '';
-            const syncBtnHtml = (!hasPlayableWords && audioUrl && transcript)
+            const diffedTranscript = v3 ? renderV3SpeakingWords(entry.assessment)
+              : (transcript || hasPlayableWords) ? computeTranscriptDiffHtml(expectedText, transcript, words) : '';
+            const syncBtnHtml = (!v3 && !hasPlayableWords && audioUrl && transcript)
               ? ` <button type="button" class="crm-btn crm-btn-secondary crm-align-words-btn" title="Sync acoustic word timings using Azure forced alignment">Sync Word Audio</button>`
               : '';
 
@@ -1444,7 +1506,7 @@
                 : '<div class="crm-result-muted">Transcript not available.</div>');
 
             return `
-            <div class="crm-result-question">
+            <div class="crm-result-question" data-question-id="${escapeHtml(qId)}">
               <div class="crm-result-question-header">
                 <div class="crm-result-question-title">Question ${idx + 1}</div>
                 <div class="crm-result-muted"><strong>Accuracy:</strong> ${escapeHtml(accuracy)}</div>

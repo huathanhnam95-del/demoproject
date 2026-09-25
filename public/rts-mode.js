@@ -56,6 +56,8 @@
     let recordedChunks = [];
     let recordingBlobUrl = null;
     let recordingBlob = null;
+    let originalRecordingBlob = null;
+    let speechV3EnabledForRts = false;
     let dspPromise = null;
     let recordingSessionToken = 0;
     let archiveAttemptId = null;
@@ -66,6 +68,7 @@
     let isAiScoring = false;
     let hasAiScoreResult = false;
     let spokenAssessmentData = null;
+    let v3SpeechPlayback = null;
 
     // Speech recognition
     let speechRecognition = null;
@@ -181,6 +184,10 @@
             return;
         }
         setupEventListeners();
+        window.AiScoringGate?.speechV3Enabled?.('respond_to_situation').then(enabled => {
+            speechV3EnabledForRts = enabled;
+            updateAiScoreButtonState();
+        }).catch(() => {});
         loadEntries();
         isInitialized = true;
     }
@@ -195,7 +202,10 @@
         v3RecordedDurationSec = 0;
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        originalRecordingBlob = null;
         dspPromise = null;
+        spokenAssessmentData = null;
+        v3SpeechPlayback = null;
         archiveAttemptId = null;
         archiveSavePromise = null;
         recordedChunks = [];
@@ -369,14 +379,30 @@
         renderPicker();
         closePicker();
 
-        // Pre-load audio
+        // Pre-load audio. Resolve first: production serves practice audio from media storage
+        // and rewrites the raw /database path to /404.html (firebase.json), so the raw path is
+        // only a fallback for when the resolver is missing or fails. The previous clip is
+        // cleared so a play() that starts before resolution cannot replay the last question;
+        // PteAudioBox picks up the new source when it arrives.
         if (el.rtsAudioPlayer) {
             const rtsAudioUrl = `${RTS_AUDIO_DIR}RTS_${currentEntry.id}.mp3`;
-            if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadAudio === 'function') {
-                window.MediaUrlResolver.loadAudio(el.rtsAudioPlayer, rtsAudioUrl, { mode: 'RTS' });
-            } else {
+            const entryId = currentEntry.id;
+            const loadDirect = () => {
+                if (currentEntry?.id !== entryId) return;
                 el.rtsAudioPlayer.src = rtsAudioUrl;
                 el.rtsAudioPlayer.load();
+            };
+            el.rtsAudioPlayer.removeAttribute('src');
+            el.rtsAudioPlayer.load();
+            try {
+                if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadAudio === 'function') {
+                    const pending = window.MediaUrlResolver.loadAudio(el.rtsAudioPlayer, rtsAudioUrl, { mode: 'RTS' });
+                    if (pending && typeof pending.catch === 'function') pending.catch(loadDirect);
+                } else {
+                    loadDirect();
+                }
+            } catch (_) {
+                loadDirect();
             }
         }
 
@@ -637,6 +663,7 @@
         transcriptText = '';
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        originalRecordingBlob = null;
         dspPromise = null;
 
         // Request mic
@@ -725,6 +752,7 @@
             return;
         }
         const blob = new Blob(recordedChunks, { type: recordedChunks[0].type || 'audio/webm' });
+        originalRecordingBlob = blob;
         recordingBlob = blob;
         recordingBlobUrl = URL.createObjectURL(blob);
 
@@ -881,7 +909,8 @@
         }
 
         el.rtsAiScoreBtn.style.display = '';
-        const hasTranscript = Boolean(getTranscriptForScoring());
+        const hasTranscript = Boolean(getTranscriptForScoring()) ||
+            (speechV3EnabledForRts && Boolean(originalRecordingBlob || recordingBlob));
         if (!hasTranscript) {
             el.rtsAiScoreBtn.disabled = true;
             if (el.rtsAiScoreHint) {
@@ -939,8 +968,11 @@
 
     async function submitToAiScoring() {
         if (isAiScoring) return;
-        const safeTranscript = getTranscriptForScoring();
-        if (!safeTranscript) {
+        let speechV3;
+        try { speechV3 = await window.AiScoringGate?.speechV3Enabled?.('respond_to_situation'); }
+        catch (_) { alert('Scoring is temporarily unavailable. Your recording is still available. Please try again.'); return; }
+        let safeTranscript = getTranscriptForScoring();
+        if (!safeTranscript && !speechV3) {
             alert('No transcript detected. Please record again or type your response before scoring.');
             return;
         }
@@ -953,7 +985,55 @@
         const aGen = attemptGen;
 
         let aiAssessmentId = null;
-        if (window.AiScoringGate?.requestConsentAndConfirm) {
+        if (speechV3) {
+            const originalBlob = originalRecordingBlob || recordingBlob;
+            if (!originalBlob) { alert('Record a response before scoring.'); return; }
+            const enhancedBlob = recordingBlob?.type?.includes('wav') ? recordingBlob : null;
+            const flow = await window.AiScoringGate.assessV3Recording({
+                mode: 'respond_to_situation', originalBlob, enhancedBlob,
+                attemptId: await ensureArchiveAttemptId(),
+                questionId: currentEntry?.id || null,
+                promptSnapshot: { promptId: currentEntry?.id || null,
+                    text: currentEntry?.answer || currentEntry?.situation || '' }
+            }).catch(error => { console.warn('[RTS] V3 assessment failed:', error); alert(error.message || 'Scoring failed. Try again.'); return null; });
+            if (!flow) return;
+            if (!flow.allowed) {
+                if (flow.cancelled) return;
+                alert(flow.error || 'Scoring not authorized');
+                return;
+            }
+            if (v3Active && (qGen !== questionGen || aGen !== attemptGen)) return;
+            aiAssessmentId = flow.assessmentId;
+            archiveAttemptId = flow.attemptId;
+            spokenAssessmentData = flow.result;
+            v3SpeechPlayback = { canonicalBlob: flow.canonicalBlob, manifest: flow.manifest };
+            safeTranscript = String(flow.result?.transcription?.rawTranscript || flow.result?.recognizedText || '').trim();
+            transcriptText = safeTranscript;
+            v3LastAiScoreData = flow.result;
+            hasAiScoreResult = true;
+            renderV3SpeechAssessment(flow.result);
+            updateAiScoreButtonState();
+            const scores = flow.result?.overallScores || {};
+            await window.PTEAttemptArchive?.patchAttempt?.(flow.attemptId, {
+                resultSnapshot: {
+                    schemaVersion: 'bel.speech.v3', assessmentId: flow.assessmentId,
+                    resultRef: flow.result?.resultRef || null,
+                    recognizedText: safeTranscript,
+                    score: scores.pronunciationScore ?? null,
+                    overallScores: scores, words: flow.result?.wordResults || []
+                },
+                responseSnapshot: { transcript: safeTranscript,
+                    spokenTranscript: safeTranscript, transcriptSource: 'server_asr',
+                    pronunciationAssessmentId: flow.assessmentId },
+                scoringSnapshot: { source: 'bel.speech.v3', success: true,
+                    status: 'completed', pronunciationAssessmentId: flow.assessmentId }
+            });
+            window.PTEAttemptArchive?.invalidateHistoryCache?.();
+            window.dispatchEvent(new CustomEvent('pte-attempt-archive:saved', {
+                detail: { attemptId: flow.attemptId, practiceMode: 'rts', promptId: currentEntry?.id || null }
+            }));
+            return;
+        } else if (window.AiScoringGate?.requestConsentAndConfirm) {
             const rawBlob = recordingBlob;
             const sampleRate = 16000;
             const durationSec = Math.max(1, Math.round(v3RecordedDurationSec || recordingSeconds || 40));
@@ -1283,6 +1363,9 @@
         const aiPanel = feedback.querySelector('#rts-v3-ai-panel');
         const samplePanel = feedback.querySelector('#rts-v3-sample-panel');
 
+        // Keep the roving tabindex in step when the tab is set from code (feedback render).
+        if (sampleTabBtn) sampleTabBtn.tabIndex = v3ActiveTab === 'sample' ? 0 : -1;
+        if (aiTabBtn) aiTabBtn.tabIndex = v3ActiveTab === 'sample' ? -1 : 0;
         if (v3ActiveTab === 'sample') {
             sampleTabBtn?.classList.add('active');
             sampleTabBtn?.setAttribute('aria-selected', 'true');
@@ -1309,6 +1392,11 @@
         const fullPane = feedback.querySelector('#rts-v3-sample-full');
         const simpPane = feedback.querySelector('#rts-v3-sample-simplified');
 
+        const simplified = v3ActiveSampleTab === 'simplified';
+        simpSampleBtn?.setAttribute('aria-selected', String(simplified));
+        fullSampleBtn?.setAttribute('aria-selected', String(!simplified));
+        if (simpSampleBtn) simpSampleBtn.tabIndex = simplified ? 0 : -1;
+        if (fullSampleBtn) fullSampleBtn.tabIndex = simplified ? -1 : 0;
         if (v3ActiveSampleTab === 'simplified') {
             simpSampleBtn?.classList.add('active');
             fullSampleBtn?.classList.remove('active');
@@ -1389,9 +1477,9 @@
                             <div id="rts-v3-results-container" style="display: none;"></div>
                         </div>
                         <div id="rts-v3-sample-panel" class="rts-v3-fb-panel" style="display: none;">
-                            <div class="rts-sample-tabs" style="display: flex; border-bottom: 1px solid var(--border-light, #e2e8f0); margin-bottom: 12px;">
-                                <button type="button" class="rts-v3-fb-tab active" data-v3-sample-tab="full" style="flex: 1; text-align: center;">📝 Full Sample</button>
-                                <button type="button" class="rts-v3-fb-tab" data-v3-sample-tab="simplified" style="flex: 1; text-align: center;">📖 Simplified</button>
+                            <div class="rts-sample-tabs" aria-label="Sample answer">
+                                <button type="button" class="rts-v3-fb-tab active" data-v3-sample-tab="full">Full sample</button>
+                                <button type="button" class="rts-v3-fb-tab" data-v3-sample-tab="simplified">Simplified</button>
                             </div>
                             <div id="rts-v3-sample-full" style="padding: 12px; line-height: 1.6; font-size: 0.95rem;">No sample answer available.</div>
                             <div id="rts-v3-sample-simplified" style="display: none; padding: 12px; line-height: 1.6; font-size: 0.95rem;">No simplified sample answer available.</div>
@@ -1401,16 +1489,17 @@
             `;
             area.appendChild(feedback);
 
-            // Wire tab switching
-            const aiTabBtn = feedback.querySelector('[data-v3-tab="ai"]');
-            const sampleTabBtn = feedback.querySelector('[data-v3-tab="sample"]');
-            aiTabBtn?.addEventListener('click', () => setV3ActiveTab('ai'));
-            sampleTabBtn?.addEventListener('click', () => setV3ActiveTab('sample'));
-
-            const fullSampleBtn = feedback.querySelector('[data-v3-sample-tab="full"]');
-            const simpSampleBtn = feedback.querySelector('[data-v3-sample-tab="simplified"]');
-            fullSampleBtn?.addEventListener('click', () => setV3SampleTab('full'));
-            simpSampleBtn?.addEventListener('click', () => setV3SampleTab('simplified'));
+            // The shell's pill tabs (roles, keyboard) for both tab rows, instead of one-off
+            // underline strips with inline styles and emoji labels.
+            feedback.querySelector('#rts-v3-ai-panel')?.setAttribute('role', 'tabpanel');
+            feedback.querySelector('#rts-v3-sample-panel')?.setAttribute('role', 'tabpanel');
+            window.SpeakingPracticeController?.wireTabs?.(feedback.querySelector('.rts-v3-fb-tabs'), {
+                onSelect: (btn) => setV3ActiveTab(btn.dataset.v3Tab)
+            });
+            window.SpeakingPracticeController?.wireTabs?.(feedback.querySelector('.rts-sample-tabs'), {
+                label: 'Sample answer',
+                onSelect: (btn) => setV3SampleTab(btn.dataset.v3SampleTab)
+            });
 
             // Wire playback events on rts-v3-playback
             const v3Playback = feedback.querySelector('#rts-v3-playback');
@@ -1546,6 +1635,7 @@
         mediaRecorder = null;
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        originalRecordingBlob = null;
         dspPromise = null;
 
         const qGen = ++questionGen;
@@ -1609,6 +1699,7 @@
         transcriptText = '';
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        originalRecordingBlob = null;
         dspPromise = null;
         v3ActiveTab = 'ai';
         v3ActiveSampleTab = 'full';
@@ -1656,18 +1747,31 @@
         v3RecordedDurationSec = 0;
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        originalRecordingBlob = null;
         dspPromise = null;
         hasAiScoreResult = false;
         v3LastAiScoreData = null;
+        spokenAssessmentData = null;
+        v3SpeechPlayback = null;
         isAiScoring = false;
         archiveAttemptId = null;
         archiveSavePromise = null;
 
         let stream;
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const micRequest = navigator.mediaDevices.getUserMedia({ audio: true });
+            pteRecorderWidget?.waitForMic?.(micRequest);
+            stream = await micRequest;
         } catch (err) {
             console.error('[RTS v3] Mic access denied:', err);
+            if (qGen !== questionGen || aGen !== attemptGen || !v3Active || myToken !== recordingSessionToken) return;
+            // Back to prep with the reason on screen; it used to stay in "recording" with
+            // nothing recording and no message. Start recording is the retry.
+            const info = window.PteRecorderWidget?.describeMicError?.(err);
+            v3Phase = 'prep';
+            syncPteShell();
+            pteRecorderWidget?.showMicError?.(info || err);
+            if (info) window.SpeakingPracticeController?.setNotice?.('rts', info.notice);
             return;
         }
 
@@ -1727,6 +1831,7 @@
         mediaRecorder = null;
         recordedChunks = [];
         recordingBlob = null;
+        originalRecordingBlob = null;
         dspPromise = null;
         hasAiScoreResult = false;
         v3LastAiScoreData = null;
@@ -1753,10 +1858,12 @@
     function onV3RecordingComplete() {
         if (recordedChunks.length === 0) {
             recordingBlob = null;
+            originalRecordingBlob = null;
             dspPromise = Promise.resolve(null);
             return;
         }
         const blob = new Blob(recordedChunks, { type: recordedChunks[0].type || 'audio/webm' });
+        originalRecordingBlob = blob;
         recordingBlob = blob;
         recordingBlobUrl = URL.createObjectURL(blob);
 
@@ -1874,7 +1981,9 @@
             if (emptyEl) emptyEl.style.display = 'none';
             if (resultsEl) {
                 resultsEl.style.display = '';
-                renderV3AiScoreResults(v3LastAiScoreData);
+                if (v3LastAiScoreData.schemaVersion === 'bel.speech.v3')
+                    renderV3SpeechAssessment(v3LastAiScoreData);
+                else renderV3AiScoreResults(v3LastAiScoreData);
             }
         } else {
             if (emptyEl) emptyEl.style.display = '';
@@ -1883,6 +1992,34 @@
                 resultsEl.innerHTML = '';
             }
             updateAiScoreButtonState();
+        }
+    }
+
+    function renderV3SpeechAssessment(result) {
+        const container = document.getElementById('rts-v3-results-container');
+        if (!container) return;
+        const empty = document.getElementById('rts-v3-ai-empty');
+        if (empty) empty.style.display = 'none';
+        container.style.display = '';
+        container.replaceChildren();
+        const heading = document.createElement('h3');
+        heading.textContent = 'Pronunciation of your response';
+        container.appendChild(heading);
+        const scores = document.createElement('p');
+        const metrics = result?.overallScores || {};
+        const format = value => typeof value === 'number' ? Math.round(value) : 'unavailable';
+        scores.textContent = `Pronunciation ${format(metrics.pronunciationScore)} · Accuracy ${format(metrics.accuracyScore)} · Fluency ${format(metrics.fluencyScore)} · Completeness ${format(metrics.completenessScore)}`;
+        container.appendChild(scores);
+        const transcript = document.createElement('div');
+        transcript.id = 'rts-v3-transcript-disclosure';
+        container.appendChild(transcript);
+        if (window.TranscriptDisclosure) {
+            new window.TranscriptDisclosure({ containerEl: transcript,
+                onWordClick: word => {
+                    const span = word?.clip || word?.clipTiming?.clipSpan;
+                    if (span && v3SpeechPlayback) window.AiScoringGate.playV3Span({ ...v3SpeechPlayback, span });
+                }
+            }).render(result);
         }
     }
 

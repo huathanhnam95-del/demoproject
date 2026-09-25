@@ -133,8 +133,9 @@ function resolveProjectsEmulatorEndpoints(env = process.env, projectId = '') {
   }
   const auth = parseLocalEmulatorEndpoint(env.FIREBASE_AUTH_EMULATOR_HOST);
   const firestore = parseLocalEmulatorEndpoint(env.FIRESTORE_EMULATOR_HOST);
-  if (!auth || !firestore) return null;
-  return { auth, firestore };
+  const storage = parseLocalEmulatorEndpoint(env.FIREBASE_STORAGE_EMULATOR_HOST);
+  if (!auth || !firestore || !storage) return null;
+  return { auth, firestore, storage };
 }
 
 function buildLocalCrmAdminDocument(rawHtml, env = process.env, projectId = '') {
@@ -151,7 +152,8 @@ function buildLocalCrmAdminDocument(rawHtml, env = process.env, projectId = '') 
 
   const exactSources = [
     formatLocalEmulatorOrigin('http', endpoints.auth),
-    formatLocalEmulatorOrigin('http', endpoints.firestore)
+    formatLocalEmulatorOrigin('http', endpoints.firestore),
+    formatLocalEmulatorOrigin('http', endpoints.storage)
   ];
   return {
     html: source.replace(metaTag, ''),
@@ -219,7 +221,7 @@ function createApp(options = {}) {
   // Projects has a bounded 1 MB JSON envelope for multiline discussions and
   // bulk commands. Scope the larger parser to both aliases before the legacy
   // 10 KB parser so unrelated local routes keep their existing limit.
-  app.use(['/api/projects', '/api/admin/projects'], express.json({ limit: '1mb' }));
+  app.use(['/api/projects', '/api/admin/projects', '/api/practice-attempts'], express.json({ limit: '1mb' }));
   app.use(express.json({ limit: '10kb' }));
   app.use(logger.requestMiddleware());
 
@@ -430,8 +432,40 @@ function createApp(options = {}) {
 
     app.use('/api/ai-scoring', functionsAuthMiddleware, createAiScoringRouter({
       db: firebase.db,
-      taskDispatcher: localTaskDispatcher
+      taskDispatcher: localTaskDispatcher,
+      getStorageBucket: firebase.getStorageBucket
     }));
+
+    // Cloud Functions runs its own scheduled reconciler. The local demo server
+    // needs the same deadline/retry path when an inline worker is interrupted.
+    const isolatedDemo = process.env.FIREBASE_PROJECT_ID === 'demo-crm-projects'
+      && String(process.env.NODE_ENV || '').toLowerCase() !== 'production'
+      && process.env.ALLOW_PROD_FIREBASE !== '1'
+      && /^(127\.0\.0\.1|localhost):\d+$/.test(String(process.env.FIRESTORE_EMULATOR_HOST || ''));
+    if (isolatedDemo) {
+      const { reconcileOutbox } = require('../../functions/src/ai-scoring/outbox-reconciler');
+      let running = false;
+      let stopped = false;
+      const tick = async () => {
+        if (running || stopped) return;
+        running = true;
+        try {
+          await reconcileOutbox({ db: firebase.db,
+            dispatch: assessmentId => localTaskDispatcher.dispatch(assessmentId) });
+        } catch (error) {
+          console.error('[LocalAiScoringReconciler] Failed:', error);
+        } finally {
+          running = false;
+        }
+      };
+      const timer = setInterval(() => { void tick(); }, 5000);
+      timer.unref?.();
+      setImmediate(() => { void tick(); });
+      app.locals.stopAiScoringReconciler = () => {
+        stopped = true;
+        clearInterval(timer);
+      };
+    }
   }
 
   // Projects owns its own verifier-backed identity fence. It must not reuse
@@ -509,6 +543,7 @@ function createApp(options = {}) {
   app.get('/api/config', (_req, res) => {
     const authEmulator = parseLocalEmulatorEndpoint(process.env.FIREBASE_AUTH_EMULATOR_HOST);
     const firestoreEmulator = parseLocalEmulatorEndpoint(process.env.FIRESTORE_EMULATOR_HOST);
+    const storageEmulator = parseLocalEmulatorEndpoint(process.env.FIREBASE_STORAGE_EMULATOR_HOST);
     const clientProjectId = String(process.env.FIREBASE_PROJECT_ID || '').trim();
     const dedicatedProjectId = String(process.env.CRM_PROJECTS_EMULATOR_PROJECT || '').trim();
     let adminProjectId = '';
@@ -538,8 +573,8 @@ function createApp(options = {}) {
         appId: process.env.FIREBASE_APP_ID,
         measurementId: process.env.FIREBASE_MEASUREMENT_ID
       },
-      emulators: publishProjectsEmulators && authEmulator && firestoreEmulator
-        ? { auth: authEmulator, firestore: firestoreEmulator }
+      emulators: publishProjectsEmulators && authEmulator && firestoreEmulator && storageEmulator
+        ? { auth: authEmulator, firestore: firestoreEmulator, storage: storageEmulator }
         : undefined,
       features: buildPublicFeatures(process.env)
     });
@@ -635,6 +670,7 @@ function startServer({ app, port, projectRoot } = {}) {
         key: fs.readFileSync(trustedKey),
         cert: fs.readFileSync(trustedCert)
       }, effectiveApp);
+      server.once('close', () => effectiveApp.locals.stopAiScoringReconciler?.());
       server.listen(effectivePort, () => {
         console.log(`[SECURE] Server running with TRUSTED CA on https://localhost:${effectivePort}`);
       });
@@ -646,6 +682,7 @@ function startServer({ app, port, projectRoot } = {}) {
         key: fs.readFileSync(legacyKey),
         cert: fs.readFileSync(legacyCert)
       }, effectiveApp);
+      server.once('close', () => effectiveApp.locals.stopAiScoringReconciler?.());
       server.listen(effectivePort, () => {
         console.log(`[WARNING] Server running with UNTRUSTED cert on https://localhost:${effectivePort}`);
       });
@@ -654,6 +691,7 @@ function startServer({ app, port, projectRoot } = {}) {
   }
 
   server = http.createServer(effectiveApp);
+  server.once('close', () => effectiveApp.locals.stopAiScoringReconciler?.());
   server.listen(effectivePort, () => {
     console.log(`Server running on http://localhost:${effectivePort}`);
   });

@@ -74,7 +74,7 @@ async function main() {
   const server = await new Promise((resolve) => {
     const instance = app.listen(0, '127.0.0.1', () => resolve(instance));
   });
-  const baseUrl = `http://127.0.0.1:${server.address().port}/index.html`;
+  const baseUrl = `http://127.0.0.1:${server.address().port}/index.html?pteShell=legacy`;
   const browser = await chromium.launch({ headless: true });
 
   try {
@@ -209,7 +209,7 @@ async function main() {
     check('connectedSpeechLevel still reports a single dominant level',
       guideState.dominant === 'reduced_words');
     check(`Instruction line names both guides (${String(guideState.instruction).slice(0, 80)})`,
-      /Active guides:/.test(String(guideState.instruction)));
+      /\bjoins\b/.test(String(guideState.instruction)) && /\blight words\b/.test(String(guideState.instruction)));
 
     // Both visual layers must be present on the same prompt. Walk prompts until
     // one carries both feature types, so the check is not fixture-dependent.

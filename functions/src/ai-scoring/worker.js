@@ -8,6 +8,10 @@
 
 const { assessFixedReference } = require('../services/azure-speech/continuous-assessment');
 const { assessSpokenResponse } = require('../services/azure-speech/two-pass-asr');
+const { AudioAssetService } = require('./audio-assets');
+const { normalizePracticeMode } = require('../practice-attempts/attempt-constraints');
+const crypto = require('crypto');
+const { assessReadAloudQuality, enrichReadAloud } = require('./read-aloud-enrichment');
 const {
   parseRolloutFlags,
   isModeEnabledForPronunciationV2,
@@ -28,34 +32,41 @@ class ScoringWorker {
     this.settlementService = settlementService;
     this.stageExecutors = stageExecutors;
     this.storageBucket = storageBucket;
+    this.audioAssetService = new AudioAssetService({
+      db,
+      getBucket: async () => {
+        if (storageBucket) return await storageBucket;
+        const { getStorageBucket } = require('../utils/firebase_admin_init');
+        return getStorageBucket();
+      }
+    });
     this.env = env;
     this.enforceRolloutGates = enforceRolloutGates;
     this.defaultExecutors = {
       read_aloud: async (job) => {
         const audioBuffer = await this.resolveAudioBuffer(job);
+        const audioQuality = job.engineVersion === 'bel.speech.v3' ? assessReadAloudQuality(audioBuffer) : null;
         const sampleRateHz = job.inputMeta?.sampleRateHz || 16000;
-        return assessFixedReference({
+        const result = await assessFixedReference({
           mode: 'read_aloud',
-          referenceText: job.referenceText || job.inputMeta?.referenceText || 'Sample reference',
+          referenceText: job.reference?.text || job.referenceText || job.inputMeta?.referenceText,
           audioBuffer,
-          audioIdentity: {
-            sampleRateHz,
-            sampleCount: job.inputMeta?.sampleCount || Math.floor(audioBuffer.length / 2)
-          },
+          audioIdentity: job.audioManifest || { sampleRateHz, sampleCount: job.inputMeta?.sampleCount },
           attemptId: job.assessmentId
         });
+        if (job.engineVersion === 'bel.speech.v3') {
+          Object.assign(result, await enrichReadAloud({ job, result, wav: audioBuffer, audioQuality }));
+        }
+        return result;
       },
       repeat_sentence: async (job) => {
         const audioBuffer = await this.resolveAudioBuffer(job);
         const sampleRateHz = job.inputMeta?.sampleRateHz || 16000;
         return assessFixedReference({
           mode: 'repeat_sentence',
-          referenceText: job.referenceText || job.inputMeta?.referenceText || 'Sample reference',
+          referenceText: job.reference?.text || job.referenceText || job.inputMeta?.referenceText,
           audioBuffer,
-          audioIdentity: {
-            sampleRateHz,
-            sampleCount: job.inputMeta?.sampleCount || Math.floor(audioBuffer.length / 2)
-          },
+          audioIdentity: job.audioManifest || { sampleRateHz, sampleCount: job.inputMeta?.sampleCount },
           attemptId: job.assessmentId
         });
       },
@@ -65,13 +76,10 @@ class ScoringWorker {
         return assessSpokenResponse({
           mode: 'retell_lecture',
           audioBuffer,
-          audioIdentity: {
-            sampleRateHz,
-            sampleCount: job.inputMeta?.sampleCount || Math.floor(audioBuffer.length / 2)
-          },
+          audioIdentity: job.audioManifest || { sampleRateHz, sampleCount: job.inputMeta?.sampleCount },
           attemptId: job.assessmentId,
           questionId: job.questionId
-        });
+        }, { frozenTranscription: job.frozenTranscription || null });
       },
       summarize_group_discussion: async (job) => {
         const audioBuffer = await this.resolveAudioBuffer(job);
@@ -79,13 +87,10 @@ class ScoringWorker {
         return assessSpokenResponse({
           mode: 'summarize_group_discussion',
           audioBuffer,
-          audioIdentity: {
-            sampleRateHz,
-            sampleCount: job.inputMeta?.sampleCount || Math.floor(audioBuffer.length / 2)
-          },
+          audioIdentity: job.audioManifest || { sampleRateHz, sampleCount: job.inputMeta?.sampleCount },
           attemptId: job.assessmentId,
           questionId: job.questionId
-        });
+        }, { frozenTranscription: job.frozenTranscription || null });
       },
       respond_to_a_situation: async (job) => {
         const audioBuffer = await this.resolveAudioBuffer(job);
@@ -93,16 +98,27 @@ class ScoringWorker {
         return assessSpokenResponse({
           mode: 'respond_to_a_situation',
           audioBuffer,
-          audioIdentity: {
-            sampleRateHz,
-            sampleCount: job.inputMeta?.sampleCount || Math.floor(audioBuffer.length / 2)
-          },
+          audioIdentity: job.audioManifest || { sampleRateHz, sampleCount: job.inputMeta?.sampleCount },
           attemptId: job.assessmentId,
           questionId: job.questionId
-        });
+        }, { frozenTranscription: job.frozenTranscription || null });
       },
       respond_to_situation: async (job) => {
         return this.defaultExecutors.respond_to_a_situation(job);
+      },
+      describe_image: async (job) => {
+        const audioBuffer = await this.resolveAudioBuffer(job);
+        const sampleRateHz = job.inputMeta?.sampleRateHz || 16000;
+        return assessSpokenResponse({
+          mode: 'describe_image',
+          audioBuffer,
+          audioIdentity: job.audioManifest || { sampleRateHz, sampleCount: job.inputMeta?.sampleCount },
+          attemptId: job.assessmentId,
+          questionId: job.questionId
+        }, { frozenTranscription: job.frozenTranscription || null });
+      },
+      di: async (job) => {
+        return this.defaultExecutors.describe_image(job);
       },
       write_essay: async (job) => {
         const essayText = job.text || job.inputMeta?.text || job.inputMeta?.textResponse || job.responseSnapshot?.text || '';
@@ -173,6 +189,15 @@ class ScoringWorker {
   }
 
   async resolveAudioBuffer(job) {
+    if (job.engineVersion === 'bel.speech.v3') {
+      if (!job.audioId || !job.audioManifest) throw new Error('V3_AUDIO_ASSET_REQUIRED');
+      const asset = await this.audioAssetService.getOwned(job.audioId, job.uid, job.mode);
+      if (asset.manifest.canonicalFileHash !== job.audioManifest.canonicalFileHash ||
+          asset.manifest.storageGeneration !== job.audioManifest.storageGeneration) {
+        throw new Error('V3_AUDIO_ASSET_CHANGED');
+      }
+      return this.audioAssetService.download(asset);
+    }
     if (Buffer.isBuffer(job.inputMeta?.audioBuffer)) {
       return job.inputMeta.audioBuffer;
     }
@@ -211,26 +236,16 @@ class ScoringWorker {
       try {
         const resp = await fetch(audioUrl);
         if (!resp.ok) {
-          if (this.env.NODE_ENV !== 'production') {
-            return Buffer.alloc(32000);
-          }
           throw new Error(`FAILED_TO_FETCH_AUDIO: HTTP ${resp.status}`);
         }
         const arrayBuf = await resp.arrayBuffer();
         return Buffer.from(arrayBuf);
       } catch (fetchErr) {
-        if (this.env.NODE_ENV !== 'production') {
-          return Buffer.alloc(32000);
-        }
         throw fetchErr;
       }
     }
 
-    if (this.env.NODE_ENV === 'production' && this.env.ALLOW_MOCK_AUDIO !== 'true') {
-      throw new Error(`MISSING_AUDIO_PAYLOAD: No valid audioBuffer, storagePath, or audioUrl provided for job ${job.assessmentId || ''}`);
-    }
-
-    return Buffer.alloc(32000);
+    throw new Error(`MISSING_AUDIO_PAYLOAD: ${job.assessmentId || ''}`);
   }
 
   getJobRef(assessmentId) {
@@ -239,6 +254,47 @@ class ScoringWorker {
 
   getOutboxRef(assessmentId) {
     return this.db.collection('aiScoringOutbox').doc(assessmentId);
+  }
+
+  resultPath(job) {
+    const owner = crypto.createHash('sha256').update(job.uid).digest('hex').slice(0, 24);
+    return `ai-scoring-results/${owner}/${job.assessmentId}.json`;
+  }
+
+  async loadStoredResult(job) {
+    const bucket = await this.audioAssetService.getBucket();
+    const file = bucket.file(this.resultPath(job));
+    const [exists] = await file.exists();
+    if (!exists) return null;
+    const [bytes] = await file.download();
+    const parsed = JSON.parse(bytes.toString('utf8'));
+    if (parsed.assessmentId !== job.assessmentId || parsed.audio?.canonicalFileHash !== job.audioManifest?.canonicalFileHash) {
+      throw new Error('STORED_RESULT_IDENTITY_MISMATCH');
+    }
+    return parsed;
+  }
+
+  async storeResult(job, result) {
+    const bucket = await this.audioAssetService.getBucket();
+    const path = this.resultPath(job);
+    const file = bucket.file(path);
+    let bytes = Buffer.from(JSON.stringify(result));
+    try {
+      await file.save(bytes, { resumable: false, contentType: 'application/json',
+        preconditionOpts: { ifGenerationMatch: 0 } });
+    } catch (error) {
+      if (Number(error.code) !== 412) throw error;
+      const [existing] = await file.download();
+      if (!existing.equals(bytes)) {
+        const parsed = JSON.parse(existing.toString('utf8'));
+        if (parsed.assessmentId !== job.assessmentId || parsed.audio?.canonicalFileHash !== job.audioManifest?.canonicalFileHash) {
+          throw new Error('STORED_RESULT_IDENTITY_MISMATCH');
+        }
+      }
+      bytes = existing;
+    }
+    const [metadata] = await file.getMetadata();
+    return { path, generation: String(metadata.generation), sha256: crypto.createHash('sha256').update(bytes).digest('hex') };
   }
 
   /**
@@ -250,11 +306,13 @@ class ScoringWorker {
     if (!doc.exists) return null;
     const job = doc.data();
 
-    if (job.status === 'ready' || job.status === 'failed') {
+    if (['ready', 'failed', 'canceled', 'unrateable', 'reference_unresolved'].includes(job.status)) {
       return null; // Already completed
     }
 
     const now = Date.now();
+    if (job.engineVersion === 'bel.speech.v3' &&
+        (Number(job.executionAttempts || 0) >= 3 || Date.parse(job.deadlineAt) <= now)) return null;
     const currentLeaseExp = job.leaseExpiresAt ? new Date(job.leaseExpiresAt).getTime() : 0;
     if (currentLeaseExp > now && job.leaseOwner !== workerId) {
       return null; // Held by another active worker
@@ -266,12 +324,15 @@ class ScoringWorker {
     tx.update(jobRef, {
       leaseOwner: workerId,
       leaseVersion: newVersion,
+      executionId: crypto.randomUUID(),
+      executionAttempts: Number(job.executionAttempts || 0) + 1,
       leaseExpiresAt,
       status: 'processing',
       updatedAt: new Date().toISOString()
     });
 
-    return { ...job, leaseVersion: newVersion, leaseOwner: workerId, leaseExpiresAt, status: 'processing' };
+    return { ...job, leaseVersion: newVersion, executionAttempts: Number(job.executionAttempts || 0) + 1,
+      leaseOwner: workerId, leaseExpiresAt, status: 'processing' };
   }
 
   /**
@@ -340,9 +401,9 @@ class ScoringWorker {
     }
 
     try {
-      if (this.enforceRolloutGates) {
+      if (this.enforceRolloutGates && job.engineVersion !== 'bel.speech.v3') {
         const flags = parseRolloutFlags(this.env);
-        const mode = String(job.mode || '').toLowerCase();
+        const mode = normalizePracticeMode(job.mode);
         const isPronunciationV2 = ['read_aloud', 'repeat_sentence'].includes(mode);
         const isTranscriptConditioned = [
           'retell_lecture',
@@ -362,37 +423,93 @@ class ScoringWorker {
         }
       }
 
-      const executor = this.stageExecutors[job.mode] || this.stageExecutors['default'] || (this.defaultExecutors && this.defaultExecutors[job.mode]);
+      const canonicalMode = normalizePracticeMode(job.mode);
+      const executor = this.stageExecutors[canonicalMode] || this.stageExecutors['default'] || (this.defaultExecutors && this.defaultExecutors[canonicalMode]);
       if (!executor) {
         throw new Error(`NO_EXECUTOR_FOR_MODE: ${job.mode}`);
       }
 
       // Execute stages
-      const assessmentResult = await executor(job);
+      let assessmentResult = job.engineVersion === 'bel.speech.v3' ? await this.loadStoredResult(job) : null;
+      if (!assessmentResult) assessmentResult = await executor({ ...job, mode: canonicalMode });
+
+      if (job.engineVersion === 'bel.speech.v3') {
+        assessmentResult.assessmentId = assessmentId;
+        assessmentResult.audio = job.audioManifest;
+        if (job.reference) assessmentResult.reference = job.reference;
+        if (assessmentResult.status !== 'completed' || !assessmentResult.coverage?.scoredWordCount ||
+            !Array.isArray(assessmentResult.wordResults) || assessmentResult.wordResults.length === 0) {
+          const error = new Error(assessmentResult.reason || 'UNRATEABLE_ASSESSMENT');
+          error.unrateable = true;
+          throw error;
+        }
+      }
 
       if (staleDetected) {
         throw new Error('STALE_LEASE_ON_COMPLETION');
       }
 
+      // Plan V3 §11.3: If material ambiguity detected, release compute lease and await student confirmation
+      if (job.engineVersion !== 'bel.speech.v3' && assessmentResult && assessmentResult.status === 'awaiting_reference_confirmation') {
+        await this.db.runTransaction(async tx => {
+          const jobRef = this.getJobRef(assessmentId);
+          tx.update(jobRef, {
+            status: 'awaiting_reference_confirmation',
+            stage: 'awaiting_reference_confirmation',
+            ambiguities: assessmentResult.ambiguities || [],
+            transcription: assessmentResult.transcription || null,
+            leaseOwner: null,
+            leaseExpiresAt: null,
+            updatedAt: new Date().toISOString()
+          });
+          tx.delete(this.getOutboxRef(assessmentId));
+        });
+        return { status: 'awaiting_reference_confirmation', assessmentId };
+      }
+
+      const resultRef = job.engineVersion === 'bel.speech.v3' ? await this.storeResult(job, assessmentResult) : null;
       // Settle captured credits on success
       await this.db.runTransaction(async tx => {
         const jobRef = this.getJobRef(assessmentId);
         const currentDoc = await tx.get(jobRef);
+        const cData = currentDoc.exists ? currentDoc.data() : job;
         if (currentDoc.exists) {
-          const cData = currentDoc.data();
           if (cData.leaseVersion !== job.leaseVersion || cData.leaseOwner !== workerId || cData.status !== 'processing') {
             throw new Error('STALE_LEASE_ON_COMPLETION');
           }
+          if (Date.parse(cData.deadlineAt) <= Date.now()) throw new Error('JOB_DEADLINE_EXPIRED');
         }
 
+        let archiveRef = null;
+        if (job.engineVersion === 'bel.speech.v3') {
+          archiveRef = this.db.collection('speakingAttempts').doc(job.attemptId);
+          const archive = await tx.get(archiveRef);
+          if (!archive.exists || archive.data().ownerUid !== job.uid ||
+              archive.data().v3AudioId !== job.audioId || archive.data().v3AssessmentId !== assessmentId) {
+            throw new Error('STALE_AUDIO_REVISION');
+          }
+        }
         await this.settlementService.captureCreditsInTx(tx, { assessmentId });
 
         tx.update(jobRef, {
           status: 'ready',
           stage: 'completed',
-          result: assessmentResult,
+          result: resultRef ? { schemaVersion: 'bel.speech.v3', overallScores: assessmentResult.overallScores,
+            coverage: assessmentResult.coverage, recognizedText: assessmentResult.recognizedText } : assessmentResult,
+          resultRef,
+          leaseOwner: null,
+          leaseExpiresAt: null,
           updatedAt: new Date().toISOString()
         });
+        if (archiveRef) tx.update(archiveRef, {
+          v3AssessmentState: 'ready', v3ResultRef: resultRef,
+          v3AssessmentId: assessmentId, updatedAt: new Date().toISOString()
+        });
+        if (archiveRef && canonicalMode === 'read_aloud' && assessmentResult.connectedSpeechRecord) {
+          tx.set(this.db.collection('readAloudConnectedSpeechAttempts').doc(assessmentId), {
+            ...assessmentResult.connectedSpeechRecord, createdAt: new Date().toISOString()
+          }, { merge: true });
+        }
 
         // Cleanup outbox
         tx.delete(this.getOutboxRef(assessmentId));
@@ -413,7 +530,7 @@ class ScoringWorker {
         const checkDoc = await this.getJobRef(assessmentId).get();
         if (checkDoc.exists) {
           const cData = checkDoc.data();
-          if (cData.leaseVersion !== job.leaseVersion || cData.leaseOwner !== workerId || cData.status === 'ready') {
+          if (cData.leaseVersion !== job.leaseVersion || cData.leaseOwner !== workerId || cData.status !== 'processing') {
             isStale = true;
           }
         }
@@ -426,28 +543,60 @@ class ScoringWorker {
 
       // Settle release/refund on technical failure
       let abortedDueToStale = false;
+      let wasTerminal = false;
       await this.db.runTransaction(async tx => {
         const jobRef = this.getJobRef(assessmentId);
         const currentDoc = await tx.get(jobRef);
+        const cData = currentDoc.exists ? currentDoc.data() : job;
         if (currentDoc.exists) {
-          const cData = currentDoc.data();
-          if (cData.leaseVersion !== job.leaseVersion || cData.leaseOwner !== workerId || cData.status === 'ready') {
+          if (cData.leaseVersion !== job.leaseVersion || cData.leaseOwner !== workerId || cData.status !== 'processing') {
             abortedDueToStale = true;
             return;
           }
         }
 
+        const isV3 = job.engineVersion === 'bel.speech.v3';
+        const terminal = !isV3 || err.unrateable || err.message === 'STALE_AUDIO_REVISION' ||
+          err.message === 'JOB_DEADLINE_EXPIRED' || Number(cData.executionAttempts || job.executionAttempts) >= 3 ||
+          Date.parse(cData.deadlineAt) <= Date.now();
+        wasTerminal = terminal;
+        if (!terminal) {
+          tx.update(jobRef, { status: 'queued', stage: 'retry_pending',
+            error: err.message || 'EXECUTION_ERROR', leaseOwner: null, leaseExpiresAt: null,
+            updatedAt: new Date().toISOString() });
+          tx.set(this.getOutboxRef(assessmentId), {
+            assessmentId, status: 'pending', retryAfterAt: new Date(Date.now() + 10000).toISOString(),
+            lastError: err.message || 'EXECUTION_ERROR', updatedAt: new Date().toISOString()
+          }, { merge: true });
+          return;
+        }
+
+        let archiveRef = null;
+        let archive = null;
+        if (isV3) {
+          archiveRef = this.db.collection('speakingAttempts').doc(job.attemptId);
+          archive = await tx.get(archiveRef);
+        }
         await this.settlementService.releaseCreditsInTx(tx, {
           assessmentId,
           reason: err.message || 'EXECUTION_ERROR'
         });
 
         tx.update(jobRef, {
-          status: 'failed',
-          stage: 'failed',
+          status: err.unrateable ? 'unrateable' : 'failed',
+          stage: err.unrateable ? 'unrateable' : 'failed',
           error: err.message || 'EXECUTION_ERROR',
+          leaseOwner: null,
+          leaseExpiresAt: null,
           updatedAt: new Date().toISOString()
         });
+
+        if (isV3) {
+          if (archive.exists && archive.data().v3AssessmentId === assessmentId) {
+            tx.update(archiveRef, { v3AssessmentState: err.unrateable ? 'unrateable' : 'failed',
+              updatedAt: new Date().toISOString() });
+          }
+        }
 
         tx.delete(this.getOutboxRef(assessmentId));
       });
@@ -456,7 +605,8 @@ class ScoringWorker {
         return { status: 'aborted', reason: 'STALE_LEASE' };
       }
 
-      return { status: 'failed', error: err.message };
+      return { status: wasTerminal ? (err.unrateable ? 'unrateable' : 'failed') : 'retry_pending',
+        error: err.message };
     } finally {
       if (heartbeatTimer) {
         clearInterval(heartbeatTimer);

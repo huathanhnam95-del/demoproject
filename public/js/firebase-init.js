@@ -9,7 +9,7 @@ import { getAuth, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs
 import { getFirestore, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getFunctions, connectFunctionsEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 
-const firebaseConfig = {
+const defaultFirebaseConfig = {
     apiKey: "AIzaSyB0vXX7NwOvME_XoaGiJlYaiLRcaHJtrIQ",
     authDomain: "listening-tasks-3ae34.firebaseapp.com",
     projectId: "listening-tasks-3ae34",
@@ -18,12 +18,6 @@ const firebaseConfig = {
     appId: "1:737872673808:web:4db57599aa22b4830fde95",
     measurementId: "G-1891MSSLXT"
 };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const functions = getFunctions(app);
 
 // ── Emulator Redirect (local dev only) ────────────────────────────
 // When running locally, route all Firebase calls to local emulators
@@ -38,11 +32,42 @@ const isLocal = _h === 'localhost'
     || /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(_h)
     || /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(_h);
 
+let firebaseConfig = defaultFirebaseConfig;
+let demoEndpoints = null;
+if (isLocal) {
+    const response = await fetch('/api/config', { cache: 'no-store' }).catch(() => null);
+    if (response?.ok) {
+        const localConfig = await response.json();
+        if (localConfig?.config?.projectId === 'demo-crm-projects') {
+            const endpoints = localConfig.emulators;
+            const validEndpoint = value => value
+                && ['localhost', '127.0.0.1'].includes(value.host)
+                && Number.isInteger(value.port) && value.port > 0 && value.port < 65536;
+            if (!localConfig.config.apiKey || !validEndpoint(endpoints?.auth)
+                || !validEndpoint(endpoints?.firestore) || window.__DISABLE_FIREBASE_EMULATORS__) {
+                throw new Error('DEMO_FIREBASE_CONFIG_INCOMPLETE');
+            }
+            firebaseConfig = localConfig.config;
+            demoEndpoints = endpoints;
+        }
+    }
+}
+
+// Initialize only after the local demo project has been resolved. Other hosts
+// retain the established Firebase configuration and emulator behavior.
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const functions = getFunctions(app);
+
 if (isLocal && !window.__DISABLE_FIREBASE_EMULATORS__) {
     // Force 127.0.0.1 to avoid IPv6 resolution issues on some local setups
     const EMULATOR_HOST = '127.0.0.1';
-    connectFirestoreEmulator(db, EMULATOR_HOST, 8080);
-    connectAuthEmulator(auth, `http://${EMULATOR_HOST}:9099`, { disableWarnings: true });
+    connectFirestoreEmulator(db, demoEndpoints?.firestore.host || EMULATOR_HOST,
+        demoEndpoints?.firestore.port || 8080);
+    connectAuthEmulator(auth,
+        `http://${demoEndpoints?.auth.host || EMULATOR_HOST}:${demoEndpoints?.auth.port || 9099}`,
+        { disableWarnings: true });
     connectFunctionsEmulator(functions, EMULATOR_HOST, 5001);
     console.warn(`🔧 [Modular SDK] Firebase Emulators active (${EMULATOR_HOST}) — local data only.`);
 } else if (isLocal && window.__DISABLE_FIREBASE_EMULATORS__) {

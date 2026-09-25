@@ -37,7 +37,7 @@ async function main() {
   const server = await new Promise((resolve) => {
     const instance = app.listen(0, '127.0.0.1', () => resolve(instance));
   });
-  const baseUrl = `http://127.0.0.1:${server.address().port}/index.html`;
+  const baseUrl = `http://127.0.0.1:${server.address().port}/index.html?pteShell=legacy`;
   const browser = await chromium.launch({ headless: true });
 
   try {

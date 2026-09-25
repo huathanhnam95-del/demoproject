@@ -233,8 +233,10 @@ async function checkReadAloudStepper(page) {
   });
   await page.waitForTimeout(200);
   const atRecorded = await readSteps();
-  check('Stepper sits on Record with a captured recording',
-    atRecorded[1]?.state === 'current');
+  // Since the Read Aloud workspace v2 (V2.0.9) a captured recording moves the stepper to Results,
+  // where Get feedback lives (speaking-practice-adapters.js getStepIndex).
+  check('Stepper moves to Results with a captured recording',
+    atRecorded[1]?.state === 'complete' && atRecorded[2]?.state === 'current');
 
   // Simulate the scorer rejecting the attempt: the results panel is rendered
   // with an error message and no score.
@@ -385,7 +387,9 @@ async function checkGuideComposition(page) {
     afterEscape.hidden === 'true' && !afterEscape.pinned && afterEscape.describedWords === 0);
 
   await page.evaluate(() => window.ReadAloudMode.hideSoundChangeTooltip());
-  await page.locator('#ra-toggle-sound-changes-btn').focus();
+  // The guide buttons are an Advanced-view surface (hidden in the basic view), so focusing one
+  // no longer moved focus; blur the word instead so focusing it again fires focusin.
+  await page.evaluate(() => document.activeElement?.blur());
   await tooltipWord.focus();
   await page.waitForFunction(() => (
     document.getElementById('ra-sound-change-tooltip')?.getAttribute('aria-hidden') === 'false'
@@ -393,7 +397,7 @@ async function checkGuideComposition(page) {
   check('Keyboard focus opens the sound-change tooltip', await page.evaluate(() => (
     document.getElementById('ra-sound-change-tooltip')?.getAttribute('aria-hidden') === 'false'
   )));
-  await page.locator('#ra-toggle-sound-changes-btn').focus();
+  await page.evaluate(() => document.activeElement?.blur());
   await page.waitForTimeout(150);
   check('Moving keyboard focus away closes an unpinned tooltip', await page.evaluate(() => (
     document.getElementById('ra-sound-change-tooltip')?.getAttribute('aria-hidden') === 'true'
@@ -414,11 +418,14 @@ async function main() {
   const server = await new Promise((resolve) => {
     const instance = app.listen(0, '127.0.0.1', () => resolve(instance));
   });
-  const baseUrl = `http://127.0.0.1:${server.address().port}/index.html`;
+  const baseUrl = `http://127.0.0.1:${server.address().port}/index.html?pteShell=legacy`;
   const browser = await chromium.launch({ headless: true });
 
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
+    // Since the V2.0.15 AI-credit gate a missing quote endpoint (404) blocks scoring; 503 means
+    // "credits off", which scores unmetered like the test expects.
+    await context.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
     await context.addInitScript(() => {
       window.localStorage.setItem('userStatus', 'guest');
       window.localStorage.setItem('hasSeenScopeTutorial', 'true');

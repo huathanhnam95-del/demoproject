@@ -84,7 +84,10 @@
         if (!(blob instanceof Blob)) return null;
         const ext = extensionForBlob(blob);
         const slot = cleanString(item?.slot || item?.kind || DEFAULT_MEDIA_SLOT, 64) || DEFAULT_MEDIA_SLOT;
-        const slotFile = cleanString(item?.slotFile || item?.fileName, 128) || `${slot}.${ext}`;
+        // student.wav is reserved by the legacy single-audio upload rule. The
+        // archive uses mediaSlots and must write through the slot-based rule.
+        const defaultSlotFile = slot === 'student' && ext === 'wav' ? 'student-recording.wav' : `${slot}.${ext}`;
+        const slotFile = cleanString(item?.slotFile || item?.fileName, 128) || defaultSlotFile;
         return {
           slot,
           label: cleanString(item?.label, 120) || 'Student recording',
@@ -121,24 +124,32 @@
         try { audio.load(); } catch (_) { /* ignore */ }
         urlApi.revokeObjectURL(url);
       };
-      const finish = () => {
-        const duration = Number(audio.duration);
+      const finish = async () => {
+        if (settled) return;
+        const metadataDurationMs = normalizePositiveDurationMs(Number(audio.duration) * 1000);
         cleanup();
-        resolve(normalizePositiveDurationMs(duration * 1000));
+        if (metadataDurationMs) return resolve(metadataDurationMs);
+        // MediaRecorder WebM often exposes Infinity in Chrome. Decode the
+        // actual bytes rather than sending an invented duration to the archive.
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return resolve(null);
+        const context = new AudioContextClass();
+        try {
+          const decoded = await context.decodeAudioData(await blob.arrayBuffer());
+          resolve(normalizePositiveDurationMs(decoded.duration * 1000));
+        } catch (_) {
+          resolve(null);
+        } finally {
+          await context.close().catch(() => {});
+        }
       };
-      const timeoutId = setTimeout(() => {
-        cleanup();
-        resolve(null);
-      }, 2500);
+      const timeoutId = setTimeout(finish, 2500);
       audio.preload = 'metadata';
       audio.onloadedmetadata = finish;
       audio.ondurationchange = () => {
         if (Number.isFinite(Number(audio.duration)) && Number(audio.duration) > 0) finish();
       };
-      audio.onerror = () => {
-        cleanup();
-        resolve(null);
-      };
+      audio.onerror = finish;
       audio.src = url;
     });
   }
@@ -282,7 +293,25 @@
     if (!cleanAttemptId) return { skipped: true, reason: 'missing-attempt-id' };
     const body = {};
     if ('resultSnapshot' in patch || 'result' in patch) {
-      body.resultSnapshot = patch.resultSnapshot || patch.result || null;
+      const result = patch.resultSnapshot || patch.result || null;
+      // The server keeps the complete V3 record by result reference. Archive
+      // snapshots carry only the fields needed for history and clip controls.
+      body.resultSnapshot = result && Array.isArray(result.words)
+        && result.words.some(word => word?.occurrenceId || word?.clipSpan)
+        ? { ...result, wordResultsTruncated: result.words.length > 40,
+          words: result.words.slice(0, 40).map(word => ({
+          occurrenceId: word.occurrenceId || null,
+          word: word.word || word.text || '',
+          errorType: word.errorType || null,
+          accuracyScore: word.accuracyScore ?? null,
+          clipSpan: word.clipSpan || word.clip || null,
+          syllables: Array.isArray(word.syllables) ? word.syllables.map(syllable => ({
+            syllable: syllable.syllable || syllable.text || '',
+            accuracyScore: syllable.accuracyScore ?? null,
+            span: syllable.span || null
+          })) : []
+        })) }
+        : result;
     }
     if ('responseSnapshot' in patch || 'response' in patch) {
       body.responseSnapshot = patch.responseSnapshot || patch.response || null;
@@ -1531,6 +1560,72 @@
     focusModalElement(opener);
   }
 
+  async function renderV3ModalDetails(container, attempt) {
+    const headers = await getAuthHeaders();
+    if (!headers) throw new Error('Please log in to view this assessment.');
+    const assessmentId = attempt.v3.assessmentId;
+    const response = await fetch(`/api/ai-scoring/assessments/${encodeURIComponent(assessmentId)}`, {
+      headers, cache: 'no-store'
+    });
+    const state = await response.json().catch(() => null);
+    if (!response.ok || state?.status !== 'ready' || state?.result?.schemaVersion !== 'bel.speech.v3') {
+      throw new Error('Saved assessment is not available yet. Please try again later.');
+    }
+    if (!container.isConnected) return;
+    const result = state.result;
+    renderModalDetails(container, {
+      ...attempt,
+      resultSnapshot: null,
+      responseSnapshot: { text: result.recognizedText || result.transcription?.rawTranscript || '' }
+    });
+    const body = container.querySelector('.pte-attempt-review-body');
+    const section = document.createElement('section');
+    section.className = 'pte-attempt-review-v3';
+    const title = document.createElement('h4');
+    title.className = 'pte-attempt-review-section-title';
+    title.textContent = 'Pronunciation assessment';
+    section.appendChild(title);
+    const scores = document.createElement('p');
+    const metrics = result.overallScores || {};
+    const format = value => typeof value === 'number' ? Math.round(value) : 'unavailable';
+    scores.textContent = `Pronunciation ${format(metrics.pronunciationScore)} · Accuracy ${format(metrics.accuracyScore)} · Fluency ${format(metrics.fluencyScore)} · Completeness ${format(metrics.completenessScore)}`;
+    section.appendChild(scores);
+    const disclosure = document.createElement('div');
+    section.appendChild(disclosure);
+    const playbackStatus = document.createElement('p');
+    playbackStatus.setAttribute('role', 'status');
+    section.appendChild(playbackStatus);
+    body.appendChild(section);
+    const { audioId, audioManifest } = attempt.v3;
+    let canonicalBlob = null;
+    const play = async word => {
+      const span = word?.clip || word?.clipSpan || word?.clipTiming?.clipSpan;
+      if (!span || !audioId || !audioManifest) {
+        playbackStatus.textContent = 'This clip is unavailable.';
+        return;
+      }
+      try {
+        if (!canonicalBlob) {
+          const audioResponse = await fetch(`/api/ai-scoring/audio/${encodeURIComponent(audioId)}`, {
+            headers, cache: 'no-store'
+          });
+          if (!audioResponse.ok) throw new Error('Canonical audio unavailable');
+          canonicalBlob = await audioResponse.blob();
+        }
+        if (!container.isConnected) return;
+        const played = await window.AiScoringGate?.playV3Span?.({ canonicalBlob, manifest: audioManifest, span });
+        playbackStatus.textContent = played === false ? 'This clip could not be played.' : '';
+      } catch (_) {
+        playbackStatus.textContent = 'This clip could not be played.';
+      }
+    };
+    if (window.TranscriptDisclosure) {
+      new window.TranscriptDisclosure({ containerEl: disclosure, onWordClick: play }).render(result);
+    } else {
+      disclosure.textContent = result.recognizedText || 'Transcript unavailable.';
+    }
+  }
+
   async function openReviewModal(attemptId) {
     const opener = document.activeElement && document.activeElement !== document.body
       ? document.activeElement
@@ -1585,7 +1680,11 @@
       if (!attempt || attempt.skipped) {
         throw new Error('Failed to retrieve attempt data.');
       }
-      renderModalDetails(container, attempt);
+      if (attempt.v3?.assessmentId && attempt.v3.status === 'ready') {
+        await renderV3ModalDetails(container, attempt);
+      } else {
+        renderModalDetails(container, attempt);
+      }
     } catch (err) {
       console.error('[PTE Archive] Error loading review details:', err);
       const body = container.querySelector('.pte-attempt-review-body');

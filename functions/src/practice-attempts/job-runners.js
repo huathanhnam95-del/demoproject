@@ -74,6 +74,9 @@ async function safeDeleteFile(bucket, path) {
 
 function collectAttemptMediaPaths(attempt) {
     const paths = new Set();
+    if (attempt?.v3AudioPath) paths.add(String(attempt.v3AudioPath));
+    (attempt?.v3AudioRevisionPaths || []).forEach(path => { if (path) paths.add(String(path)); });
+    if (attempt?.v3ResultRef?.path) paths.add(String(attempt.v3ResultRef.path));
     const legacyPath = String(attempt?.audio?.studentPath || '').trim();
     if (legacyPath) paths.add(legacyPath);
 
@@ -153,6 +156,9 @@ async function deleteAttemptCascade(db, attemptId) {
         await db.collection(SPEAKING_ATTEMPT_SHARES).doc(shareId).delete().catch(() => null);
     }
     await Promise.all(mediaPaths.map((path) => safeDeleteFile(bucket, path).catch(() => null)));
+    for (const id of new Set([attempt.v3AudioId, ...(attempt.v3AudioRevisionIds || [])].filter(Boolean))) {
+        await db.collection('aiScoringAudio').doc(id).delete().catch(() => null);
+    }
     await decrementBookmarkCounterIfNeeded(db, attempt);
 
     await attemptRef.delete().catch(() => null);
@@ -185,6 +191,7 @@ async function claimAttemptForDeletion(db, attemptRef, now) {
 
 async function runSpeakingAttemptCleanup(db, options = {}) {
     const now = options.now instanceof Date ? options.now : new Date();
+    const bucketProvider = options.getBucket || getStorageBucket;
     logJobEvent('runSpeakingAttemptCleanup:start', { now: now.toISOString() });
 
     // Clean up stale drafts (prepared but never submitted).
@@ -199,12 +206,66 @@ async function runSpeakingAttemptCleanup(db, options = {}) {
         .catch(() => null);
 
     if (draftSnap && Array.isArray(draftSnap.docs) && draftSnap.docs.length) {
-        const bucket = await getStorageBucket();
+        const bucket = await bucketProvider();
         for (const doc of draftSnap.docs) {
             const data = doc.data() || {};
+            if (['queued', 'processing', 'retry_pending'].includes(data.v3AssessmentState)) continue;
             const mediaPaths = collectAttemptMediaPaths(data);
             await Promise.all(mediaPaths.map((path) => safeDeleteFile(bucket, path).catch(() => null)));
+            for (const id of new Set([data.v3AudioId, ...(data.v3AudioRevisionIds || [])].filter(Boolean))) {
+                await db.collection('aiScoringAudio').doc(id).delete().catch(() => null);
+            }
             await doc.ref.delete().catch(() => null);
+        }
+    }
+
+    // A V3 recording may already have an archived original while its canonical
+    // assessment asset was never quoted or confirmed. Retire only that expired
+    // staged revision; keep the original attempt and active job assets intact.
+    const expiredAudio = await db.collection('aiScoringAudio')
+        .where('expiresAt', '<=', now.toISOString()).limit(200).get();
+    if (!expiredAudio.empty) {
+        const bucket = await bucketProvider();
+        for (const doc of expiredAudio.docs) {
+            const asset = doc.data() || {};
+            if (!['staged', 'deleting'].includes(asset.status) || asset.assessmentId ||
+                Date.parse(asset.expiresAt) > now.getTime()) continue;
+            try {
+                const claimed = await db.runTransaction(async tx => {
+                    const current = await tx.get(doc.ref);
+                    if (!current.exists || !['staged', 'deleting'].includes(current.data().status) ||
+                        current.data().assessmentId || Date.parse(current.data().expiresAt) > now.getTime()) return false;
+                    if (current.data().status === 'staged') tx.update(doc.ref, { status: 'deleting', updatedAt: now.toISOString() });
+                    return true;
+                });
+                if (!claimed) continue;
+                await safeDeleteFile(bucket, asset.storagePath);
+                await db.runTransaction(async tx => {
+                    const current = await tx.get(doc.ref);
+                    if (!current.exists || current.data().status !== 'deleting' ||
+                        current.data().assessmentId || Date.parse(current.data().expiresAt) > now.getTime()) return;
+                    const attemptRef = db.collection(SPEAKING_ATTEMPTS).doc(asset.attemptId);
+                    const attempt = await tx.get(attemptRef);
+                    if (attempt.exists && attempt.data().ownerUid === asset.uid) {
+                        const record = attempt.data();
+                        const patch = {
+                            v3AudioRevisionPaths: (record.v3AudioRevisionPaths || []).filter(path => path !== asset.storagePath),
+                            v3AudioRevisionIds: (record.v3AudioRevisionIds || []).filter(id => id !== doc.id),
+                            updatedAt: now.toISOString()
+                        };
+                        if (record.v3AudioId === doc.id) Object.assign(patch, {
+                            v3AudioId: null, v3AudioPath: null, v3AudioManifest: null
+                        });
+                        tx.update(attemptRef, patch);
+                    }
+                    tx.delete(doc.ref);
+                });
+            } catch (error) {
+                logJobEvent('expired-v3-audio-cleanup-failed', {
+                    attemptId: asset.attemptId, resultCode: 'RETRY_NEXT_RUN',
+                    error: String(error?.message || error)
+                });
+            }
         }
     }
 

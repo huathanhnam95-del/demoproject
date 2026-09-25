@@ -5,6 +5,44 @@ const { launchPracticeChrome } = require('./launch-practice-chrome');
 
 // Same guest and media bootstrap as practice-modes-ui-full-audit, without its telemetry patches.
 function initScript() {
+  const blockedProviderHost = 'praat-api-1071929245506.us-central1.run.app';
+  const blockedRequests = [];
+  Object.defineProperty(window, '__pteBlockedProviderRequests', { configurable: false, value: blockedRequests });
+  const getProviderRequestUrl = input => {
+    try {
+      const candidate = typeof input === 'string' ? input : input && input.url;
+      const url = new URL(candidate, location.href);
+      return url.hostname === blockedProviderHost ? url.href : null;
+    } catch (_) {
+      return null;
+    }
+  };
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = (input, init) => {
+    const url = getProviderRequestUrl(input);
+    if (url) {
+      blockedRequests.push(url);
+      return Promise.reject(new TypeError('PRAAT provider traffic is disabled in the synthetic browser harness.'));
+    }
+    return nativeFetch(input, init);
+  };
+  const nativeXhrOpen = XMLHttpRequest.prototype.open;
+  const nativeXhrSend = XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.open = function (method, url, ...args) {
+    this.__pteBlockedProviderUrl = getProviderRequestUrl(url);
+    return nativeXhrOpen.call(this, method, url, ...args);
+  };
+  XMLHttpRequest.prototype.send = function (...args) {
+    if (this.__pteBlockedProviderUrl) {
+      blockedRequests.push(this.__pteBlockedProviderUrl);
+      setTimeout(() => {
+        this.dispatchEvent(new ProgressEvent('error'));
+        this.dispatchEvent(new ProgressEvent('loadend'));
+      }, 0);
+      return undefined;
+    }
+    return nativeXhrSend.apply(this, args);
+  };
   localStorage.setItem('userStatus', 'guest'); localStorage.setItem('hasSeenScopeTutorial', 'true');
   sessionStorage.setItem('guestMode', 'true'); sessionStorage.setItem('welcomeModalSeen', 'true');
   ['read-aloud', 'speak', 'describe-image', 'notes', 'asq', 'sgd', 'rts'].forEach(mode => localStorage.setItem(`${mode}ModeFirstUse`, 'true'));

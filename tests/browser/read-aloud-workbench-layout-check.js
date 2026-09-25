@@ -50,7 +50,7 @@ function ok(label, pass, detail) {
         window.localStorage.setItem('hasSeenScopeTutorial', 'true');
         window.localStorage.setItem('read-aloudModeFirstUse', 'true');
       });
-      await page.goto(`${baseUrl}/index.html?raWorkspace=legacy`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${baseUrl}/index.html?raWorkspace=legacy&pteShell=legacy`, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => typeof window.switchToMode === 'function', { timeout: 30000 });
       const guestButton = page.locator('#guest-mode-btn');
       if (await guestButton.isVisible().catch(() => false)) await guestButton.click();
@@ -94,7 +94,8 @@ function ok(label, pass, detail) {
         return {
           focusClass: document.body.classList.contains('spc-focus'),
           stepsInPrimaryRow: !!document.querySelector('.spc-row--primary .spc-steps'),
-          footerExists: !!document.querySelector('.spc-footer .spc-slot-attempt'),
+          // Since 8f329a5d3 (14 Sep) Read Aloud's actions live in its own #ra-action-host by the passage.
+          footerExists: !!document.querySelector('#ra-action-host .spc-slot-attempt'),
           leftPrimary: left('.spc-row--primary'),
           leftGuidebar: left('.ra-guidebar'),
           leftStage: left('.ra-stage'),
@@ -104,7 +105,7 @@ function ok(label, pass, detail) {
           panelOverflow: panel ? panel.scrollWidth - panel.clientWidth : 0,
           docOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
           duplicateParagraphText: coachParagraph ? coachParagraph.textContent.trim().length : 0,
-          guideChips: document.querySelectorAll('#ra-prompt-guides-group button').length
+          guideChips: [...document.querySelectorAll('#ra-prompt-guides-group button')].map(button => button.textContent.trim()).join(' | ')
         };
       });
 
@@ -112,11 +113,12 @@ function ok(label, pass, detail) {
       if (bp.name === '1440') {
         record(`focus width on by default ${tag}`, probe.focusClass === true);
         record(`steps collapsed into primary row ${tag}`, probe.stepsInPrimaryRow === true);
-        record(`action footer exists ${tag}`, probe.footerExists === true);
+        record(`action slot sits in the Read Aloud action host ${tag}`, probe.footerExists === true);
         record(`coach no longer renders a second passage ${tag}`,
           probe.duplicateParagraphText === 0, `chars=${probe.duplicateParagraphText}`);
-        record(`all four guide chips present ${tag}`,
-          probe.guideChips === 4, `count=${probe.guideChips}`);
+        // Rhythm & Stress joined the guides with task 1241 (stress typography).
+        record(`all five guide chips present ${tag}`,
+          probe.guideChips === 'Chunking | Rhythm & Stress | Linking | Reduced words | Sound changes', probe.guideChips);
       }
 
       if (bp.name === '1440') {

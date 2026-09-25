@@ -3,7 +3,7 @@ const express = require('express');
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
-const { chromium } = require('playwright');
+const { launchPracticeChrome } = require('./helpers/launch-practice-chrome');
 
 const TEST_ID = '14947400dbffa3defa47121610d37d49ee5c791b00ae3d98c5a44db1420dec8b';
 
@@ -340,7 +340,7 @@ function buildApiPayload() {
 
 async function main() {
   const { server, origin } = await startHarnessServer();
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchPracticeChrome();
 
   try {
     const context = await browser.newContext({
@@ -387,9 +387,28 @@ async function main() {
       });
     });
 
+    let v3Fixture = false;
     await context.route('**/api/**', async (route) => {
       const url = new URL(route.request().url());
       const payload = buildApiPayload();
+      if (v3Fixture) {
+        const speaking = payload.test.speaking['speaking-1'];
+        speaking.transcript = 'Hello world';
+        speaking.v3 = { revisionId: 'fixture-revision' };
+        speaking.assessment = {
+          schemaVersion: 'bel.speech.v3',
+          audio: { sampleCount: 16000, sampleRateHz: 16000, canonicalFileHash: 'fixture-hash' },
+          wordResults: [
+            { word: 'Hello', displayStart: 0, accuracyScore: 0,
+              clip: { startSample: 0, endSample: 8000 },
+              syllables: [{ syllable: 'Hel', accuracyScore: 0,
+                span: { startSample: 0, endSample: 4000 },
+                phonemes: [{ ipaRaw: 'ɹ' }] }] },
+            { word: 'world', displayStart: 1, accuracyScore: null,
+              isBoundaryUncertain: true, clip: { startSample: 8000, endSample: 16000 } }
+          ]
+        };
+      }
 
       if (url.pathname === '/api/config') {
         await route.fulfill({
@@ -438,6 +457,11 @@ async function main() {
         return;
       }
 
+      if (url.pathname === `/api/admin/entrance-tests/${TEST_ID}/speaking/speaking-1/canonical-audio`) {
+        await route.fulfill({ status: 200, contentType: 'audio/wav', body: Buffer.alloc(44) });
+        return;
+      }
+
       await route.fulfill({
         status: 404,
         contentType: 'application/json',
@@ -462,17 +486,36 @@ async function main() {
     assert.ok(boot.hasJsPdfGlobal, 'Expected jsPDF global to be available.');
     assert.ok(boot.hasGenerator, 'Expected PDF generator to be available.');
 
-    fs.mkdirSync('tmp', { recursive: true });
+    const evidenceDir = process.env.PTE_SHELL_EVIDENCE || path.join('tmp');
+    fs.mkdirSync(evidenceDir, { recursive: true });
     const downloadPromise = page.waitForEvent('download', { timeout: 60000 });
     await page.click('#crm-export-pdf-btn');
     const download = await downloadPromise;
     const filename = download.suggestedFilename();
     assert.ok(/\.pdf$/i.test(filename), `Expected a .pdf download filename. Got: ${filename}`);
     assert.ok(/^entrance-test-/i.test(filename), `Expected entrance test pdf filename prefix. Got: ${filename}`);
-    const savePath = path.join('tmp', 'crm-entrance-test-result.pdf');
+    const savePath = path.join(evidenceDir, 'crm-entrance-test-result.pdf');
     await download.saveAs(savePath);
     const stat = fs.statSync(savePath);
     assert.ok(stat.size > 1024, `Expected non-trivial PDF download. size=${stat.size}`);
+
+    v3Fixture = true;
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.locator('.crm-v3-token').first().waitFor({ state: 'visible' });
+    assert.equal(await page.locator('.crm-v3-token').count(), 2, 'V3 occurrence tokens render');
+    assert.equal(await page.locator('.crm-v3-syllable').count(), 1, 'V3 syllable renders');
+    assert.match(await page.locator('.crm-v3-token').first().getAttribute('aria-label'), /score 0/, 'zero is retained');
+    assert.match(await page.locator('.crm-v3-token').nth(1).getAttribute('aria-label'), /score unavailable, context playback/);
+    assert.equal(await page.locator('.crm-align-words-btn').count(), 0, 'V3 must not offer legacy realignment');
+    await page.evaluate(() => {
+      window.__v3Played = [];
+      window.AiScoringGate.playV3Span = async ({ span }) => { window.__v3Played.push(span); return true; };
+    });
+    await page.locator('.crm-v3-token').first().click();
+    await page.locator('.crm-v3-syllable').first().click();
+    assert.deepEqual(await page.evaluate(() => window.__v3Played), [
+      { startSample: 0, endSample: 8000 }, { startSample: 0, endSample: 4000 }
+    ], 'CRM word and syllable controls pass exact sample spans');
 
     console.log('crm entrance test pdf browser check passed');
 

@@ -12,6 +12,7 @@ const {
     buildPublicSession
 } = require('../entrance-test/test36plus');
 const { buildEntranceTestAdminList } = require('../../functions/src/crm/entrance-test-link-recovery');
+const { getEntranceV3Status } = require('../../functions/src/entrance-test/v3-assessment');
 
 const VALID_TEST_TYPES_LEGACY = new Set(['entrance_test_36plus_v1', 'segmental_screening_v1']);
 const DEFAULT_TEST_TYPE_LEGACY = 'entrance_test_36plus_v1';
@@ -363,6 +364,17 @@ function registerLocalOnlyRoutes(router, deps) {
                 }
 
                 const test = testSnap.data() || {};
+                if (Object.values(test.speaking || {}).some(entry => entry?.v3?.status === 'ready')) {
+                    const bucket = await localGetStorageBucket();
+                    test.speaking = { ...test.speaking };
+                    for (const [questionId, entry] of Object.entries(test.speaking)) {
+                        if (entry?.v3?.status !== 'ready') continue;
+                        const state = await getEntranceV3Status({ db: localDb, bucket, testId, questionId });
+                        test.speaking[questionId] = { ...entry, assessment: state.result,
+                            words: state.result?.wordResults || null,
+                            transcript: state.result?.recognizedText || entry.transcript };
+                    }
+                }
                 const studentId = String(test.studentId || '').trim();
                 const studentSnap = studentId ? await localDb.collection('crmStudents').doc(studentId).get() : null;
                 const student = studentSnap && studentSnap.exists ? (studentSnap.data() || {}) : null;
@@ -376,6 +388,27 @@ function registerLocalOnlyRoutes(router, deps) {
             } catch (error) {
                 console.error('[CRM] Get entrance test failed:', error);
                 return localSendError(res, 500, 'GET_TEST_ERROR', 'Failed to fetch entrance test details.', error?.message || error);
+            }
+        });
+
+        router.get('/entrance-tests/:testId/speaking/:questionId/canonical-audio', localAuthMiddleware, async (req, res) => {
+            try {
+                const test = await localDb.collection('entranceTests').doc(String(req.params.testId || '')).get();
+                const entry = test.exists ? test.data()?.speaking?.[String(req.params.questionId || '')] : null;
+                const canonicalAudio = entry?.v3?.audio || entry?.audio;
+            if (entry?.v3?.status !== 'ready' || !canonicalAudio?.storagePath)
+                    return localSendError(res, 404, 'AUDIO_NOT_FOUND', 'Canonical audio is unavailable.');
+                const bucket = await localGetStorageBucket();
+                const file = bucket.file(canonicalAudio.storagePath);
+                const [metadata] = await file.getMetadata();
+                if (String(metadata.generation) !== entry.v3.manifest.storageGeneration)
+                    return localSendError(res, 409, 'AUDIO_REVISION_CHANGED', 'Canonical audio revision changed.');
+                const [bytes] = await file.download();
+                res.set('Content-Type', 'audio/wav');
+                res.set('Cache-Control', 'private, no-store');
+                return res.send(bytes);
+            } catch (error) {
+                return localSendError(res, 500, 'AUDIO_FETCH_ERROR', 'Failed to load canonical audio.');
             }
         });
 

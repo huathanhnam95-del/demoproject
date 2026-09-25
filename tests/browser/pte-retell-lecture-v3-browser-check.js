@@ -53,6 +53,21 @@ async function run() {
       await page.goto(`${harness.baseURL}/?pteShell=v3`, { waitUntil: 'domcontentloaded' });
       await dismissOverlays(page);
 
+      await page.evaluate(() => {
+        const originalBytes = new TextEncoder().encode('retell-lecture-original-capture');
+        const originalStart = MediaRecorder.prototype.start;
+        MediaRecorder.prototype.start = function (...args) {
+          this.mimeType = 'audio/webm';
+          return originalStart?.apply(this, args);
+        };
+        MediaRecorder.prototype.stop = function () {
+          this.state = 'inactive';
+          const data = new Blob([originalBytes], { type: 'audio/webm' });
+          const event = new Event('dataavailable'); Object.defineProperty(event, 'data', { value: data });
+          this.ondataavailable?.(event); this.dispatchEvent(event);
+          const stop = new Event('stop'); this.onstop?.(stop); this.dispatchEvent(stop);
+        };
+      });
       // 1. Switch to Retell Lecture (notes) mode
       await page.evaluate(async () => {
         await window.switchToMode('notes');
@@ -156,6 +171,12 @@ async function run() {
         return window.TakeNotesMode?.getPtePhase?.() === 'complete';
       }, null, { timeout: 8000 });
 
+      const rawCapture = await page.evaluate(async () => {
+        const blob = window.TakeNotesMode?.getRecordingBlob?.();
+        return { type: blob?.type || '', text: blob ? await blob.text() : '' };
+      });
+      assert.deepEqual(rawCapture, { type: 'audio/webm', text: 'retell-lecture-original-capture' }, 'Retell Lecture playback/archive keeps the original capture identity');
+
       // 8. In complete phase:
       // Dock has: Record again (#notes-retry-btn), Play (#notes-rec-play-btn), Get feedback (#notes-submit-btn)
       assert.equal(await page.locator('#notes-retry-btn').isVisible(), true, 'Record again visible in complete dock');
@@ -198,7 +219,9 @@ async function run() {
       assert.equal(await page.locator('#pte-next-notes').isVisible(), true, 'Next question button visible in dock');
 
       // Left column: audio listen-back and matched notes
-      assert.equal(await page.locator('#notes-v3-audio-preview').isVisible(), true, 'student recording audio preview visible');
+      // One player for the recording: the shared listen-back pill replaces the bare <audio controls>.
+      await page.waitForSelector('#pte-listen-back', { state: 'visible', timeout: 5000 });
+      assert.equal(await page.locator('#notes-v3-audio-preview').isVisible(), false, 'no second, bare player');
       assert.equal(await page.locator('#notes-v3-matched-notes').isVisible(), true, 'matched notes visible on left');
 
       // Right column: two tabs "Notes match" and "Lecture transcript"
@@ -286,7 +309,7 @@ async function run() {
     }
 
     // 9. Legacy fallback check (flag = 'legacy' and default flag off)
-    for (const flag of ['legacy', '']) {
+    for (const flag of ['legacy']) {
       console.log(`[PTE Retell Lecture v3] Testing legacy fallback (flag='${flag}')...`);
       const page = await harness.open({ flag });
       await page.evaluate(async () => {

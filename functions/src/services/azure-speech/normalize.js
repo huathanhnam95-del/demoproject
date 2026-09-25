@@ -122,7 +122,7 @@ function normalizeWord(rawWord, index, audio) {
   };
 }
 
-function normalizeFinalResult({ rawResult, audio, mode, assessmentId, reference }) {
+function normalizeFinalResult({ rawResult, audio, mode, assessmentId, reference, schemaVersion }) {
   const nBest = rawResult?.NBest?.[0] || rawResult;
   const rawWords = Array.isArray(nBest?.Words) ? nBest.Words : [];
 
@@ -136,7 +136,7 @@ function normalizeFinalResult({ rawResult, audio, mode, assessmentId, reference 
   const completeness = readScore(nBest, 'CompletenessScore');
 
   return {
-    schemaVersion: 'practice-pronunciation-v2',
+    schemaVersion: schemaVersion || 'bel.speech.v3',
     assessmentId: assessmentId || `asmt-${Date.now()}`,
     mode: mode || 'read_aloud',
     status: words.length > 0 ? 'ready' : 'unavailable',

@@ -2288,6 +2288,17 @@
       }
     }
 
+    // Update the URL as soon as the mode's panel is on screen, before any await.
+    // It used to be set only after the mode's data had loaded (the mode's own
+    // replaceRoute in applyPromptRow/loadQuestion), which left the address bar showing
+    // the previous route - the bare /pte-practice dashboard entry - for as long as the
+    // fetches took: measured at 5.3s with production-like latency. It also meant mode
+    // entry never created a history entry at all, so Back skipped past the dashboard to
+    // whichever mode came before. The mode still replaces this entry with the resolved
+    // question id once it has one.
+    const entryRoute = PracticeRouter.parseRoute(window.location.pathname);
+    PracticeRouter.pushRoute(mode, entryRoute?.mode === mode ? entryRoute.questionId : null);
+
     const assetsReady = await ensureModeAssets(mode);
     if (!assetsReady) {
       v3TransitionSettled = true;
@@ -2614,10 +2625,10 @@
         });
       }, 50);
 
-      // 7. Update URL for browser back/forward navigation. Preserve a
-      // question ID that was supplied by a deep link while the mode finishes
-      // its asynchronous initialization; the mode will replace it after it
-      // has selected the matching entry.
+      // 7. The route was already pushed before the awaits above, so the address bar
+      // matches the screen from the moment the panel appears. This is the fallback for
+      // any path that reached here without it; pushRoute no-ops when the URL already
+      // matches, so it cannot create a duplicate entry.
       const currentRoute = PracticeRouter.parseRoute(window.location.pathname);
       const currentQuestionId = currentRoute?.mode === mode ? currentRoute.questionId : null;
       PracticeRouter.pushRoute(mode, currentQuestionId);
@@ -4691,6 +4702,11 @@
   // Speech recognition
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   let recognition = null;
+  let speechV3EnabledForRs = false;
+  window.AiScoringGate?.speechV3Enabled?.('repeat_sentence').then(enabled => {
+    speechV3EnabledForRs = enabled;
+    if (enabled && recordBtn) { recordBtn.disabled = false; recordBtn.textContent = 'Start Recording'; }
+  }).catch(() => {});
   let isRecording = false;
   let transcription = "";
   let wordRecognition = null; // For individual word pronunciation practice
@@ -4703,40 +4719,162 @@
   let repeatSentenceMediaRecorder = null;
   let repeatSentenceAudioChunks = [];
   let repeatSentenceMediaStream = null;
+  // Why the last capture could not open the microphone, so the v3 recorder can say it.
+  let repeatSentenceCaptureError = null;
+  // The v3 shell adopts #record-btn into its dock and labels it (RepeatSentenceV3.sync()).
+  // Legacy recognition callbacks fire later and used to rename it "Start Recording" behind
+  // the shell's back; under v3 they leave the label alone.
+  function setLegacyRecordLabel(text) {
+    try { if (repeatSentenceV3.active) return; } catch (_) { /* v3 controller not built yet */ }
+    recordBtn.textContent = text;
+  }
   let repeatSentenceStopPromise = null;
+  let repeatSentenceCaptureGeneration = 0;
+  window.repeatSentenceRawBlob = null;
   window.repeatSentenceWavBlob = null;
   window.repeatSentenceAudioBuffer = null;
-  window.lastRepeatSentenceAssessment = null;
+  window.lastRepeatSentenceAssessment = null; window.repeatSentenceV3Playback = null;
+  window.repeatSentenceAudioProcessingStatus = null;
+  window.repeatSentenceAudioFormat = null;
+  window.repeatSentencePlaybackTimeline = null;
+
+  async function isRepeatSentenceAssessmentWav(blob) {
+    if (!(blob instanceof Blob) || !/^audio\/(wav|wave)(;|$)/i.test(blob.type || '')) return false;
+    try {
+      const bytes = await blob.slice(0, Math.min(blob.size, 4096)).arrayBuffer();
+      if (bytes.byteLength < 44) return false;
+      const view = new DataView(bytes);
+      const readString = (offset, length) => {
+        let value = '';
+        for (let i = 0; i < length; i += 1) value += String.fromCharCode(view.getUint8(offset + i));
+        return value;
+      };
+      if (readString(0, 4) !== 'RIFF' || readString(8, 4) !== 'WAVE') return false;
+
+      let format = null;
+      let hasDataChunk = false;
+      for (let offset = 12; offset + 8 <= view.byteLength;) {
+        const chunkId = readString(offset, 4);
+        const chunkSize = view.getUint32(offset + 4, true);
+        const chunkData = offset + 8;
+        if (chunkId === 'fmt ' && chunkSize >= 16 && chunkData + 16 <= view.byteLength) {
+          format = {
+            audioFormat: view.getUint16(chunkData, true),
+            channels: view.getUint16(chunkData + 2, true),
+            sampleRate: view.getUint32(chunkData + 4, true),
+            bitsPerSample: view.getUint16(chunkData + 14, true)
+          };
+        } else if (chunkId === 'data' && chunkSize > 0) {
+          hasDataChunk = true;
+          break;
+        }
+        const nextOffset = chunkData + chunkSize + (chunkSize % 2);
+        if (nextOffset <= offset || nextOffset > view.byteLength) break;
+        offset = nextOffset;
+      }
+
+      return hasDataChunk
+        && format?.audioFormat === 1
+        && format.channels === 1
+        && format.sampleRate === 16000
+        && format.bitsPerSample === 16;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function getRepeatSentencePlaybackTimeline() {
+    const activeV3 = window.RepeatSentenceV3;
+    const timeline = activeV3?.active
+      ? activeV3.attempt?.playbackTimeline
+      : window.repeatSentencePlaybackTimeline;
+    if (!timeline || timeline.rawBlob !== window.repeatSentenceRawBlob || timeline.offsetKnown !== true
+      || !Number.isFinite(timeline.removedLeadingMs) || timeline.removedLeadingMs < 0) return null;
+    return timeline;
+  }
+
+  async function playRepeatSentenceSegment(startMs, endMs, triggerEl = null) {
+    const timeline = getRepeatSentencePlaybackTimeline();
+    if (!timeline) {
+      window.SpeakingPracticeController?.setNextError?.('speak', 'Word and syllable replay is unavailable because this recording has no verified timing offset. The full original recording is still available.');
+      return false;
+    }
+    const start = Number(startMs) + timeline.removedLeadingMs;
+    const end = Number(endMs) + timeline.removedLeadingMs;
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return false;
+    let audioBuffer = window.repeatSentenceAudioBuffer;
+    if (!audioBuffer && timeline.rawBlob) {
+      try {
+        const audioContext = window.PronunciationTooltip?.getAudioContext?.();
+        if (!audioContext) throw new Error('Audio playback is unavailable.');
+        if (audioContext.state === 'suspended' && typeof audioContext.resume === 'function') await audioContext.resume();
+        const arrayBuffer = await timeline.rawBlob.arrayBuffer();
+        audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+        if (getRepeatSentencePlaybackTimeline() !== timeline) return false;
+        window.repeatSentenceAudioBuffer = audioBuffer;
+      } catch (_) {
+        window.SpeakingPracticeController?.setNextError?.('speak', 'The original recording is available, but this word segment could not be decoded for replay.');
+        return false;
+      }
+    }
+    const durationMs = Number(audioBuffer?.duration) * 1000;
+    if (!audioBuffer || !Number.isFinite(durationMs) || end > durationMs + 20) {
+      window.SpeakingPracticeController?.setNextError?.('speak', 'This word segment falls outside the original recording, so replay is unavailable.');
+      return false;
+    }
+    return !!await window.PronunciationTooltip?.playAudioSegment?.(audioBuffer, start, end, triggerEl);
+  }
 
   async function stopRepeatSentenceAudioCapture() {
     if (repeatSentenceMediaRecorder && repeatSentenceMediaRecorder.state !== 'inactive') {
+      const recorder = repeatSentenceMediaRecorder;
+      const captureGeneration = recorder.__repeatSentenceCaptureGeneration;
+      const captureChunks = repeatSentenceAudioChunks;
+      const captureStream = repeatSentenceMediaStream;
       const stopPromise = new Promise((resolve) => {
-        const recorder = repeatSentenceMediaRecorder;
         recorder.onstop = async () => {
-          if (repeatSentenceMediaStream) {
+          if (captureStream) {
             try {
-              repeatSentenceMediaStream.getTracks().forEach(t => t.stop());
+              captureStream.getTracks().forEach(t => t.stop());
             } catch (_) {
               // Ignore track stop errors during cleanup
             }
-            repeatSentenceMediaStream = null;
+            if (repeatSentenceMediaStream === captureStream) repeatSentenceMediaStream = null;
           }
-          if (repeatSentenceAudioChunks.length > 0) {
-            const rawBlob = new Blob(repeatSentenceAudioChunks, { type: recorder.mimeType || 'audio/webm' });
-            let finalWavBlob = rawBlob;
-            if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
-              try {
-                const enhanced = await window.AudioDspPipeline.enhance(rawBlob);
-                if (enhanced && enhanced.wavBlob) {
-                  finalWavBlob = enhanced.wavBlob;
-                }
-              } catch (dspErr) {
-                console.warn('[RepeatSentence] Audio enhancement failed:', dspErr);
-              }
-            }
-            window.repeatSentenceWavBlob = finalWavBlob;
+          if (repeatSentenceMediaRecorder === recorder) repeatSentenceMediaRecorder = null;
+          if (captureGeneration !== repeatSentenceCaptureGeneration) { resolve(); return; }
+          if (captureChunks.length > 0) {
+            const rawBlob = new Blob(captureChunks, { type: recorder.mimeType || 'audio/webm' });
+            let finalAudioBlob = null;
+            let preparationResult = null;
+            let outputFormat = 'unavailable';
+            let processingStatus = 'format-conversion-failed';
             try {
-              const arrayBuf = await finalWavBlob.arrayBuffer();
+              const pipeline = window.AudioDspPipeline;
+              if (!pipeline || typeof pipeline.prepareForAssessment !== 'function') throw new Error('Audio format conversion is unavailable.');
+              preparationResult = await pipeline.prepareForAssessment(rawBlob);
+              if (!await isRepeatSentenceAssessmentWav(preparationResult?.outputBlob)) throw new Error('Audio conversion did not produce scorer-compatible WAV.');
+              finalAudioBlob = preparationResult.outputBlob;
+              outputFormat = 'wav';
+              processingStatus = preparationResult.processingStatus || 'format-only';
+            } catch (prepErr) {
+              console.warn('[RepeatSentence] Audio format conversion failed; keeping the original recording playable:', prepErr);
+            }
+            if (captureGeneration !== repeatSentenceCaptureGeneration) { resolve(); return; }
+            window.repeatSentenceRawBlob = rawBlob;
+            window.repeatSentenceWavBlob = finalAudioBlob;
+            window.repeatSentenceAudioFormat = outputFormat;
+            window.repeatSentenceAudioProcessingStatus = processingStatus;
+            const removedLeadingMs = preparationResult?.stats?.removedLeadingMs;
+            window.repeatSentencePlaybackTimeline = {
+              captureGeneration,
+              rawBlob,
+              assessmentBlob: finalAudioBlob,
+              offsetKnown: Number.isFinite(removedLeadingMs) && removedLeadingMs >= 0,
+              removedLeadingMs: Number.isFinite(removedLeadingMs) && removedLeadingMs >= 0 ? removedLeadingMs : null
+            };
+            try {
+              const arrayBuf = await rawBlob.arrayBuffer();
               const ctx = (window.PronunciationTooltip && typeof window.PronunciationTooltip.getAudioContext === 'function')
                 ? window.PronunciationTooltip.getAudioContext()
                 : (window._repeatSentenceAudioCtx || (window._repeatSentenceAudioCtx = new (window.AudioContext || window.webkitAudioContext)()));
@@ -4744,7 +4882,8 @@
                 if (ctx.state === 'suspended' && typeof ctx.resume === 'function') {
                   await ctx.resume();
                 }
-                window.repeatSentenceAudioBuffer = await ctx.decodeAudioData(arrayBuf.slice(0));
+                const decodedRawAudio = await ctx.decodeAudioData(arrayBuf.slice(0));
+                if (captureGeneration === repeatSentenceCaptureGeneration && window.repeatSentenceRawBlob === rawBlob) window.repeatSentenceAudioBuffer = decodedRawAudio;
               }
             } catch (decErr) {
               console.warn('[RepeatSentence] Audio decode failed:', decErr);
@@ -4765,17 +4904,28 @@
   }
 
   async function startRepeatSentenceAudioCapture() {
+    const captureGeneration = ++repeatSentenceCaptureGeneration;
     repeatSentenceAudioChunks = [];
     repeatSentenceStopPromise = null;
+    repeatSentenceCaptureError = null;
+    window.repeatSentenceRawBlob = null;
     window.repeatSentenceWavBlob = null;
-    window.repeatSentenceAudioBuffer = null;
-    window.lastRepeatSentenceAssessment = null;
+      window.repeatSentenceAudioBuffer = null;
+    window.lastRepeatSentenceAssessment = null; window.repeatSentenceV3Playback = null;
+    window.repeatSentenceAudioProcessingStatus = null;
+    window.repeatSentenceAudioFormat = null;
+    window.repeatSentencePlaybackTimeline = null;
 
     if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (captureGeneration !== repeatSentenceCaptureGeneration) {
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
         repeatSentenceMediaStream = stream;
         const recorder = new MediaRecorder(stream);
+        recorder.__repeatSentenceCaptureGeneration = captureGeneration;
         repeatSentenceMediaRecorder = recorder;
         recorder.ondataavailable = (event) => {
           if (event.data && event.data.size > 0) {
@@ -4784,6 +4934,7 @@
         };
         recorder.start(100);
       } catch (err) {
+        repeatSentenceCaptureError = err;
         console.warn('[RepeatSentence] Audio recording setup error:', err);
       }
     }
@@ -4844,15 +4995,17 @@
       if (event.error === "no-speech") {
         recordingStatus.textContent = "No speech detected. Try speaking louder or closer to the microphone.";
       } else if (event.error === "not-allowed") {
+        repeatSentenceCaptureError = { name: 'NotAllowedError' };
         recordingStatus.textContent = "Microphone access denied. Please allow microphone access in your browser settings.";
         isRecording = false;
-        recordBtn.textContent = "Start Recording";
+        setLegacyRecordLabel("Start Recording");
         recordBtn.classList.remove("recording");
         recordingStatus.classList.remove("active");
       } else if (event.error === "audio-capture") {
+        repeatSentenceCaptureError = { name: 'NotFoundError' };
         recordingStatus.textContent = "No microphone found. Please connect a microphone.";
         isRecording = false;
-        recordBtn.textContent = "Start Recording";
+        setLegacyRecordLabel("Start Recording");
         recordBtn.classList.remove("recording");
         recordingStatus.classList.remove("active");
       } else if (event.error === "network") {
@@ -4876,7 +5029,7 @@
               if (e.name !== "InvalidStateError" && !e.message.includes("already started")) {
                 log.error("Failed to restart recognition:", e);
                 isRecording = false;
-                recordBtn.textContent = "Start Recording";
+                setLegacyRecordLabel("Start Recording");
                 recordBtn.classList.remove("recording");
                 recordingStatus.classList.remove("active");
               }
@@ -4884,15 +5037,17 @@
           }
         }, 100);
       } else {
-        recordBtn.textContent = "Start Recording";
+        setLegacyRecordLabel("Start Recording");
         recordBtn.classList.remove("recording");
         recordingStatus.classList.remove("active");
       }
     };
   } else {
-    recordBtn.disabled = true;
-    recordBtn.textContent = "Speech Recognition Not Available";
-    transcriptionText.textContent = "Your browser does not support speech recognition. Please use Chrome or Edge.";
+    if (!speechV3EnabledForRs) {
+      recordBtn.disabled = true;
+      recordBtn.textContent = "Speech Recognition Not Available";
+      transcriptionText.textContent = "Your browser does not support speech recognition. Please use Chrome or Edge.";
+    }
   }
 
   const STEP_INTERVAL_MS = 2400;
@@ -8676,7 +8831,8 @@
     const isCurrent = () => v3Token === null || (repeatSentenceV3.active
       && v3Token === repeatSentenceV3.generation && v3Attempt === repeatSentenceV3.attempt);
     const totalWords = getCorrectWordCount("speak");
-    if (!userAnswer.trim()) {
+    const speechV3 = speechV3EnabledForRs && repeatSentenceV3.active;
+    if (!speechV3 && !userAnswer.trim()) {
       result.innerHTML = `<span class="errors">Please provide your answer before checking.</span>`;
       scoreElement.textContent = `Points: 0 / ${totalWords}`;
       return;
@@ -8690,9 +8846,40 @@
     }
 
     // Call Azure Pronunciation Assessment if student audio was recorded
-    const assessmentBlob = v3Attempt ? v3Attempt.blob : window.repeatSentenceWavBlob;
+    const assessmentCandidate = v3Attempt ? v3Attempt.processedBlob : window.repeatSentenceWavBlob;
+    const assessmentBlob = await isRepeatSentenceAssessmentWav(assessmentCandidate) ? assessmentCandidate : null;
+    if (!isCurrent()) return;
+    if ((v3Attempt?.rawBlob || window.repeatSentenceRawBlob) && !assessmentBlob) {
+      console.warn('[RepeatSentence] Skipping pronunciation assessment because format-only conversion did not produce a valid mono 16 kHz PCM WAV.');
+      window.SpeakingPracticeController?.setNextError?.('speak', 'Your original recording is still available, but audio format conversion failed. Pronunciation scoring is unavailable.');
+    }
     if (assessmentBlob && correctSentenceSpeak) {
       try {
+        if (speechV3) {
+          const originalBlob = v3Attempt?.rawBlob || window.repeatSentenceRawBlob;
+          if (!originalBlob) throw new Error('Original recording is unavailable. Record again.');
+          const flow = await window.AiScoringGate.assessV3Recording({
+            mode: 'repeat_sentence', originalBlob, enhancedBlob: assessmentBlob,
+            attemptId: v3Attempt?.archiveId || v3Attempt?.id,
+            questionId: currentSpeakQuestionId, referenceText: correctSentenceSpeak,
+            promptSnapshot: { promptId: currentSpeakQuestionId, text: correctSentenceSpeak }
+          });
+          if (!isCurrent()) return;
+          if (!flow.allowed) throw new Error(flow.error || 'Scoring not authorized');
+          const result = flow.result;
+          userAnswer = result.recognizedText || '';
+          transcription = userAnswer;
+          window.lastRepeatSentenceAssessment = {
+            ...result, pronScore: result.overallScores?.pronunciationScore,
+            fluencyScore: result.overallScores?.fluencyScore,
+            completenessScore: result.overallScores?.completenessScore,
+            words: result.wordResults || result.words || []
+          };
+          const canonicalBuffer = await window.AiScoringGate.loadCanonicalBuffer(flow.canonicalBlob, flow.manifest);
+          if (!isCurrent()) return;
+          window.repeatSentenceAudioBuffer = canonicalBuffer;
+          window.repeatSentenceV3Playback = { canonicalBlob: flow.canonicalBlob, manifest: flow.manifest };
+        } else {
         const formData = new FormData();
         formData.append('audio', assessmentBlob, 'recording.wav');
         formData.append('referenceText', correctSentenceSpeak);
@@ -8707,6 +8894,7 @@
         if (!isCurrent()) return;
         if (assessRes.ok && assessData && assessData.success && Array.isArray(assessData.words) && assessData.words.length > 0) {
           window.lastRepeatSentenceAssessment = assessData;
+        }
         }
       } catch (assessErr) {
         console.warn('[RepeatSentence] Pronunciation assessment request failed:', assessErr);
@@ -8769,13 +8957,15 @@
     const renderFeedback = () => {
       let acousticTokensHtml = '';
       if (window.lastRepeatSentenceAssessment && Array.isArray(window.lastRepeatSentenceAssessment.words) && window.lastRepeatSentenceAssessment.words.length > 0) {
-        const tokenSpans = window.lastRepeatSentenceAssessment.words.map((w) => {
-          const acc = Math.round(Number(w.accuracyScore ?? 0));
+        const tokenSpans = window.lastRepeatSentenceAssessment.words.map((w, index) => {
+          const acc = w.accuracyScore == null ? null : Math.round(Number(w.accuracyScore));
           let statusClass = 'speak-word-token--good';
           if (w.errorType === 'Omission') {
             statusClass = 'speak-word-token--omission';
           } else if (w.errorType === 'Insertion') {
             statusClass = 'speak-word-token--insertion';
+          } else if (acc == null) {
+            statusClass = 'speak-word-token--unavailable';
           } else if (acc < 60) {
             statusClass = 'speak-word-token--error';
           } else if (acc < 80) {
@@ -8786,11 +8976,12 @@
           const displayWord = w.errorType === 'Insertion' ? `[${rawWord}]` : rawWord;
           const escapedWord = escapeHtml(displayWord);
           const sylJson = escapeHtml(JSON.stringify(w.syllables || []));
+          const timeline = getRepeatSentencePlaybackTimeline();
           const timeAttr = (w.startMs != null && w.endMs != null)
-            ? ` data-start-ms="${w.startMs}" data-end-ms="${w.endMs}" data-playable="true"`
+            ? ` data-start-ms="${w.startMs}" data-end-ms="${w.endMs}" data-playable="${(speechV3 ? !!window.repeatSentenceV3Playback && !!(w.clip || w.clipTiming?.clipSpan) : !!timeline) ? 'true' : 'false'}"`
             : '';
 
-          return `<span class="speak-word-token ${statusClass}" role="button" tabindex="0" data-word="${escapedWord}" data-accuracy="${acc}" data-syllables="${sylJson}"${timeAttr}>${escapedWord}</span>`;
+          return `<span class="speak-word-token ${statusClass}" role="button" tabindex="0" data-word="${escapedWord}" data-index="${index}" data-accuracy="${acc ?? ''}" data-syllables="${sylJson}"${timeAttr}>${escapedWord}</span>`;
         });
 
         acousticTokensHtml = `
@@ -8812,22 +9003,17 @@
         window.PronunciationTooltip.bindHoverTooltip(result, {
           selector: '.speak-word-token',
           playSyllable: async (sStart, sEnd, chip, token) => {
-            if (window.repeatSentenceAudioBuffer) {
-              window.PronunciationTooltip.playAudioSegment(window.repeatSentenceAudioBuffer, sStart, sEnd, chip);
-            } else if (window.repeatSentenceWavBlob) {
-              try {
-                const audioCtx = (window.PronunciationTooltip && typeof window.PronunciationTooltip.getAudioContext === 'function')
-                  ? window.PronunciationTooltip.getAudioContext()
-                  : null;
-                if (audioCtx) {
-                  const arrBuf = await window.repeatSentenceWavBlob.arrayBuffer();
-                  window.repeatSentenceAudioBuffer = await audioCtx.decodeAudioData(arrBuf.slice(0));
-                  window.PronunciationTooltip.playAudioSegment(window.repeatSentenceAudioBuffer, sStart, sEnd, chip);
-                }
-              } catch (e) {
-                console.warn('[RepeatSentence] Lazy syllable playback failed:', e);
+            if (speechV3) {
+              if (!window.repeatSentenceV3Playback) return;
+              const word = window.lastRepeatSentenceAssessment?.words?.[Number(token?.dataset?.index)];
+              const syllable = word?.syllables?.find(item => item.startMs === sStart && item.endMs === sEnd);
+              if (syllable?.span) {
+                await window.AiScoringGate.playV3Span({ ...window.repeatSentenceV3Playback,
+                  span: syllable.span });
               }
+              return;
             }
+            await playRepeatSentenceSegment(sStart, sEnd, chip);
           }
         });
       }
@@ -8839,22 +9025,14 @@
           const sStart = tokenEl.dataset.startMs;
           const sEnd = tokenEl.dataset.endMs;
           if (sStart != null && sEnd != null) {
-            if (window.repeatSentenceAudioBuffer) {
-              window.PronunciationTooltip.playAudioSegment(window.repeatSentenceAudioBuffer, Number(sStart), Number(sEnd), tokenEl);
-            } else if (window.repeatSentenceWavBlob) {
-              try {
-                const audioCtx = (window.PronunciationTooltip && typeof window.PronunciationTooltip.getAudioContext === 'function')
-                  ? window.PronunciationTooltip.getAudioContext()
-                  : null;
-                if (audioCtx) {
-                  const arrBuf = await window.repeatSentenceWavBlob.arrayBuffer();
-                  window.repeatSentenceAudioBuffer = await audioCtx.decodeAudioData(arrBuf.slice(0));
-                  window.PronunciationTooltip.playAudioSegment(window.repeatSentenceAudioBuffer, Number(sStart), Number(sEnd), tokenEl);
-                }
-              } catch (err) {
-                console.warn('[RepeatSentence] Lazy word playback failed:', err);
-              }
+            if (speechV3) {
+              if (!window.repeatSentenceV3Playback) return;
+              const word = window.lastRepeatSentenceAssessment?.words?.[Number(tokenEl.dataset.index)];
+              const span = word?.clip || word?.clipTiming?.clipSpan;
+              if (span) await window.AiScoringGate.playV3Span({ ...window.repeatSentenceV3Playback, span });
+              return;
             }
+            await playRepeatSentenceSegment(Number(sStart), Number(sEnd), tokenEl);
           }
         });
       });
@@ -10280,6 +10458,7 @@
   const repeatSentenceV3 = {
     active: false, phase: 'loading', generation: 0, timer: null, busy: null, retryOperation: null,
     departureCleanup: null, shadowEpoch: 0, shadowTitleTimer: null, shadowUtterance: null, origins: [],
+    recordingUrl: null, playback: null,
     replaysLeft() {
       const limit = window.DifficultyManager?.getCurrentSettings('speak')?.maxReplays ?? 5;
       return Math.max(0, limit - (window.speakReplayCount || 0));
@@ -10357,6 +10536,7 @@
     unmount() {
       if (!this.active) return;
       this.stopShadow(); this.stopPlayback();
+      repeatSentenceCaptureGeneration++;
       this.buttonLabels?.forEach(({ node, previous }) => { node.textContent = previous; });
       this.active = false; this.generation++; clearInterval(this.timer); this.audioBox?.destroy(); this.recorder?.destroy();
       // Capture helpers publish the WAV and decoded buffer after DSP. Keep their
@@ -10367,8 +10547,12 @@
         await stopRepeatSentenceRecording();
         if (repeatSentenceStopPromise) await repeatSentenceStopPromise;
         if (this.departureCleanup === cleanup) {
-          window.repeatSentenceWavBlob = null; window.repeatSentenceAudioBuffer = null;
-          window.lastRepeatSentenceAssessment = null; repeatSentenceStopPromise = null;
+          this.clearAttemptAudio();
+          this.attempt = null;
+          window.repeatSentenceRawBlob = null; window.repeatSentenceWavBlob = null; window.repeatSentenceAudioBuffer = null;
+          window.repeatSentenceAudioProcessingStatus = null; window.repeatSentenceAudioFormat = null;
+          window.repeatSentencePlaybackTimeline = null;
+          window.lastRepeatSentenceAssessment = null; window.repeatSentenceV3Playback = null; repeatSentenceStopPromise = null;
         }
       })().finally(() => { if (this.departureCleanup === cleanup) this.departureCleanup = null; });
       this.departureCleanup = cleanup;
@@ -10379,8 +10563,24 @@
       this.origins = []; this.view?.remove(); modeSpeak.classList.remove('speak-pte-v3'); delete modeSpeak.dataset.ptePhase;
     },
     stopPlayback() {
+      if (window.repeatSentenceV3Playback) window.SegmentPlaybackCoordinator?.defaultCoordinator?.stopAll?.();
       if (!this.playback) return;
       this.playback.pause(); this.playback.currentTime = 0;
+    },
+    clearAttemptAudio() {
+      const url = this.recordingUrl;
+      this.recordingUrl = null;
+      if (this.playback) {
+        this.playback.pause();
+        if (!url || this.playback.src === url) {
+          this.playback.removeAttribute('src');
+          this.playback.load();
+        }
+      }
+      if (url) {
+        try { URL.revokeObjectURL(url); } catch (_) { /* ignore released attempt URLs */ }
+      }
+      if (this.attempt?.url === url) this.attempt.url = null;
     },
     selectPlayback(kind) {
       this.playback.pause();
@@ -10459,7 +10659,8 @@
       if (this.departureCleanup) await this.departureCleanup;
       if (!this.active || token !== this.generation) return;
       this.clearAttemptErrors();
-      this.attempt = null; this.setPhase('listen');
+        this.clearAttemptAudio();
+        this.attempt = null; this.setPhase('listen');
       try {
         await this.audioBox.countdown(3);
         if (!this.active || token !== this.generation) return;
@@ -10499,10 +10700,12 @@
       clearInterval(this.timer); this.audioBox.reset(); this.audioBox.setCompleted(); this.replaying = false;
       const operation = (async () => {
         try {
-          await startRepeatSentenceRecording();
+          const starting = startRepeatSentenceRecording();
+          this.recorder.waitForMic?.(starting);
+          await starting;
           if (!this.active || token !== this.generation) { await stopRepeatSentenceRecording(); return; }
           if (!isRecording || !repeatSentenceMediaStream) throw new Error('Microphone recording could not start. Allow microphone access and try again.');
-          this.attempt = { id: `rs-${Date.now()}-${Math.random().toString(36).slice(2)}`, promptId: currentSpeakQuestionId, text: correctSentenceSpeak, started: Date.now() };
+          this.attempt = { id: `rs-${Date.now()}-${Math.random().toString(36).slice(2)}`, promptId: currentSpeakQuestionId, text: correctSentenceSpeak, started: Date.now(), rawBlob: null, processedBlob: null, blob: null, url: null };
           const owner = this.captureAttemptOwner();
           this.recorder.showRecording(15); this.recorder.attachStream(repeatSentenceMediaStream); this.setPhase('recording');
           this.timer = setInterval(() => {
@@ -10511,7 +10714,17 @@
           }, 100);
         } catch (error) {
           await stopRepeatSentenceRecording();
-          if (this.active && token === this.generation) this.fail(error);
+          if (this.active && token === this.generation) {
+            // Recording never started: the recorder says why (it was left on a frozen
+            // countdown), the dock keeps the reason, and Start recording is the retry.
+            const info = window.PteRecorderWidget?.describeMicError?.(repeatSentenceCaptureError || error);
+            if (info && this.phase === 'prep') {
+              this.recorder.showMicError(info);
+              window.SpeakingPracticeController?.setNotice?.('speak', info.notice);
+            } else {
+              this.fail(error);
+            }
+          }
         } finally { if (this.busy === operation) { this.busy = null; this.sync(); } }
       })();
       this.busy = operation; this.sync();
@@ -10565,10 +10778,21 @@
         await stopRepeatSentenceRecording();
         if (!this.ownsAttempt(owner)) return false;
         const attempt = owner.attempt;
-        attempt.transcript = transcription; attempt.blob = window.repeatSentenceWavBlob;
+        attempt.transcript = transcription;
+        attempt.rawBlob = window.repeatSentenceRawBlob;
+        attempt.processedBlob = window.repeatSentenceWavBlob;
+        const playbackTimeline = window.repeatSentencePlaybackTimeline;
+        attempt.playbackTimeline = playbackTimeline?.rawBlob === attempt.rawBlob
+          && playbackTimeline.captureGeneration === repeatSentenceCaptureGeneration
+          ? playbackTimeline
+          : null;
+        attempt.blob = attempt.rawBlob;
         attempt.durationMs = Date.now() - attempt.started;
         if (attempt.blob) attempt.url = URL.createObjectURL(attempt.blob);
-        this.recordingUrl = attempt.url; this.selectPlayback('yours');
+        this.clearAttemptAudio();
+        this.recordingUrl = attempt.url;
+        this.playback.src = this.recordingUrl || '';
+        this.selectPlayback('yours');
         this.recorder.showComplete(); this.setPhase('complete');
         return this.save();
       })();
@@ -10602,7 +10826,10 @@
           if (!isCurrent()) return false;
         }
         this.clearAttemptErrors();
-        this.attempt = null; resetScaffolding(); transcription = ''; window.repeatSentenceWavBlob = null; window.lastRepeatSentenceAssessment = null;
+        this.clearAttemptAudio();
+        this.attempt = null; resetScaffolding(); transcription = ''; window.repeatSentenceRawBlob = null; window.repeatSentenceWavBlob = null; window.lastRepeatSentenceAssessment = null; window.repeatSentenceV3Playback = null;
+        window.repeatSentenceAudioProcessingStatus = null; window.repeatSentenceAudioFormat = null;
+        window.repeatSentencePlaybackTimeline = null;
         startAttemptContext('speak', currentSpeakQuestionId); this.prepare();
         return true;
       })().catch(error => {
@@ -10662,7 +10889,15 @@
         const acoustic = words.find(w => w.word.toLowerCase() === word.toLowerCase());
         if (acoustic?.startMs != null && acoustic?.endMs != null) {
           const you = document.createElement('button'); you.type = 'button'; you.className = 'pte-btn'; you.textContent = '▶ You';
-          you.onclick = () => window.PronunciationTooltip?.playAudioSegment(window.repeatSentenceAudioBuffer, acoustic.startMs, acoustic.endMs, you); row.append(you);
+          if (assessment?.schemaVersion === 'bel.speech.v3') {
+            const span = acoustic.clip || acoustic.clipTiming?.clipSpan;
+            you.disabled = !span || !window.repeatSentenceV3Playback;
+            you.title = you.disabled ? 'This word has no verified recording segment.' : 'Play your recorded word';
+            you.onclick = () => window.AiScoringGate.playV3Span({ ...window.repeatSentenceV3Playback, span });
+          } else {
+            you.onclick = () => playRepeatSentenceSegment(acoustic.startMs, acoustic.endMs, you);
+          }
+          row.append(you);
         }
         const model = document.createElement('button'); model.type = 'button'; model.className = 'pte-btn'; model.textContent = '▶ Model';
         model.onclick = () => { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(word)); }; row.append(model); fixes.append(row);
@@ -10864,7 +11099,7 @@
   };
 
   async function stopRepeatSentenceRecording() {
-    if (!recognition || (!isRecording && repeatSentenceMediaRecorder?.state !== 'recording')) return;
+    if ((!recognition && !speechV3EnabledForRs) || (!isRecording && repeatSentenceMediaRecorder?.state !== 'recording')) return;
       // Tutorial Mode Check: Prevent stopping if no speech is detected
       if (!repeatSentenceV3.active && window.isTutorialActive && document.getElementById('tab-speak').classList.contains('active')) {
         const currentText = transcriptionText ? transcriptionText.textContent.trim() : "";
@@ -10880,7 +11115,7 @@
       // Stop recording
       isRecording = false;
       try {
-        recognition.stop();
+        recognition?.stop();
       } catch (e) {
         // Ignore errors when stopping
       }
@@ -10898,12 +11133,12 @@
   async function startRepeatSentenceRecording() {
     // Also protect a legacy-scope start following departure from v3.
     if (repeatSentenceV3.departureCleanup) await repeatSentenceV3.departureCleanup;
-    if (!recognition || isRecording) return;
+    if ((!recognition && !speechV3EnabledForRs) || isRecording) return;
     await ensureMicrophoneAccess();
       // Start recording
       // First, make sure any previous recognition is stopped
       try {
-        recognition.stop();
+        recognition?.stop();
       } catch (e) {
         // Ignore if already stopped
       }
@@ -10931,13 +11166,14 @@
       window.SpeakingPracticeController?.sync?.('speak');
 
       try {
-        recognition.start();
+        if (recognition && !speechV3EnabledForRs) recognition.start();
       } catch (e) {
         // Handle specific error cases
         if (e.name === "InvalidStateError" || e.message.includes("already started")) {
           // Recognition is already running, just update UI
           recordingStatus.textContent = "Recording...";
         } else if (e.name === "NotAllowedError") {
+          repeatSentenceCaptureError = e;
           recordingStatus.textContent = "Microphone access denied. Please allow microphone access and try again.";
           isRecording = false;
           recordBtn.textContent = "Start Recording";
@@ -10963,7 +11199,7 @@
   checkBtnSpeak.addEventListener("click", () => {
     if (repeatSentenceV3.active) {
       if (repeatSentenceV3.phase !== 'complete' || repeatSentenceV3.busy) return;
-      if (!transcription.trim()) { repeatSentenceV3.fail(new Error('No speech was detected. Record again before getting feedback.')); return; }
+      if (!speechV3EnabledForRs && !transcription.trim()) { repeatSentenceV3.fail(new Error('No speech was detected. Record again before getting feedback.')); return; }
       const owner = repeatSentenceV3.captureAttemptOwner();
       const operation = performCheckSpeak(transcription.trim(), scoreSpeak);
       repeatSentenceV3.busy = operation;
@@ -10999,9 +11235,14 @@
   if (retryBtnSpeak) {
     retryBtnSpeak.addEventListener("click", () => {
       if (repeatSentenceV3.active) { repeatSentenceV3.retry().catch(error => repeatSentenceV3.fail(error)); return; }
+      repeatSentenceCaptureGeneration++;
+      window.repeatSentenceRawBlob = null;
       window.repeatSentenceWavBlob = null;
       window.repeatSentenceAudioBuffer = null;
-      window.lastRepeatSentenceAssessment = null;
+      window.repeatSentenceAudioProcessingStatus = null;
+      window.repeatSentenceAudioFormat = null;
+      window.repeatSentencePlaybackTimeline = null;
+      window.lastRepeatSentenceAssessment = null; window.repeatSentenceV3Playback = null;
       // New flow: Show record button, hide retry button, and reset scaffolding
       // Show Play button again (was hidden after Check to prevent point farming)
       if (recordBtn) recordBtn.style.display = "inline-block";

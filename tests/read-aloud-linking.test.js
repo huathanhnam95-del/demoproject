@@ -188,6 +188,7 @@ async function assertFromWeakFormAnnotation(analyzePrompt) {
 }
 
 (async () => {
+  const ReadAloudLinking = await loadHelper();
   const {
     tokenizePrompt,
     analyzePrompt,
@@ -196,7 +197,7 @@ async function assertFromWeakFormAnnotation(analyzePrompt) {
     normalizeConnectedSpeechLevel,
     hasVisibleAssimilation,
     filterAnalysisByBlockedBoundaries
-  } = await loadHelper();
+  } = ReadAloudLinking;
 
   await assertWeakFormMetadata(analyzePrompt);
   await assertFromWeakFormAnnotation(analyzePrompt);
@@ -434,6 +435,52 @@ async function assertFromWeakFormAnnotation(analyzePrompt) {
     false,
     'blocked assimilation boundaries should not count as visible sound changes'
   );
+
+  // Dynamic category lead labels
+  assert.strictEqual(ReadAloudLinking.getCategoryLeadLabel('linking'), 'Technique');
+  assert.strictEqual(ReadAloudLinking.getCategoryLeadLabel('v1_linking'), 'Technique');
+  assert.strictEqual(ReadAloudLinking.getCategoryLeadLabel('catenation'), 'Technique');
+  assert.strictEqual(ReadAloudLinking.getCategoryLeadLabel('reduced_words'), 'Weak form');
+  assert.strictEqual(ReadAloudLinking.getCategoryLeadLabel('v2_reduced_words'), 'Weak form');
+  assert.strictEqual(ReadAloudLinking.getCategoryLeadLabel('weak_forms'), 'Weak form');
+  assert.strictEqual(ReadAloudLinking.getCategoryLeadLabel('sound_changes'), 'Sounds like');
+  assert.strictEqual(ReadAloudLinking.getCategoryLeadLabel('v3_sound_changes'), 'Sounds like');
+  assert.strictEqual(ReadAloudLinking.getCategoryLeadLabel('n_bilabial_assimilation'), 'Sounds like');
+  assert.strictEqual(ReadAloudLinking.getCategoryLeadLabel('unknown_category'), 'Technique');
+
+  // Verify SOUND_CHANGE_GUIDE_COPY has no stuttering "like " prefixes
+  const soundChangeSubtypes = ['coalescent_dj', 'coalescent_tj', 'coalescent_sj', 'coalescent_zj', 'n_bilabial_assimilation', 'yod_coalescence'];
+  for (const subtype of soundChangeSubtypes) {
+    const copy = ReadAloudLinking.getSoundChangeCopy(subtype);
+    assert.ok(copy, `sound change copy should exist for ${subtype}`);
+    assert.ok(copy.sayItLike, `sayItLike should exist for ${subtype}`);
+    assert.ok(!copy.sayItLike.startsWith('like '), `sayItLike for ${subtype} should not start with "like ": got "${copy.sayItLike}"`);
+  }
+  assert.strictEqual(ReadAloudLinking.getSoundChangeCopy('coalescent_dj').sayItLike, 'a j');
+  assert.strictEqual(ReadAloudLinking.getSoundChangeCopy('coalescent_tj').sayItLike, 'a ch');
+  assert.strictEqual(ReadAloudLinking.getSoundChangeCopy('n_bilabial_assimilation').sayItLike, 'an m');
+
+  // Verify buildGuideExplanationItems produces correctly labeled and attributed items
+  const fullAnalysis = await analyzePrompt('to eat and play did you', { connectedSpeechLevel: 'v3_sound_changes' });
+  const explanationItems = ReadAloudLinking.buildGuideExplanationItems(fullAnalysis);
+  assert.ok(explanationItems.length > 0, 'guide items should be produced for prompt');
+  const linkingItem = explanationItems.find((i) => i.category === 'linking');
+  if (linkingItem) {
+    assert.strictEqual(linkingItem.sayItLike, 'run the two words together');
+    assert.strictEqual(ReadAloudLinking.getCategoryLeadLabel(linkingItem.category), 'Technique');
+  }
+  const reducedItem = explanationItems.find((i) => i.category === 'reduced_words');
+  if (reducedItem) {
+    assert.ok(reducedItem.word, 'reduced word item should expose word');
+    assert.ok(reducedItem.subtype, 'reduced word item should expose subtype');
+    assert.strictEqual(ReadAloudLinking.getCategoryLeadLabel(reducedItem.category), 'Weak form');
+  }
+  const soundChangeItem = explanationItems.find((i) => i.category === 'sound_changes');
+  if (soundChangeItem) {
+    assert.ok(soundChangeItem.sayItLike, 'sound change item should have sayItLike');
+    assert.ok(!soundChangeItem.sayItLike.startsWith('like '), 'sound change item sayItLike should not start with "like "');
+    assert.strictEqual(ReadAloudLinking.getCategoryLeadLabel(soundChangeItem.category), 'Sounds like');
+  }
 
   console.log('read-aloud linking helper tests passed');
 })().catch((error) => {

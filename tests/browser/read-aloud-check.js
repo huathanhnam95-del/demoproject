@@ -1,9 +1,13 @@
 /* eslint-disable no-console */
 const { chromium } = require('playwright');
+const { dismissOverlays } = require('./helpers/pte-shell-harness');
 
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ ignoreHTTPSErrors: true });
+  // Since the V2.0.15 AI-credit gate a missing quote endpoint (404) blocks scoring; 503 means
+  // "credits off", which scores unmetered like the test expects.
+  await context.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
   await context.addInitScript(() => {
     class FakeMediaRecorder {
       constructor(stream) {
@@ -75,34 +79,13 @@ const { chromium } = require('playwright');
   }
 
   console.log('Navigating to https://localhost:8443/');
-  await page.goto('https://localhost:8443/', { waitUntil: 'domcontentloaded' });
+  await page.goto('https://localhost:8443/?pteShell=legacy&raWorkspace=legacy', { waitUntil: 'domcontentloaded' });
 
-  // Dismiss entry modal
-  console.log('Dismissing entry modal...');
-  await page.click('#guest-mode-btn');
-
-  // Wait for mode cards
-  console.log('Waiting for mode cards...');
-  await page.waitForSelector('.mode-switch-btn', { state: 'visible' });
-
-  // Locate Read Aloud card
-  const cards = await page.$$('.card-body h3');
-  let readAloudFound = false;
-  for (const card of cards) {
-    const text = await card.textContent();
-    if (text.includes('Read Aloud')) {
-      readAloudFound = true;
-      console.log('Read Aloud card found! Clicking it...');
-      await card.evaluate(node => node.closest('.mode-switch-btn').click());
-      break;
-    }
-  }
-
-  if (!readAloudFound) {
-    console.error('FAIL: Read Aloud card not found!');
-    await browser.close();
-    process.exit(1);
-  }
+  // Preloader, then the guest entry (the dashboard mode cards this used to click are gone).
+  console.log('Dismissing preloader and entry modal...');
+  await dismissOverlays(page);
+  console.log('Opening Read Aloud...');
+  await page.evaluate(() => window.switchToMode('read-aloud'));
 
   // Wait for Tutorial and read aloud mode panel
   console.log('Checking for tutorial...');
@@ -116,6 +99,8 @@ const { chromium } = require('playwright');
   // (speaking-practice-controller.css gates [data-spc-level="advanced"]).
   // Switch to Advanced before asserting on them.
   await page.evaluate(() => {
+    // The old view-toggle button is gone; the controller exposes the preference directly.
+    try { window.SpeakingPracticeController?.setPreferredView('advanced'); } catch (_) {}
     document.querySelector('.spc-view-toggle-btn[data-view="advanced"]')?.click();
   });
   await page.waitForSelector('#ra-prompt-guides-group', { state: 'visible', timeout: 5000 });
@@ -134,7 +119,7 @@ const { chromium } = require('playwright');
   
   if (recordBtnText.includes('Unsupported Browser')) {
     console.log('Browser does not support STT, gracefully handling unsupported state.');
-  } else if (recordBtnText.includes('Skip Prep')) {
+  } else if (/Skip Prep|Start recording/i.test(recordBtnText)) {
     console.log('In Prep state. Skipping prep...');
     await dismissTutorialIfVisible();
     await page.click('#ra-record-btn');
@@ -155,6 +140,7 @@ const { chromium } = require('playwright');
       console.log('SUCCESS: Recording started.');
     } else {
       console.log('FAIL: Did not enter recording state.');
+      process.exitCode = 1;
     }
   }
 

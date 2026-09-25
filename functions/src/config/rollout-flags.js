@@ -7,6 +7,8 @@
 
 const DEFAULT_ROLLOUT_FLAGS = Object.freeze({
   aiScoringQuotes: 'active', // 'off' | 'shadow' | 'active'
+  speechV3Modes: Object.freeze([]),
+  entranceSpeechV3: false,
   aiCreditRateCardVersion: '2026.09.v1',
   aiCreditMonthlyGrant: 5000,
   aiCreditDailyCapEnabled: false,
@@ -80,9 +82,15 @@ function parseRolloutFlags(env = {}) {
   const pronounceTimingV42 = parseThreeState(env.PRONOUNCE_TIMING_V42, DEFAULT_ROLLOUT_FLAGS.pronounceTimingV42);
   const pronounceStressV2 = parseThreeState(env.PRONOUNCE_STRESS_V2, DEFAULT_ROLLOUT_FLAGS.pronounceStressV2);
   const rlSpokenAssessment = parseBoolean(env.RL_SPOKEN_ASSESSMENT, DEFAULT_ROLLOUT_FLAGS.rlSpokenAssessment);
+  const { normalizePracticeMode } = require('../practice-attempts/attempt-constraints');
+  const speechV3Modes = Object.freeze([...new Set(parseList(env.BEL_SPEECH_V3_MODES, DEFAULT_ROLLOUT_FLAGS.speechV3Modes)
+    .map(normalizePracticeMode).filter(Boolean))]);
+  const entranceSpeechV3 = parseBoolean(env.BEL_ENTRANCE_SPEECH_V3, DEFAULT_ROLLOUT_FLAGS.entranceSpeechV3);
 
   return Object.freeze({
     aiScoringQuotes,
+    speechV3Modes,
+    entranceSpeechV3,
     aiCreditRateCardVersion,
     aiCreditMonthlyGrant,
     aiCreditDailyCapEnabled,
@@ -129,12 +137,20 @@ function isRlSpokenAssessmentEnabled(flags) {
   return (flags?.rlSpokenAssessment ?? DEFAULT_ROLLOUT_FLAGS.rlSpokenAssessment) === true;
 }
 
+function isSpeechV3Enabled(mode, flags) {
+  const { normalizePracticeMode } = require('../practice-attempts/attempt-constraints');
+  const canonical = normalizePracticeMode(mode);
+  return Boolean(canonical && flags?.speechV3Modes?.includes(canonical));
+}
+
 /**
  * Returns public-safe client capabilities payload for /api/config.
  */
 function getPublicFeatureFlags(flags) {
   return Object.freeze({
     aiScoringQuotes: flags.aiScoringQuotes,
+    speechV3Modes: Array.from(flags.speechV3Modes),
+    entranceSpeechV3: flags.entranceSpeechV3,
     aiCreditRateCardVersion: flags.aiCreditRateCardVersion,
     entranceExactClipPolicy: flags.entranceExactClipPolicy,
     practicePronunciationV2Modes: Array.from(flags.practicePronunciationV2Modes),
@@ -151,6 +167,7 @@ module.exports = {
   isAiScoringQuotesEnabled,
   isAiScoringQuotesActive,
   isAiScoringQuotesShadow,
+  isSpeechV3Enabled,
   isModeEnabledForPronunciationV2,
   isModeEnabledForTranscriptConditioning,
   isRlSpokenAssessmentEnabled,

@@ -24,9 +24,11 @@ function screenshotPath(filename) {
 }
 
 async function activateSpeakingMode(page, mode) {
-    await page.evaluate(async (modeId) => {
-        await window.switchToMode(modeId);
-    }, mode);
+    // Leaving a mode that holds an unsaved recording asks "Leave ...?" first; the matrix accepts it.
+    await page.evaluate((modeId) => { window.__spcSwitch = window.switchToMode(modeId); }, mode);
+    const leave = page.locator('#custom-confirm-modal-confirm');
+    if (await leave.waitFor({ state: 'visible', timeout: 1500 }).then(() => true, () => false)) await leave.click();
+    await page.evaluate(() => window.__spcSwitch);
     await page.waitForFunction((modeId) => {
         const panel = document.getElementById(`mode-${modeId}`);
         return !!panel
@@ -90,7 +92,7 @@ async function captureSpeakingScreenshots(browser, server) {
     const desktopPage = await desktop.newPage();
 
     try {
-        await desktopPage.goto(`http://localhost:${server.address().port}/?speakingController=v2`, { waitUntil: 'domcontentloaded' });
+        await desktopPage.goto(`http://localhost:${server.address().port}/?speakingController=v2&pteShell=legacy`, { waitUntil: 'domcontentloaded' });
         await dismissBlockingOverlays(desktopPage);
 
         await activateSpeakingMode(desktopPage, 'asq');
@@ -133,7 +135,7 @@ async function captureSpeakingScreenshots(browser, server) {
     });
     const tabletPage = await tablet.newPage();
     try {
-        await tabletPage.goto(`http://localhost:${server.address().port}/?speakingController=v2`, { waitUntil: 'domcontentloaded' });
+        await tabletPage.goto(`http://localhost:${server.address().port}/?speakingController=v2&pteShell=legacy`, { waitUntil: 'domcontentloaded' });
         await dismissBlockingOverlays(tabletPage);
         await activateSpeakingMode(tabletPage, 'speak');
         await tabletPage.screenshot({ path: screenshotPath('speaking-controller-tablet.png'), fullPage: true });
@@ -155,7 +157,7 @@ async function captureSpeakingScreenshots(browser, server) {
     });
     const mobilePage = await mobile.newPage();
     try {
-        await mobilePage.goto(`http://localhost:${server.address().port}/?speakingController=v2`, { waitUntil: 'domcontentloaded' });
+        await mobilePage.goto(`http://localhost:${server.address().port}/?speakingController=v2&pteShell=legacy`, { waitUntil: 'domcontentloaded' });
         await dismissBlockingOverlays(mobilePage);
         await activateSpeakingMode(mobilePage, 'speak');
         await mobilePage.screenshot({ path: screenshotPath('speaking-controller-mobile.png'), fullPage: true });
@@ -240,7 +242,7 @@ async function runTest() {
             window.localStorage.setItem('hasSeenScopeTutorial', 'true');
         });
         const page1 = await context1.newPage();
-        const url = `http://localhost:${server.address().port}/?speakingController=v2`;
+        const url = `http://localhost:${server.address().port}/?speakingController=v2&pteShell=legacy`;
         await page1.goto(url, { waitUntil: 'domcontentloaded' });
         await dismissBlockingOverlays(page1);
 
@@ -265,7 +267,7 @@ async function runTest() {
             window.localStorage.setItem('hasSeenScopeTutorial', 'true');
         });
         const page2 = await context2.newPage();
-        await page2.goto(`http://localhost:${server.address().port}/?speakingController=v2`, { waitUntil: 'domcontentloaded' });
+        await page2.goto(`http://localhost:${server.address().port}/?speakingController=v2&pteShell=legacy`, { waitUntil: 'domcontentloaded' });
         await dismissBlockingOverlays(page2);
 
         const flagResults = await page2.evaluate(() => {
@@ -292,7 +294,7 @@ async function runTest() {
         assert('english:asq remains excluded', !flagResults.englishAsq);
 
         // Test legacy override
-        await page2.goto(`http://localhost:${server.address().port}/?speakingController=legacy`, { waitUntil: 'domcontentloaded' });
+        await page2.goto(`http://localhost:${server.address().port}/?speakingController=legacy&pteShell=legacy`, { waitUntil: 'domcontentloaded' });
         await dismissBlockingOverlays(page2);
 
         const legacyResult = await page2.evaluate(() => {
@@ -318,7 +320,7 @@ async function runTest() {
         const pageErrors = [];
         page3.on('pageerror', err => pageErrors.push(err.message));
 
-        await page3.goto(`http://localhost:${server.address().port}/?speakingController=v2`, { waitUntil: 'domcontentloaded' });
+        await page3.goto(`http://localhost:${server.address().port}/?speakingController=v2&pteShell=legacy`, { waitUntil: 'domcontentloaded' });
         await dismissBlockingOverlays(page3);
 
         // Navigate to speak mode panel to get a real panel context
@@ -807,7 +809,7 @@ async function runTest() {
             window.localStorage.setItem('hasSeenScopeTutorial', 'true');
         });
         const page6 = await context6.newPage();
-        await page6.goto(`http://localhost:${server.address().port}/?speakingController=v2`, { waitUntil: 'domcontentloaded' });
+        await page6.goto(`http://localhost:${server.address().port}/?speakingController=v2&pteShell=legacy`, { waitUntil: 'domcontentloaded' });
         await dismissBlockingOverlays(page6);
 
         const lifecycleResults = await page6.evaluate(async () => {
@@ -920,7 +922,7 @@ async function runTest() {
             window.localStorage.setItem('hasSeenScopeTutorial', 'true');
         });
         const page8 = await context8.newPage();
-        await page8.goto(`http://localhost:${server.address().port}/?speakingController=v2`, { waitUntil: 'domcontentloaded' });
+        await page8.goto(`http://localhost:${server.address().port}/?speakingController=v2&pteShell=legacy`, { waitUntil: 'domcontentloaded' });
         await dismissBlockingOverlays(page8);
         await page8.evaluate(async () => window.switchToMode('rts'));
         await page8.waitForFunction(() => (window.RTSMode?.getItems?.() || []).length > 1, { timeout: 15000 });
@@ -1076,6 +1078,10 @@ async function runTest() {
             SPC.unmount('type');
 
             const raPanel = document.getElementById('mode-read-aloud');
+            // Read Aloud's script loads, and builds its Settings sheet, on first entry, so enter the
+            // mode as a learner would before checking what the sheet adopted.
+            await window.switchToMode('read-aloud');
+            await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 300)));
             SPC.activate('read-aloud', { scope: 'pte' });
             const raController = raPanel?.querySelector('.spc-controller');
             results.raMounted = !!raController;
@@ -1204,7 +1210,7 @@ async function runTest() {
             window.localStorage.setItem('bel:speaking-controller:view:v1', 'advanced');
         });
         const page7 = await context7.newPage();
-        await page7.goto(`http://localhost:${server.address().port}/?speakingController=v2`, { waitUntil: 'domcontentloaded' });
+        await page7.goto(`http://localhost:${server.address().port}/?speakingController=v2&pteShell=legacy`, { waitUntil: 'domcontentloaded' });
         await dismissBlockingOverlays(page7);
 
         const persistedView = await page7.evaluate(() => {
@@ -1319,7 +1325,7 @@ async function runTest() {
             window.localStorage.setItem('hasSeenScopeTutorial', 'true');
         });
         const page12 = await context12.newPage();
-        await page12.goto(`http://localhost:${server.address().port}/`, { waitUntil: 'domcontentloaded' });
+        await page12.goto(`http://localhost:${server.address().port}/?pteShell=legacy`, { waitUntil: 'domcontentloaded' });
         await dismissBlockingOverlays(page12);
         const defaultResults = await page12.evaluate(async () => {
             const SPC = window.SpeakingPracticeController;
@@ -1434,7 +1440,7 @@ async function runTest() {
             window.localStorage.setItem('hasSeenScopeTutorial', 'true');
         });
         const page13 = await context13.newPage();
-        await page13.goto(`http://localhost:${server.address().port}/?speakingController=v2`, { waitUntil: 'domcontentloaded' });
+        await page13.goto(`http://localhost:${server.address().port}/?speakingController=v2&pteShell=legacy`, { waitUntil: 'domcontentloaded' });
         await dismissBlockingOverlays(page13);
         const speakingMobileLayout = await page13.evaluate(async () => {
             await window.switchToMode('speak');

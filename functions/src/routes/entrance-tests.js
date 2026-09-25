@@ -3,6 +3,7 @@ const axios = require('axios');
 const https = require('https');
 const { FieldValue } = require('firebase-admin/firestore');
 const { getStorage } = require('firebase-admin/storage');
+const { getFunctions } = require('firebase-admin/functions');
 const { db } = require('../utils/firebase_admin_init');
 const { sendError, sendSuccess } = require('../crm/http-contracts');
 const { CRM_LEADS } = require('../crm/collections');
@@ -17,7 +18,27 @@ const {
     buildPublicSession,
     scoreSubmission
 } = require('../entrance-test/test36plus');
-const { transcribeAudio } = require('../entrance-test/asr-service');
+const { transcribeAudio, parseFiniteScore } = require('../entrance-test/asr-service');
+const { parseRolloutFlags } = require('../config/rollout-flags');
+const { parseEntranceV3Upload, uploadEntranceV3, getEntranceV3Status } = require('../entrance-test/v3-assessment');
+
+function resolveAcousticAndEffectiveAccuracy({ asrRes, words, textAccuracyPercent }) {
+    const directScore = parseFiniteScore(asrRes?.accuracyScore) ?? parseFiniteScore(words?.accuracyScore);
+    let accuracyScore = null;
+    if (directScore !== null) {
+        accuracyScore = directScore;
+    } else if (Array.isArray(words) && words.length > 0) {
+        const validScores = words
+            .map((w) => (typeof w === 'object' && w != null) ? parseFiniteScore(w.accuracyScore) : null)
+            .filter((n) => n !== null);
+        if (validScores.length > 0) {
+            accuracyScore = Math.round((validScores.reduce((a, b) => a + b, 0) / validScores.length) * 10) / 10;
+        }
+    }
+    // Preserve acoustic score distinctly; do not silently replace missing acoustic score with text-match edit distance
+    const effectiveAccuracy = accuracyScore;
+    return { accuracyScore, effectiveAccuracy };
+}
 
 const router = express.Router();
 
@@ -116,7 +137,13 @@ router.get('/session', async (req, res) => {
 
         const session = buildPublicSession(testId);
         const progress = sanitizeProgressDraft(data.progress);
-        return sendSuccess(res, { testId, session, progress });
+        const speakingV3 = Object.fromEntries(Object.entries(data.speaking || {})
+            .filter(([, entry]) => entry?.v3?.revisionId)
+            .map(([questionId, entry]) => [questionId, {
+                revisionId: entry.v3.revisionId, status: entry.v3.status,
+                transcript: entry.transcript || null, accuracyScore: entry.accuracyScore ?? null
+            }]));
+        return sendSuccess(res, { testId, session, progress, speakingV3 });
     } catch (e) {
         console.error('[EntranceTest] /session error:', e);
         return sendError(res, 500, 'SESSION_ERROR', 'Failed to start session.', e?.message || String(e));
@@ -237,6 +264,28 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
             return sendError(res, 500, 'DATA_ERROR', 'Lead or student binding is missing for this test.');
         }
 
+        if (parseRolloutFlags(process.env).entranceSpeechV3) {
+            let uploaded;
+            try {
+                uploaded = await uploadEntranceV3({ db, bucket, testId, questionId, question,
+                    data, ...parseEntranceV3Upload(audioBuffer, req.headers['content-type']) });
+            } catch (error) {
+                if (/^(INVALID_|AUDIO_|RIFF_|PCM_|WAV_)/.test(error.message))
+                    return sendError(res, 400, 'INVALID_CANONICAL_AUDIO', error.message);
+                throw error;
+            }
+            try {
+                const queue = getFunctions().taskQueue('locations/asia-southeast1/functions/entranceSpeechWorkerTask');
+                await queue.enqueue({ revisionId: uploaded.revisionId });
+                await db.collection('entranceSpeechOutbox').doc(uploaded.revisionId).update({
+                    dispatchedAt: new Date().toISOString() });
+            } catch (error) {
+                console.error('[EntranceTest] V3 task dispatch deferred to reconciler:', error);
+            }
+            return sendSuccess(res, { status: 'queued', revisionId: uploaded.revisionId,
+                manifest: uploaded.manifest });
+        }
+
         const contentType = String(req.headers['content-type'] || 'application/octet-stream');
         const ext = extensionFromContentType(contentType);
         const fileName = `audio_${String(question.promptNumber).padStart(2, '0')}.${ext}`;
@@ -264,19 +313,13 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
             words = Array.isArray(asrRes?.words) ? asrRes.words : null;
             accuracy = computeWordAccuracyPercent(question.expectedText, transcript);
 
-            if (Number.isFinite(Number(asrRes?.accuracyScore))) {
-                accuracyScore = Number(asrRes.accuracyScore);
-            } else if (Number.isFinite(Number(words?.accuracyScore))) {
-                accuracyScore = Number(words.accuracyScore);
-            } else if (Array.isArray(words) && words.length > 0) {
-                const validScores = words
-                    .map((w) => (typeof w === 'object' && w != null && Number.isFinite(Number(w.accuracyScore))) ? Number(w.accuracyScore) : null)
-                    .filter((n) => n !== null);
-                if (validScores.length > 0) {
-                    accuracyScore = Math.round((validScores.reduce((a, b) => a + b, 0) / validScores.length) * 10) / 10;
-                }
-            }
-            effectiveAccuracy = accuracyScore != null ? accuracyScore : (accuracy?.percent ?? null);
+            const scores = resolveAcousticAndEffectiveAccuracy({
+                asrRes,
+                words,
+                textAccuracyPercent: accuracy?.percent ?? null
+            });
+            accuracyScore = scores.accuracyScore;
+            effectiveAccuracy = scores.effectiveAccuracy;
         } catch (e) {
             asrError = e?.message || String(e);
             console.warn('[EntranceTest] ASR failed:', asrError);
@@ -322,6 +365,23 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
     }
 });
 
+router.get('/speaking/status', async (req, res) => {
+    try {
+        if (!db) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
+        const token = String(req.query.token || '').trim();
+        const questionId = String(req.query.questionId || '').trim();
+        if (token.length < 10 || !getSpeakingQuestionById(questionId))
+            return sendError(res, 400, 'INVALID_REQUEST', 'Invalid token or question.');
+        const bucket = resolveStorageBucket();
+        const state = await getEntranceV3Status({ db, bucket, testId: hashTokenToTestId(token), questionId });
+        if (!state) return sendError(res, 404, 'ASSESSMENT_NOT_FOUND', 'No V3 assessment for this question.');
+        return sendSuccess(res, state);
+    } catch (error) {
+        console.error('[EntranceTest] /speaking/status:', error);
+        return sendError(res, 500, 'STATUS_ERROR', 'Could not load speaking assessment.');
+    }
+});
+
 router.post('/submit', async (req, res) => {
     try {
         if (!db) return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
@@ -352,6 +412,13 @@ router.post('/submit', async (req, res) => {
             }
 
             const scoring = scoreSubmission(responses);
+            if (parseRolloutFlags(process.env).entranceSpeechV3) {
+                const questions = TEST_36PLUS.sections.find(section => section.id === 'speaking')?.questions || [];
+                if (questions.some(question => data.speaking?.[question.id]?.v3?.status !== 'ready')) {
+                    return { ok: false, status: 409, error: 'SPEAKING_ASSESSMENT_PENDING',
+                        message: 'Complete all speaking assessments before submitting.' };
+                }
+            }
             const studentId = String(data.studentId || '').trim();
             const leadId = String(data.leadId || '').trim();
             if (studentId) {
@@ -414,5 +481,8 @@ router.post('/submit', async (req, res) => {
         return sendError(res, 500, 'SUBMIT_ERROR', 'Failed to submit entrance test.', e?.message || String(e));
     }
 });
+
+router.resolveAcousticAndEffectiveAccuracy = resolveAcousticAndEffectiveAccuracy;
+router.parseFiniteScore = parseFiniteScore;
 
 module.exports = router;

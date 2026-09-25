@@ -20,6 +20,7 @@ const {
     scoreSubmission
 } = require('../../entrance-test/test36plus');
 const { transcribeAudio, alignAudioWithAzure } = require('../../entrance-test/asr-service');
+const { getEntranceV3Status } = require('../../entrance-test/v3-assessment');
 
 const VALID_TEST_TYPES = new Set([
     'entrance_test_36plus_v1',
@@ -48,11 +49,14 @@ function getSpeakingQuestionExpectedText(questionId, entry = null) {
     return cleanOptionalString(expected);
 }
 
-function resolveStorageBucket(preferredBucketName) {
+function resolveStorageBucket(preferredBucketName, injectedAdmin) {
     try {
+        const demoStorage = process.env.FIREBASE_PROJECT_ID === 'demo-crm-projects'
+            && /^(127\.0\.0\.1|localhost):\d+$/.test(String(process.env.FIREBASE_STORAGE_EMULATOR_HOST || ''));
         const bucketName = cleanOptionalString(preferredBucketName)
-            || cleanOptionalString(process.env.CLIENT_FIREBASE_STORAGE_BUCKET);
-        const storage = getStorage();
+            || cleanOptionalString(demoStorage
+                ? process.env.FIREBASE_STORAGE_BUCKET : process.env.CLIENT_FIREBASE_STORAGE_BUCKET);
+        const storage = injectedAdmin?.storage?.() || getStorage();
         return bucketName ? storage.bucket(bucketName) : storage.bucket();
     } catch (error) {
         console.warn('[CRM EntranceTests] Storage init failed:', error?.message || error);
@@ -125,6 +129,7 @@ async function listTestsByField(db, field, value) {
 
 module.exports = function registerEntranceTestRoutes(router, deps) {
     const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
+    const bucketFor = (preferredName) => resolveStorageBucket(preferredName, deps.admin);
 
     async function createEntranceTest(req, res, targetKind) {
         try {
@@ -239,10 +244,23 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                 }
             }
 
+            const test = { ...(context.test || {}) };
+            if (Object.values(test.speaking || {}).some(entry => entry?.v3?.status === 'ready')) {
+                const bucket = bucketFor();
+                if (!bucket) return sendError(res, 503, 'SERVER_CONFIG_ERROR', 'Firebase Storage not initialized.');
+                test.speaking = { ...test.speaking };
+                for (const [questionId, entry] of Object.entries(test.speaking)) {
+                    if (entry?.v3?.status !== 'ready') continue;
+                    const state = await getEntranceV3Status({ db, bucket, testId, questionId });
+                    test.speaking[questionId] = { ...entry, assessment: state.result,
+                        words: state.result?.wordResults || null,
+                        transcript: state.result?.recognizedText || entry.transcript };
+                }
+            }
             return sendSuccess(res, {
                 testId,
                 test: {
-                    ...(context.test || {}),
+                    ...test,
                     scoring
                 },
                 lead: context.lead,
@@ -254,9 +272,34 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
         }
     });
 
+    router.get('/entrance-tests/:testId/speaking/:questionId/canonical-audio', ...requireAdminHandlers, async (req, res) => {
+        try {
+            const test = await db.collection(ENTRANCE_TESTS).doc(String(req.params.testId || '')).get();
+            const entry = test.exists ? test.data()?.speaking?.[String(req.params.questionId || '')] : null;
+            const canonicalAudio = entry?.v3?.audio || entry?.audio;
+            if (entry?.v3?.status !== 'ready' || !canonicalAudio?.storagePath)
+                return sendError(res, 404, 'AUDIO_NOT_FOUND', 'Canonical audio is unavailable.');
+            const bucket = bucketFor(canonicalAudio.bucketName);
+            if (!bucket) return sendError(res, 503, 'SERVER_CONFIG_ERROR', 'Firebase Storage not initialized.');
+            const expectedGeneration = Number(entry.v3.manifest.storageGeneration);
+            if (!Number.isSafeInteger(expectedGeneration) || expectedGeneration <= 0)
+                return sendError(res, 409, 'AUDIO_REVISION_CHANGED', 'Canonical audio revision is invalid.');
+            const [metadata] = await bucket.file(canonicalAudio.storagePath).getMetadata();
+            if (String(metadata.generation) !== String(expectedGeneration))
+                return sendError(res, 409, 'AUDIO_REVISION_CHANGED', 'Canonical audio revision changed.');
+            const file = bucket.file(canonicalAudio.storagePath, { generation: expectedGeneration });
+            const [bytes] = await file.download();
+            res.set('Content-Type', 'audio/wav');
+            res.set('Cache-Control', 'private, no-store');
+            return res.send(bytes);
+        } catch (error) {
+            return sendError(res, 500, 'AUDIO_FETCH_ERROR', 'Failed to load canonical audio.');
+        }
+    });
+
     router.get('/entrance-tests/:testId/speaking/:questionId/audio-url', ...requireAdminHandlers, async (req, res) => {
         try {
-            const bucket = resolveStorageBucket();
+            const bucket = bucketFor();
             if (!bucket) {
                 return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Storage not initialized.');
             }
@@ -281,7 +324,7 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
             }
 
             const bucketName = cleanOptionalString(entry?.audio?.bucketName);
-            const targetBucket = resolveStorageBucket(bucketName) || bucket;
+            const targetBucket = bucketFor(bucketName) || bucket;
             const [url] = await targetBucket.file(storagePath).getSignedUrl({
                 action: 'read',
                 expires: Date.now() + 10 * 60 * 1000
@@ -295,7 +338,7 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
 
     router.post('/entrance-tests/:testId/speaking/retry-asr', ...requireAdminHandlers, async (req, res) => {
         try {
-            const bucket = resolveStorageBucket();
+            const bucket = bucketFor();
             if (!bucket) {
                 return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Storage not initialized.');
             }
@@ -325,7 +368,7 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                 if (!storagePath) continue;
 
                 const bucketName = cleanOptionalString(entry?.audio?.bucketName);
-                const targetBucket = resolveStorageBucket(bucketName) || bucket;
+                const targetBucket = bucketFor(bucketName) || bucket;
                 const contentType = cleanOptionalString(entry?.audio?.contentType) || 'application/octet-stream';
                 const expectedText = getSpeakingQuestionExpectedText(questionId);
 
@@ -391,8 +434,10 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
         }
     });
 
-    router.post('/:testId/speaking/align-words', async (req, res) => {
+    router.post('/:testId/speaking/align-words', ...requireAdminHandlers, async (req, res) => {
         try {
+            const bucket = bucketFor();
+            if (!bucket) return sendError(res, 503, 'SERVER_CONFIG_ERROR', 'Firebase Storage not initialized.');
             const testId = cleanOptionalString(req.params?.testId);
             if (!testId || testId.length < 20) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid testId.');
@@ -423,7 +468,7 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                 if (!storagePath || !alignTarget) continue;
 
                 const bucketName = cleanOptionalString(entry?.audio?.bucketName);
-                const targetBucket = resolveStorageBucket(bucketName) || bucket;
+                const targetBucket = bucketFor(bucketName) || bucket;
                 const contentType = cleanOptionalString(entry?.audio?.contentType) || 'application/octet-stream';
 
                 try {

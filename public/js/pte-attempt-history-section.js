@@ -64,6 +64,7 @@
         return prompt != null && rowId != null && String(rowId) === String(prompt);
       });
       current.textContent = `This question · ${questionRows.length}`;
+      options.onUpdate?.({ questionCount: questionRows.length, guest });
       current.setAttribute('aria-pressed', String(!all)); every.setAttribute('aria-pressed', String(all));
       const trendText = options.formatTrend?.(questionRows) || '';
       trend.textContent = trendText; trend.hidden = !trendText;

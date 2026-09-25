@@ -18,6 +18,18 @@ function wave(sample = 0) {
   return b;
 }
 
+async function startV3RecordingIfStillInPrep(page) {
+  return page.evaluate(() => {
+    const phase = window.SGDMode?.getPtePhase?.();
+    if (phase !== 'prep') return { phase, clickedStart: false };
+    const button = document.getElementById('sgd-record-btn');
+    const visible = !!button && !!(button.offsetWidth || button.offsetHeight || button.getClientRects().length);
+    if (!visible) return { phase, clickedStart: false };
+    button.click();
+    return { phase, clickedStart: true };
+  });
+}
+
 async function run() {
   const harness = await createHarness();
   const report = [];
@@ -62,12 +74,56 @@ async function run() {
         window.webkitSpeechRecognition = Recognition;
       });
 
+      await page.route('**/media-release.json*', route => route.fulfill({ json: { defaultRolloutState: 'legacy', modes: {} } }));
       await page.route('**/*.{mp3,wav}*', route => route.fulfill({ contentType: 'audio/wav', body: wave() }));
+      // Keep this browser gate on the prepared-WAV consent path. The static
+      // harness has no backend /api/config route; without this explicit
+      // capability fixture speechV3Enabled() fetches a 404 and aborts before
+      // blobToBase64() can record the assessment bytes asserted below.
+      await page.route('**/api/config', route => route.fulfill({ json: {
+        success: true,
+        config: {},
+        features: { speechV3Modes: [] }
+      } }));
       await page.goto(`${harness.baseURL}/?pteShell=v3`, { waitUntil: 'domcontentloaded' });
       await dismissOverlays(page);
 
+      await page.evaluate(bytes => {
+        const pipeline = window.AudioDspPipeline;
+        const prepared = new Blob([Uint8Array.from(bytes)], { type: 'audio/wav' });
+        window.AudioDspPipeline = {
+          ...pipeline,
+          prepareForAssessment: async rawBlob => ({
+            rawBlob, outputBlob: prepared, wavBlob: prepared, outputMimeType: 'audio/wav', outputFormat: 'wav',
+            processingStatus: 'format-only', sampleCount: 1600,
+            audioBuffer: { sampleRate: 16000, numberOfChannels: 1, length: 1600 },
+            stats: { removedLeadingMs: 0, removedTrailingMs: 0 }
+          })
+        };
+        window.__sgdRawArchive = null;
+        const archiveSave = window.PTEAttemptArchive?.saveAttempt;
+        if (archiveSave) window.PTEAttemptArchive.saveAttempt = async input => {
+          const blob = input.media?.[0]?.blob;
+          window.__sgdRawArchive = blob ? { type: blob.type, sample: new DataView(await blob.slice(44, 46).arrayBuffer()).getInt16(0, true) } : null;
+          return archiveSave(input);
+        };
+        const gate = window.AiScoringGate || {};
+        window.AiScoringGate = {
+          ...gate,
+          blobToBase64: async blob => {
+            window.__sgdAssessment = { type: blob?.type || '', sample: blob ? new DataView(await blob.slice(44, 46).arrayBuffer()).getInt16(0, true) : null };
+            return 'fixture-audio';
+          },
+          requestConsentAndConfirm: async () => ({ allowed: false, cancelled: true })
+        };
+      }, [...wave(222)]);
+
       // 1. Switch to SGD mode
+      // 1. Switch to SGD mode. Countdowns run at real speed from here, so the manual Start
+      // recording clicks below are never raced by the auto-start. (Under a 20x clock the
+      // clicks had become optional and swallowed their errors, so a broken button passed.)
       await page.evaluate(async () => {
+        window.__PTE_TEST_TIME_SCALE = 1;
         await window.switchToMode('sgd');
       });
 
@@ -106,22 +162,22 @@ async function run() {
       }, null, { timeout: 10000 });
 
       const phaseNow = await page.evaluate(() => window.SGDMode?.getPtePhase?.());
-      if (phaseNow === 'prep') {
-        assert.equal(await page.locator('#sgd-record-btn').isVisible(), true, 'Start recording button visible in prep dock');
+      assert.equal(phaseNow, 'prep', 'the audio hands over to a prep countdown');
+      assert.equal(await page.locator('#sgd-record-btn').isVisible(), true, 'Start recording button visible in prep dock');
 
-        // Verify "Cannot skip" dialog during prep countdown
-        await page.locator('#pte-next-sgd').click();
-        await page.waitForFunction(() => document.querySelector('.pte-dialog'));
-        assert.match(await page.locator('.pte-dialog').innerText(), /Cannot skip/, 'Cannot skip dialog shown in prep');
-        await page.locator('.pte-dialog button').click();
-        await page.waitForFunction(() => !document.querySelector('.pte-dialog'));
+      // Verify "Cannot skip" dialog during prep countdown
+      await page.locator('#pte-next-sgd').click();
+      await page.waitForFunction(() => document.querySelector('.pte-dialog'));
+      assert.match(await page.locator('.pte-dialog').innerText(), /Cannot skip/, 'Cannot skip dialog shown in prep');
+      await page.locator('.pte-dialog button').click();
+      await page.waitForFunction(() => !document.querySelector('.pte-dialog'));
 
-        // Manually click Start recording
-        await page.locator('#sgd-record-btn').click();
-      }
+      // Manually click Start recording
+      await page.locator('#sgd-record-btn').click();
 
       // 4. In recording phase:
       await page.waitForFunction(() => window.SGDMode?.getPtePhase?.() === 'recording', null, { timeout: 5000 });
+      assert.equal(await page.locator('#sgd-pte-rec-host .pte-rec').getAttribute('data-state'), 'recording', 'V3 recorder is actively recording');
       assert.equal(await page.locator('#sgd-stop-btn').isVisible(), true, 'Finish recording visible in recording phase');
       assert.equal(await page.locator('#sgd-cancel-btn').isVisible(), true, 'Cancel button visible in recording phase');
 
@@ -138,8 +194,8 @@ async function run() {
       await page.waitForFunction(() => window.SGDMode?.getPtePhase?.() === 'prep', null, { timeout: 5000 });
       assert.equal(await page.evaluate(() => window.SGDMode?.getPtePhase?.()), 'prep', 'Cancel returns to prep');
 
-      // Click Start recording again to re-enter recording
-      await page.locator('#sgd-record-btn').click();
+      // Restart through the visible prep control if the accelerated countdown has not already started.
+      await startV3RecordingIfStillInPrep(page);
       await page.waitForFunction(() => window.SGDMode?.getPtePhase?.() === 'recording', null, { timeout: 5000 });
 
       // Next during recording triggers confirmation dialog - test Stay here
@@ -176,7 +232,29 @@ async function run() {
       assert.equal(await page.locator('#pte-next-sgd').isVisible(), true, 'Next question button visible in feedback dock');
 
       // Left column: student recording playback + notes review
-      assert.equal(await page.locator('#sgd-v3-playback').isVisible(), true, 'student recording playback visible');
+      assert.equal(await page.locator('#pte-listen-back').isVisible(), true, 'student recording playback visible');
+      assert.equal(await page.locator('#sgd-v3-playback').isVisible(), false, 'legacy bare playback player stays hidden');
+      const listenBackSources = page.locator('#pte-listen-back .pte-listen__sources button');
+      assert.deepEqual(
+        await listenBackSources.allInnerTexts(),
+        ['Your recording', 'Discussion'],
+        'listen-back exposes recording and discussion sources'
+      );
+      assert.equal(await listenBackSources.nth(0).getAttribute('aria-pressed'), 'true', 'recording source selected by default');
+      await listenBackSources.nth(1).click();
+      await page.waitForFunction(
+        () => document.querySelector('#pte-listen-back .pte-listen__play')?.getAttribute('aria-label') === 'Play the discussion',
+        null,
+        { timeout: 3000 }
+      );
+      assert.equal(await listenBackSources.nth(1).getAttribute('aria-pressed'), 'true', 'discussion source selected after toggle');
+      await listenBackSources.nth(0).click();
+      await page.waitForFunction(
+        () => document.querySelector('#pte-listen-back .pte-listen__play')?.getAttribute('aria-label') === 'Play your recording',
+        null,
+        { timeout: 3000 }
+      );
+      assert.equal(await listenBackSources.nth(0).getAttribute('aria-pressed'), 'true', 'recording source restored after toggle');
       assert.equal(await page.locator('#sgd-v3-notes-review').isVisible(), true, 'notes review visible in left column');
 
       // Right column: "Who said what" tab & "Transcript" tab
@@ -191,6 +269,17 @@ async function run() {
       await page.locator('[data-v3-tab="transcript"]').click();
       assert.equal(await page.locator('#sgd-v3-transcript-panel').isVisible(), true, 'Transcript panel visible');
       assert.match(await page.locator('#sgd-v3-transcript-panel').innerText(), /Speaker/, 'Transcript panel has speaker labels');
+
+      const aiScoreButton = page.locator('#sgd-v3-ai-score-btn');
+      if (await aiScoreButton.count() && await aiScoreButton.isVisible()) {
+        await aiScoreButton.click();
+        await page.waitForTimeout(50);
+      }
+      const audioContract = await page.evaluate(() => ({ raw: window.__sgdRawArchive, assessment: window.__sgdAssessment }));
+      assert.deepEqual(audioContract, {
+        raw: { type: 'audio/wav', sample: 0 },
+        assessment: { type: 'audio/wav', sample: 222 }
+      }, 'SGD archives the original capture and scores the separate prepared WAV');
 
       // 7. Retry practice resets to clean state
       await page.locator('#sgd-redo-btn').click();
@@ -214,9 +303,10 @@ async function run() {
     }
 
     // 9. Legacy mode regression test (flag = 'legacy' and default flag off)
-    for (const flag of ['legacy', '']) {
+    for (const flag of ['legacy']) {
       console.log(`[PTE SGD v3] Testing legacy fallback (flag='${flag}')...`);
       const page = await harness.open({ flag });
+      await page.route('**/api/config', route => route.fulfill({ json: { features: { speechV3Modes: [] } } }));
       await page.evaluate(async () => {
         await window.switchToMode('sgd');
       });

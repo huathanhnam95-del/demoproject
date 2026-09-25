@@ -30,7 +30,8 @@
     let recordedChunks = [];
     let recordingBlobUrl = null;
     let recordingBlob = null;
-    let dspPromise = null;
+    let originalRecordingBlob = null;
+    let lastV3Playback = null;
     let recordingSessionToken = 0;
 
     // Speech recognition
@@ -170,7 +171,8 @@
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordedChunks = [];
         recordingBlob = null;
-        dspPromise = null;
+        originalRecordingBlob = null;
+        lastV3Playback = null;
         if (el.diRecordingPlayback) {
             try {
                 el.diRecordingPlayback.pause();
@@ -267,24 +269,66 @@
         return DI_IMAGE_DIR + entry.id + '.jpg';
     }
 
+    // The picture is the question. While it loads its space is kept; if it cannot load the
+    // learner is told and can try again - it used to collapse to an alt-text strip that still
+    // offered a zoom button. CSS keys off data-image-state.
+    function setImageState(imgEl, state) {
+        const container = imgEl?.closest('.di-image-container');
+        if (!container) return;
+        container.dataset.imageState = state;
+        if (state !== 'error' || container.querySelector('.di-image-error')) return;
+        const note = document.createElement('div');
+        note.className = 'di-image-error';
+        note.setAttribute('role', 'status');
+        note.innerHTML = '<p>This picture didn\u2019t load.</p><button type="button" class="pte-btn">Try again</button>';
+        note.querySelector('button').addEventListener('click', (event) => {
+            event.stopPropagation();
+            if (currentEntry) setImageWithFallback(imgEl, currentEntry);
+        });
+        container.appendChild(note);
+    }
+
     function setImageWithFallback(imgEl, entry) {
         if (!imgEl || !entry) return;
         const primarySrc = getImageSrc(entry);
         const fallbackSrc = getImageFallbackSrc(entry);
+        setImageState(imgEl, 'loading');
+        // Setting the src an image already shows fires no load event (the feedback thumbnail
+        // reuses the stage picture), so an already-loaded picture is marked ready directly.
+        const markIfLoaded = () => {
+            if (imgEl.complete && imgEl.naturalWidth > 1 && !String(imgEl.currentSrc || imgEl.src).startsWith('data:')) setImageState(imgEl, 'ready');
+        };
+        imgEl.onload = () => {
+            if (!String(imgEl.currentSrc || imgEl.src).startsWith('data:')) setImageState(imgEl, 'ready');
+        };
         imgEl.onerror = () => {
-            imgEl.onerror = null;
+            // A failure of the fallback as well leaves nothing to show.
+            imgEl.onerror = () => setImageState(imgEl, 'error');
+            if (!fallbackSrc || imgEl.src === fallbackSrc) { setImageState(imgEl, 'error'); return; }
             if (fallbackSrc && imgEl.src !== fallbackSrc) {
-                if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadImage === 'function') {
-                    window.MediaUrlResolver.loadImage(imgEl, fallbackSrc, { mode: 'Describe-Image' });
-                } else {
+                try {
+                    if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadImage === 'function') {
+                        const p = window.MediaUrlResolver.loadImage(imgEl, fallbackSrc, { mode: 'Describe-Image' });
+                        if (p && typeof p.catch === 'function') p.catch(() => { imgEl.src = fallbackSrc; });
+                    } else {
+                        imgEl.src = fallbackSrc;
+                    }
+                } catch (_) {
                     imgEl.src = fallbackSrc;
                 }
             }
         };
-        if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadImage === 'function') {
-            window.MediaUrlResolver.loadImage(imgEl, primarySrc, { mode: 'Describe-Image' });
-        } else {
+        try {
+            if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadImage === 'function') {
+                const p = window.MediaUrlResolver.loadImage(imgEl, primarySrc, { mode: 'Describe-Image' });
+                if (p && typeof p.then === 'function') p.then(markIfLoaded, () => { imgEl.src = primarySrc; markIfLoaded(); });
+            } else {
+                imgEl.src = primarySrc;
+                markIfLoaded();
+            }
+        } catch (_) {
             imgEl.src = primarySrc;
+            markIfLoaded();
         }
     }
 
@@ -543,9 +587,12 @@
         try {
             if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
             recordingBlob = null;
-            dspPromise = null;
+            originalRecordingBlob = null;
+            lastV3Playback = null;
 
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const micRequest = navigator.mediaDevices.getUserMedia({ audio: true });
+            if (isV3()) pteRecorderWidget?.waitForMic?.(micRequest);
+            const stream = await micRequest;
             const sessionToken = ++recordingSessionToken;
             const aGen = ++attemptGen;
             const qGen = questionGen;
@@ -572,29 +619,12 @@
                 if (el.diRecordStatus) el.diRecordStatus.classList.remove('di-recording-active');
                 if (sessionToken !== recordingSessionToken || aGen !== attemptGen || qGen !== questionGen) return;
                 if (recordedChunks.length > 0) {
-                    const blob = new Blob(recordedChunks, { type: recorder.mimeType || 'audio/wav' });
+                    const rawMimeType = recorder.mimeType || recordedChunks.find(chunk => chunk.type)?.type || 'application/octet-stream';
+                    const blob = new Blob(recordedChunks, { type: rawMimeType });
+                    originalRecordingBlob = blob;
                     recordingBlob = blob;
                     recordingBlobUrl = URL.createObjectURL(blob);
                     if (el.diRecordingPlayback) el.diRecordingPlayback.src = recordingBlobUrl;
-
-                    dspPromise = (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function')
-                        ? window.AudioDspPipeline.enhance(blob).then((result) => {
-                            if (sessionToken !== recordingSessionToken || aGen !== attemptGen || qGen !== questionGen) return blob;
-                            if (result && result.wavBlob) {
-                                if (recordingBlobUrl) URL.revokeObjectURL(recordingBlobUrl);
-                                recordingBlob = result.wavBlob;
-                                recordingBlobUrl = result.audioUrl || URL.createObjectURL(result.wavBlob);
-                                if (el.diRecordingPlayback) el.diRecordingPlayback.src = recordingBlobUrl;
-                                return result.wavBlob;
-                            }
-                            return blob;
-                        }).catch((err) => {
-                            console.warn('[DescribeImage] AudioDspPipeline enhancement failed, keeping raw audio:', err);
-                            return blob;
-                        })
-                        : Promise.resolve(blob);
-                } else {
-                    dspPromise = Promise.resolve(null);
                 }
 
                 if (isV3()) {
@@ -633,6 +663,18 @@
 
         } catch (err) {
             console.error('[DI] Recording error:', err);
+            if (isV3()) {
+                // Back to prep with the reason on screen (a 5-second toast was all there was,
+                // and the dock stayed on Finish recording). Start recording is the retry; the
+                // prep countdown is not restarted, so it cannot push into another attempt.
+                const info = window.PteRecorderWidget?.describeMicError?.(err);
+                v3Phase = 'prep';
+                syncPteV3UI();
+                window.SpeakingPracticeController?.setPhase?.('describe-image', 'prep');
+                pteRecorderWidget?.showMicError?.(info || err);
+                if (info) window.SpeakingPracticeController?.setNotice?.('describe-image', info.notice);
+                return;
+            }
             if (typeof window.showToast === 'function') {
                 window.showToast('Could not access microphone. Please allow microphone access.', 5000);
             }
@@ -681,6 +723,7 @@
 
     /* ──────────────────────────── SPEECH RECOGNITION ──────────────────────────── */
 
+    // Deprecated: webkitSpeechRecognition is retained for non-authoritative interim display only; server-side two-pass ASR is authoritative per Plan V3
     function startSpeechRecognition() {
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SR) return;
@@ -732,7 +775,8 @@
     function retryRecording() {
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
-        dspPromise = null;
+        originalRecordingBlob = null;
+        lastV3Playback = null;
         transcriptText = '';
         recordedDurationSec = 0;
         attemptGen += 1;
@@ -799,11 +843,67 @@
         const sessionToken = recordingSessionToken;
         const aGen = attemptGen;
         const qGen = questionGen;
-        const finalBlob = dspPromise ? await dspPromise.catch(() => recordingBlob) : recordingBlob;
+        const finalBlob = recordingBlob;
         if (sessionToken !== recordingSessionToken || aGen !== attemptGen || qGen !== questionGen) return;
 
-        window.PTEAttemptArchive?.saveAttempt?.({
+        // Decode AudioBuffer for instant word-click and ReferenceConfirmationUi clip playback
+        const speechV3 = await window.AiScoringGate?.speechV3Enabled?.('describe_image').catch(() => null);
+        if (sessionToken !== recordingSessionToken || aGen !== attemptGen || qGen !== questionGen) return;
+        if (speechV3 === false && finalBlob && (window.AudioContext || window.webkitAudioContext)) {
+            try {
+                const arrayBuf = await finalBlob.arrayBuffer();
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                const ctx = window.SegmentPlaybackCoordinator?.defaultCoordinator?.getAudioContext() || new AudioCtx();
+                window.describeImageAudioBuffer = await ctx.decodeAudioData(arrayBuf.slice(0));
+            } catch (decodeErr) {
+                console.warn('[DI] Error decoding audio buffer for word playback:', decodeErr);
+            }
+        }
+
+        // Plan V3 §11 & §13: Authoritative AI scoring via AiScoringGate with 25 credit/min rate card
+        const aiAssessment = await scoreDescribeImageWithAi(finalBlob).catch(err => {
+            console.warn('[DI] AI assessment error:', err);
+            alert('Scoring is temporarily unavailable. Your recording is still available. Please try again.');
+            return null;
+        });
+
+        if (sessionToken !== recordingSessionToken || aGen !== attemptGen || qGen !== questionGen) return;
+        const isCompletedAi = aiAssessment && (aiAssessment.status === 'completed' || (Array.isArray(aiAssessment.words) && aiAssessment.words.length > 0));
+        const authoritativeTranscript = aiAssessment?.transcription?.rawTranscript || transcriptText || '';
+
+        // Render transcript disclosure banner if authoritative ASR result returned
+        if (isCompletedAi && el.diTranscript && window.TranscriptDisclosure) {
+            const disclosure = new window.TranscriptDisclosure({
+                containerEl: el.diTranscript,
+                onWordClick: (word, index) => {
+                    if (aiAssessment.schemaVersion === 'bel.speech.v3' && lastV3Playback) {
+                        const wordResult = aiAssessment.wordResults?.find(item => item.occurrenceId === word.occurrenceId)
+                            || aiAssessment.wordResults?.[index];
+                        const span = word?.clip || wordResult?.clip || wordResult?.clipTiming?.clipSpan;
+                        if (span) window.AiScoringGate.playV3Span({ ...lastV3Playback, span });
+                    } else if (window.PronunciationTooltip && window.describeImageAudioBuffer) {
+                        const wData = aiAssessment.words?.[index];
+                        if (wData && wData.startMs != null && wData.endMs != null) {
+                            window.PronunciationTooltip.playAudioSegment(window.describeImageAudioBuffer, wData.startMs, wData.endMs);
+                        }
+                    }
+                }
+            });
+            disclosure.render(aiAssessment);
+        } else if (aiAssessment?.status === 'reference_unresolved' && el.diTranscript) {
+            // Was amber text on amber (about 1.6:1) reading "cancelled by learner"; plain words
+            // in the shell's note style (.di-scoring-note).
+            const note = document.createElement('div');
+            note.className = 'di-scoring-note';
+            note.textContent = 'You cancelled AI scoring. No credits were used.';
+            el.diTranscript.replaceChildren(note);
+        } else if (el.diTranscript && authoritativeTranscript) {
+            el.diTranscript.textContent = authoritativeTranscript;
+        }
+
+        const archiveInput = {
             practiceMode: 'describe-image',
+            attemptId: aiAssessment?.archiveAttemptId || undefined,
             promptSnapshot: {
                 promptId: currentEntry.id || currentEntry.title || null,
                 title: currentEntry.title || '',
@@ -812,7 +912,7 @@
                 data: currentEntry
             },
             responseSnapshot: {
-                transcript: transcriptText || ''
+                transcript: authoritativeTranscript
             },
             answerSnapshot: {
                 keyPoints: currentEntry.keyPoints || [],
@@ -820,16 +920,141 @@
             },
             resultSnapshot: {
                 submitted: true,
-                score: null
+                score: isCompletedAi ? (aiAssessment?.schemaVersion === 'bel.speech.v3'
+                    ? (aiAssessment.overallScores?.pronunciationScore ?? null)
+                    : (aiAssessment.overallScores || null)) : null,
+                ...(aiAssessment?.schemaVersion === 'bel.speech.v3' ? {
+                    schemaVersion: 'bel.speech.v3',
+                    overallScores: aiAssessment.overallScores || null,
+                    assessmentId: aiAssessment.assessmentId || null,
+                    resultRef: aiAssessment.resultRef || null,
+                    recognizedText: aiAssessment.recognizedText || authoritativeTranscript,
+                    words: aiAssessment.wordResults || []
+                } : {})
             },
-            scoringSource: 'client',
+            scoringSource: isCompletedAi ? 'ai_two_pass_asr' : 'client',
             media: finalBlob ? [{
                 slot: 'student',
                 label: 'Student description',
                 blob: finalBlob,
-                contentType: finalBlob.type || 'audio/wav'
+                contentType: finalBlob.type || 'application/octet-stream'
             }] : []
+        };
+        const isV3Archive = aiAssessment?.schemaVersion === 'bel.speech.v3' && aiAssessment.archiveAttemptId;
+        const archiveWrite = isV3Archive
+            ? window.PTEAttemptArchive?.patchAttempt?.(aiAssessment.archiveAttemptId, {
+                responseSnapshot: archiveInput.responseSnapshot,
+                answerSnapshot: archiveInput.answerSnapshot,
+                resultSnapshot: archiveInput.resultSnapshot,
+                scoringSnapshot: { source: 'ai_scoring_v3', success: true, status: 'completed' }
+            })
+            : window.PTEAttemptArchive?.saveAttempt?.(archiveInput);
+        Promise.resolve(archiveWrite).then(() => {
+            if (isV3Archive) {
+                window.PTEAttemptArchive?.invalidateHistoryCache?.();
+                window.dispatchEvent(new CustomEvent('pte-attempt-archive:saved', {
+                    detail: { attemptId: aiAssessment.archiveAttemptId,
+                        practiceMode: 'describe-image', promptId: currentEntry.id || null }
+                }));
+            }
         }).catch((error) => console.warn('[PTE Archive] Describe Image save failed:', error));
+    }
+
+    async function scoreDescribeImageWithAi(finalBlob) {
+        const sessionToken = recordingSessionToken;
+        const isCurrent = () => sessionToken === recordingSessionToken && finalBlob === recordingBlob;
+        if (!window.AiScoringGate?.requestConsentAndConfirm || !finalBlob) {
+            return null;
+        }
+
+        const speechV3 = await window.AiScoringGate.speechV3Enabled('describe_image');
+        if (!isCurrent()) return null;
+        if (speechV3) {
+            if (!originalRecordingBlob) throw new Error('Original recording is unavailable. Record again.');
+            const flow = await window.AiScoringGate.assessV3Recording({
+                mode: 'describe_image', originalBlob: originalRecordingBlob, enhancedBlob: finalBlob,
+                questionId: currentEntry?.id || null,
+                promptSnapshot: { promptId: currentEntry?.id || null,
+                    text: currentEntry?.prompt || currentEntry?.title || '', title: currentEntry?.title || '' }
+            });
+            if (!isCurrent() || !flow.allowed) return null;
+            lastV3Playback = { canonicalBlob: flow.canonicalBlob, manifest: flow.manifest };
+            const result = flow.result;
+            if (result && result.status === 'completed') {
+                result.archiveAttemptId = flow.attemptId;
+                result.assessmentId = flow.assessmentId;
+            }
+            return result;
+        }
+
+        const pipeline = window.AudioDspPipeline;
+        if (!pipeline?.prepareForAssessment) throw new Error('Audio format conversion is unavailable.');
+        const prepared = await pipeline.prepareForAssessment(finalBlob);
+        if (!isCurrent()) return null;
+        if (!pipeline.isValidMono16kWav || !await pipeline.isValidMono16kWav(prepared)) {
+            throw new Error('Audio format conversion failed. Your original recording is still available.');
+        }
+        const sampleCount = prepared.sampleCount ?? prepared.stats?.sampleCount;
+        if (!Number.isSafeInteger(sampleCount) || sampleCount <= 0) throw new Error('Audio sample count is unavailable.');
+        const base64Audio = await window.AiScoringGate.blobToBase64(prepared.outputBlob);
+        if (!isCurrent()) return null;
+
+        const gateResult = await window.AiScoringGate.requestConsentAndConfirm({
+            mode: 'describe_image',
+            inputMeta: {
+                sampleCount,
+                sampleRateHz: 16000,
+                audioData: base64Audio
+            },
+            questionId: currentEntry?.id || null
+        });
+
+        if (!gateResult || !gateResult.allowed) {
+            if (gateResult?.cancelled) {
+                console.log('[DI] AI scoring cancelled by student');
+            }
+            return null;
+        }
+
+        if (gateResult.assessmentId) {
+            let assessmentResult = await window.AiScoringGate.pollAssessmentResult(gateResult.assessmentId);
+
+            // Handle selective uncertainty ambiguity confirmation if triggered
+            if (assessmentResult?.status === 'awaiting_reference_confirmation' && el.diTranscript && window.ReferenceConfirmationUi) {
+                const confPromise = new Promise((resolve) => {
+                    const confirmUi = new window.ReferenceConfirmationUi({
+                        container: el.diTranscript,
+                        ambiguities: assessmentResult.ambiguities || [],
+                        audioBuffer: window.describeImageAudioBuffer || null,
+                        audioElement: el.diRecordingPlayback || null,
+                        onConfirm: async (selections) => {
+                            if (window.AiScoringGate?.confirmReference) {
+                                await window.AiScoringGate.confirmReference({
+                                    assessmentId: gateResult.assessmentId,
+                                    confirmations: selections
+                                }).catch(err => console.warn('[DI] Confirm error:', err));
+                            }
+                            const updated = await window.AiScoringGate.pollAssessmentResult(gateResult.assessmentId);
+                            resolve(updated);
+                        },
+                        onCancel: async () => {
+                            if (window.AiScoringGate?.confirmReference) {
+                                await window.AiScoringGate.confirmReference({
+                                    assessmentId: gateResult.assessmentId,
+                                    action: 'cancel'
+                                }).catch(err => console.warn('[DI] Cancel error:', err));
+                            }
+                            resolve({ status: 'reference_unresolved', refunded: true });
+                        }
+                    });
+                    confirmUi.render();
+                });
+                assessmentResult = await confPromise;
+            }
+
+            return assessmentResult;
+        }
+        return null;
     }
 
     function escapeHtml(text) {
@@ -901,6 +1126,9 @@ Please provide:
         const imgEl = sourceImg || (currentStep === 'recording' ? el.diImageRecord : el.diImage) || el.diPreviewImg;
         const src = imgEl?.src || (currentEntry ? getImageSrc(currentEntry) : '');
         if (!el.diZoomOverlay || !el.diZoomImage || !src) return;
+        // Nothing to enlarge while the picture is loading or after it failed.
+        const imageState = imgEl?.closest('.di-image-container')?.dataset.imageState;
+        if (imageState === 'loading' || imageState === 'error') return;
         zoomLastFocused = document.activeElement;
         el.diZoomImage.src = src;
         show(el.diZoomOverlay);
@@ -1299,7 +1527,7 @@ Please provide:
         mediaRecorder = null;
         stopSpeechRecognition();
 
-        const finalBlob = dspPromise ? await dspPromise.catch(() => recordingBlob) : recordingBlob;
+        const finalBlob = recordingBlob;
         if (aGen !== attemptGen) return;
         if (currentEntry) {
             try {
@@ -1315,7 +1543,7 @@ Please provide:
                     answerSnapshot: { keyPoints: currentEntry.keyPoints || [], sampleAnswer: currentEntry.sampleAnswer || null },
                     resultSnapshot: { submitted: true, score: null },
                     scoringSource: 'client',
-                    media: finalBlob ? [{ slot: 'student', label: 'Student description', blob: finalBlob, contentType: finalBlob.type || 'audio/wav' }] : []
+                    media: finalBlob ? [{ slot: 'student', label: 'Student description', blob: finalBlob, contentType: finalBlob.type || 'application/octet-stream' }] : []
                 });
             } catch (_) {}
         }

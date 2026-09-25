@@ -26,6 +26,7 @@
     },
     speaking: {},
     recording: null, // { questionId, recorder, stream, chunks }
+    recordingAttemptSeq: 0,
     uploading: null, // { questionId, phase: 'uploading'|'processing', percent }
     lastRenderedStepIndex: null
   };
@@ -61,6 +62,15 @@
 
     appState.session = data.session;
     appState.steps = buildSteps(data.session);
+    if (data.speakingV3 && typeof data.speakingV3 === 'object') {
+      for (const [questionId, state] of Object.entries(data.speakingV3)) {
+        if (state?.revisionId) appState.speaking[questionId] = {
+          revisionId: state.revisionId, uploaded: state.status === 'ready',
+          v3Status: state.status, transcript: state.transcript || null,
+          accuracyPercent: state.accuracyScore ?? null
+        };
+      }
+    }
     hydrateQuestionProgress(appState.steps);
     hydrateSavedProgress(choosePreferredProgressDraft(data.progress, readLocalProgressDraft()));
     if (window.MediaUrlResolver) {
@@ -73,6 +83,77 @@
       }
     }
     render();
+    const current = appState.steps[appState.stepIndex];
+    if (current?.type === 'speaking_question' && appState.speaking[current.questionId]?.v3Status === 'queued') {
+      resumeEntranceV3(current.questionId).catch(error => {
+        renderError(error.message || 'Assessment failed. Please retry.');
+      });
+    }
+  }
+
+  async function resumeEntranceV3(questionId, uploadAttempt = null) {
+    const rec = appState.speaking[questionId];
+    const operation = uploadAttempt || { questionId, phase: 'processing', percent: 100 };
+    appState.uploading = operation;
+    operation.phase = 'processing';
+    operation.percent = 100;
+    const isCurrent = () => appState.uploading === operation && appState.speaking[questionId] === rec;
+    render();
+    try {
+      const deadline = Date.now() + 4 * 60 * 1000;
+      while (Date.now() < deadline) {
+        if (!isCurrent()) return null;
+        const res = await fetch(`/api/entrance-tests/speaking/status?token=${encodeURIComponent(token)}&questionId=${encodeURIComponent(questionId)}`,
+          { cache: 'no-store' });
+        const json = await res.json().catch(() => null);
+        if (!isCurrent()) return null;
+        if (!res.ok || !json?.success) throw new Error(json?.message || 'Could not recover the speaking assessment.');
+        if (json.revisionId && rec.revisionId !== json.revisionId) return null;
+        if (json.status === 'ready' && json.result) {
+          appState.speaking[questionId] = { ...rec, uploaded: true, v3Status: 'ready',
+            transcript: json.result.recognizedText || null,
+            accuracyPercent: json.result.overallScores?.accuracyScore ?? null,
+            assessment: json.result };
+          if (appState.steps[appState.stepIndex]?.questionId === questionId) render();
+          return json.result;
+        }
+        if (json.status === 'failed') throw new Error(json.error || 'Speaking assessment failed. Please record again.');
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+      throw new Error('Assessment is still processing. Reload this page to resume.');
+    } finally {
+      if (appState.uploading === operation) {
+        appState.uploading = null;
+        if (appState.steps[appState.stepIndex]?.questionId === questionId) render();
+      }
+    }
+  }
+
+  async function createSpeakingUpload(originalBlob, originalMimeType) {
+    const response = await fetch('/api/config', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Could not check speaking assessment availability. Your recording is saved here; please retry.');
+    const config = await response.json();
+    const enabled = (config?.features?.entranceSpeechV3 ?? config?.featureFlags?.entranceSpeechV3
+      ?? config?.capabilities?.entranceSpeechV3) === true;
+    if (!enabled) return { blob: originalBlob, contentType: originalMimeType };
+    const pipeline = window.AudioDspPipeline;
+    if (!pipeline?.prepareForAssessment) throw new Error('Audio format conversion is unavailable. Your original recording is still available.');
+    const prepared = await pipeline.prepareForAssessment(originalBlob);
+    if (!pipeline.isValidMono16kWav || !await pipeline.isValidMono16kWav(prepared)) {
+      throw new Error('Audio format conversion failed. Your original recording is still available.');
+    }
+    const toBase64 = blob => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(',')[1]);
+      reader.onerror = () => reject(new Error('Could not read the recording. Please retry.'));
+      reader.readAsDataURL(blob);
+    });
+    const [originalBase64, assessmentBase64] = await Promise.all([
+      toBase64(originalBlob), toBase64(prepared.outputBlob)
+    ]);
+    const contentType = 'application/vnd.bel.speech-v3+json';
+    return { contentType, blob: new Blob([JSON.stringify({ version: 1, originalMimeType,
+      originalBase64, assessmentBase64 })], { type: contentType }) };
   }
 
   async function fetchSession() {
@@ -404,6 +485,7 @@
     const questionId = step.questionId;
     const rec = appState.speaking[questionId] || {};
     const hasBlob = !!rec.blob;
+    const savedV3 = rec.uploaded && rec.v3Status === 'ready';
     const isRecording = !!(appState.recording
       && appState.recording.questionId === questionId
       && appState.recording.recorder
@@ -417,6 +499,8 @@
       controlsHtml = `<button class="btn btn-secondary" type="button" disabled>${escapeHtml(busyLabel)}</button>`;
     } else if (isRecording) {
       controlsHtml = `<button id="btn-stop-rec" class="btn btn-danger et-recording-live" type="button">Stop recording</button>`;
+    } else if (savedV3) {
+      controlsHtml = `<div role="status" class="et-saved-assessment">Assessment saved.${rec.transcript ? ` You said: ${escapeHtml(rec.transcript)}` : ''}${typeof rec.accuracyPercent === 'number' ? ` Accuracy: ${escapeHtml(String(rec.accuracyPercent))}%.` : ''}</div>`;
     } else if (hasBlob) {
       controlsHtml = `
         <button id="btn-record-again" class="btn btn-secondary" type="button">Record again</button>
@@ -456,7 +540,7 @@
     const submitDisabledAttr = (isRecording || isUploading) ? 'disabled' : '';
     const submitText = isUploading
       ? (upload?.phase === 'processing' ? 'Processing…' : 'Uploading…')
-      : 'Submit';
+      : savedV3 ? 'Continue' : 'Submit';
 
     elements.card.innerHTML = `
       <div class="et-section-badge">${escapeHtml(step.sectionTitle || '')} • Q${escapeHtml(String(step.questionNumber || ''))}</div>
@@ -1030,200 +1114,6 @@
     return '';
   }
 
-  /**
-   * Client-side DSP preprocessing for entrance test speaking recordings.
-   * Applies: 80 Hz high-pass → 16 kHz mono resample → -3 dBFS normalize → lead/trail trim → WAV.
-   * Returns { wavBlob, stats } where stats includes duration and peak info.
-   * Falls back to raw blob on processing failure or 3-second timeout (iOS Safari screen-lock).
-   */
-  async function prepareEntranceTestBlob(rawBlob) {
-    if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
-      try {
-        const result = await window.AudioDspPipeline.enhance(rawBlob, {
-          targetSampleRate: 16000,
-          highpassFreq: 80,
-          targetPeakDb: -3,
-          trim: true,
-          paddingMs: 150,
-          createUrl: false
-        });
-        return {
-          wavBlob: result.wavBlob,
-          stats: result.stats
-        };
-      } catch (err) {
-        console.warn('[EntranceTest] AudioDspPipeline enhancement failed, falling back to raw blob:', err);
-        return { wavBlob: rawBlob, stats: null };
-      }
-    }
-
-    let audioContext = null;
-    try {
-      const arrayBuffer = await rawBlob.arrayBuffer();
-      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextCtor) return { wavBlob: rawBlob, stats: null };
-      audioContext = new AudioContextCtor();
-      const decoded = await audioContext.decodeAudioData(arrayBuffer.slice(0));
-      const originalDurationMs = Math.round(decoded.duration * 1000);
-
-      const outputLength = Math.ceil(decoded.duration * 16000);
-      const offline = new OfflineAudioContext(1, outputLength, 16000);
-
-      // DSP chain: source → 80 Hz high-pass → destination
-      const source = offline.createBufferSource();
-      source.buffer = decoded;
-
-      const highpass = offline.createBiquadFilter();
-      highpass.type = 'highpass';
-      highpass.frequency.value = 80;
-      highpass.Q.value = 0.707; // Butterworth
-
-      source.connect(highpass);
-      highpass.connect(offline.destination);
-      source.start(0);
-
-      // 3-second timeout fallback for iOS Safari
-      let rendered;
-      try {
-        rendered = await Promise.race([
-          offline.startRendering(),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('OfflineAudioContext timeout')), 3000)
-          )
-        ]);
-      } catch (_) {
-        console.warn('[EntranceTest] OfflineAudioContext timed out, using basic resample');
-        const fallback = new OfflineAudioContext(1, outputLength, 16000);
-        const fbSrc = fallback.createBufferSource();
-        fbSrc.buffer = decoded;
-        fbSrc.connect(fallback.destination);
-        fbSrc.start(0);
-        rendered = await Promise.race([
-          fallback.startRendering(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Fallback timeout')), 3000))
-        ]).catch(() => decoded);
-      }
-
-      // Close decoding audioContext as soon as rendering completes
-      if (typeof audioContext.close === 'function') {
-        await audioContext.close().catch(() => {});
-        audioContext = null;
-      }
-
-      // Peak normalization to -3 dBFS
-      const channelData = rendered.getChannelData(0);
-      let maxPeak = 0;
-      for (let i = 0; i < channelData.length; i++) {
-        const absVal = Math.abs(channelData[i]);
-        if (absVal > maxPeak) maxPeak = absVal;
-      }
-      const peakBefore = maxPeak;
-      if (maxPeak > 0) {
-        const targetPeak = Math.pow(10, -3 / 20); // ~0.7079
-        const gain = targetPeak / maxPeak;
-        if (gain < 0.99 || gain > 1.01) {
-          for (let i = 0; i < channelData.length; i++) {
-            channelData[i] = Math.max(-1, Math.min(1, channelData[i] * gain));
-          }
-        }
-      }
-
-      // Leading/trailing silence trimming
-      let trimmedBuffer = rendered;
-      const frameSize = Math.max(1, Math.round(16000 * 0.01));
-      const frameRms = [];
-      for (let offset = 0; offset < channelData.length; offset += frameSize) {
-        const end = Math.min(channelData.length, offset + frameSize);
-        let energy = 0;
-        for (let i = offset; i < end; i++) {
-          energy += channelData[i] * channelData[i];
-        }
-        frameRms.push(Math.sqrt(energy / Math.max(1, end - offset)));
-      }
-      const maxRms = frameRms.reduce((h, v) => Math.max(h, v), 0);
-      if (maxRms >= 0.01) {
-        const threshold = Math.max(0.008, maxRms * 0.18);
-        let firstFrame = -1;
-        let lastFrame = -1;
-        for (let i = 0; i < frameRms.length; i++) {
-          if (frameRms[i] >= threshold) {
-            if (firstFrame === -1) firstFrame = i;
-            lastFrame = i;
-          }
-        }
-        if (firstFrame !== -1 && lastFrame !== -1) {
-          const padSamples = Math.round(0.15 * 16000); // 150ms padding
-          const trimStart = Math.max(0, firstFrame * frameSize - padSamples);
-          const trimEnd = Math.min(channelData.length, (lastFrame + 1) * frameSize + padSamples);
-          const trimLength = trimEnd - trimStart;
-          if (trimLength > 0 && trimLength < channelData.length * 0.9) {
-            let tb = null;
-            if (typeof AudioBuffer === 'function') {
-              try {
-                tb = new AudioBuffer({ numberOfChannels: 1, length: trimLength, sampleRate: 16000 });
-              } catch (_) { tb = null; }
-            }
-            if (!tb) {
-              const ctx = new AudioContextCtor();
-              try {
-                tb = ctx.createBuffer(1, trimLength, 16000);
-              } finally {
-                if (typeof ctx.close === 'function') ctx.close().catch(() => {});
-              }
-            }
-            if (tb) {
-              trimmedBuffer = tb;
-              const trimData = trimmedBuffer.getChannelData(0);
-              for (let i = 0; i < trimLength; i++) {
-                trimData[i] = channelData[trimStart + i];
-              }
-            }
-          }
-        }
-      }
-
-      // Encode as WAV
-      const trimmedData = trimmedBuffer.getChannelData(0);
-      const dataLength = trimmedData.length;
-      const wavBuf = new ArrayBuffer(44 + dataLength * 2);
-      const view = new DataView(wavBuf);
-      const writeString = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
-      writeString(0, 'RIFF');
-      view.setUint32(4, 36 + dataLength * 2, true);
-      writeString(8, 'WAVE');
-      writeString(12, 'fmt ');
-      view.setUint32(16, 16, true);
-      view.setUint16(20, 1, true);
-      view.setUint16(22, 1, true);
-      view.setUint32(24, 16000, true);
-      view.setUint32(28, 32000, true);
-      view.setUint16(32, 2, true);
-      view.setUint16(34, 16, true);
-      writeString(36, 'data');
-      view.setUint32(40, dataLength * 2, true);
-      let offset = 44;
-      for (let i = 0; i < dataLength; i++) {
-        const s = Math.max(-1, Math.min(1, trimmedData[i]));
-        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-        offset += 2;
-      }
-
-      const wavBlob = new Blob([wavBuf], { type: 'audio/wav' });
-      const trimmedDurationMs = Math.round((dataLength / 16000) * 1000);
-      return {
-        wavBlob,
-        stats: { originalDurationMs, trimmedDurationMs, peakBefore, peakAfter: Math.pow(10, -3 / 20) }
-      };
-    } catch (err) {
-      console.warn('[EntranceTest] Audio preprocessing failed, using raw blob:', err);
-      return { wavBlob: rawBlob, stats: null };
-    } finally {
-      if (audioContext && typeof audioContext.close === 'function') {
-        audioContext.close().catch(() => {});
-      }
-    }
-  }
-
   function clearSpeakingRecording(questionId) {
     const prev = appState.speaking[questionId] || null;
     const audioUrl = prev?.audioUrl;
@@ -1244,7 +1134,13 @@
       return;
     }
 
+    clearSpeakingRecording(questionId);
+    const attemptId = ++appState.recordingAttemptSeq;
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (attemptId !== appState.recordingAttemptSeq) {
+      stream.getTracks().forEach((track) => track.stop());
+      return;
+    }
     const mimeType = pickAudioMimeType();
     const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
     const chunks = [];
@@ -1254,37 +1150,25 @@
     });
 
     recorder.addEventListener('stop', () => {
+      if (attemptId !== appState.recordingAttemptSeq) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
       const blob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' });
       const audioUrl = URL.createObjectURL(blob);
-      appState.speaking[questionId] = { blob, audioUrl, mimeType: blob.type || 'audio/webm' };
-      appState.recording = null;
+      const recording = {
+        attemptId,
+        blob,
+        rawBlob: blob,
+        audioUrl,
+        mimeType: blob.type || 'audio/webm'
+      };
+      appState.speaking[questionId] = recording;
+      if (appState.recording?.attemptId === attemptId) appState.recording = null;
       render();
-
-      // Asynchronously preprocess for cleaner local playback (non-blocking)
-      prepareEntranceTestBlob(blob).then(({ wavBlob, stats }) => {
-        const current = appState.speaking[questionId];
-        if (!current || current.uploaded) return; // Already submitted, skip update
-        if (stats && wavBlob) {
-          const processedUrl = URL.createObjectURL(wavBlob);
-          // Update the playback blob and URL to the processed version
-          appState.speaking[questionId] = {
-            ...current,
-            blob: wavBlob,
-            rawBlob: blob,
-            audioUrl: processedUrl,
-            mimeType: 'audio/wav',
-            isPreprocessed: true,
-            stats
-          };
-          // Revoke old URL
-          try { URL.revokeObjectURL(audioUrl); } catch (_) { /* ignore */ }
-          // Re-render to update the audio element src
-          render();
-        }
-      }).catch(() => { /* Preprocessing failed silently, raw blob remains */ });
     });
 
-    appState.recording = { questionId, recorder, stream, chunks };
+    appState.recording = { questionId, attemptId, recorder, stream, chunks };
     recorder.start();
   }
 
@@ -1329,23 +1213,20 @@
     const submitBtn = elements.card.querySelector('#btn-submit');
 
     const title = upload.phase === 'processing' ? 'Processing audio…'
-      : upload.phase === 'formatting' ? 'Formatting audio…'
       : 'Uploading audio…';
     const percentText = upload.phase === 'uploading' && typeof upload.percent === 'number'
       ? `${clamp(upload.percent, 0, 100)}%`
       : '';
     const subtitle = upload.phase === 'processing'
       ? 'Upload finished. Please wait while we process and score your recording.'
-      : upload.phase === 'formatting'
-        ? 'Enhancing audio clarity before upload…'
-        : 'Uploading audio, please keep this tab open.';
+      : 'Uploading audio, please keep this tab open.';
 
     if (titleEl) titleEl.textContent = title;
     if (percentEl) percentEl.textContent = percentText;
     if (subtitleEl) subtitleEl.textContent = subtitle;
 
     if (fillEl) {
-      const shouldIndeterminate = upload.phase === 'processing' || upload.phase === 'formatting';
+      const shouldIndeterminate = upload.phase === 'processing';
       fillEl.classList.toggle('indeterminate', shouldIndeterminate);
       if (shouldIndeterminate) {
         fillEl.style.width = '';
@@ -1355,9 +1236,7 @@
     }
 
     if (submitBtn) {
-      submitBtn.textContent = upload.phase === 'processing' ? 'Processing…'
-        : upload.phase === 'formatting' ? 'Formatting…'
-        : 'Uploading…';
+      submitBtn.textContent = upload.phase === 'processing' ? 'Processing…' : 'Uploading…';
     }
   }
 
@@ -1408,6 +1287,11 @@
 
   async function submitSpeaking(questionId) {
     const rec = appState.speaking[questionId] || null;
+    if (rec?.uploaded && rec.v3Status === 'ready') {
+      if (isLastQuestionStepIndex(appState.stepIndex)) await finalizeSubmit();
+      else await advanceWithProgress();
+      return;
+    }
     if (!rec?.blob) {
       await showInfoModal({
         title: 'Chưa có bản thu âm',
@@ -1434,35 +1318,20 @@
       return;
     }
 
-    appState.uploading = { questionId, phase: 'formatting', percent: 0 };
+    const uploadAttempt = { questionId, attemptId: rec.attemptId, phase: 'uploading', percent: 0 };
+    appState.uploading = uploadAttempt;
     render();
 
     try {
-      // Client-side DSP preprocessing: high-pass, normalize, trim, convert to 16kHz WAV
-      // If audio was already preprocessed by the stop event handler, reuse it directly
-      let uploadBlob = rec.blob;
-      let uploadContentType = rec.mimeType || rec.blob.type || 'application/octet-stream';
-      let stats = rec.stats || null;
+      const originalBlob = rec.rawBlob || rec.blob;
+      const originalMimeType = rec.mimeType || originalBlob.type || 'application/octet-stream';
+      const preparedUpload = await createSpeakingUpload(originalBlob, originalMimeType);
+      const uploadBlob = preparedUpload.blob;
+      const uploadContentType = preparedUpload.contentType;
 
-      if (!rec.isPreprocessed) {
-        const prepResult = await prepareEntranceTestBlob(rec.rawBlob || rec.blob);
-        if (prepResult && prepResult.wavBlob && prepResult.stats) {
-          uploadBlob = prepResult.wavBlob;
-          uploadContentType = 'audio/wav';
-          stats = prepResult.stats;
-        }
-      } else {
-        uploadContentType = 'audio/wav';
-      }
-
-      if (stats) {
-        /* eslint-disable-next-line no-console */
-        console.log('[EntranceTest] Audio preprocessed:', stats);
-      }
-
-      if (!appState.uploading || appState.uploading.questionId !== questionId) return;
-      appState.uploading.phase = 'uploading';
-      appState.uploading.percent = 0;
+      if (appState.uploading !== uploadAttempt || appState.speaking[questionId] !== rec) return;
+      uploadAttempt.phase = 'uploading';
+      uploadAttempt.percent = 0;
       updateSpeakingUploadUi();
 
       const url = `/api/entrance-tests/speaking/upload?token=${encodeURIComponent(token)}&questionId=${encodeURIComponent(questionId)}`;
@@ -1471,22 +1340,28 @@
         blob: uploadBlob,
         contentType: uploadContentType,
         onProgress: (pct) => {
-          if (!appState.uploading || appState.uploading.questionId !== questionId) return;
+          if (appState.uploading !== uploadAttempt || appState.speaking[questionId] !== rec) return;
           if (typeof pct === 'number') {
-            appState.uploading.phase = 'uploading';
-            appState.uploading.percent = clamp(pct, 0, 100);
+            uploadAttempt.phase = 'uploading';
+            uploadAttempt.percent = clamp(pct, 0, 100);
             updateSpeakingUploadUi();
           }
         },
         onUploadComplete: () => {
-          if (!appState.uploading || appState.uploading.questionId !== questionId) return;
-          appState.uploading.phase = 'processing';
-          appState.uploading.percent = 100;
+          if (appState.uploading !== uploadAttempt || appState.speaking[questionId] !== rec) return;
+          uploadAttempt.phase = 'processing';
+          uploadAttempt.percent = 100;
           updateSpeakingUploadUi();
         }
       });
 
-      appState.speaking[questionId] = {
+      if (appState.uploading !== uploadAttempt || appState.speaking[questionId] !== rec) return;
+      if (json.status === 'queued' && json.revisionId) {
+        appState.speaking[questionId] = { ...rec, revisionId: json.revisionId,
+          uploaded: false, v3Status: 'queued' };
+        const recovered = await resumeEntranceV3(questionId, uploadAttempt);
+        if (!recovered || appState.speaking[questionId]?.revisionId !== json.revisionId) return;
+      } else appState.speaking[questionId] = {
         ...rec,
         uploaded: true,
         transcript: json.transcript || null,
@@ -1494,7 +1369,7 @@
         asrError: json.asrError || null
       };
 
-      appState.uploading = null;
+      if (appState.uploading === uploadAttempt) appState.uploading = null;
 
       if (isLastQuestionStepIndex(appState.stepIndex)) {
         await finalizeSubmit();
@@ -1503,7 +1378,7 @@
 
       await advanceWithProgress();
     } catch (error) {
-      appState.uploading = null;
+      if (appState.uploading === uploadAttempt) appState.uploading = null;
       render();
       throw error;
     }

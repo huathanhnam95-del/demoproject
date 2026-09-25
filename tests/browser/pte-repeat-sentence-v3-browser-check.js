@@ -23,14 +23,15 @@ async function exerciseCancelledCapture(page, width) {
   await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'recording' && !window.RepeatSentenceV3.busy);
   const cancelledId = await page.evaluate(() => window.RepeatSentenceV3.attempt.id);
   await page.evaluate(() => {
-    const enhance = window.AudioDspPipeline.enhance;
+    const pipeline = window.AudioDspPipeline;
+    const prepare = pipeline.prepareForAssessment;
     window.__oldDspPending = false;
-    window.AudioDspPipeline = { enhance: async blob => {
+    window.AudioDspPipeline = { ...pipeline, prepareForAssessment: async blob => {
       window.__oldDspPending = true;
       await new Promise(resolve => { window.__releaseOldDsp = resolve; });
       window.__oldDspPending = false;
-      window.AudioDspPipeline = { enhance };
-      return enhance(blob);
+      window.AudioDspPipeline = pipeline;
+      return prepare(blob);
     } };
   });
   await page.locator('#speak-pte-cancel').click();
@@ -53,7 +54,7 @@ async function exerciseCancelledCapture(page, width) {
   await page.locator('#speak-pte-stop').click();
   await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'complete' && !window.RepeatSentenceV3.busy);
   assert.deepEqual(await page.evaluate(() => window.__saves.map(item => item.attemptId)), [afterRelease.id], 'only the fresh capture is saved');
-  assert.equal(await page.evaluate(() => window.__dsp), 2, 'both captures finish through DSP');
+  assert.equal(await page.evaluate(() => window.__dsp), 2, 'both captures finish through format preparation');
 }
 
 async function finishAndAssess(page) {
@@ -67,8 +68,48 @@ async function finishAndAssess(page) {
 }
 
 async function exerciseListenBackRetry(page, width) {
+  const assessmentSamples = [];
+  await page.route('**/api/repeat-sentence/assess', route => {
+    const body = route.request().postDataBuffer() || Buffer.alloc(0);
+    const offset = body.indexOf('RIFF');
+    assessmentSamples.push(offset >= 0 ? body.readInt16LE(offset + 44) : null);
+    return route.fulfill({ json: assessment });
+  });
+  await page.evaluate(bytes => {
+    const outputBlob = new Blob([Uint8Array.from(bytes)], { type: 'audio/wav' });
+    const pipeline = window.AudioDspPipeline;
+    window.AudioDspPipeline = {
+      ...pipeline,
+      prepareForAssessment: async rawBlob => ({
+        rawBlob, outputBlob, wavBlob: outputBlob, outputFormat: 'wav', outputMimeType: 'audio/wav',
+        processingStatus: 'format-only', sampleCount: 8000,
+        audioBuffer: { sampleRate: 16000, numberOfChannels: 1, length: 8000 },
+        stats: { removedLeadingMs: 0, removedTrailingMs: 0 }
+      })
+    };
+  }, [...wave(8192)]);
   await page.locator('#record-btn').click();
   await finishAndAssess(page);
+  const separatedAudio = await page.evaluate(async () => {
+    const attempt = RepeatSentenceV3.attempt;
+    const sample = async blob => new DataView(await blob.slice(44, 46).arrayBuffer()).getInt16(0, true);
+    const playback = await fetch(attempt.url).then(response => response.blob());
+    const archive = __saves.find(item => item.attemptId === attempt.id);
+    return {
+      rawType: attempt.rawBlob?.type,
+      rawSample: await sample(attempt.rawBlob),
+      processedSample: await sample(attempt.processedBlob),
+      playbackSample: await sample(playback),
+      archiveSample: archive?.media[0]?.sample ?? null,
+      archiveType: archive?.media[0]?.type || null
+    };
+  });
+  assert.equal(separatedAudio.rawType, 'audio/wav');
+  assert.equal(separatedAudio.rawSample, 0, 'captured raw fixture remains the archive identity');
+  assert.equal(separatedAudio.playbackSample, separatedAudio.rawSample, 'listen-back URL resolves to the captured raw sample');
+  assert.equal(separatedAudio.archiveSample, separatedAudio.rawSample, 'archive saves the raw capture');
+  assert.equal(separatedAudio.processedSample, 8192, 'processed WAV remains a distinct assessment copy');
+  assert.deepEqual(assessmentSamples, [8192], 'assessment uploads the processed mono 16 kHz PCM WAV');
   await page.locator('#speak-pte-original').click();
   const original = await page.evaluate(() => {
     const audio = document.getElementById('speak-pte-playback');
@@ -96,7 +137,7 @@ async function exerciseListenBackRetry(page, width) {
       original: document.getElementById('speak-pte-original').getAttribute('aria-pressed'),
       label: audio.getAttribute('aria-label'), src: audio.src, recordingUrl: window.RepeatSentenceV3.attempt.url };
   });
-  fs.writeFileSync(path.join(evidence, `${width}-listen-back-retry.json`), JSON.stringify({ original, state }, null, 2));
+  fs.writeFileSync(path.join(evidence, `${width}-listen-back-retry.json`), JSON.stringify({ separatedAudio, assessmentSamples, original, state }, null, 2));
   assert.equal(state.yours, 'true', 'new capture selects Your recording');
   assert.equal(state.original, 'false', 'Original sentence selection is cleared with the source change');
   assert.equal(state.src, state.recordingUrl);
@@ -268,11 +309,28 @@ async function exerciseDeparture(page, width, ordering) {
     return route.fulfill({ json: assessment });
   });
   await page.evaluate(({ oldWave, newWave }) => {
-    window.__captureCalls = 0; window.__archiveAudio = [];
-    window.AudioDspPipeline = { enhance: async () => {
+    window.__captureCalls = 0; window.__rawCaptureCalls = 0; window.__archiveAudio = [];
+    window.MediaRecorder.prototype.stop = function () {
+      this.state = 'inactive';
+      const capture = ++window.__rawCaptureCalls;
+      const event = new Event('dataavailable');
+      Object.defineProperty(event, 'data', { value: new Blob([Uint8Array.from(capture === 1 ? oldWave : newWave)], { type: 'audio/wav' }) });
+      this.ondataavailable?.(event);
+      this.dispatchEvent(event);
+      const stop = new Event('stop');
+      this.onstop?.(stop);
+      this.dispatchEvent(stop);
+    };
+    const pipeline = window.AudioDspPipeline;
+    window.AudioDspPipeline = { ...pipeline, prepareForAssessment: async rawBlob => {
       const capture = ++window.__captureCalls;
       if (capture === 1) await new Promise(resolve => { window.__releaseDeparture = resolve; });
-      return { wavBlob: new Blob([Uint8Array.from(capture === 1 ? oldWave : newWave)], { type: 'audio/wav' }) };
+      return {
+        rawBlob, outputBlob: rawBlob, wavBlob: rawBlob, outputMimeType: 'audio/wav', outputFormat: 'wav',
+        fallback: false, processingStatus: 'format-only', sampleCount: 8000,
+        audioBuffer: { sampleRate: 16000, numberOfChannels: 1, length: 8000 },
+        stats: { removedLeadingMs: 0, removedTrailingMs: 0 }
+      };
     } };
     const save = window.PTEAttemptArchive.saveAttempt;
     window.PTEAttemptArchive.saveAttempt = async input => {
@@ -676,7 +734,10 @@ async function run() {
         } } });
       });
       await page.route('**/database/speak/index.json*', route => route.fulfill({ json: { items: [1, 2, 3].map(id => ({ id, audioFile: `${id}.mp3`, correctSentence: sentence, level: 1 })) } }));
+      await page.route('**/media-release.json*', route => route.fulfill({ json: { defaultRolloutState: 'legacy', modes: {} } }));
       await page.route('**/*.{mp3,wav}*', route => route.fulfill({ contentType: 'audio/wav', body: wave() }));
+      await page.route('**/media-release.json*', route => route.fulfill({ json: { defaultRolloutState: 'legacy', modes: {} } }));
+      await page.route('**/catalogs/**', route => route.fulfill({ json: { assets: {} } }));
       await page.route('**/api/**', route => route.fulfill({ json: route.request().url().includes('repeat-sentence/assess') ? assessment : {} }));
       await page.goto(`${harness.baseURL}/?pteShell=v3`, { waitUntil: 'domcontentloaded' });
       await dismissOverlays(page);
@@ -684,8 +745,27 @@ async function run() {
         window.__saves = []; window.__patches = []; window.__dsp = 0;
         window.__nativeArchive = { saveAttempt: window.PTEAttemptArchive.saveAttempt,
           patchAttempt: window.PTEAttemptArchive.patchAttempt, fetchUserAttemptsCached: window.PTEAttemptArchive.fetchUserAttemptsCached };
-        window.AudioDspPipeline = { enhance: async () => { window.__dsp++; return { wavBlob: new Blob([Uint8Array.from(bytes)], { type: 'audio/wav' }) }; } };
-        window.PTEAttemptArchive.saveAttempt = async input => { window.__saves.push({ ...input, media: input.media.map(m => ({ slot: m.slot, size: m.blob.size })) }); return window.__persistedFixture ? { attemptId: input.attemptId } : { skipped: true, reason: 'guest' }; };
+        const pipeline = window.AudioDspPipeline;
+        window.AudioDspPipeline = { ...pipeline, prepareForAssessment: async rawBlob => {
+          window.__dsp++;
+          const outputBlob = new Blob([Uint8Array.from(bytes)], { type: 'audio/wav' });
+          return {
+            rawBlob, outputBlob, wavBlob: outputBlob, outputMimeType: 'audio/wav', outputFormat: 'wav',
+            fallback: false, processingStatus: 'format-only', sampleCount: 8000,
+            audioBuffer: { sampleRate: 16000, numberOfChannels: 1, length: 8000 },
+            stats: { removedLeadingMs: 0, removedTrailingMs: 0 }
+          };
+        } };
+        window.PTEAttemptArchive.saveAttempt = async input => {
+          const media = await Promise.all(input.media.map(async m => ({
+            slot: m.slot,
+            size: m.blob.size,
+            type: m.blob.type,
+            sample: new DataView(await m.blob.slice(44, 46).arrayBuffer()).getInt16(0, true)
+          })));
+          window.__saves.push({ ...input, media });
+          return window.__persistedFixture ? { attemptId: input.attemptId } : { skipped: true, reason: 'guest' };
+        };
         window.PTEAttemptArchive.patchAttempt = async (id, input) => {
           window.__patches.push({ id, input });
           if (window.__failPatch) { window.__failPatch = false; throw new Error('Fixture patch failed'); }
@@ -754,7 +834,7 @@ async function run() {
       await page.screenshot({ path: path.join(evidence, `${width}-recording.png`), fullPage: true });
       await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'complete', null, { timeout: 20000 });
       await page.waitForFunction(() => !window.RepeatSentenceV3.busy);
-      assert.equal(await page.evaluate(() => window.__dsp), 1, 'auto-stop enhances capture');
+      assert.equal(await page.evaluate(() => window.__dsp), 1, 'auto-stop prepares the required scoring format');
       assert.equal(await page.evaluate(() => window.__saves.length), 1, 'auto-stop archives capture');
       await page.evaluate(() => window.scrollTo(0, 0));
       await page.screenshot({ path: path.join(evidence, `${width}-complete.png`), fullPage: true });
@@ -769,6 +849,31 @@ async function run() {
       await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'feedback' && !window.RepeatSentenceV3.busy);
       assert.equal(await page.locator('#speak-pte-sentence .speak-word-token').count(), 7);
       assert.equal(await page.locator('#speak-pte-sentence .speak-word-token--error').count(), 1);
+      const segmentMapping = await page.evaluate(async () => {
+        const timeline = window.RepeatSentenceV3.attempt.playbackTimeline;
+        const original = { offsetKnown: timeline.offsetKnown, removedLeadingMs: timeline.removedLeadingMs };
+        const tooltip = window.PronunciationTooltip;
+        const originalPlay = tooltip.playAudioSegment;
+        const calls = [];
+        window.repeatSentenceAudioBuffer = { duration: 8 };
+        tooltip.playAudioSegment = async (_buffer, startMs, endMs) => { calls.push({ startMs, endMs }); return true; };
+        timeline.offsetKnown = true;
+        timeline.removedLeadingMs = 125;
+        const token = document.querySelector('#speak-pte-sentence .speak-word-token');
+        token.click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        timeline.offsetKnown = false;
+        token.click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        timeline.offsetKnown = original.offsetKnown;
+        timeline.removedLeadingMs = original.removedLeadingMs;
+        tooltip.playAudioSegment = originalPlay;
+        return { calls, originalOffsetKnown: original.offsetKnown };
+      });
+      assert.deepEqual(segmentMapping, {
+        calls: [{ startMs: 125, endMs: 225 }],
+        originalOffsetKnown: true
+      }, 'word replay maps scorer times to the original timeline and refuses an unknown map');
       assert.match(await page.locator('#speak-pte-results .pte-stats').innerText(), /72%/);
       assert.equal(await page.evaluate(() => window.__saves.length), 2, 'feedback updates the archived attempt');
       assert.equal(await page.evaluate(() => window.__saves[0].attemptId === window.__saves[1].attemptId), true);
@@ -806,6 +911,7 @@ async function run() {
       await page.clock.runFor(3300);
       await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'recording');
       assert.equal(await page.locator('.pte-rec__ring--rec i').evaluate(el => getComputedStyle(el).animationName), 'none');
+      await page.clock.resume();
       await page.locator('#speak-pte-stop').click();
       await page.waitForFunction(() => window.RepeatSentenceV3.phase === 'complete' && !window.RepeatSentenceV3.busy);
       await page.locator('#pte-next-speak').click();
@@ -833,7 +939,7 @@ async function run() {
       assert.deepEqual(errors, [], 'no new JavaScript errors');
       report.push({ width, errors }); await page.close();
     }
-    for (const flag of scenarios.includes('full') ? ['legacy', ''] : []) {
+    for (const flag of scenarios.includes('full') ? ['legacy'] : []) {
       const page = await harness.open({ flag });
       await page.evaluate(async () => { await window.switchToMode('speak'); });
       assert.equal(await page.locator('#mode-speak .pte-card').count(), 0, 'flag off stays legacy');

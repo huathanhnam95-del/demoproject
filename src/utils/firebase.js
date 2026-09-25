@@ -10,6 +10,7 @@ let bucketVerified = false;
 let projectId = '';
 let initialBucketName = '';
 let bucketResolvePromise = null;
+let verifiedDemoEmulatorMode = false;
 
 function uniqueStrings(items) {
     const out = [];
@@ -53,6 +54,12 @@ function chooseFallbackBucketByName(names) {
 
 async function getStorageBucket() {
     if (!admin.apps.length) return null;
+    // The dedicated demo project has already validated every emulator endpoint.
+    // Storage emulator bucket-existence probes can fail despite readable objects.
+    if (verifiedDemoEmulatorMode && initialBucketName === 'demo-crm-projects.appspot.com') {
+        if (!bucket) bucket = admin.storage().bucket(initialBucketName);
+        return bucket;
+    }
 
     if (bucket && bucketVerified && typeof bucket.name === 'string' && bucket.name.length > 0) {
         return bucket;
@@ -136,8 +143,22 @@ async function getStorageBucket() {
 
 try {
     const serviceAccountPath = resolveServiceAccountPath(process.cwd());
-    if (serviceAccountPath && fs.existsSync(serviceAccountPath)) {
-        const serviceAccount = require(serviceAccountPath);
+    const requestedDemoProject = String(process.env.FIREBASE_PROJECT_ID || '').trim() === 'demo-crm-projects';
+    const demoEmulatorMode = requestedDemoProject
+        && String(process.env.NODE_ENV || '').toLowerCase() !== 'production'
+        && process.env.ALLOW_PROD_FIREBASE !== '1'
+        && (!process.env.GCLOUD_PROJECT || process.env.GCLOUD_PROJECT === 'demo-crm-projects')
+        && ['FIRESTORE_EMULATOR_HOST', 'FIREBASE_AUTH_EMULATOR_HOST',
+            'FIREBASE_STORAGE_EMULATOR_HOST', 'STORAGE_EMULATOR_HOST']
+            .every(name => /^((127\.0\.0\.1|localhost)(:\d+)?|http:\/\/(127\.0\.0\.1|localhost):\d+)$/.test(String(process.env[name] || '')));
+    if (requestedDemoProject && !demoEmulatorMode) throw new Error('DEMO_FIREBASE_EMULATORS_REQUIRED');
+    verifiedDemoEmulatorMode = demoEmulatorMode;
+    if (demoEmulatorMode || (serviceAccountPath && fs.existsSync(serviceAccountPath))) {
+        // The dedicated demo project is allowed to run entirely in emulators.
+        // Never let a workstation service account override its project identity.
+        const serviceAccount = demoEmulatorMode
+            ? { project_id: 'demo-crm-projects' }
+            : require(serviceAccountPath);
         projectId = String(serviceAccount.project_id || process.env.FIREBASE_PROJECT_ID || '').trim();
         const storageBucketEnv = process.env.FIREBASE_STORAGE_BUCKET || '';
         const storageBucketNormalized = storageBucketEnv.endsWith('.firebasestorage.app')

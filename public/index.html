@@ -5214,7 +5214,7 @@
                   <div class="ra-sound-change-tooltip__words"></div>
                   <div class="ra-sound-change-tooltip__transform ra-sound-change-tooltip__label"></div>
                   <div class="ra-sound-change-tooltip__say" hidden>
-                    <span>Say it like</span>
+                    <span class="ra-sound-change-tooltip__say-label">Say it like</span>
                     <strong class="ra-sound-change-tooltip__say-value"></strong>
                   </div>
                   <div class="ra-sound-change-tooltip__ipa" hidden>
@@ -5518,6 +5518,12 @@
   <script src="difficulty-filter.js"></script>
   <script type="module" src="js/question-recommendation-engine.js"></script>
   <script src="js/lazy-loader.js"></script>
+  <script src="js/ai-credit-confirmation.js"></script>
+  <script type="module" src="js/audio/bounded-clip-player.js"></script>
+  <script type="module" src="js/audio/segment-playback-coordinator.js"></script>
+  <script src="js/audio/ai-scoring-gate.js"></script>
+  <script src="js/audio/transcript-disclosure.js"></script>
+  <script type="module" src="js/audio/reference-confirmation-ui.js"></script>
   <script src="js/pronunciation-tooltip.js"></script>
   <script type="module" src="js/collo-dictate-mode.js?v=20260919_fix"></script>
   <script type="module" src="js/reading-journey.js"></script>
@@ -5724,9 +5730,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
   <script>
-    // Initialize Firebase compat SDK with same config for watch-mode.js
-    if (!firebase.apps.length) {
-      firebase.initializeApp({
+    // The redirect script resolves the demo project before initializing compat.
+    window.__BEL_COMPAT_DEFAULT_CONFIG__ = {
         apiKey: "AIzaSyB0vXX7NwOvME_XoaGiJlYaiLRcaHJtrIQ",
         authDomain: "listening-tasks-3ae34.firebaseapp.com",
         projectId: "listening-tasks-3ae34",
@@ -5734,9 +5739,7 @@
         messagingSenderId: "737872673808",
         appId: "1:737872673808:web:4db57599aa22b4830fde95",
         measurementId: "G-1891MSSLXT"
-      });
-    }
-    console.log('✓ Firebase compat SDK initialized for Watch mo');
+    };
   </script>
   <script src="js/compat-emulator-redirect.js"></script>
   <script src="js/pte-attempt-archive.js?v=20260919_pte_v3"></script>
@@ -6143,6 +6146,7 @@
   <script src="/js/read-aloud-workspace-model.js?v=20260917_ra_v2"></script>
   <script src="/js/read-aloud-workspace-view.js?v=20260917_ra_v2"></script>
   <script src="/js/speaking-practice-adapters.js?v=20260919_pte_v3"></script>
+  <script src="/js/pte-listen-back.js?v=20260922_listen_back"></script>
   <script src="/js/read-aloud-prompt-grammar.js"></script>
   <script src="/js/read-aloud-stress-rhythm.js"></script>
   <script src="/js/read-aloud-prompt-renderer.js"></script>

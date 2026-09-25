@@ -226,12 +226,14 @@
             || Object.prototype.hasOwnProperty.call(emulatorConfig, 'firestore');
           let firestoreEndpoint = { host: 'localhost', port: 8080 };
           let authEndpoint = { host: 'localhost', port: 9099 };
+          let storageEndpoint = { host: 'localhost', port: 9199 };
           if (hasEndpointOverride) {
             if (result.config.projectId !== 'demo-crm-projects') {
               throw new Error('Emulator endpoint overrides require the dedicated demo project.');
             }
             authEndpoint = parseLocalEmulatorEndpoint(emulatorConfig.auth, 'Auth emulator');
             firestoreEndpoint = parseLocalEmulatorEndpoint(emulatorConfig.firestore, 'Firestore emulator');
+            storageEndpoint = parseLocalEmulatorEndpoint(emulatorConfig.storage, 'Storage emulator');
           }
           const firestoreHost = firestoreEndpoint.host;
           const firestorePort = firestoreEndpoint.port;
@@ -239,7 +241,7 @@
           const authPort = authEndpoint.port;
           try { firebaseRef.firestore().useEmulator(firestoreHost, firestorePort); } catch (e) { /* already connected */ }
           try { firebaseRef.auth().useEmulator(`http://${authHost}:${authPort}`, { disableWarnings: true }); } catch (e) { /* */ }
-          try { if (firebaseRef.storage) firebaseRef.storage().useEmulator('localhost', 9199); } catch (e) { /* */ }
+          try { if (firebaseRef.storage) firebaseRef.storage().useEmulator(storageEndpoint.host, storageEndpoint.port); } catch (e) { /* */ }
           try { if (firebaseRef.functions) firebaseRef.functions().useEmulator('localhost', 5001); } catch (e) { /* */ }
           console.warn('🔧 [AuthGuard] Compat emulators connected.');
         }

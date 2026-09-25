@@ -28,6 +28,9 @@ const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { onTaskDispatched } = require('firebase-functions/v2/tasks');
 const { getFirestore } = require('firebase-admin/firestore');
 const { ScoringWorker } = require('./ai-scoring/worker');
+const { reconcileOutbox } = require('./ai-scoring/outbox-reconciler');
+const { processEntranceV3, reconcileEntranceV3 } = require('./entrance-test/v3-assessment');
+const { getFunctions } = require('firebase-admin/functions');
 const { WalletService } = require('./ai-credits/wallet-service');
 const { SettlementService } = require('./ai-credits/settlement-service');
 const apiApp = require('./apiApp');
@@ -156,7 +159,7 @@ module.exports = {
         region: ['asia-southeast1', 'us-central1'],
         memory: '1GiB',
         timeoutSeconds: 300,
-        secrets: ['AZURE_SPEECH_KEY']
+        secrets: ['AZURE_SPEECH_KEY', 'GROQ_API_KEY']
     }, apiApp),
     crmProjectsAutomationProcessor: onSchedule({ region: 'us-central1', schedule: 'every 1 minutes', timeoutSeconds: 300 }, async () => {
         const { getAuth } = require('firebase-admin/auth');
@@ -222,6 +225,8 @@ module.exports = {
         await createAttachmentCleanup({ db: getFirestore(), storage }).run();
     }),
     scoreWorkerTask: onTaskDispatched({
+        timeoutSeconds: 540,
+        memory: '512MiB',
         retryConfig: {
             maxAttempts: 3,
             minBackoffSeconds: 10
@@ -230,7 +235,7 @@ module.exports = {
             maxConcurrentDispatches: 6
         },
         region: 'asia-southeast1',
-        secrets: ['AZURE_SPEECH_KEY']
+        secrets: ['AZURE_SPEECH_KEY', 'GROQ_API_KEY']
     }, async (req) => {
         const assessmentId = req.data?.assessmentId;
         if (!assessmentId) return;
@@ -239,5 +244,35 @@ module.exports = {
         const settlementService = new SettlementService({ db, walletService });
         const worker = new ScoringWorker({ db, settlementService });
         await worker.processJob(assessmentId, `cloud-task-${req.id || 'worker'}`);
+    }),
+    aiScoringOutboxReconciler: onSchedule({
+        region: 'asia-southeast1', schedule: 'every 1 minutes', timeoutSeconds: 300,
+        maxInstances: 1, concurrency: 1
+    }, async () => {
+        const queue = getFunctions().taskQueue('locations/asia-southeast1/functions/scoreWorkerTask');
+        const summary = await reconcileOutbox({
+            db: getFirestore(), dispatch: (assessmentId) => queue.enqueue({ assessmentId })
+        });
+        console.info('[AiScoringOutbox]', summary);
+    }),
+    entranceSpeechWorkerTask: onTaskDispatched({
+        timeoutSeconds: 540,
+        memory: '512MiB',
+        retryConfig: { maxAttempts: 3, minBackoffSeconds: 10 },
+        rateLimits: { maxConcurrentDispatches: 3 },
+        region: 'asia-southeast1', secrets: ['AZURE_SPEECH_KEY']
+    }, async req => {
+        const revisionId = req.data?.revisionId;
+        if (!revisionId) return;
+        await processEntranceV3({ db: getFirestore(), bucket: await getStorageBucket(), revisionId });
+    }),
+    entranceSpeechOutboxReconciler: onSchedule({
+        region: 'asia-southeast1', schedule: 'every 1 minutes', timeoutSeconds: 300,
+        maxInstances: 1, concurrency: 1
+    }, async () => {
+        const queue = getFunctions().taskQueue('locations/asia-southeast1/functions/entranceSpeechWorkerTask');
+        const summary = await reconcileEntranceV3({ db: getFirestore(),
+            dispatch: revisionId => queue.enqueue({ revisionId }) });
+        console.info('[EntranceSpeechOutbox]', summary);
     })
 };

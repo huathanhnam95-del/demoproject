@@ -114,6 +114,26 @@ async function signIn(email, password) {
       };
     }
 
+    // The isolated demo uses both SDK generations: attempt media uploads still
+    // use compat Storage, which requires its own Auth session. Keep the two
+    // emulator identities aligned before reporting a successful login.
+    if (auth.app.options.projectId === 'demo-crm-projects') {
+      const compat = window.firebase?.auth?.();
+      if (!compat || window.firebase.app().options.projectId !== 'demo-crm-projects') {
+        await signOut(auth);
+        throw new Error('Demo compat authentication is unavailable.');
+      }
+      try {
+        const compatCredential = await compat.signInWithEmailAndPassword(email, password);
+        if (compatCredential.user?.uid !== (freshUser || user).uid) {
+          throw new Error('Demo Firebase identities do not match.');
+        }
+      } catch (compatError) {
+        await Promise.allSettled([signOut(auth), compat.signOut()]);
+        throw compatError;
+      }
+    }
+
     log.debug('✓ User signed in successfully with verified email');
 
     return {
@@ -209,6 +229,9 @@ async function signInAsLocalAdmin() {
 async function signOutUser() {
   try {
     await signOut(auth);
+    if (auth.app.options.projectId === 'demo-crm-projects') {
+      await window.firebase?.auth?.().signOut();
+    }
     log.debug('✓ User signed out successfully');
     return {
       success: true

@@ -16,6 +16,8 @@ const {
     scoreSubmission
 } = require('../entrance-test/test36plus');
 const { transcribeAudio } = require('../../functions/src/entrance-test/asr-service');
+const { parseRolloutFlags } = require('../../functions/src/config/rollout-flags');
+const { parseEntranceV3Upload, uploadEntranceV3, getEntranceV3Status, processEntranceV3 } = require('../../functions/src/entrance-test/v3-assessment');
 
 const router = express.Router();
 
@@ -130,7 +132,13 @@ router.get('/session', async (req, res) => {
 
         const session = buildPublicSession(testId);
         const progress = sanitizeProgressDraft(data.progress);
-        return sendSuccess(res, { testId, testType, session, progress });
+        const speakingV3 = Object.fromEntries(Object.entries(data.speaking || {})
+            .filter(([, entry]) => entry?.v3?.revisionId)
+            .map(([questionId, entry]) => [questionId, {
+                revisionId: entry.v3.revisionId, status: entry.v3.status,
+                transcript: entry.transcript || null, accuracyScore: entry.accuracyScore ?? null
+            }]));
+        return sendSuccess(res, { testId, testType, session, progress, speakingV3 });
     } catch (e) {
         console.error('[EntranceTest] /session error:', e);
         return sendError(res, 500, 'SESSION_ERROR', 'Failed to start session.', e?.message || String(e));
@@ -253,6 +261,22 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
             return sendError(res, 500, 'DATA_ERROR', 'Lead or student binding is missing for this test.');
         }
 
+        if (parseRolloutFlags(process.env).entranceSpeechV3) {
+            let uploaded;
+            try {
+                uploaded = await uploadEntranceV3({ db, bucket, testId, questionId, question,
+                    data, ...parseEntranceV3Upload(audioBuffer, req.headers['content-type']) });
+            } catch (error) {
+                if (/^(INVALID_|AUDIO_|RIFF_|PCM_|WAV_)/.test(error.message))
+                    return sendError(res, 400, 'INVALID_CANONICAL_AUDIO', error.message);
+                throw error;
+            }
+            setImmediate(() => processEntranceV3({ db, bucket, revisionId: uploaded.revisionId })
+                .catch(error => console.error('[EntranceTest] Local V3 worker:', error)));
+            return sendSuccess(res, { status: 'queued', revisionId: uploaded.revisionId,
+                manifest: uploaded.manifest });
+        }
+
         const contentType = String(req.headers['content-type'] || 'application/octet-stream');
         const ext = extensionFromContentType(contentType);
         const fileName = `audio_${String(question.promptNumber).padStart(2, '0')}.${ext}`;
@@ -339,6 +363,23 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
     }
 });
 
+router.get('/speaking/status', async (req, res) => {
+    try {
+        const token = String(req.query.token || '').trim();
+        const questionId = String(req.query.questionId || '').trim();
+        if (token.length < 10 || !getSpeakingQuestionById(questionId))
+            return sendError(res, 400, 'INVALID_REQUEST', 'Invalid token or question.');
+        const bucket = await getStorageBucket();
+        const state = await getEntranceV3Status({ db, bucket,
+            testId: hashTokenToTestId(token), questionId });
+        if (!state) return sendError(res, 404, 'ASSESSMENT_NOT_FOUND', 'No V3 assessment for this question.');
+        return sendSuccess(res, state);
+    } catch (error) {
+        console.error('[EntranceTest] /speaking/status:', error);
+        return sendError(res, 500, 'STATUS_ERROR', 'Could not load speaking assessment.');
+    }
+});
+
 // Submit the whole test (no login, token-gated) - single-use
 router.post('/submit', async (req, res) => {
     try {
@@ -370,6 +411,13 @@ router.post('/submit', async (req, res) => {
             }
 
             const scoring = scoreSubmission(responses);
+            if (parseRolloutFlags(process.env).entranceSpeechV3) {
+                const questions = TEST_36PLUS.sections.find(section => section.id === 'speaking')?.questions || [];
+                if (questions.some(question => data.speaking?.[question.id]?.v3?.status !== 'ready')) {
+                    return { ok: false, status: 409, error: 'SPEAKING_ASSESSMENT_PENDING',
+                        message: 'Complete all speaking assessments before submitting.' };
+                }
+            }
             const studentId = String(data.studentId || '').trim();
             const leadId = String(data.leadId || '').trim();
             if (studentId) {

@@ -51,9 +51,16 @@ async function preparePage(page, baseUrl) {
     localStorage.setItem('onboardingWelcomeDismissed', 'true');
     localStorage.setItem('readAloudTutorialCompleted', 'true');
   });
-  await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${baseUrl}/?pteShell=legacy`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => typeof window.switchToMode === 'function', { timeout: 30000 });
   await page.evaluate(() => window.finishBelPreloader?.());
+  await page.waitForFunction(() => !!window.AiScoringGate, { timeout: 30000 });
+  await page.evaluate(() => {
+    // These scenarios test Read Aloud assessment behavior. Credit consent and
+    // Speech V3 are verified separately, so grant a synthetic legacy quote.
+    window.AiScoringGate.requestConsentAndConfirm = async () => ({ allowed: true });
+    window.AiScoringGate.speechV3Enabled = async () => false;
+  });
 }
 
 async function mockWorkbookRows(page, rows) {
@@ -625,6 +632,9 @@ async function assertSupportedFlow(browser, baseUrl) {
     };
   });
 
+  // Since the V2.0.15 AI-credit gate a missing quote endpoint (404) blocks scoring; 503 means
+  // "credits off", which scores unmetered like these checks expect.
+  await context.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
   const page = await context.newPage();
   await preparePage(page, baseUrl);
   await mockWorkbookRows(page, [
@@ -891,14 +901,45 @@ async function assertSupportedFlow(browser, baseUrl) {
   assert.equal(restoredFilterState.filteredCount, 3, 'resetting filters should restore the full prompt pool');
   assert.equal(restoredFilterState.currentQuestionId, '3', 'resetting filters should restore the last valid prompt when it matches again');
 
-  await page.evaluate(() => {
-    document.getElementById('ra-toggle-chunking-btn')?.click();
-    document.getElementById('ra-toggle-linking-btn')?.click();
+  await page.evaluate(async () => {
+    await window.ReadAloudMode.loadSpecificPrompt(1);
   });
-  await page.waitForFunction(() => {
-    const overlay = document.getElementById('ra-linking-overlay');
-    return !!overlay && overlay.querySelectorAll('path').length > 0;
-  }, { timeout: 30000 });
+  await waitForPromptReady(page, { questionId: '2', textPattern: 'i can take it to the store' });
+
+  await page.evaluate(() => {
+    // Turn both guides on. Linking can already be on by default, and a click would turn it off.
+    ['ra-toggle-chunking-btn', 'ra-toggle-linking-btn'].forEach((id) => {
+      const button = document.getElementById(id);
+      if (button && button.getAttribute('aria-pressed') !== 'true') button.click();
+    });
+  });
+  try {
+    await page.waitForFunction(() => {
+      const overlay = document.getElementById('ra-linking-overlay');
+      return !!overlay && overlay.querySelectorAll('path').length > 0;
+    }, { timeout: 30000 });
+  } catch (error) {
+    const state = await page.evaluate(() => {
+      const mode = window.ReadAloudMode;
+      const overlay = document.getElementById('ra-linking-overlay');
+      const stage = document.getElementById('ra-prompt-stage');
+      return {
+        prompt: mode?.currentPromptPlainText,
+        questionId: mode?.currentQuestionId,
+        viewMode: mode?.getEffectiveViewMode?.(),
+        activeModes: mode?.getActiveConnectedSpeechModes?.(),
+        pteView: !!mode?.pteView,
+        pteCoachOpen: mode?.pteCoachOpen,
+        stageWidth: stage?.getBoundingClientRect().width,
+        overlayDisplay: overlay?.style.display,
+        overlayPaths: overlay?.querySelectorAll('path').length,
+        linkingStatus: document.getElementById('ra-linking-status')?.textContent,
+        linkingPressed: document.getElementById('ra-toggle-linking-btn')?.getAttribute('aria-pressed'),
+        chunkingPressed: document.getElementById('ra-toggle-chunking-btn')?.getAttribute('aria-pressed')
+      };
+    });
+    throw new Error(`Expected a visible linking arrow: ${JSON.stringify(state)}`, { cause: error });
+  }
 
   const wideLinkingState = await page.evaluate(() => {
     const overlay = document.getElementById('ra-linking-overlay');
@@ -1249,7 +1290,8 @@ async function assertSupportedFlow(browser, baseUrl) {
     document.getElementById('ra-check-btn')?.click();
   });
 
-  await page.waitForFunction(() => {
+  try {
+    await page.waitForFunction(() => {
     const resultBox = document.getElementById('ra-result-box');
     const connectedBox = document.getElementById('ra-connected-speech-box');
     const connectedLabel = document.getElementById('ra-connected-speech-label');
@@ -1282,7 +1324,27 @@ async function assertSupportedFlow(browser, baseUrl) {
       !!checkBtn &&
       getComputedStyle(checkBtn).display === 'none'
     );
-  }, { timeout: 30000 });
+    }, { timeout: 30000 });
+  } catch (error) {
+    const state = await page.evaluate(() => {
+      const byId = (id) => document.getElementById(id);
+      const display = (id) => byId(id) ? getComputedStyle(byId(id)).display : null;
+      return {
+        assessCount: window.__raAssessCount,
+        resultDisplay: display('ra-result-box'),
+        connectedDisplay: display('ra-connected-speech-box'),
+        label: byId('ra-connected-speech-label')?.textContent,
+        meta: byId('ra-connected-speech-meta')?.textContent,
+        accuracy: byId('ra-accuracy-value')?.textContent,
+        feedback: byId('ra-transcript-feedback')?.textContent?.slice(0, 180),
+        summary: byId('ra-connected-speech-summary')?.textContent?.slice(0, 180),
+        list: byId('ra-connected-speech-list')?.textContent?.slice(0, 180),
+        status: byId('ra-status-message')?.textContent,
+        checkDisplay: display('ra-check-btn')
+      };
+    });
+    throw new Error(`Expected completed Read Aloud feedback: ${JSON.stringify(state)}`, { cause: error });
+  }
 
   const supportedAssessmentState = await page.evaluate(() => {
     const resultBox = document.getElementById('ra-result-box');
@@ -1636,6 +1698,9 @@ async function assertChunkingDisabledStateReset(browser, baseUrl) {
     };
   });
 
+  // Since the V2.0.15 AI-credit gate a missing quote endpoint (404) blocks scoring; 503 means
+  // "credits off", which scores unmetered like these checks expect.
+  await context.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
   const page = await context.newPage();
   await preparePage(page, baseUrl);
   await mockWorkbookRows(page, [
@@ -1768,6 +1833,9 @@ async function assertAssessmentGuards(browser, baseUrl) {
     };
   });
 
+  // Since the V2.0.15 AI-credit gate a missing quote endpoint (404) blocks scoring; 503 means
+  // "credits off", which scores unmetered like these checks expect.
+  await context.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
   const page = await context.newPage();
   await preparePage(page, baseUrl);
   await mockWorkbookRows(page, [
@@ -1973,6 +2041,9 @@ async function assertPendingMicrophoneRequestGuards(browser, baseUrl) {
     };
   });
 
+  // Since the V2.0.15 AI-credit gate a missing quote endpoint (404) blocks scoring; 503 means
+  // "credits off", which scores unmetered like these checks expect.
+  await context.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
   const page = await context.newPage();
   await preparePage(page, baseUrl);
   await mockWorkbookRows(page, [
@@ -2124,6 +2195,9 @@ async function assertMicrophoneErrorRecovery(browser, baseUrl) {
     };
   });
 
+  // Since the V2.0.15 AI-credit gate a missing quote endpoint (404) blocks scoring; 503 means
+  // "credits off", which scores unmetered like these checks expect.
+  await context.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
   const page = await context.newPage();
   await preparePage(page, baseUrl);
   await mockWorkbookRows(page, [
@@ -2236,6 +2310,9 @@ async function assertUnsupportedWithoutWebAudio(browser, baseUrl) {
     };
   });
 
+  // Since the V2.0.15 AI-credit gate a missing quote endpoint (404) blocks scoring; 503 means
+  // "credits off", which scores unmetered like these checks expect.
+  await context.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
   const page = await context.newPage();
   await preparePage(page, baseUrl);
   await mockWorkbookRows(page, [
@@ -2371,6 +2448,9 @@ async function assertAssessmentFailureFeedback(browser, baseUrl) {
     };
   });
 
+  // Since the V2.0.15 AI-credit gate a missing quote endpoint (404) blocks scoring; 503 means
+  // "credits off", which scores unmetered like these checks expect.
+  await context.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
   const page = await context.newPage();
   await preparePage(page, baseUrl);
   await mockWorkbookRows(page, [
@@ -2516,6 +2596,9 @@ async function assertZeroScoreAssessmentPayloadShowsFailure(browser, baseUrl) {
     };
   });
 
+  // Since the V2.0.15 AI-credit gate a missing quote endpoint (404) blocks scoring; 503 means
+  // "credits off", which scores unmetered like these checks expect.
+  await context.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
   const page = await context.newPage();
   await preparePage(page, baseUrl);
   await mockWorkbookRows(page, [
@@ -2669,6 +2752,9 @@ async function assertDirectAccuracyPayloadShowsScoredResult(browser, baseUrl) {
     };
   });
 
+  // Since the V2.0.15 AI-credit gate a missing quote endpoint (404) blocks scoring; 503 means
+  // "credits off", which scores unmetered like these checks expect.
+  await context.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
   const page = await context.newPage();
   await preparePage(page, baseUrl);
   await mockWorkbookRows(page, [
@@ -2755,6 +2841,9 @@ async function assertSpeechCoachAccordionAndEdgeCases(browser, baseUrl) {
     return route.continue();
   });
 
+  // Since the V2.0.15 AI-credit gate a missing quote endpoint (404) blocks scoring; 503 means
+  // "credits off", which scores unmetered like these checks expect.
+  await context.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
   const page = await context.newPage();
   await preparePage(page, baseUrl);
 

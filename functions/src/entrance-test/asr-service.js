@@ -171,6 +171,17 @@ function cleanHallucinatedLoops(text, options = {}) {
     return cleaned.replace(/\s+/g, ' ').trim();
 }
 
+function parseFiniteScore(val) {
+    if (typeof val === 'number') {
+        return Number.isFinite(val) && val >= 0 && val <= 100 ? val : null;
+    }
+    if (typeof val === 'string' && val.trim().length > 0) {
+        const n = Number(val);
+        return Number.isFinite(n) && n >= 0 && n <= 100 ? n : null;
+    }
+    return null;
+}
+
 const {
     normalizeToOxfordAmericanIPA,
     normalizeIPAsInText,
@@ -263,6 +274,7 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
         }
         const resJson = await res.json();
         const nbest = resJson.NBest?.[0];
+        const rawWords = Array.isArray(nbest?.Words) ? nbest.Words : [];
         // Extract words with un-truncated acoustic boundaries per §5.8
         const words = extractWordsAndSyllablesFromAzure(rawWords);
         if (!words || words.length === 0) return null;
@@ -273,13 +285,12 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
         }
 
         let accuracyScore = null;
-        if (Number.isFinite(Number(nbest?.AccuracyScore))) {
-            accuracyScore = Math.round(Number(nbest.AccuracyScore) * 10) / 10;
-        } else if (Number.isFinite(Number(nbest?.PronunciationAssessment?.AccuracyScore))) {
-            accuracyScore = Math.round(Number(nbest.PronunciationAssessment.AccuracyScore) * 10) / 10;
+        const directScore = parseFiniteScore(nbest?.AccuracyScore) ?? parseFiniteScore(nbest?.PronunciationAssessment?.AccuracyScore);
+        if (directScore !== null) {
+            accuracyScore = Math.round(directScore * 10) / 10;
         } else {
             const validScores = words
-                .map((w) => (typeof w === 'object' && w != null && Number.isFinite(Number(w.accuracyScore))) ? Number(w.accuracyScore) : null)
+                .map((w) => (typeof w === 'object' && w != null) ? parseFiniteScore(w.accuracyScore) : null)
                 .filter((n) => n !== null);
             if (validScores.length > 0) {
                 accuracyScore = Math.round((validScores.reduce((a, b) => a + b, 0) / validScores.length) * 10) / 10;
@@ -585,6 +596,7 @@ module.exports = {
     cleanHallucinatedLoops,
     resolveGeminiAudioMimeType,
     getGeminiApiKeys,
-    getHuggingFaceApiKey
+    getHuggingFaceApiKey,
+    parseFiniteScore
 };
 

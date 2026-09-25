@@ -523,11 +523,36 @@
     updatePillDisplay(config, controllerState);
   }
 
+  /**
+   * v3 pill and question list: the label says which question it is, not its number again.
+   * Mode option text carries ids, level tags and markers ("#1 - Solar System", "[Lvl 1] #1 🎥 -
+   * Gas Giants", "Q12: …", "Question 12", or just "1"), which the pill used to print after its own "#id".
+   */
+  function cleanPickerLabel(label, displayId) {
+    const text = String(label || '').trim()
+      .replace(/^Q\d+:\s*/i, '')
+      .replace(/^\[Lvl\s*\d+\]\s*/i, '')
+      .replace(/^#\d+\b\s*/, '')
+      .replace(/^[\u{1F3A5}\u{1F3AC}\u{1F4F9}]\uFE0F?\s*/u, '')
+      .replace(/^[-\u2013\u2014:|]\s*/, '')
+      .trim();
+    return text.replace(/^question\s*#?\s*/i, '') === String(displayId) ? '' : text;
+  }
+
+  function formatPickerItem(config, controllerState, item) {
+    const custom = config.picker.formatItem?.(item) || null;
+    const displayId = custom?.displayId ?? item.displayId ?? item.id;
+    // SGD hands over its raw entries, which carry a title rather than a label.
+    const rawLabel = item.label ?? item.title ?? '';
+    const label = controllerState.isV3 ? (custom?.label ?? cleanPickerLabel(rawLabel, displayId)) : rawLabel;
+    return { ...item, displayId, label, searchText: item.searchText || rawLabel };
+  }
+
   function getPickerItems(config, controllerState) {
     const picker = config.picker;
     if (picker.sourceSelectId && controllerState.sourceSelect) {
       const select = controllerState.sourceSelect;
-      return Array.from(select.options).map(opt => ({
+      return Array.from(select.options).map(opt => formatPickerItem(config, controllerState, {
         id: opt.value,
         label: opt.textContent.trim(),
         searchText: opt.textContent.trim(),
@@ -536,7 +561,7 @@
       }));
     } else if (picker.getItems) {
       try {
-        return picker.getItems();
+        return (picker.getItems() || []).map(item => formatPickerItem(config, controllerState, item));
       } catch (e) {
         console.error('[SPC] picker.getItems() error:', e);
         return [];
@@ -585,7 +610,7 @@
     const pillLabel = controllerState.dom.pillLabel;
 
     if (current) {
-      pillId.textContent = '#' + current.id;
+      pillId.textContent = '#' + (current.displayId ?? current.id);
       if (controllerState.isV3) {
         let text = (current.label || '').trim().replace(/^Q\d+:\s*/i, '');
         let hasGlyph = false;
@@ -673,7 +698,7 @@
 
       const idSpan = document.createElement('span');
       idSpan.className = 'spc-sheet-item-id';
-      idSpan.textContent = '#' + item.id;
+      idSpan.textContent = '#' + (item.displayId ?? item.id);
 
       const labelSpan = document.createElement('span');
       labelSpan.className = 'spc-sheet-item-label';
@@ -1624,7 +1649,13 @@
     if (state.isV3) {
       setPhase(modeId, state.config.v3.getPhase?.() || state.phase);
       state.history?.sync();
-      state.config.v3.onSync?.();
+      // Retell's onSync asks the controller to sync again. Without this guard every sync recursed
+      // until the stack overflowed (swallowed by its try/catch), which froze the page after a
+      // scope switch while Retell was open.
+      if (!state.inModeSync) {
+        state.inModeSync = true;
+        try { state.config.v3.onSync?.(); } finally { state.inModeSync = false; }
+      }
       return;
     }
     updateActiveChip(state);
@@ -1690,6 +1721,29 @@
     const actions = v3Element('div', 'pte-dock__actions'); dock.append(status, actions); card.append(dock);
     const attempts = v3Element('section', 'pte-attempts'); card.after(attempts);
     state.v3DOM = { bar, card, progress, cardBody, dock, status, actions, attempts };
+    // Publish the dock's height so fixed page furniture (the chat button) can sit clear of
+    // it, as the legacy footer does with --spc-footer-height. It changes as buttons wrap.
+    const publishDockHeight = () => {
+      const height = Math.round(dock.getBoundingClientRect().height);
+      if (height > 0) document.documentElement.style.setProperty('--pte-dock-height', `${height}px`);
+    };
+    publishDockHeight();
+    if (typeof ResizeObserver === 'function') {
+      state.dockResizeObserver = new ResizeObserver(publishDockHeight);
+      state.dockResizeObserver.observe(dock);
+    }
+    // The question audio box hands a failure to the dock, which would otherwise keep saying the
+    // recorder appears when the audio ends. Any later audio state clears it.
+    card.addEventListener('pte-audio-state', (event) => {
+      const { state: audioState, spoken } = event.detail || {};
+      if (audioState === 'failed') {
+        event.preventDefault();
+        state.notice = { text: spoken || "The audio couldn't play. Try again, or continue without it.", phase: state.phase, audio: true };
+      } else if (state.notice?.audio) {
+        state.notice = null;
+      } else return;
+      setPhase(config.modeId, state.phase);
+    });
     // Only shell-owned chrome is hidden here; mode-specific duplication belongs to its phase.
     document.querySelectorAll('.main-header').forEach(node => { rememberV3(state, node); node.hidden = true; node.style.display = 'none'; });
     document.body.classList.add('pte-shell-v3');
@@ -1752,10 +1806,21 @@
         const count = helper.count?.();
         button.textContent = `${helper.label}${count == null ? '' : ` · ${count}`}`;
         if (helper.pressed) button.setAttribute('aria-pressed', String(!!helper.pressed()));
+        // "Coach · 0" or "Intro video · 0" opens nothing; such helpers opt out while empty.
+        if (helper.hideWhenZero && count === 0) button.hidden = true;
       }
     });
-    const defaults = { listen: 'Listen carefully. The recorder appears when the audio ends.', prep: 'Recording starts automatically when the countdown ends.', complete: 'Recording saved. Listen back or get feedback.', feedback: 'Saved to Previous attempts below.' };
-    status.textContent = state.nextError || state.saveError || (state.config.v3.statusText?.[phase] ?? defaults[phase] ?? '');
+    // "Saved" is only claimed once Previous attempts actually lists an attempt for this
+    // question (guests keep theirs for the session); before, it was said unconditionally.
+    const summary = state.historySummary;
+    const savedCopy = summary && summary.questionCount > 0
+      ? (summary.guest ? 'Saved below for this session. Sign in to keep your attempts.' : 'Saved to Previous attempts below.')
+      : (summary ? 'Try again, or go on to the next question.' : 'Saved to Previous attempts below.');
+    const defaults = { listen: 'Listen carefully. The recorder appears when the audio ends.', prep: 'Recording starts automatically when the countdown ends.', complete: 'Listen back, or get feedback.', feedback: savedCopy };
+    // A notice (why recording could not start, an attempt that was not saved) belongs to the
+    // phase it was raised in; moving on clears it.
+    if (state.notice && state.notice.phase !== phase) state.notice = null;
+    status.textContent = state.nextError || state.saveError || state.notice?.text || (state.config.v3.statusText?.[phase] ?? defaults[phase] ?? '');
     next.textContent = phase === 'feedback' ? 'Next question →' : 'Next →';
     next.classList.toggle('pte-btn--primary', phase === 'feedback'); next.classList.toggle('pte-btn--ghost', phase !== 'feedback');
     next.disabled = phase === 'loading' || !!state.nextPending;
@@ -1771,7 +1836,7 @@
     const bodies = {
       listen: "You haven't answered this question yet. It will be marked as skipped.",
       recording: 'Your recording will stop and this attempt will be saved without feedback.',
-      complete: 'This attempt is saved. You can get feedback on it later from Previous attempts at the bottom of the page.'
+      complete: "You haven't asked for feedback on this recording yet."
     };
     const body = v3Element('p', '', kind === 'noskip' ? "The recording is about to begin. As in the test, you can't move to the next question during the countdown." : bodies[state.phase] || bodies.complete);
     body.id = `pte-dialog-body-${state.modeId}`; panel.setAttribute('aria-describedby', body.id);
@@ -1875,8 +1940,12 @@
       if (record.anchor?.parentNode) record.anchor.replaceWith(record.node);
     });
     state.config.v3.onUnmount?.();
+    state.dockResizeObserver?.disconnect(); state.dockResizeObserver = null; state.notice = null;
     state.v3DOM.card.remove(); state.v3DOM.attempts.remove();
-    if (![...activeControllers.values()].some(other => other !== state && other.isV3)) document.body.classList.remove('pte-shell-v3', 'pte-focus');
+    if (![...activeControllers.values()].some(other => other !== state && other.isV3)) {
+      document.body.classList.remove('pte-shell-v3', 'pte-focus');
+      document.documentElement.style.removeProperty('--pte-dock-height');
+    }
   }
 
   function register(config) {
@@ -1971,7 +2040,12 @@
       buildPicker(config, state);
       config.v3.onMount?.();
       adoptV3Dock(config, state);
-      if (config.v3.attempts) state.history = window.PteAttemptHistory?.mount(state.v3DOM.attempts, config.v3.attempts);
+      if (config.v3.attempts) {
+        state.history = window.PteAttemptHistory?.mount(state.v3DOM.attempts, {
+          ...config.v3.attempts,
+          onUpdate: (summary) => { state.historySummary = summary; if (state.phase === 'feedback') setPhase(state.modeId, 'feedback'); }
+        });
+      }
       setPhase(modeId, config.v3.getPhase?.() || 'loading');
       config.v3.onSync?.();
       return;
@@ -2146,7 +2220,72 @@
     });
   }
 
+  /**
+   * Feedback tabs: the shell's pill tablist with roles, aria-selected, a roving tabindex and
+   * arrow/Home/End keys. RA, RS, DI and ASQ already worked this way; RL, SGD and RTS had
+   * their own underline tabs without them. onSelect(tab) switches the mode's panels.
+   */
+  function wireTabs(tablist, { onSelect, label = 'Feedback' } = {}) {
+    if (!tablist || tablist.dataset.pteTabs === 'wired') return;
+    tablist.dataset.pteTabs = 'wired';
+    tablist.classList.add('pte-tabs');
+    tablist.setAttribute('role', 'tablist');
+    if (!tablist.hasAttribute('aria-label')) tablist.setAttribute('aria-label', label);
+    const tabs = [...tablist.querySelectorAll('button')];
+    const mark = (tab) => tabs.forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; t.classList.toggle('active', on);
+    });
+    const select = (tab, focus) => { mark(tab); if (focus) tab.focus(); onSelect?.(tab); };
+    tabs.forEach((tab, i) => {
+      tab.type = 'button';
+      tab.setAttribute('role', 'tab');
+      tab.addEventListener('click', () => select(tab));
+      tab.addEventListener('keydown', (event) => {
+        const target = { ArrowRight: tabs[(i + 1) % tabs.length], ArrowLeft: tabs[(i - 1 + tabs.length) % tabs.length], Home: tabs[0], End: tabs[tabs.length - 1] }[event.key];
+        if (target) { event.preventDefault(); select(target, true); }
+      });
+    });
+    mark(tabs.find(t => t.classList.contains('active') || t.getAttribute('aria-selected') === 'true') || tabs[0]);
+  }
+
   /* ═══════════════════════════ EXPOSE ═══════════════════════════ */
+
+  function wireTabs(list, { label, onSelect } = {}) {
+    if (!list || typeof onSelect !== 'function') return;
+    const tabs = Array.from(list.querySelectorAll('button'));
+    if (!tabs.length) return;
+    list.setAttribute('role', 'tablist');
+    if (label) list.setAttribute('aria-label', label);
+    const selected = tabs.find(tab => tab.classList.contains('active')) || tabs[0];
+    tabs.forEach(tab => {
+      tab.setAttribute('role', 'tab');
+      tab.setAttribute('aria-selected', String(tab === selected));
+      tab.tabIndex = tab === selected ? 0 : -1;
+    });
+    const choose = tab => {
+      tabs.forEach(candidate => {
+        const active = candidate === tab;
+        candidate.classList.toggle('active', active);
+        candidate.setAttribute('aria-selected', String(active));
+        candidate.tabIndex = active ? 0 : -1;
+      });
+      onSelect(tab);
+    };
+    list.addEventListener('click', event => {
+      const tab = event.target.closest('button');
+      if (tab && list.contains(tab)) choose(tab);
+    });
+    list.addEventListener('keydown', event => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      const current = Math.max(0, tabs.indexOf(document.activeElement));
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
+        : (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      event.preventDefault();
+      choose(tabs[next]);
+      tabs[next].focus();
+    });
+  }
 
   window.SpeakingPracticeController = {
     register: register,
@@ -2159,6 +2298,7 @@
     isV2Active: isV2Active,
     createSheet: createSheet,
     setPhase: setPhase,
+    wireTabs: wireTabs,
     setNextError: (modeId, message) => {
       const state = activeControllers.get(modeId);
       if (!state?.isV3) return;
@@ -2172,7 +2312,15 @@
       state.saveError = String(message || '');
       setPhase(modeId, state.phase);
     },
+    /** Dock message for the current phase (call after setPhase); cleared by the next phase. */
+    setNotice: (modeId, message) => {
+      const state = activeControllers.get(modeId);
+      if (!state?.isV3) return;
+      state.notice = message ? { text: String(message), phase: state.phase } : null;
+      setPhase(modeId, state.phase);
+    },
     getPhase: modeId => activeControllers.get(modeId)?.phase || null,
+    wireTabs: wireTabs,
     openDialog: (modeId, kind) => {
       const state = activeControllers.get(modeId);
       return state?.isV3 ? openV3Dialog(kind, state) : Promise.resolve(false);

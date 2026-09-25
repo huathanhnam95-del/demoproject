@@ -413,12 +413,15 @@ async function assertSharedControllerStructure(page, label) {
     });
   });
 
+  // Since the V2.0.15 AI-credit gate a missing quote endpoint (404) blocks scoring; 503 means
+  // "credits off", which scores unmetered like the test expects.
+  await context.route('**/api/ai-scoring/quotes', route => route.fulfill({ status: 503, json: { error: 'AI scoring disabled' } }));
   const page = await context.newPage();
   consoleLines = [];
   page.on('console', (msg) => consoleLines.push(`${msg.type()}: ${msg.text()}`));
 
   try {
-    await page.goto(`${baseUrl}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${baseUrl}/index.html?pteShell=legacy`, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => typeof window.switchToMode === 'function', { timeout: 30000 });
     await clickByScript(page, '#vocab-alert-ok');
 

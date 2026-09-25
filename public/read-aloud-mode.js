@@ -160,6 +160,7 @@ class ReadAloudMode {
     this.isSubmitInFlight = false;
     this.userRecordingUrl = null;
     this.assessmentAudioBuffer = null;
+    this.rawPlaybackAudioBuffer = null;
     this.wordPlaybackContext = null;
     this.wordPlaybackSource = null;
     this.wordPlaybackButton = null;
@@ -1193,9 +1194,6 @@ class ReadAloudMode {
   }
 
   onExit() {
-    if (typeof document !== 'undefined' && document.body && document.body.dataset.practiceLayout) {
-      delete document.body.dataset.practiceLayout;
-    }
     const panel = document.getElementById('mode-read-aloud');
     if (panel) {
       panel.dataset.perfReady = 'false';
@@ -2628,16 +2626,6 @@ class ReadAloudMode {
         return;
       }
 
-      if (this.pteView && !this.pteCoachOpen) {
-        if (this.state !== 'RESULTS') {
-          this.renderPromptGuideExplanations(filteredAnalysis);
-        }
-        overlay.style.display = 'none';
-        badgeLayer.style.display = 'none';
-        badgeLayer.innerHTML = '';
-        return;
-      }
-
       const wordMap = this.currentPromptRenderState?.wordMap || new Map();
       // Every layer comes out of one superset analysis, so the render pass is
       // told exactly which families the learner switched on.
@@ -2665,6 +2653,14 @@ class ReadAloudMode {
       // with the prompt's Preview cards.
       if (this.state !== 'RESULTS') {
         this.renderPromptGuideExplanations(filteredAnalysis);
+      }
+
+      if (this.pteView && !this.pteCoachOpen) {
+        overlay.style.display = 'none';
+        badgeLayer.style.display = 'none';
+        badgeLayer.innerHTML = '';
+        this.syncGuideSelectionState();
+        return;
       }
 
       const promptWidth = Math.min(window.innerWidth || 0, promptStage.getBoundingClientRect().width || 0);
@@ -2961,6 +2957,13 @@ class ReadAloudMode {
 
     const statusMsg = document.getElementById('ra-status-message');
     if (statusMsg) statusMsg.textContent = message;
+    // The status element above is visually hidden in the v3 shell, so the learner saw
+    // nothing happen. The recorder shows why, and Start recording stays the retry.
+    if (this.pteView) {
+      const info = window.PteRecorderWidget?.describeMicError?.(error);
+      this.pteRecorder?.showMicError?.(info || error);
+      if (info) window.SpeakingPracticeController?.setNotice?.('read-aloud', info.notice);
+    }
   }
 
   setAssessmentStatusMessage(message) {
@@ -2974,6 +2977,7 @@ class ReadAloudMode {
     this.assessmentStatusMessage = '';
     this.lastAssessmentPayload = null;
     this.lastAssessmentSession = null;
+    this.assessmentOutcome = null;
     if (this.pteView) {
       delete this.pteView.payload;
       this.pteView.split?.querySelector('.pte-fb__error-state')?.remove();
@@ -3194,6 +3198,7 @@ class ReadAloudMode {
     }
     this.userRecordingUrl = null;
     if (!preserveAssessmentBuffer) this.assessmentAudioBuffer = null;
+    if (!preserveAssessmentBuffer) this.rawPlaybackAudioBuffer = null;
     this.pendingBlob = null;
     this.pendingSession = null;
     this.updateRecordedAudioControl();
@@ -3219,6 +3224,17 @@ class ReadAloudMode {
     }
     this.updateRecordedAudioControl();
     this.syncCustomAudioProgress();
+  }
+
+  async decodeRawPlaybackBlob(rawBlob) {
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!rawBlob || typeof AudioContextCtor !== 'function') return null;
+    const context = new AudioContextCtor();
+    try {
+      return await context.decodeAudioData((await rawBlob.arrayBuffer()).slice(0));
+    } finally {
+      if (typeof context.close === 'function') context.close().catch(() => {});
+    }
   }
 
   stopReferenceAudioPlayback() {
@@ -3321,15 +3337,103 @@ class ReadAloudMode {
     return { eventId, family, phrase: item.label || '', startWordIndex: Number(item.startWordIndex), endWordIndex: Number(item.endWordIndex) };
   }
 
+  getGuideLeadLabel(category) {
+    const linkingApi = typeof window !== 'undefined' ? window.ReadAloudLinking : null;
+    if (typeof linkingApi?.getCategoryLeadLabel === 'function') {
+      return linkingApi.getCategoryLeadLabel(category);
+    }
+    const normalized = String(category || '').toLowerCase();
+    if (normalized.includes('link') || normalized === 'catenation') return 'Technique';
+    if (normalized.includes('reduc') || normalized.includes('weak')) return 'Weak form';
+    if (normalized.includes('sound') || normalized.includes('assimilation') || normalized.includes('coalesc')) return 'Sounds like';
+    return 'Technique';
+  }
+
+  resolveCanonicalWeakFormAudio(item) {
+    if (!item) return null;
+    const rawWord = String(item.subtype || item.word || item.label || '').trim().toLowerCase();
+    const cleanKey = rawWord.replace(/^[^a-z-]+|[^a-z-]+$/g, '');
+    let key = cleanKey;
+    if (key === 'the') {
+      const ipa = String(item.targetIpa || item.spokenAs || '').toLowerCase();
+      if ((ipa.includes('ði') || ipa.includes('\u00f0i') || ipa.includes('thee')) && !ipa.includes('ðə') && !ipa.includes('\u00f0\u0259')) {
+        key = 'the-vowel';
+      } else if (item.condition?.nextSound === 'vowel' || item.nextSoundClass === 'vowel') {
+        key = 'the-vowel';
+      } else {
+        key = 'the-consonant';
+      }
+    }
+    const CANONICAL_MAP = {
+      'to': { key: 'to', phrase: 'to go', ipa: '/tə ɡoʊ/' },
+      'the-consonant': { key: 'the-consonant', phrase: 'the book', ipa: '/ðə bʊk/' },
+      'the-vowel': { key: 'the-vowel', phrase: 'the apple', ipa: '/ði ˈæp.əl/' },
+      'a': { key: 'a', phrase: 'a book', ipa: '/ə bʊk/' },
+      'an': { key: 'an', phrase: 'an hour', ipa: '/ən ˈaʊ.ər/' },
+      'of': { key: 'of', phrase: 'cup of tea', ipa: '/kʌp əv tiː/' },
+      'and': { key: 'and', phrase: 'bread and butter', ipa: '/bɹɛd ən ˈbʌt.ər/' },
+      'for': { key: 'for', phrase: 'wait for me', ipa: '/weɪt fər miː/' },
+      'can': { key: 'can', phrase: 'you can go', ipa: '/juː kən ɡoʊ/' },
+      'have': { key: 'have', phrase: 'we have seen', ipa: '/wiː həv siːn/' },
+      'has': { key: 'has', phrase: 'she has done', ipa: '/ʃiː həz dʌn/' },
+      'was': { key: 'was', phrase: 'it was good', ipa: '/ɪt wəz ɡʊd/' },
+      'were': { key: 'were', phrase: 'they were here', ipa: '/ðeɪ wər hɪr/' },
+      'from': { key: 'from', phrase: 'away from home', ipa: '/əˈweɪ frəm hoʊm/' }
+    };
+    const def = CANONICAL_MAP[key];
+    if (!def) return null;
+    return {
+      key: def.key,
+      phrase: def.phrase,
+      ipa: def.ipa,
+      file: `/database/RA/weak-forms/canonical/${def.key}.mp3`
+    };
+  }
+
+  getCanonicalWeakFormCarrierPhrase(wordOrItem) {
+    if (!wordOrItem) return null;
+    if (typeof wordOrItem === 'object') {
+      const canonical = this.resolveCanonicalWeakFormAudio(wordOrItem);
+      return canonical?.phrase || null;
+    }
+    const raw = String(wordOrItem).trim().toLowerCase().replace(/^[^a-z-]+|[^a-z-]+$/g, '');
+    const CANONICAL_PHRASES = {
+      'to': 'to go',
+      'the': 'the book',
+      'the-consonant': 'the book',
+      'the-vowel': 'the apple',
+      'a': 'a book',
+      'an': 'an hour',
+      'of': 'cup of tea',
+      'and': 'bread and butter',
+      'for': 'wait for me',
+      'can': 'you can go',
+      'have': 'we have seen',
+      'has': 'she has done',
+      'was': 'it was good',
+      'were': 'they were here',
+      'from': 'away from home'
+    };
+    return CANONICAL_PHRASES[raw] || null;
+  }
+
   /**
-   * Fallback model audio for cards with no recorded clip. Speaks the card's own
-   * phrase through the browser voice — never the IPA and never the respelling,
-   * which synthesis reads as nonsense. Renders nothing where the API is absent
-   * rather than showing a control that cannot work.
+   * Fallback model audio for cards with no recorded clip. For reduced words,
+   * plays the local canonical weak-form audio bank at $0 cost. For other cards,
+   * speaks the card's own phrase through the browser voice — never the IPA and
+   * never the respelling, which synthesis reads as nonsense.
    */
   _buildSpokenModelFallbackControl(item) {
+    const isReduced = item?.category === 'reduced_words';
+    if (isReduced) {
+      const canonical = this.resolveCanonicalWeakFormAudio(item);
+      if (canonical?.file) {
+        const escapeHtml = ReadAloudMode.escapeHtml;
+        return `<button class="sc-model-play-btn sc-audio-btn sc-audio-btn--model" type="button" data-model-src="${escapeHtml(canonical.file)}" data-initial-label="Listen" data-initial-aria-label="Play model weak form" title="Hear the model weak form" aria-label="Play model weak form"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Listen</span></button>`;
+      }
+    }
     if (typeof window === 'undefined' || !window.speechSynthesis) return '';
-    const phrase = String(item?.label || '').trim();
+    const phrase = (isReduced && this.getCanonicalWeakFormCarrierPhrase(item)) || String(item?.label || '').trim();
     if (!phrase) return '';
     const escapeHtml = ReadAloudMode.escapeHtml;
     return `<button class="sc-audio-btn sc-audio-btn--model sc-audio-btn--synth" type="button" data-speak-phrase="${escapeHtml(phrase)}" title="Hear this read by the browser voice" aria-label="Hear ${escapeHtml(phrase)} read aloud"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Listen</span></button>`;
@@ -3337,8 +3441,12 @@ class ReadAloudMode {
 
   /** Speak a short phrase with the browser voice, cancelling anything in flight. */
   speakGuidePhrase(phrase) {
-    const text = String(phrase || '').trim();
+    let text = String(phrase || '').trim();
     if (!text || !window.speechSynthesis) return;
+    const carrier = this.getCanonicalWeakFormCarrierPhrase(text.toLowerCase());
+    if (carrier) {
+      text = carrier;
+    }
     try {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
@@ -3377,17 +3485,24 @@ class ReadAloudMode {
       this.speechCoachModelAudio.removeAttribute('src');
       if (typeof this.speechCoachModelAudio.load === 'function') this.speechCoachModelAudio.load();
     }
+    const resetButton = (button) => {
+      if (!button) return;
+      button.classList.remove('is-playing');
+      const isListen = button.dataset.initialLabel === 'Listen'
+        || button.title?.includes('weak form')
+        || (button.dataset.initialAriaLabel && button.dataset.initialAriaLabel.includes('Listen'));
+      const idleLabel = button.dataset.initialLabel || (isListen ? 'Listen' : 'Model');
+      const idleAria = button.dataset.initialAriaLabel || (isListen ? 'Play model weak form' : 'Play model pronunciation');
+      button.setAttribute('aria-label', idleAria);
+      const label = button.querySelector('span:not([aria-hidden])') || button.querySelector('span');
+      if (label) label.textContent = idleLabel;
+    };
     if (this.speechCoachModelButton) {
-      this.speechCoachModelButton.classList.remove('is-playing');
-      this.speechCoachModelButton.setAttribute('aria-label', 'Play model pronunciation');
-      this.speechCoachModelButton.querySelector('span')?.replaceChildren(document.createTextNode('Model'));
+      resetButton(this.speechCoachModelButton);
     }
     this.speechCoachModelButton = null;
     document.querySelectorAll('.sc-model-play-btn.is-playing').forEach((button) => {
-      button.classList.remove('is-playing');
-      button.setAttribute('aria-label', 'Play model pronunciation');
-      const label = button.querySelector('span');
-      if (label) label.textContent = 'Model';
+      resetButton(button);
     });
   }
 
@@ -3409,6 +3524,9 @@ class ReadAloudMode {
   }
 
   cancelRecordedSegmentPlayback({ pause = false, resetTime = false } = {}) {
+    if ((this.pendingSession || this.lastAssessmentSession)?.v3Playback) {
+      window.SegmentPlaybackCoordinator?.defaultCoordinator?.stopAll?.();
+    }
     const previous = this.recordedSegmentPlayback || {};
     const revision = Number(previous.revision || 0) + 1;
     previous.metadataCleanup?.('stale');
@@ -3464,9 +3582,52 @@ class ReadAloudMode {
     });
   }
 
+  getRawPlaybackTimeline() {
+    const session = this.pendingSession || this.lastAssessmentSession;
+    const timeline = session?.playbackTimeline;
+    if (!session?.rawBlob || timeline?.rawBlob !== session.rawBlob || timeline?.offsetKnown !== true
+      || !Number.isFinite(timeline.removedLeadingMs) || timeline.removedLeadingMs < 0) return null;
+    return { session, offsetMs: timeline.removedLeadingMs };
+  }
+
+  getV3RecordingSpan(session, startMs, endMs) {
+    const words = session?.v3Result?.words || [];
+    const candidates = [...words, ...words.flatMap(word => word.syllables || []),
+      ...(session?.v3Result?.connectedSpeech?.events || [])];
+    const spans = candidates.filter(item => item.startMs != null && item.endMs != null && Number(item.startMs) === Number(startMs)
+      && Number(item.endMs) === Number(endMs)).map(item => item.span || item.clip || item.clipTiming?.clipSpan)
+      .filter(span => Number.isSafeInteger(span?.startSample) && Number.isSafeInteger(span?.endSample));
+    if (!spans.length || spans.some(span => span.startSample !== spans[0].startSample
+      || span.endSample !== spans[0].endSample)) return null;
+    return spans[0];
+  }
+
   async playRecordedWordSegment(startMs, endMs, button = null) {
-    const start = Number(startMs);
-    const end = Number(endMs);
+    const session = this.pendingSession || this.lastAssessmentSession;
+    if (session?.v3Result) {
+      const span = this.getV3RecordingSpan(session, startMs, endMs);
+      if (!span || !session.v3Playback) {
+        this.setAssessmentStatusMessage('This segment has no verified recording position. The full original recording is still available.');
+        return { started: false, source: null, reason: 'timestamp_mapping_unavailable' };
+      }
+      this.stopSpeechCoachYoursAudio({ pause: true, resetTime: true });
+      this.stopSpeechCoachModelAudio();
+      this.stopReferenceAudioPlayback();
+      let started = false;
+      try { started = await window.AiScoringGate.playV3Span({ ...session.v3Playback, span }); }
+      catch (_) { /* A failed identity check must never fall back to millisecond seeking. */ }
+      if (!started) this.setAssessmentStatusMessage('This segment could not be verified. The full original recording is still available.');
+      return { started, source: started ? 'canonical-sample-span' : null };
+    }
+    const scoreStart = Number(startMs);
+    const scoreEnd = Number(endMs);
+    const timeline = this.getRawPlaybackTimeline();
+    if (!timeline) {
+      this.setAssessmentStatusMessage('Word and syllable replay is unavailable because this recording has no verified timing offset. The full recording is still available.');
+      return { started: false, source: null, reason: 'timestamp_mapping_unavailable' };
+    }
+    const start = scoreStart + timeline.offsetMs;
+    const end = scoreEnd + timeline.offsetMs;
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
       return { started: false, source: null, reason: 'invalid_range' };
     }
@@ -3511,7 +3672,14 @@ class ReadAloudMode {
     }
 
     const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-    if (this.assessmentAudioBuffer && typeof AudioContextCtor === 'function') {
+    const rawPlaybackBuffer = this.rawPlaybackAudioBuffer;
+    const rawDurationMs = Number(rawPlaybackBuffer?.duration) * 1000;
+    if (Number.isFinite(rawDurationMs) && rawDurationMs > 0 && end > rawDurationMs + 20) {
+      this.stopRecordedWordPlayback();
+      this.setAssessmentStatusMessage('This word segment falls outside the original recording, so replay is unavailable.');
+      return { started: false, source: null, reason: 'invalid_range' };
+    }
+    if (rawPlaybackBuffer && typeof AudioContextCtor === 'function') {
       if (!this.wordPlaybackContext || this.wordPlaybackContext.state === 'closed') {
         this.wordPlaybackContext = new AudioContextCtor();
       }
@@ -3520,7 +3688,7 @@ class ReadAloudMode {
       const offsetSec = Math.max(0, start / 1000);
       const durationSec = Math.min(
         Math.max(0, end / 1000 - offsetSec),
-        Math.max(0, Number(this.assessmentAudioBuffer.duration) - offsetSec)
+        Math.max(0, Number(rawPlaybackBuffer.duration) - offsetSec)
       );
       if (!(durationSec > 0)) {
         this.stopRecordedWordPlayback();
@@ -3540,7 +3708,7 @@ class ReadAloudMode {
       }
       try {
         const source = context.createBufferSource();
-        source.buffer = this.assessmentAudioBuffer;
+        source.buffer = rawPlaybackBuffer;
         source.connect(context.destination);
         source.onended = () => {
           if (this.recordedSegmentPlayback.revision === revision
@@ -3641,7 +3809,7 @@ class ReadAloudMode {
           failedButton.setAttribute('aria-disabled', 'true');
           failedButton.classList.add('sc-audio-btn--unavailable');
           failedButton.setAttribute('aria-label', 'Model audio unavailable');
-          const label = failedButton.querySelector('span');
+          const label = failedButton.querySelector('span:not([aria-hidden])') || failedButton.querySelector('span');
           if (label) label.textContent = 'Model unavailable';
         }
       });
@@ -3661,13 +3829,19 @@ class ReadAloudMode {
     this.speechCoachModelButton = button;
     this.speechCoachModelAudio.src = src;
     this.speechCoachModelAudio.load();
-    const label = button.querySelector('span');
+    const label = button.querySelector('span:not([aria-hidden])') || button.querySelector('span');
+    if (!button.dataset.initialLabel && label) {
+      button.dataset.initialLabel = label.textContent.trim();
+    }
+    if (!button.dataset.initialAriaLabel) {
+      button.dataset.initialAriaLabel = button.getAttribute('aria-label') || '';
+    }
     if (label) label.textContent = 'Loading model...';
     button.setAttribute('aria-label', 'Loading model audio');
     button.classList.add('is-playing');
     Promise.resolve(this.speechCoachModelAudio.play()).then(() => {
       if (this.speechCoachModelButton === button) {
-        if (label) label.textContent = 'Stop model';
+        if (label) label.textContent = button.dataset.initialLabel === 'Listen' ? 'Stop' : 'Stop model';
         button.setAttribute('aria-label', 'Stop model audio');
       }
     }).catch(() => {
@@ -3714,12 +3888,30 @@ class ReadAloudMode {
 
   applyRecordingCaptureFailure(recordingSession, message) {
     if (!this.shouldApplyAssessment(recordingSession)) return;
-    this.renderAssessmentFailure(message, 'We could not prepare this recording for scoring.');
+    this.lastAssessmentPayload = null;
+    this.lastAssessmentSession = null;
+    this.assessmentOutcome = { kind: 'capture_error', message };
+    if (this.pteView) delete this.pteView.payload;
+    this.setAssessmentStatusMessage(message);
+    const accuracyElement = document.getElementById('ra-accuracy-value');
+    const feedbackElement = document.getElementById('ra-transcript-feedback');
+    if (accuracyElement) accuracyElement.textContent = '--';
+    if (feedbackElement) {
+      // The v3 shell says this once, in its error panel (renderPteFeedback); a second copy
+      // here showed the same failure twice in two wordings.
+      if (this.pteView) feedbackElement.replaceChildren();
+      else feedbackElement.innerHTML = `<p style="line-height: 1.6; font-size: 1rem; padding: 10px; border: 1px solid #f3d1d1; border-radius: 8px; background: #fff7f7; color: #b42318;">We could not prepare this recording for scoring.</p>`;
+    }
+    this.clearConnectedSpeechResults();
+    this.showAssessmentDisplay();
+    // Nothing was recorded, so nothing was saved; the default feedback copy says otherwise.
+    if (this.pteView) window.SpeakingPracticeController?.setNotice?.('read-aloud', "This attempt wasn't saved.");
   }
 
   renderAssessmentFailure(message, detail = 'We could not score this attempt.') {
     this.lastAssessmentPayload = null;
     this.lastAssessmentSession = null;
+    this.assessmentOutcome = { kind: 'error', message, detail };
     if (this.pteView) delete this.pteView.payload;
     this.setAssessmentStatusMessage(message);
     const accuracyElement = document.getElementById('ra-accuracy-value');
@@ -3833,6 +4025,7 @@ class ReadAloudMode {
     if (announcement) announcement.classList.remove('pte-sr-only');
     const statusMsg = document.getElementById('ra-status-message');
     if (statusMsg) statusMsg.classList.remove('pte-sr-only');
+    this.syncPteGuideTokens(view.panel, true);
     delete view.panel.dataset.ptePhase; delete view.panel.dataset.pteCoach;
     this.pteView = null;
     this.workspaceView?.ensureLayoutHosts?.();
@@ -3868,23 +4061,46 @@ class ReadAloudMode {
     window.dispatchEvent(new Event('resize'));
   }
 
+  // Owner decision (23 Sep): with the Coach closed the passage is clean, as in the mockup. The
+  // shell CSS hides the marks; here their words also leave the tab order, and an open word
+  // popover closes. Opening the Coach restores both.
+  syncPteGuideTokens(panel, coachOpen) {
+    if (!coachOpen && this.activeSoundChangeTooltipId) this.hideSoundChangeTooltip();
+    panel.querySelectorAll('#ra-prompt-stage [data-guide-target]').forEach((token) => {
+      if (coachOpen) {
+        if (token.dataset.pteTabindex === undefined) return;
+        if (token.dataset.pteTabindex) token.setAttribute('tabindex', token.dataset.pteTabindex);
+        else token.removeAttribute('tabindex');
+        delete token.dataset.pteTabindex;
+      } else if (token.dataset.pteTabindex === undefined) {
+        token.dataset.pteTabindex = token.getAttribute('tabindex') ?? '';
+        token.setAttribute('tabindex', '-1');
+      }
+    });
+  }
+
   syncPteShell() {
     const view = this.pteView; if (!view) return;
     const phase = this.getPtePhase();
     const feedback = phase === 'feedback';
-    if (phase !== view.phase) {
-      this.hideSoundChangeTooltip();
-      if (phase === 'prep') this.pteRecorder.showCountdown(this.prepSeconds);
-      else if (phase === 'recording') this.pteRecorder.showRecording(this.recordSeconds);
+    // While the browser asks for the microphone the recorder keeps its countdown face (the
+    // waiting face comes from waitForMic in startRecording); it only reads "Recording" once
+    // audio is flowing. It used to show "Recording 00:00" over the permission prompt.
+    const recorderKey = phase === 'recording' && this.state === 'REQUESTING_MIC' ? 'requesting' : phase;
+    if (phase !== view.phase || recorderKey !== view.recorderKey) {
+      if (phase !== view.phase) this.hideSoundChangeTooltip();
+      if (recorderKey === 'prep') this.pteRecorder.showCountdown(this.prepSeconds);
+      else if (recorderKey === 'recording') this.pteRecorder.showRecording(this.recordSeconds);
       else if (phase === 'complete' || feedback) this.pteRecorder.showComplete();
-      if (feedback) this.pteFeedbackTab = 'results';
-      view.phase = phase;
+      if (feedback && phase !== view.phase) this.pteFeedbackTab = 'results';
+      view.phase = phase; view.recorderKey = recorderKey;
     }
     if (this.state === 'RECORDING' && this.audioStream && view.stream !== this.audioStream) {
       this.pteRecorder.attachStream(this.audioStream); view.stream = this.audioStream;
     }
     view.panel.dataset.ptePhase = phase;
     view.panel.dataset.pteCoach = this.pteCoachOpen ? 'open' : 'closed';
+    this.syncPteGuideTokens(view.panel, !!this.pteCoachOpen);
     view.split.classList.toggle('pte-fb', feedback);
     view.instruction.textContent = `Look at the text below. In ${this.prepSeconds} seconds, you must read this text aloud as naturally and clearly as possible. You have ${this.recordSeconds} seconds to read aloud.`;
     const status = document.getElementById('ra-status-message');
@@ -3924,37 +4140,58 @@ class ReadAloudMode {
     if (!view || view.payload === payload) return;
     view.payload = payload; view.stats.replaceChildren(); view.fixes.replaceChildren();
 
-    const isError = this.assessmentOutcome?.kind === 'error' || (!payload && this.assessmentStatusMessage);
+    const outcomeKind = this.assessmentOutcome?.kind;
+    const isAssessmentError = outcomeKind === 'error';
+    // Capture failed: no recording exists, so there is nothing to keep, re-score or play back.
+    // One panel says so, instead of empty score tiles, a 00:00 player, "Coach tips · 0" and the
+    // same message twice.
+    const isCaptureError = outcomeKind === 'capture_error';
     const hasScores = payload && ['accuracyScore', 'fluencyScore', 'completenessScore', 'pronScore'].some(k => Number.isFinite(payload[k]));
 
-    if (isError && !hasScores) {
+    if ((isAssessmentError || isCaptureError) && !hasScores) {
       view.split.querySelector('.pte-fb__error-state')?.remove();
       const errorBlock = document.createElement('div');
       errorBlock.className = 'pte-fb__error-state';
-      const cause = this.assessmentOutcome?.message || this.assessmentStatusMessage || "We couldn't score this attempt.";
+      errorBlock.setAttribute('role', 'alert');
+      const cause = this.assessmentOutcome?.message || this.assessmentStatusMessage
+        || (isCaptureError ? 'We couldn’t capture that recording. Please try again.' : "We couldn't score this attempt.");
       errorBlock.innerHTML = `
-        <div class="pte-fb__error-icon">!</div>
-        <h3 class="pte-fb__error-title">We couldn't score this attempt</h3>
-        <p class="pte-fb__error-desc">${cause}</p>
+        <div class="pte-fb__error-icon" aria-hidden="true">!</div>
+        <h3 class="pte-fb__error-title"></h3>
+        <p class="pte-fb__error-desc"></p>
         <div class="pte-fb__error-actions">
-          <button type="button" class="pte-btn pte-btn--primary pte-fb__error-retry">Try again</button>
-          <button type="button" class="pte-btn pte-btn--ghost pte-fb__error-keep">Keep the recording</button>
+          <button type="button" class="pte-btn pte-btn--primary pte-fb__error-retry"></button>
+          ${isCaptureError ? '' : '<button type="button" class="pte-btn pte-btn--ghost pte-fb__error-keep">Keep the recording</button>'}
         </div>
       `;
+      // Text, not markup: the cause can carry a server message.
+      errorBlock.querySelector('.pte-fb__error-title').textContent = isCaptureError ? 'We couldn’t capture your recording' : "We couldn't score this attempt";
+      errorBlock.querySelector('.pte-fb__error-desc').textContent = cause;
+      errorBlock.querySelector('.pte-fb__error-retry').textContent = isCaptureError ? 'Record again' : 'Try again';
       errorBlock.querySelector('.pte-fb__error-retry').addEventListener('click', () => {
         const retryBtn = document.getElementById('ra-retry-btn');
         if (retryBtn) retryBtn.click();
         else this.restartPrepPhase?.();
       });
-      errorBlock.querySelector('.pte-fb__error-keep').addEventListener('click', () => {
+      errorBlock.querySelector('.pte-fb__error-keep')?.addEventListener('click', () => {
         errorBlock.style.display = 'none';
         view.stage.style.display = '';
         view.right.style.display = '';
       });
-      const emptyRow = document.createElement('div');
-      emptyRow.className = 'pte-stats__empty';
-      emptyRow.textContent = 'Not scored';
-      view.stats.append(emptyRow);
+      if (isCaptureError) {
+        // Behind the panel the score tiles read "—", so no earlier score can survive anywhere.
+        for (const label of ['Accuracy', 'Fluency', 'Completeness', 'Overall']) {
+          const cell = document.createElement('div');
+          const small = document.createElement('small'); small.textContent = label;
+          const strong = document.createElement('strong'); strong.textContent = '—';
+          cell.append(small, strong); view.stats.append(cell);
+        }
+      } else {
+        const emptyRow = document.createElement('div');
+        emptyRow.className = 'pte-stats__empty';
+        emptyRow.textContent = 'Not scored';
+        view.stats.append(emptyRow);
+      }
       const causeP = document.createElement('p');
       causeP.textContent = cause;
       view.fixes.append(causeP);
@@ -3969,34 +4206,27 @@ class ReadAloudMode {
     }
 
     const node = (tag, text) => { const el = document.createElement(tag); el.textContent = text; return el; };
-    if (!hasScores) {
-      const emptyRow = document.createElement('div');
-      emptyRow.className = 'pte-stats__empty';
-      emptyRow.textContent = 'Not scored';
-      view.stats.append(emptyRow);
-    } else {
-      for (const [label, key] of [['Accuracy', 'accuracyScore'], ['Fluency', 'fluencyScore'], ['Completeness', 'completenessScore'], ['Overall', 'pronScore']]) {
-        const cell = node('div', '');
-        cell.append(node('small', label));
-        const val = payload?.[key];
-        if (Number.isFinite(val)) {
-          const strong = document.createElement('strong');
-          strong.textContent = String(Math.round(val));
-          const unit = document.createElement('span');
-          unit.className = 'pte-stats__unit';
-          unit.textContent = '%';
-          strong.append(unit);
-          const bar = document.createElement('span');
-          bar.className = 'pte-stats__bar';
-          const fill = document.createElement('i');
-          fill.style.width = `${Math.min(100, Math.max(0, val))}%`;
-          bar.append(fill);
-          cell.append(strong, bar);
-        } else {
-          cell.append(node('strong', '—'));
-        }
-        view.stats.append(cell);
+    for (const [label, key] of [['Accuracy', 'accuracyScore'], ['Fluency', 'fluencyScore'], ['Completeness', 'completenessScore'], ['Overall', 'pronScore']]) {
+      const cell = node('div', '');
+      cell.append(node('small', label));
+      const val = payload?.[key];
+      if (Number.isFinite(val)) {
+        const strong = document.createElement('strong');
+        strong.textContent = String(Math.round(val));
+        const unit = document.createElement('span');
+        unit.className = 'pte-stats__unit';
+        unit.textContent = '%';
+        strong.append(unit);
+        const bar = document.createElement('span');
+        bar.className = 'pte-stats__bar';
+        const fill = document.createElement('i');
+        fill.style.width = `${Math.min(100, Math.max(0, val))}%`;
+        bar.append(fill);
+        cell.append(strong, bar);
+      } else {
+        cell.append(node('strong', '—'));
       }
+      view.stats.append(cell);
     }
     if (!payload) { view.fixes.append(node('p', this.assessmentStatusMessage || 'Getting feedback…')); return; }
     const words = (payload.words || []).filter(word => Number.isFinite(word.accuracyScore) && word.accuracyScore < 60);
@@ -4011,7 +4241,8 @@ class ReadAloudMode {
       const actions = node('div', ''); actions.className = 'ra-pte-fix-actions';
       const you = node('button', '▶ You'); you.className = 'pte-btn'; you.type = 'button';
       const start = item.startMs ?? Number(item.startSec) * 1000, end = item.endMs ?? Number(item.endSec) * 1000;
-      you.disabled = !Number.isFinite(start) || !Number.isFinite(end) || end <= start;
+      you.disabled = !Number.isFinite(start) || !Number.isFinite(end) || end <= start
+        || (payload.schemaVersion === 'bel.speech.v3' && !this.getV3RecordingSpan(this.lastAssessmentSession, start, end));
       you.addEventListener('click', () => this.playRecordedWordSegment(start, end, you)); actions.append(you);
       const model = node('button', '▶ Model'); model.className = 'pte-btn'; model.type = 'button';
       model.addEventListener('click', () => {
@@ -4347,7 +4578,10 @@ class ReadAloudMode {
     this.updateUIForState();
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const micRequest = navigator.mediaDevices.getUserMedia({ audio: true });
+      // "Waiting for your microphone…" appears only if the browser is still asking after a moment.
+      this.pteRecorder?.waitForMic?.(micRequest);
+      const stream = await micRequest;
       const shouldContinue = this.isSameRecordingSession(recordingSession)
         && this.isActive
         && recordingSession.disposition === 'submit'
@@ -4384,26 +4618,17 @@ class ReadAloudMode {
         }
         const rawBlob = new Blob(recordedChunks, { type: activeRecorder.mimeType || 'audio/webm' });
         recordingSession.rawBlob = rawBlob;
-        recordingSession.durationMs = recordingSession.startedAt ? Math.max(200, Date.now() - recordingSession.startedAt) : 1000;
-        let playbackBlob = rawBlob;
-        if (this.isPteShellEnabled()) {
-          try {
-            let preparedAudioBuffer = null;
-            playbackBlob = await this.prepareWavBlob(rawBlob, (audioBuffer) => {
-              preparedAudioBuffer = audioBuffer;
-            });
-            if (recordingSession.id !== this.recordingRequestId || !this.shouldApplyAssessment(recordingSession)) { resolveCapture(); return; }
-            recordingSession.wavBlob = playbackBlob;
-            recordingSession.assessmentAudioBuffer = preparedAudioBuffer;
-            recordingSession.durationMs = Math.round((preparedAudioBuffer?.duration || 0) * 1000) || recordingSession.durationMs;
-            this.assessmentAudioBuffer = preparedAudioBuffer;
-          } catch (error) {
-            if (recordingSession.id !== this.recordingRequestId) { resolveCapture(); return; }
-            this.applyRecordingCaptureFailure(recordingSession, 'We couldn’t prepare that recording. Please try again.');
-            resolveCapture(); return;
+        recordingSession.rawAudioBufferPromise = this.decodeRawPlaybackBlob(rawBlob).then((rawAudioBuffer) => {
+          if (this.shouldApplyAssessment(recordingSession)) {
+            recordingSession.rawAudioBuffer = rawAudioBuffer;
+            this.rawPlaybackAudioBuffer = rawAudioBuffer;
           }
-        }
-        this.setRecordedAudio(playbackBlob, { preserveAssessmentBuffer: this.isPteShellEnabled() });
+          return rawAudioBuffer;
+        }).catch(() => null);
+        recordingSession.durationMs = recordingSession.startedAt ? Math.max(200, Date.now() - recordingSession.startedAt) : 1000;
+        recordingSession.rawDurationMs = recordingSession.durationMs;
+        recordingSession.playbackTimeline = { rawBlob, offsetKnown: false, removedLeadingMs: null };
+        this.setRecordedAudio(rawBlob, { preserveAssessmentBuffer: this.isPteShellEnabled() });
 
         this.pendingBlob = rawBlob;
         this.pendingSession = recordingSession;
@@ -4596,7 +4821,7 @@ class ReadAloudMode {
   savePteCapture(session) {
     if (session.archivePromise) return session.archivePromise;
     session.archivePromise = (async () => {
-      const blob = session.wavBlob;
+      const blob = session.rawBlob;
       if (!blob) throw new Error('Finish recording before moving on.');
       const input = {
         practiceMode: 'read-aloud',
@@ -4604,7 +4829,7 @@ class ReadAloudMode {
         promptSnapshot: { promptId: session.questionId, text: session.referenceText, source: 'read-aloud' },
         responseSnapshot: { referenceText: session.referenceText },
         scoringSnapshot: { source: 'none', success: false, status: 'unassessed' },
-        media: [{ slot: 'student', label: 'Student read aloud', blob, contentType: blob.type, durationMs: session.durationMs }]
+        media: [{ slot: 'student', label: 'Student read aloud', blob, contentType: blob.type || 'audio/webm', durationMs: session.rawDurationMs || session.durationMs }]
       };
       if (!window.PTEAttemptArchive?.saveAttempt) throw new Error('Attempt saving is unavailable. Please try again.');
       const saved = await window.PTEAttemptArchive.saveAttempt(input);
@@ -4615,7 +4840,7 @@ class ReadAloudMode {
         session.localAttemptId ||= `ra-${Date.now()}-${session.id}`;
         session.historyAudioUrl ||= URL.createObjectURL(blob);
         window.PteAttemptHistory.recordLocal({ ...input, media: undefined, attemptId: session.localAttemptId, promptId: session.questionId,
-          audio: { studentUrl: session.historyAudioUrl, durationMs: session.durationMs } });
+          audio: { studentUrl: session.historyAudioUrl, durationMs: session.rawDurationMs || session.durationMs } });
       } else session.archiveAttemptId = saved?.attemptId || input.attemptId;
       window.SpeakingPracticeController?.setSaveError?.('read-aloud', '');
       return saved;
@@ -4644,7 +4869,7 @@ class ReadAloudMode {
         } else {
           if (!window.PteAttemptHistory?.recordLocal) throw new Error('Attempt history is unavailable. Please try again.');
           window.PteAttemptHistory.recordLocal({ ...input, media: undefined, attemptId: session.localAttemptId,
-            promptId: session.questionId, audio: { studentUrl: session.historyAudioUrl, durationMs: session.durationMs } });
+            promptId: session.questionId, audio: { studentUrl: session.historyAudioUrl, durationMs: session.rawDurationMs || session.durationMs } });
         }
         if (!isCurrent()) return false;
         session.savedAssessedArchiveInput = input;
@@ -4677,17 +4902,63 @@ class ReadAloudMode {
     recordingSession.assessmentAbortController = assessmentAbortController;
     const statusMsg = document.getElementById('ra-status-message');
     try {
-      if (statusMsg) statusMsg.textContent = 'Formatting audio...';
+      if (statusMsg) statusMsg.textContent = 'Preparing the original recording for scoring...';
       let preparedAudioBuffer = null;
-      const wavBlob = await this.prepareWavBlob(rawBlob, (audioBuffer) => {
+      let preparationResult = null;
+      const wavBlob = await this.prepareWavBlob(rawBlob, (audioBuffer, result) => {
         preparedAudioBuffer = audioBuffer;
+        preparationResult = result;
       });
       if (!this.shouldApplyAssessment(recordingSession)) return false;
       recordingSession.wavBlob = wavBlob;
       recordingSession.assessmentAudioBuffer = preparedAudioBuffer;
+      const removedLeadingMs = preparationResult?.stats?.removedLeadingMs;
+      recordingSession.playbackTimeline = {
+        rawBlob: recordingSession.rawBlob,
+        offsetKnown: Number.isFinite(removedLeadingMs) && removedLeadingMs >= 0,
+        removedLeadingMs: Number.isFinite(removedLeadingMs) && removedLeadingMs >= 0 ? removedLeadingMs : null
+      };
+      recordingSession.processedDurationMs = preparationResult?.stats?.outputDurationMs ?? null;
       this.assessmentAudioBuffer = preparedAudioBuffer;
-      if (preparedAudioBuffer) {
-        this.setRecordedAudio(wavBlob, { preserveAssessmentBuffer: true });
+      if (await window.AiScoringGate?.speechV3Enabled?.('read_aloud')) {
+        if (statusMsg) statusMsg.textContent = 'Calculating credit quote...';
+        const flow = await window.AiScoringGate.assessV3Recording({
+          mode: 'read_aloud', originalBlob: rawBlob, enhancedBlob: wavBlob,
+          attemptId: recordingSession.archiveCandidateId ||= `att_ra_${Date.now()}_${recordingSession.id}`,
+          questionId: recordingSession.questionId,
+          referenceText: recordingSession.referenceText,
+          promptSnapshot: { promptId: recordingSession.questionId,
+            text: recordingSession.referenceText, source: 'read-aloud' },
+          onConfirmed: ({ assessmentId, attemptId }) => {
+            recordingSession.assessmentId = assessmentId;
+            recordingSession.archiveAttemptId = attemptId;
+            recordingSession.archivePromise = Promise.resolve({ attemptId });
+          },
+          signal: assessmentAbortController?.signal
+        });
+        if (!this.shouldApplyAssessment(recordingSession)) return false;
+        if (!flow.allowed) {
+          if (statusMsg) statusMsg.textContent = flow.cancelled ? 'Assessment cancelled. No credits charged.' :
+            (flow.error || 'Scoring unavailable.');
+          return false;
+        }
+        const result = flow.result;
+        const scores = result.overallScores || {};
+        const payload = {
+          schemaVersion: 'bel.speech.v3',
+          accuracyScore: scores.accuracyScore, fluencyScore: scores.fluencyScore,
+          completenessScore: scores.completenessScore, pronScore: scores.pronunciationScore,
+          words: result.wordResults || result.words || [], recognizedText: result.recognizedText || '',
+          connectedSpeech: result.connectedSpeech, audioQuality: result.audioQuality,
+          audio: result.audio, resultRef: result.resultRef || null
+        };
+        const canonicalBuffer = await window.AiScoringGate.loadCanonicalBuffer(flow.canonicalBlob, flow.manifest);
+        if (!this.shouldApplyAssessment(recordingSession)) return false;
+        recordingSession.v3Playback = { canonicalBlob: flow.canonicalBlob, manifest: flow.manifest };
+        recordingSession.v3Result = payload;
+        recordingSession.assessmentAudioBuffer = canonicalBuffer;
+        this.assessmentAudioBuffer = recordingSession.assessmentAudioBuffer;
+        return this.processAzureResults(payload, recordingSession);
       }
 
       const formData = new FormData();
@@ -4778,6 +5049,8 @@ class ReadAloudMode {
         failureStatus = 'Your audio is too loud or clipped. Please adjust your microphone volume.';
       } else if (err?.code === 'AZURE_ASSESSMENT_FAILED' && err?.reason === 'scores_unavailable') {
         failureStatus = 'We captured the transcript, but pronunciation scoring was unavailable. Keep it under 40 seconds and try again.';
+      } else if (err?.code === 'AUDIO_FORMAT_CONVERSION_FAILED') {
+        failureStatus = 'Your original recording is available, but audio format conversion failed. Scoring is unavailable.';
       } else if (err?.code === 'INVALID_AUDIO') {
         failureStatus = 'We couldn’t read that recording. Please try again.';
       } else {
@@ -4815,215 +5088,48 @@ class ReadAloudMode {
   }
 
   async prepareWavBlob(blob, captureAudioBuffer = null) {
-    if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
-      const result = await window.AudioDspPipeline.enhance(blob, {
-        targetSampleRate: 16000,
-        highpassFreq: 80,
-        targetPeakDb: -3,
-        trim: true,
-        paddingMs: 150,
-        createUrl: false
-      });
-
-      if (!result.audioBuffer) {
-        throw new Error('Audio enhancement failed to produce a valid buffer');
-      }
-
-      const quality = this.validateAudioBufferQuality(result.audioBuffer);
-      if (!quality.passed) {
-        const error = new Error('Audio quality validation failed');
-        error.code = 'INVALID_AUDIO';
-        error.reason = quality.reason;
-        throw error;
-      }
-
-      if (typeof captureAudioBuffer === 'function') captureAudioBuffer(result.audioBuffer);
-      return result.wavBlob;
+    const pipeline = window.AudioDspPipeline;
+    if (!pipeline || typeof pipeline.prepareForAssessment !== 'function') {
+      const error = new Error('The original recording is available, but audio format conversion is unavailable. Scoring cannot run.');
+      error.code = 'AUDIO_FORMAT_CONVERSION_FAILED';
+      throw error;
     }
-
-    const arrayBuffer = await blob.arrayBuffer();
-    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextCtor) throw new Error('AudioContext is not supported.');
-    const audioContext = new AudioContextCtor();
-    let rendered;
-
-    try {
-      const decoded = await audioContext.decodeAudioData(arrayBuffer.slice(0));
-
-      const outputLength = Math.ceil(decoded.duration * 16000);
-      const offline = new OfflineAudioContext(1, outputLength, 16000);
-
-      // DSP chain: source → 80 Hz high-pass filter → destination
-      const source = offline.createBufferSource();
-      source.buffer = decoded;
-
-      const highpass = offline.createBiquadFilter();
-      highpass.type = 'highpass';
-      highpass.frequency.value = 80;
-      highpass.Q.value = 0.707; // Butterworth (maximally flat passband)
-
-      source.connect(highpass);
-      highpass.connect(offline.destination);
-      source.start(0);
-
-      // iOS Safari can suspend OfflineAudioContext when the screen locks.
-      // Apply a 3-second timeout fallback: skip DSP and use a basic resample.
-      try {
-        rendered = await Promise.race([
-          offline.startRendering(),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('OfflineAudioContext timeout')), 3000)
-          )
-        ]);
-      } catch (timeoutErr) {
-        // Fallback: basic resample without DSP enhancements
-        console.warn('[ReadAloud] OfflineAudioContext timed out, falling back to basic resample:', timeoutErr.message);
-        const fallbackOffline = new OfflineAudioContext(1, outputLength, 16000);
-        const fallbackSource = fallbackOffline.createBufferSource();
-        fallbackSource.buffer = decoded;
-        fallbackSource.connect(fallbackOffline.destination);
-        fallbackSource.start(0);
-        rendered = await Promise.race([
-          fallbackOffline.startRendering(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Fallback timeout')), 3000))
-        ]).catch(() => decoded);
-      }
-    } finally {
-      if (typeof audioContext.close === 'function') await audioContext.close().catch(() => { });
+    const result = await pipeline.prepareForAssessment(blob);
+    const outputBlob = result?.outputBlob;
+    const valid = typeof pipeline.isValidMono16kWav === 'function'
+      && await pipeline.isValidMono16kWav(result);
+    if (!valid || !outputBlob || outputBlob.type !== 'audio/wav') {
+      const error = new Error('The original recording is available, but format conversion did not produce scorer-compatible audio. Scoring cannot run.');
+      error.code = 'AUDIO_FORMAT_CONVERSION_FAILED';
+      throw error;
     }
-
-    // Peak normalization to -3 dBFS (target peak at ~70.8% of full scale)
-    const channelData = rendered.getChannelData(0);
-    let maxPeak = 0;
-    for (let i = 0; i < channelData.length; i++) {
-      const absVal = Math.abs(channelData[i]);
-      if (absVal > maxPeak) maxPeak = absVal;
-    }
-    if (maxPeak > 0) {
-      const targetPeak = Math.pow(10, -3 / 20); // ~0.7079
-      const gain = targetPeak / maxPeak;
-      if (gain < 0.99 || gain > 1.01) {
-        for (let i = 0; i < channelData.length; i++) {
-          channelData[i] = Math.max(-1, Math.min(1, channelData[i] * gain));
-        }
-      }
-    }
-
-    // Leading/trailing silence trimming (preserve inter-word pauses)
-    const trimmed = this.trimSilence(rendered, 150);
-
-    const quality = this.validateAudioBufferQuality(trimmed);
+    const quality = this.validateAudioBufferQuality(result.audioBuffer);
     if (!quality.passed) {
       const error = new Error('Audio quality validation failed');
       error.code = 'INVALID_AUDIO';
       error.reason = quality.reason;
       throw error;
     }
-
-    if (typeof captureAudioBuffer === 'function') captureAudioBuffer(trimmed);
-    return this.audioBufferToWav(trimmed);
+    if (typeof captureAudioBuffer === 'function') captureAudioBuffer(result.audioBuffer, result);
+    return outputBlob;
   }
 
-  /**
-   * Detects speech boundaries using frame-based RMS energy thresholding.
-   * Returns { firstSampleIndex, lastSampleIndex, speechDurationMs, frameRms, maxRms, threshold }
-   * or null if no speech is detected.
-   */
+  /** Returns shared detector output, or null when the shared detector is unavailable. */
   detectSpeechBoundaries(channelData, sampleRate) {
     if (window.AudioDspPipeline && typeof window.AudioDspPipeline.detectSpeechBoundaries === 'function') {
       return window.AudioDspPipeline.detectSpeechBoundaries(channelData, sampleRate);
     }
-    const totalSamples = channelData.length;
-    const frameSize = Math.max(1, Math.round(sampleRate * 0.01)); // 10ms frames
-    const frameDurationMs = (frameSize / sampleRate) * 1000;
-    const frameRms = [];
-
-    for (let offset = 0; offset < totalSamples; offset += frameSize) {
-      const end = Math.min(totalSamples, offset + frameSize);
-      let energy = 0;
-      for (let i = offset; i < end; i++) {
-        const val = channelData[i];
-        energy += val * val;
-      }
-      frameRms.push(Math.sqrt(energy / Math.max(1, end - offset)));
-    }
-
-    const maxRms = frameRms.reduce((highest, val) => Math.max(highest, val), 0);
-    const minimumFrameRms = 0.01;
-    if (maxRms < minimumFrameRms) return null;
-
-    const minimumFrameThreshold = 0.008;
-    const frameRmsFraction = 0.18;
-    const threshold = Math.max(minimumFrameThreshold, maxRms * frameRmsFraction);
-
-    let firstSpeechFrame = -1;
-    let lastSpeechFrame = -1;
-    let speechFrameCount = 0;
-
-    for (let i = 0; i < frameRms.length; i++) {
-      if (frameRms[i] >= threshold) {
-        speechFrameCount++;
-        if (firstSpeechFrame === -1) firstSpeechFrame = i;
-        lastSpeechFrame = i;
-      }
-    }
-
-    if (firstSpeechFrame === -1 || lastSpeechFrame === -1) return null;
-
-    const firstSampleIndex = firstSpeechFrame * frameSize;
-    const lastSampleIndex = Math.min(totalSamples - 1, (lastSpeechFrame + 1) * frameSize - 1);
-    const speechDurationMs = Math.round((lastSpeechFrame - firstSpeechFrame + 1) * frameDurationMs);
-
-    return { firstSampleIndex, lastSampleIndex, speechDurationMs, speechFrameCount, frameRms, maxRms, threshold };
+    return null;
   }
 
   /**
-   * Trims leading and trailing silence from an AudioBuffer, preserving inter-word pauses.
-   * Adds paddingMs of silence padding on both sides to avoid cutting breath/onset transients.
-   * Returns the original buffer unchanged if no speech boundaries are detected or if
-   * trimming would remove less than 10% of the total duration.
+   * Trims with the shared confidence policy. Without it, retains the full clip.
    */
-  trimSilence(audioBuffer, paddingMs = 150) {
+  trimSilence(audioBuffer, paddingMs = 200) {
     if (window.AudioDspPipeline && typeof window.AudioDspPipeline.trimSilence === 'function') {
-      return window.AudioDspPipeline.trimSilence(audioBuffer, { paddingMs });
+      return window.AudioDspPipeline.trimSilence(audioBuffer, { paddingMs, minTrimMs: 400 });
     }
-    const channelData = audioBuffer.getChannelData(0);
-    const sampleRate = audioBuffer.sampleRate;
-    const boundaries = this.detectSpeechBoundaries(channelData, sampleRate);
-
-    if (!boundaries) return audioBuffer;
-
-    const paddingSamples = Math.round((paddingMs / 1000) * sampleRate);
-    const trimStart = Math.max(0, boundaries.firstSampleIndex - paddingSamples);
-    const trimEnd = Math.min(channelData.length, boundaries.lastSampleIndex + 1 + paddingSamples);
-    const trimmedLength = trimEnd - trimStart;
-
-    // Skip trimming if it would remove less than 10% of total samples (not worth the overhead)
-    if (trimmedLength <= 0 || trimmedLength >= channelData.length * 0.9) return audioBuffer;
-
-    let trimmedBuffer = null;
-    if (typeof AudioBuffer === 'function') {
-      try {
-        trimmedBuffer = new AudioBuffer({ numberOfChannels: 1, length: trimmedLength, sampleRate });
-      } catch (_) {
-        trimmedBuffer = null;
-      }
-    }
-    if (!trimmedBuffer) {
-      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextCtor) return audioBuffer;
-      const tmpCtx = new AudioContextCtor();
-      try {
-        trimmedBuffer = tmpCtx.createBuffer(1, trimmedLength, sampleRate);
-      } finally {
-        if (typeof tmpCtx.close === 'function') tmpCtx.close().catch(() => {});
-      }
-    }
-    const trimmedData = trimmedBuffer.getChannelData(0);
-    for (let i = 0; i < trimmedLength; i++) {
-      trimmedData[i] = channelData[trimStart + i];
-    }
-    return trimmedBuffer;
+    return audioBuffer;
   }
 
   validateAudioBufferQuality(audioBuffer) {
@@ -5133,7 +5239,7 @@ class ReadAloudMode {
 
     this.showAssessmentDisplay();
     this.setAssessmentStatusMessage('Analysis complete.');
-    if (accuracyElement) accuracyElement.textContent = payload.accuracyScore.toString();
+    if (accuracyElement) accuracyElement.textContent = payload.accuracyScore == null ? '—' : String(payload.accuracyScore);
 
     if (feedbackElement) {
       this.renderRecognizedTranscript(
@@ -5198,9 +5304,9 @@ class ReadAloudMode {
       media: recordingSession.wavBlob ? [{
         slot: 'student',
         label: 'Student read aloud',
-        blob: recordingSession.wavBlob,
-        contentType: 'audio/wav',
-        clientReportedDurationMs: recordingSession.durationMs || 1000
+        blob: recordingSession.rawBlob,
+        contentType: recordingSession.rawBlob?.type || 'audio/webm',
+        clientReportedDurationMs: recordingSession.rawDurationMs || recordingSession.durationMs || 1000
       }] : []
     };
     if (this.isPteShellEnabled() && recordingSession.wavBlob) {
@@ -5540,8 +5646,9 @@ class ReadAloudMode {
 
       // Plain language leads; IPA is a quiet secondary line and is dropped
       // entirely in the simple tier (see [data-coach-tier="simple"] in style.css).
+      const leadLabel = this.getGuideLeadLabel(item.category);
       const sayItLike = item.sayItLike
-        ? `<span class="sc-card-say"><span class="sc-card-say-label">Say it like</span> <strong>${escapeHtml(item.sayItLike)}</strong></span>`
+        ? `<span class="sc-card-say"><span class="sc-card-say-label">${escapeHtml(leadLabel)}</span> <strong>${escapeHtml(item.sayItLike)}</strong></span>`
         : '';
       const spokenAs = item.spokenAs
         ? `<span class="sc-card-ipa"><strong>${item.strongAs ? 'Strong:' : 'Try:'}</strong> ${item.strongAs ? `${escapeHtml(item.strongAs)} · <strong>Weak:</strong> ${escapeHtml(item.spokenAs)}` : escapeHtml(item.spokenAs)}</span>`
@@ -5776,6 +5883,9 @@ class ReadAloudMode {
           && Number.isFinite(startMs)
           && Number.isFinite(endMs)
           && endMs > startMs
+          && ((this.pendingSession || this.lastAssessmentSession)?.v3Result
+            ? !!this.getV3RecordingSpan(this.pendingSession || this.lastAssessmentSession, startMs, endMs)
+            : !!this.getRawPlaybackTimeline())
           && this.hasPlayableRecordingSource();
         const token = document.createElement('button');
         token.type = 'button';
@@ -5912,16 +6022,7 @@ class ReadAloudMode {
       window.PronunciationTooltip.bindHoverTooltip(transcript, {
         selector: '.ra-word-token',
         playSyllable: (sStart, sEnd, chip) => {
-          this.stopRecordedWordPlayback?.();
-          const buffer = this.assessmentAudioBuffer || this.speechCoachRecordingBuffer;
-          const audioEl = document.getElementById('ra-user-recording-audio');
-          if (buffer) {
-            window.PronunciationTooltip.playAudioSegment(buffer, sStart, sEnd, chip);
-          } else if (audioEl) {
-            window.PronunciationTooltip.playAudioSegment(audioEl, sStart, sEnd, chip);
-          } else {
-            this.playRecordedWordSegment(sStart, sEnd, null);
-          }
+          this.playRecordedWordSegment(sStart, sEnd, chip);
         }
       });
     }
@@ -6927,40 +7028,46 @@ class ReadAloudMode {
       `;
     }
 
-    let modalOverlay = document.getElementById('sc-info-modal-overlay');
-    if (!modalOverlay) {
-      modalOverlay = document.createElement('div');
-      modalOverlay.id = 'sc-info-modal-overlay';
-      modalOverlay.style.cssText = 'position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(2px);';
-      document.body.appendChild(modalOverlay);
-    }
-
+    // The shell's dialog pattern: a labelled modal that takes focus, keeps Tab inside, closes on
+    // Escape, the backdrop or its buttons, and gives focus back. It was an unlabelled overlay
+    // with an unnamed "×", no keyboard handling, and a new backdrop listener on every open.
+    document.getElementById('sc-info-modal-overlay')?.remove();
+    const opener = document.activeElement;
+    const modalOverlay = document.createElement('div');
+    modalOverlay.id = 'sc-info-modal-overlay';
+    modalOverlay.className = 'pte-dialog-overlay';
     modalOverlay.innerHTML = `
-      <div style="background:#fff; border-radius:12px; max-width:480px; width:100%; padding:20px 24px; box-shadow:0 10px 25px rgba(0,0,0,0.2); position:relative; font-family:inherit;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; border-bottom:1px solid #f3f4f6; padding-bottom:10px;">
-          <h3 style="margin:0; font-size:1.15rem; color:#111827; font-weight:700;">${title}</h3>
-          <button type="button" id="sc-info-modal-close" style="border:none; background:transparent; font-size:1.4rem; color:#6b7280; cursor:pointer; line-height:1;">&times;</button>
+      <div class="pte-dialog sc-info-dialog" role="dialog" aria-modal="true" aria-labelledby="sc-info-modal-title">
+        <div class="sc-info-dialog__head">
+          <h3 id="sc-info-modal-title">${title}</h3>
+          <button type="button" id="sc-info-modal-close" class="sc-info-dialog__close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         </div>
-        <div style="font-size:0.92rem; color:#374151; line-height:1.55;">
-          ${bodyHtml}
-        </div>
-        <div style="margin-top:18px; text-align:right;">
-          <button type="button" id="sc-info-modal-ok" style="padding:8px 18px; background:#2563eb; color:#fff; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Got it</button>
+        <div class="sc-info-dialog__body">${bodyHtml}</div>
+        <div class="pte-dialog__actions">
+          <button type="button" id="sc-info-modal-ok" class="pte-btn pte-btn--primary">Got it</button>
         </div>
       </div>
     `;
-
-    modalOverlay.style.display = 'flex';
-
+    document.body.appendChild(modalOverlay);
+    const dialog = modalOverlay.querySelector('[role="dialog"]');
     const closeModal = () => {
-      modalOverlay.style.display = 'none';
+      modalOverlay.remove();
+      if (opener && opener.isConnected && typeof opener.focus === 'function') opener.focus();
     };
-
-    document.getElementById('sc-info-modal-close')?.addEventListener('click', closeModal);
-    document.getElementById('sc-info-modal-ok')?.addEventListener('click', closeModal);
+    modalOverlay.querySelector('#sc-info-modal-close').addEventListener('click', closeModal);
+    modalOverlay.querySelector('#sc-info-modal-ok').addEventListener('click', closeModal);
     modalOverlay.addEventListener('click', (e) => {
       if (e.target === modalOverlay) closeModal();
     });
+    modalOverlay.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); closeModal(); return; }
+      if (e.key !== 'Tab') return;
+      const focusable = [...dialog.querySelectorAll('button, [href], [tabindex]:not([tabindex="-1"])')];
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+    modalOverlay.querySelector('#sc-info-modal-ok').focus();
   }
 
   handleGuideTargetKeydown(event) {
@@ -7350,9 +7457,15 @@ class ReadAloudMode {
     const model = guideEvent ? this.getSpeechCoachAudioEntry(guideEvent) : null;
     const escapeHtml = ReadAloudMode.escapeHtml;
     if (model?.status === 'ready' && model.file) {
-      return `<button class="sc-model-play-btn sc-audio-btn sc-audio-btn--model" type="button" data-model-src="${escapeHtml(String(model.file))}" aria-label="Listen"><span aria-hidden="true">▶</span><span>Listen</span></button>`;
+      return `<button class="sc-model-play-btn sc-audio-btn sc-audio-btn--model" type="button" data-model-src="${escapeHtml(String(model.file))}" data-initial-label="Listen" data-initial-aria-label="Listen" aria-label="Listen"><span aria-hidden="true">▶</span><span>Listen</span></button>`;
     }
-    const phrase = String(item.label || '').trim();
+    if (item.category === 'reduced_words') {
+      const canonical = this.resolveCanonicalWeakFormAudio(item);
+      if (canonical?.file) {
+        return `<button class="sc-model-play-btn sc-audio-btn sc-audio-btn--model" type="button" data-model-src="${escapeHtml(canonical.file)}" data-initial-label="Listen" data-initial-aria-label="Listen" aria-label="Listen"><span aria-hidden="true">▶</span><span>Listen</span></button>`;
+      }
+    }
+    const phrase = (item.category === 'reduced_words' && this.getCanonicalWeakFormCarrierPhrase(item)) || String(item.label || '').trim();
     if (phrase && window.speechSynthesis) {
       return `<button class="sc-audio-btn sc-audio-btn--model sc-audio-btn--synth" type="button" data-speak-phrase="${escapeHtml(phrase)}" aria-label="Listen"><span aria-hidden="true">▶</span><span>Listen</span></button>`;
     }
@@ -7398,8 +7511,12 @@ class ReadAloudMode {
     if (badge) badge.textContent = item?.badge || 'Sound Change';
 
     const sayEl = tooltip.querySelector('.ra-sound-change-tooltip__say');
+    const sayLabelEl = tooltip.querySelector('.ra-sound-change-tooltip__say-label');
     const sayValueEl = tooltip.querySelector('.ra-sound-change-tooltip__say-value');
     const sayItLike = String(item?.sayItLike || copy.sayItLike || '').trim();
+    if (sayLabelEl) {
+      sayLabelEl.textContent = this.getGuideLeadLabel(item?.category || (subtype ? 'sound_changes' : ''));
+    }
     if (sayValueEl) sayValueEl.textContent = sayItLike;
     if (sayEl) sayEl.hidden = !sayItLike;
 
@@ -7430,6 +7547,9 @@ class ReadAloudMode {
       this.soundChangeTooltipLeaveTimer = null;
     }
     const tooltip = document.getElementById('ra-sound-change-tooltip');
+    if (tooltip && this.speechCoachModelButton && tooltip.contains(this.speechCoachModelButton)) {
+      this.stopSpeechCoachModelAudio();
+    }
     if (tooltip) {
       tooltip.style.display = 'none';
       tooltip.setAttribute('aria-hidden', 'true');
@@ -7525,6 +7645,11 @@ class ReadAloudMode {
       const logicalPath = `/database/RA/Voice/audio/Audio by folder/${this.currentQuestionId}/${filename}`;
       const questionId = this.currentQuestionId;
 
+      // Resolve first: production serves this audio from media storage and rewrites the
+      // raw /database path to /404.html (firebase.json), so the raw path is only the
+      // fallback. The previous prompt's sample is cleared so it cannot play in the meantime.
+      audioEl.removeAttribute('src');
+      audioEl.load();
       if (window.MediaUrlResolver && typeof window.MediaUrlResolver.resolveAudioUrl === 'function') {
         window.MediaUrlResolver.resolveAudioUrl(logicalPath, { mode: 'RA' }).then((url) => {
           if (this.currentQuestionId !== questionId) return;

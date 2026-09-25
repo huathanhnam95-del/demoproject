@@ -218,6 +218,7 @@ async function runTests() {
         AbortController
     });
 
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../../public/js/crm/teacher-scheduler-presentation.js'), 'utf8'), context);
     vm.runInContext(workspaceJs, context);
 
     const TeacherSchedulerWorkspace = context.window.TeacherSchedulerWorkspace;
@@ -1994,7 +1995,7 @@ async function runTests() {
         assert(!calHtml.includes('is-compact'), '120-minute pill must not be compact');
         assert(calHtml.includes('pill-meta-row'), 'Standard pill must render pill-meta-row');
         assert(calHtml.includes('<div class="pill-meta-row"><span class="pill-time">9:00–11:00</span><span class="pill-badge-completed">✓ Completed</span></div>'), 'pill-meta-row must contain time and completed badge');
-        assert(calHtml.includes('<div class="pill-header"><span class="pill-title">Trần Khắc Huy - PTE Academic 1-1</span></div>'), 'pill-header must give 100% width to pill-title without inline badge');
+        assert(calHtml.includes('<div class="pill-header"><span class="pill-title">Trần Khắc Huy</span></div>'), 'pill-header must give 100% width to pill-title without inline badge');
 
         windowMock.ClassroomAPI = origAPI;
         console.log('✓ Pill meta-row layout and unclipped title verified');
@@ -2708,7 +2709,7 @@ async function runTests() {
         assert(railHtml.includes('ts-repair-class-teacher'), 'Class rail card must have ts-repair-class-teacher line');
         assert(railHtml.includes('Teacher Alice'), 'Class rail card must render assigned teacher name');
         assert(railHtml.includes('ts-repair-class-progress'), 'Class rail card must have separate ts-repair-class-progress line');
-        assert(railHtml.includes('5/10 scheduled · 5 remaining'), 'Class rail card must render scheduled/target progress text');
+        assert(railHtml.includes('5/10 scheduled · 5 left'), 'Class rail card must render scheduled/target progress text');
         assert(railHtml.includes('Super Long Classroom Name That Used To Squeeze Counter'), 'Class title must be intact');
 
         windowMock.ClassroomAPI = origAPI;

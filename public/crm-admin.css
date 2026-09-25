@@ -2203,12 +2203,10 @@ html.crm-session-cached #crm-loading {
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill .pill-title {
-  font-weight: 600;
   white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  line-height: 1.25;
   overflow: hidden;
   text-overflow: ellipsis;
   word-break: break-word;
@@ -2230,7 +2228,6 @@ html.crm-session-cached #crm-loading {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 0.68rem;
   flex-shrink: 0;
 }
 
@@ -2248,7 +2245,6 @@ html.crm-session-cached #crm-loading {
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill.is-compact .pill-title {
-  font-size: 0.7rem;
   white-space: nowrap;
   display: block;
 }

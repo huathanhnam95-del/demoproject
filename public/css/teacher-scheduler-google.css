@@ -12,7 +12,8 @@
   --ts-line: #dadce0;
   --ts-blue: #0b57d0;
   --ts-hover: #e8edf5;
-  --ts-rail: 212px;
+  --ts-rail: 264px;
+  --ts-font: "Roboto", "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
   --ts-tools: 48px;
   --ts-gutter: 58px;
   --ts-hour: 50px;
@@ -118,7 +119,9 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
    Google Calendar UI Components: Typography & Base Primitives
    -------------------------------------------------------------------------- */
 .teacher-scheduler-google {
-  font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--ts-font);
+  font-size: 14px;
+  line-height: 1.45;
   color: var(--ts-ink);
   background: var(--ts-shell);
   height: 100%;
@@ -621,7 +624,7 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   display: flex;
   align-items: center;
   gap: 9px;
-  height: 30px;
+  min-height: 36px;
   padding: 0 8px;
   cursor: pointer;
   border-radius: 4px;
@@ -662,7 +665,7 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
 }
 
 .ts-check-row .teacher-name {
-  font-size: 12px;
+  font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -896,13 +899,17 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   position: absolute;
   z-index: 10;
   pointer-events: auto;
-  font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 12px;
-  line-height: 1.25;
+  font-family: var(--ts-font);
+  font-size: 14px;
+  line-height: 1.3;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   border-radius: 4px;
   border: 0;
   box-shadow: 0 1px 2px rgba(60, 64, 67, 0.15);
-  padding: 4px 6px;
+  padding: 6px 8px;
   text-align: left;
   overflow: hidden;
   cursor: pointer;
@@ -951,20 +958,33 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill .pill-title {
-  font-size: 12px;
-  line-height: 1.25;
-  font-weight: 600;
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 500;
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill .pill-time {
-  font-size: 11px;
-  line-height: 1.2;
+  font-size: 12px;
+  line-height: 16px;
   font-weight: 400;
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill .pill-teacher {
-  font-size: 11px;
-  line-height: 1.2;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teacher-scheduler-workspace .pill-course {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ts-event-meta, #3C4043);
 }
 
 /* Dynamic 3-tier density styles */
@@ -996,7 +1016,7 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   text-overflow: ellipsis !important;
   display: block !important;
   -webkit-line-clamp: unset !important;
-  line-height: 1.25;
+  line-height: 18px;
 }
 .teacher-scheduler-workspace .scheduler-session-pill.ts-density-mid .pill-meta-row {
   display: flex !important;
@@ -1007,25 +1027,25 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
 }
 .teacher-scheduler-workspace .scheduler-session-pill.ts-density-mid .pill-time {
   white-space: nowrap;
-  font-size: 11px;
-  line-height: 1.2;
+  font-size: 12px;
+  line-height: 16px;
 }
 .teacher-scheduler-workspace .scheduler-session-pill.ts-density-mid .pill-teacher {
   display: none !important;
 }
 
-/* Tier 3: full (>= 72px) - 3 lines */
+/* Full events reserve separate lines for name, course, time and teacher. */
 .teacher-scheduler-workspace .scheduler-session-pill.ts-density-full .pill-title {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.25;
+  line-height: 18px;
 }
 
 .teacher-scheduler-workspace .scheduler-calendar-time span {
-  font-size: 10.5px;
-  color: #70757a;
+  font-size: 12px;
+  color: #5f6368;
   font-weight: 400;
   letter-spacing: 0.2px;
 }
@@ -1287,8 +1307,8 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
 
 .teacher-scheduler-workspace .ts-repair-class-title,
 .ts-repair-class-title {
-  font-size: 12px;
-  line-height: 1.35;
+  font-size: 14px;
+  line-height: 20px;
   font-weight: 500;
   color: var(--ts-ink, #1f1f1f);
   white-space: normal;
@@ -1298,8 +1318,8 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
 
 .teacher-scheduler-workspace .ts-repair-class-teacher,
 .ts-repair-class-teacher {
-  font-size: 11px;
-  line-height: 1.3;
+  font-size: 12px;
+  line-height: 17px;
   color: var(--ts-muted, #444746);
   white-space: nowrap;
   overflow: hidden;
@@ -1308,8 +1328,8 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
 
 .teacher-scheduler-workspace .ts-repair-class-progress,
 .ts-repair-class-progress {
-  font-size: 10.5px;
-  line-height: 1.3;
+  font-size: 12px;
+  line-height: 17px;
   color: var(--ts-muted, #5f6368);
   white-space: nowrap;
   overflow: hidden;
@@ -2012,9 +2032,9 @@ dialog.ts-modal-dialog::backdrop,
 }
 
 .teacher-scheduler-workspace .scheduler-class-card .ts-class-teacher {
-  font-size: 10.5px;
-  color: #157a3b;
-  font-weight: 500;
+  font-size: 12px;
+  color: var(--ts-muted);
+  font-weight: 400;
 }
 
 /* --------------------------------------------------------------------------
@@ -2098,7 +2118,7 @@ dialog.ts-modal-dialog::backdrop,
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.24), 0 2px 8px rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(0, 0, 0, 0.08);
   padding: 16px 20px;
-  font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--ts-font);
   color: var(--ts-ink, #1f1f1f);
 }
 
@@ -2157,7 +2177,7 @@ dialog.ts-modal-dialog::backdrop,
 
 #teacher-scheduler-session-bubble,
 .ts-floating-dialog {
-  font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--ts-font);
   color: var(--ts-ink, #1f1f1f);
 }
 
@@ -2201,13 +2221,13 @@ dialog.ts-modal-dialog::backdrop,
 }
 
 #teacher-scheduler-session-bubble .ts-bubble-meta-date {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   color: var(--ts-ink, #1f1f1f);
 }
 
 #teacher-scheduler-session-bubble .ts-bubble-meta-teacher {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--ts-meta, #5f6368);
   margin-top: 1px;
 }
@@ -2245,7 +2265,7 @@ dialog.ts-modal-dialog::backdrop,
   padding: 8px 36px 8px 12px !important;
   border: 1px solid #dadce0 !important;
   border-radius: 8px !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
   color: var(--ts-ink, #1f1f1f) !important;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
@@ -2417,7 +2437,7 @@ dialog.ts-modal-dialog::backdrop,
   border-radius: 4px;
   padding: 6px 8px;
   box-shadow: 0 6px 16px rgba(60, 64, 67, 0.35);
-  font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--ts-font);
   opacity: 1;
   will-change: transform;
   transition: none !important;
@@ -2440,3 +2460,67 @@ dialog.ts-modal-dialog::backdrop,
   }
 }
 
+
+/* Readable schedule typography and shared colour controls. */
+.teacher-scheduler-workspace #teacher-scheduler-admin-filter-group { display: none !important; }
+.teacher-scheduler-workspace .ts-rail-title, .teacher-scheduler-workspace .ts-section-toggle { font-size: 14px; font-weight: 500; }
+.teacher-scheduler-workspace .ts-rail-description { font-size: 12px; line-height: 18px; color: #5f6368; padding: 0 8px 8px; }
+.teacher-scheduler-workspace .ts-class-course { font-size: 12px; line-height: 17px; color: #5f6368; overflow-wrap: anywhere; }
+.teacher-scheduler-workspace .ts-class-course:empty { display: none; }
+.teacher-scheduler-workspace .ts-repair-class-progress { white-space: normal; }
+.teacher-scheduler-workspace .mini-cal-month-title { font-size: 14px; font-weight: 500; }
+.teacher-scheduler-workspace .mini-cal-day-btn { font-size: 12px; }
+.teacher-scheduler-workspace .mini-cal-day-cell { min-height: 30px; }
+.teacher-scheduler-workspace #teacher-scheduler-teacher-search { font-size: 14px; min-height: 36px; }
+.ts-custom-dates > summary { padding: 8px 0; cursor: pointer; font-size: 13px; color: #444746; }
+.ts-custom-date-fields { display: grid; gap: 8px; padding-top: 8px; }
+.ts-custom-date-fields label { display: grid; grid-template-columns: 34px minmax(0,1fr); align-items: center; font-size: 12px; }
+.ts-custom-date-fields input { min-width: 0; font: inherit; min-height: 34px; }
+#teacher-scheduler-session-bubble { width: 440px; padding: 20px; border-radius: 16px; font-size: 14px; line-height: 20px; max-height: calc(100dvh - 24px); overflow-y: auto; box-shadow: 0 8px 28px #3c40432e, 0 2px 6px #3c40431a; }
+#teacher-scheduler-session-bubble .ts-session-heading { min-width: 0; flex: 1; }
+#teacher-scheduler-session-bubble-title { font-size: 22px; line-height: 28px; font-weight: 500; white-space: normal; overflow-wrap: anywhere; }
+#teacher-scheduler-session-bubble .ts-session-subtitle { font-size: 14px; line-height: 20px; color: #5f6368; margin-top: 4px; }
+#teacher-scheduler-session-bubble .teacher-scheduler-session-meta { margin: 14px 0; line-height: 22px; }
+#teacher-scheduler-session-bubble .ts-field-label { font-size: 14px; font-weight: 500; text-transform: none; letter-spacing: normal; color: #3c4043; }
+#teacher-scheduler-session-bubble .crm-input { font-family: inherit; font-size: 14px; padding: 10px 12px; background: #f8f9fa; border: 1px solid #dadce0; }
+#teacher-scheduler-session-bubble textarea.crm-input { height: 110px; line-height: 22px; }
+#teacher-scheduler-session-bubble button { font-family: inherit; }
+#teacher-scheduler-session-bubble .ts-action-btn, #btn-teacher-scheduler-save-outcome { font-size: 14px; min-height: 38px; }
+#teacher-scheduler-session-bubble .ts-icon-btn { height: 36px; width: 36px; flex-shrink: 0; }
+.ts-color-button { display: inline-flex; gap: 8px; align-items: center; padding: 6px 12px; min-height: 36px; border: 1px solid #dadce0; border-radius: 18px; background: #fff; color: #3c4043; font-size: 14px; cursor: pointer; max-width: 100%; }
+.ts-color-dot { display: inline-block; width: 14px; height: 14px; flex: 0 0 14px; border-radius: 50%; border: 1px solid #0002; }
+.ts-color-panel { padding: 12px 0 16px; border-bottom: 1px solid #e8eaed; }
+.ts-color-panel[hidden] { display: none; }
+.ts-color-hint { margin: 0 0 10px; font-size: 12px; line-height: 18px; color: #5f6368; overflow-wrap: anywhere; }
+.ts-color-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.ts-color-panel button { cursor: pointer; font-size: 14px; min-height: 36px; background: #fff; color: #3c4043; border: 1px solid #dadce0; border-radius: 6px; padding: 6px 10px; }
+.ts-color-tags button { display: inline-flex; align-items: center; gap: 6px; border-radius: 18px; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+.ts-color-tags button[aria-pressed=true] { border-color: #1a73e8; background: #e8f0fe; }
+.ts-color-swatches { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; margin-bottom: 10px; }
+.ts-color-swatches button { padding: 3px; border: 0; display: grid; place-items: center; background: transparent; }
+.ts-color-swatches button span { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--swatch); color: var(--swatch-ink); border: 1px solid #0002; font-weight: 500; }
+.ts-color-swatches button[aria-pressed=true] span { outline: 2px solid #3c4043; outline-offset: 2px; }
+.ts-color-panel button:hover { background-color: #f1f3f4; }
+.ts-color-panel button:focus-visible, .ts-color-button:focus-visible { outline: 2px solid #1a73e8; outline-offset: 2px; }
+.ts-color-panel button:disabled { opacity: .6; cursor: wait; }
+.ts-color-custom { margin-top: 10px; }
+.ts-color-custom summary { cursor: pointer; padding: 6px 0; }
+.ts-color-custom label { display: flex; align-items: center; gap: 12px; margin: 10px 0; flex-wrap: wrap; }
+.ts-color-custom input[type=text], .ts-color-custom select { font: inherit; padding: 8px; border: 1px solid #dadce0; border-radius: 6px; min-width: 0; max-width: 100%; }
+.ts-color-custom input[type=color] { width: 44px; height: 36px; padding: 2px; cursor: pointer; border: 1px solid #dadce0; background: white; }
+.ts-color-preview { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.ts-color-preview strong { font-weight: 500; overflow-wrap: anywhere; }
+.ts-color-scopes { border: 0; margin: 0; padding: 0; min-width: 0; }
+.ts-color-scopes legend { font-size: 16px; font-weight: 500; margin-bottom: 8px; }
+.ts-color-scopes label { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; cursor: pointer; }
+.ts-color-scopes input { margin: 4px 0 0; accent-color: #1a73e8; }
+.ts-color-scopes small { display: block; color: #5f6368; font-size: 12px; line-height: 18px; }
+.ts-color-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.ts-color-panel .ts-color-primary { background: #1a73e8; color: white; border-color: transparent; }
+.ts-color-panel .ts-color-primary:hover { background: #1557b0; }
+.ts-color-error { color: #b3261e; font-size: 13px; line-height: 20px; margin: 12px 0 4px; }
+@media (max-width: 480px) {
+  #teacher-scheduler-session-bubble { padding: 16px; max-width: calc(100vw - 16px); }
+  .ts-color-swatches { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  #teacher-scheduler-session-bubble .bubble-action-bar { flex-wrap: wrap; gap: 8px; }
+}

@@ -625,6 +625,20 @@ window.ClassroomAPI = (function () {
         return parseJsonResponse(res);
     }
 
+    async function saveTeacherSessionColor(sessionId, data) {
+        const res = await fetch(`/api/teacher/sessions/${encodeURIComponent(sessionId)}/color`, {
+            method: 'POST', headers: await getHeaders(), body: JSON.stringify(data)
+        });
+        return parseJsonResponse(res);
+    }
+
+    async function saveTeacherColorTag(data) {
+        const res = await fetch('/api/teacher/scheduler/color-tags', {
+            method: 'POST', headers: await getHeaders(), body: JSON.stringify(data)
+        });
+        return parseJsonResponse(res);
+    }
+
     async function returnSubmissionForRevision(submissionId, data) {
         const headers = await getHeaders();
         const res = await fetch(`/api/admin/submissions/${submissionId}/return-for-revision`, {
@@ -693,6 +707,8 @@ window.ClassroomAPI = (function () {
         createSchedulingOperationId,
         fetchSchedulerWorkspace,
         fetchTeacherSchedulerWorkspace,
+        saveTeacherSessionColor,
+        saveTeacherColorTag,
         updateClassroomScheduleConfig,
         seedClassroomSessions,
         addClassroomSession,

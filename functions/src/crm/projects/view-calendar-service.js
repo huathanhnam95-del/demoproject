@@ -79,13 +79,19 @@ function createViewCalendarService({ db, accessService, queryService, commandSer
         return result;
     }
     async function readScheduleState(transaction, projectId) {
-        async function bounded(name, maximum) {
-            const rows = snapshotRows(await transaction.get(projectCollection(db, projectId, name).limit(maximum + 1)));
+        // Independent reads run together; limit checks keep their order.
+        const [taskDocs, sectionDocs, project, config] = await Promise.all([
+            transaction.get(projectCollection(db, projectId, 'tasks').limit(MAX_QUERY_TASKS + 1)),
+            transaction.get(projectCollection(db, projectId, 'sections').limit(MAX_QUERY_SECTIONS + 1)),
+            transaction.get(projectRef(db, projectId)),
+            transaction.get(calendarRef)
+        ]);
+        function bounded(docs, maximum) {
+            const rows = snapshotRows(docs);
             if (rows.length > maximum) throw new DomainError(409, 'PROJECT_QUERY_LIMIT', 'Project exceeds the bounded schedule limit.');
             return rows;
         }
-        const tasks = await bounded('tasks', MAX_QUERY_TASKS); const sections = await bounded('sections', MAX_QUERY_SECTIONS);
-        const project = await transaction.get(projectRef(db, projectId)); const config = await transaction.get(calendarRef);
+        const tasks = bounded(taskDocs, MAX_QUERY_TASKS); const sections = bounded(sectionDocs, MAX_QUERY_SECTIONS);
         return { tasks, sections, project: { id: projectId, data: project.data() || {} }, calendar: config.exists ? config.data() : {} };
     }
     function scheduleFence(snapshot) { return digestPayload({ tasks: snapshot.tasks.map(({ id: taskId, data, updateTime }) => ({ id: taskId, data, updateTime })), sections: snapshot.sections.map(({ id: sectionId, data, updateTime }) => ({ id: sectionId, data, updateTime })), project: snapshot.project, calendar: snapshot.calendar, feedVersion: FEED_VERSION }); }
@@ -115,9 +121,16 @@ function createViewCalendarService({ db, accessService, queryService, commandSer
         const nonce = crypto.randomBytes(24).toString('base64url'); const token = `${slot}.${nonce}`;
         return db.runTransaction(async (transaction) => {
             await accessService.assertTransactionContentAccess(transaction, identity.uid, projectId, { write: true });
-            const task = await assertProjectTask(transaction, db, projectId, taskId);
+            // Read the task and schedule state together; task errors keep precedence.
+            const [taskOutcome, snapshotOutcome] = await Promise.allSettled([
+                assertProjectTask(transaction, db, projectId, taskId),
+                readScheduleState(transaction, projectId)
+            ]);
+            if (taskOutcome.status === 'rejected') throw taskOutcome.reason;
+            const task = taskOutcome.value;
             if (Number(task.data.revision || 0) !== expectedRevision) throw new DomainError(409, 'STALE_REVISION', 'Task changed; refresh.');
-            const snapshot = await readScheduleState(transaction, projectId);
+            if (snapshotOutcome.status === 'rejected') throw snapshotOutcome.reason;
+            const snapshot = snapshotOutcome.value;
             const evaluation = evaluateSchedule(task.data, snapshot.calendar, input.startDate, input.dueDate);
             const { tasks, effective } = effectiveStates(snapshot);
             tasks.set(taskId, { ...task, data: { ...task.data, startDate: input.startDate, dueDate: input.dueDate } });

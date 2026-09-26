@@ -50,8 +50,9 @@ function createProjectsChangeFeedService({ db, accessService }) {
         const projectId = id(rawProjectId, 'project ID');
         return db.runTransaction(async transaction => {
             const access = await accessService.assertTransactionContentAccess(transaction, identity.uid, projectId);
-            const heads = [];
-            for (let shard = 0; shard < SHARDS; shard++) heads.push(Number(readData(await transaction.get(headRef(db, projectId, shard)))?.sequence || 0));
+            // Read all shard heads together within the same read-only transaction.
+            const heads = (await Promise.all(Array.from({ length: SHARDS }, (_, shard) => transaction.get(headRef(db, projectId, shard)))))
+                .map(snapshot => Number(readData(snapshot)?.sequence || 0));
             const authority = { project: serializeProjectAccess(access), membership: { role: access.role, revision: Number(access.membership.data.revision || 0) }, signature: JSON.stringify([access.role, access.project.data.membershipRevision || 0, access.project.data.lifecycle || 'active']) };
             let cursor = options.cursor ? decodeCursor(options.cursor, identity.uid, projectId, heads) : { v: 1, actorUid: identity.uid, projectId, ack: heads.slice(), target: null };
             const target = cursor.target || heads.slice(); const ack = cursor.ack.slice();

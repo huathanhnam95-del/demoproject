@@ -250,7 +250,13 @@ function createProjectsAccessService(deps = {}) {
         }
         const uid = normalizeUid(decoded?.uid || decoded?.sub || decoded?.user_id);
         if (!uid) throw new ProjectsAccessError(401, 'UNAUTHORIZED', 'Authentication failed.');
-        const authUser = await readAuthUser(uid);
+        // The Auth user and Firestore identity reads are independent; read them
+        // together. Every check below still completes before identity returns.
+        const [authUser, profileSnap, workforceSnap] = await Promise.all([
+            readAuthUser(uid),
+            ref('users', uid).get(),
+            ref(PROJECT_COLLECTIONS.workforce, uid).get()
+        ]);
         const authTime = Number(decoded?.auth_time || 0);
         const validAfter = authUser?.tokensValidAfterTime
             ? Math.floor(new Date(authUser.tokensValidAfterTime).getTime() / 1000)
@@ -258,10 +264,6 @@ function createProjectsAccessService(deps = {}) {
         if (validAfter > 0 && authTime > 0 && authTime < validAfter) {
             throw new ProjectsAccessError(401, 'REVOKED_TOKEN', 'Session has been revoked.');
         }
-        const [profileSnap, workforceSnap] = await Promise.all([
-            ref('users', uid).get(),
-            ref(PROJECT_COLLECTIONS.workforce, uid).get()
-        ]);
         const profile = profileSnap?.exists ? (profileSnap.data() || {}) : {};
         const workforce = workforceSnap?.exists ? (workforceSnap.data() || {}) : null;
         return {
@@ -318,11 +320,11 @@ function createProjectsAccessService(deps = {}) {
     async function readTransactionIdentity(transaction, rawUid) {
         const uid = normalizeUid(rawUid);
         if (!uid) throw new ProjectsAccessError(400, 'INVALID_UID', 'Invalid account UID.');
-        const [profileSnap, workforceSnap] = await Promise.all([
+        const [profileSnap, workforceSnap, authUser] = await Promise.all([
             transaction.get(ref('users', uid)),
-            transaction.get(ref(PROJECT_COLLECTIONS.workforce, uid))
+            transaction.get(ref(PROJECT_COLLECTIONS.workforce, uid)),
+            readAuthUser(uid)
         ]);
-        const authUser = await readAuthUser(uid);
         const profile = profileSnap?.exists ? (profileSnap.data() || {}) : {};
         const workforce = workforceSnap?.exists ? (workforceSnap.data() || {}) : null;
         return {
@@ -362,15 +364,20 @@ function createProjectsAccessService(deps = {}) {
     }
 
     async function assertTransactionContentAccess(transaction, rawUid, projectId, options = {}) {
-        const identity = await assertTransactionEligible(transaction, rawUid);
+        // Start the project and member reads alongside the identity reads.
+        // Decisions keep their order: identity first, then project ID, then
+        // project/member; the prefetched documents are unused until then.
         const normalizedProjectId = normalizeProjectId(projectId);
-        if (!normalizedProjectId) throw new ProjectsAccessError(400, 'INVALID_PROJECT_ID', 'Invalid project ID.');
-        const projectRef = ref(PROJECT_COLLECTIONS.projects, normalizedProjectId);
-        const memberRef = ref(PROJECT_COLLECTIONS.members, memberDocumentId(normalizedProjectId, identity.uid));
-        const outcomes = await Promise.allSettled([
+        const prefetchUid = normalizeUid(rawUid);
+        const projectRef = normalizedProjectId ? ref(PROJECT_COLLECTIONS.projects, normalizedProjectId) : null;
+        const memberRef = normalizedProjectId && prefetchUid ? ref(PROJECT_COLLECTIONS.members, memberDocumentId(normalizedProjectId, prefetchUid)) : null;
+        const reads = memberRef ? Promise.allSettled([
             Promise.resolve().then(() => transaction.get(projectRef)),
             Promise.resolve().then(() => transaction.get(memberRef))
-        ]);
+        ]) : null;
+        const identity = await assertTransactionEligible(transaction, rawUid);
+        if (!normalizedProjectId) throw new ProjectsAccessError(400, 'INVALID_PROJECT_ID', 'Invalid project ID.');
+        const outcomes = await reads;
         // Keep the original project-first read failure precedence.
         for (const outcome of outcomes) if (outcome.status === 'rejected') throw outcome.reason;
         const [projectSnap, memberSnap] = outcomes.map(outcome => outcome.value);
@@ -488,8 +495,16 @@ function createProjectsAccessService(deps = {}) {
 
     async function authorizeProject(identity, projectId, { write = false, owner = false } = {}) {
         assertProjectsGrant(identity);
-        const project = await readProject(projectId);
-        const membership = await readMembership(project.id, identity.uid);
+        // Read the project and membership together; project errors keep precedence.
+        const normalizedProjectId = normalizeProjectId(projectId);
+        const [projectOutcome, membershipOutcome] = await Promise.allSettled([
+            readProject(projectId),
+            normalizedProjectId ? readMembership(normalizedProjectId, identity.uid) : Promise.resolve(null)
+        ]);
+        if (projectOutcome.status === 'rejected') throw projectOutcome.reason;
+        if (membershipOutcome.status === 'rejected') throw membershipOutcome.reason;
+        const project = projectOutcome.value;
+        const membership = membershipOutcome.value;
         // Hide membership and link existence from accounts that do not belong to
         // the guessed project ID.
         if (!membership) throw new ProjectsAccessError(404, 'PROJECT_NOT_FOUND', 'Project not found.');
@@ -1195,19 +1210,22 @@ function createProjectsAccessService(deps = {}) {
         const expectedProjectId = access.project.id;
         const snapshot = await db.collection(PROJECT_COLLECTIONS.members).where('projectId', '==', expectedProjectId).get();
         const directory = [];
-        for (const doc of snapshot?.docs || []) {
-            const member = canonicalMembership(doc, expectedProjectId);
-            if (!member) continue;
+        const members = (snapshot?.docs || []).map((doc) => canonicalMembership(doc, expectedProjectId)).filter(Boolean);
+        // Look up member accounts in bounded parallel batches; results are
+        // handled in member order.
+        const lookups = [];
+        for (let start = 0; start < members.length; start += 20) {
+            lookups.push(...await Promise.allSettled(members.slice(start, start + 20)
+                .map((member) => (member.uid ? readIdentityByUid(member.uid) : Promise.resolve(null)))));
+        }
+        for (const [index, member] of members.entries()) {
             const { uid } = member;
-            let profile = null;
-            if (uid) {
-                try {
-                    profile = await readIdentityByUid(uid);
-                } catch (error) {
-                    if (error instanceof ProjectsAccessError && error.code === 'UNAUTHORIZED') continue;
-                    throw error;
-                }
+            const lookup = lookups[index];
+            if (lookup.status === 'rejected') {
+                if (lookup.reason instanceof ProjectsAccessError && lookup.reason.code === 'UNAUTHORIZED') continue;
+                throw lookup.reason;
             }
+            const profile = lookup.value;
             if (!uid || !profile || profile.status !== 'active' || !hasActiveWorkforce(profile.workforce)) continue;
             directory.push({
                 uid,

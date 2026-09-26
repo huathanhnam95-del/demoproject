@@ -145,18 +145,26 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
         let snapshot;
         await db.runTransaction(async (transaction) => {
             const access = await accessService.assertTransactionContentAccess(transaction, identity.uid, projectId, { roles: ['Owner', 'Editor', 'Viewer'] });
-            const projectSnapshot = await transaction.get(projectRef(db, projectId));
+            // Independent reads in one read-only transaction run together; the
+            // checks below keep their original order and error precedence.
+            const bounded = (collectionName, limit) => transaction.get(projectCollection(db, projectId, collectionName).limit(limit + 1));
+            const [projectSnapshot, sectionDocs, columnDocs, taskDocs, calendarDoc, memberDocs] = await Promise.all([
+                transaction.get(projectRef(db, projectId)),
+                bounded('sections', MAX_QUERY_SECTIONS),
+                bounded('columns', MAX_QUERY_COLUMNS),
+                bounded('tasks', MAX_QUERY_TASKS),
+                transaction.get(db.collection(PROJECT_COLLECTIONS.organizationConfig).doc('calendar')),
+                transaction.get(db.collection(PROJECT_COLLECTIONS.members).where('projectId', '==', projectId).limit(1001))
+            ]);
             if (!projectSnapshot?.exists) throw new DomainError(404, 'PROJECT_NOT_FOUND', 'Project not found.');
-            async function readBounded(collectionName, limit, label) {
-                const rows = snapshotRows(await transaction.get(projectCollection(db, projectId, collectionName).limit(limit + 1)));
+            function checkBounded(docs, limit, label) {
+                const rows = snapshotRows(docs);
                 if (rows.length > limit) throw new DomainError(409, 'PROJECT_QUERY_LIMIT', `Project query exceeds the Phase2 ${label} limit.`);
                 return rows;
             }
-            const sections = await readBounded('sections', MAX_QUERY_SECTIONS, 'section');
-            const columns = await readBounded('columns', MAX_QUERY_COLUMNS, 'column');
-            const tasks = await readBounded('tasks', MAX_QUERY_TASKS, 'task');
-            const calendarDoc = await transaction.get(db.collection(PROJECT_COLLECTIONS.organizationConfig).doc('calendar'));
-            const memberDocs = await transaction.get(db.collection(PROJECT_COLLECTIONS.members).where('projectId', '==', projectId).limit(1001));
+            const sections = checkBounded(sectionDocs, MAX_QUERY_SECTIONS, 'section');
+            const columns = checkBounded(columnDocs, MAX_QUERY_COLUMNS, 'column');
+            const tasks = checkBounded(taskDocs, MAX_QUERY_TASKS, 'task');
             if (memberDocs.docs.length > 1000) throw new DomainError(409, 'PROJECT_QUERY_LIMIT', 'Project member limit exceeded.');
             const memberUids = memberDocs.docs.filter((doc) => {
                 const data = doc.data();
@@ -180,10 +188,12 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
         const start = Date.now();
         await db.runTransaction(async (transaction) => {
             const access = await accessService.assertTransactionContentAccess(transaction, identity.uid, projectId, { roles: ['Owner', 'Editor', 'Viewer'] });
-            const projectSnapshot = await transaction.get(projectRef(db, projectId));
+            const [projectSnapshot, calendarDoc, memberDocs] = await Promise.all([
+                transaction.get(projectRef(db, projectId)),
+                transaction.get(db.collection(PROJECT_COLLECTIONS.organizationConfig).doc('calendar')),
+                transaction.get(db.collection(PROJECT_COLLECTIONS.members).where('projectId', '==', projectId).limit(1001))
+            ]);
             if (!projectSnapshot?.exists) throw new DomainError(404, 'PROJECT_NOT_FOUND', 'Project not found.');
-            const calendarDoc = await transaction.get(db.collection(PROJECT_COLLECTIONS.organizationConfig).doc('calendar'));
-            const memberDocs = await transaction.get(db.collection(PROJECT_COLLECTIONS.members).where('projectId', '==', projectId).limit(1001));
             if (memberDocs.docs.length > 1000) throw new DomainError(409, 'PROJECT_QUERY_LIMIT', 'Project member limit exceeded.');
             const memberUids = memberDocs.docs.filter((doc) => {
                 const data = doc.data();
@@ -381,11 +391,12 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
         return db.runTransaction(async transaction => {
             const access = await accessService.assertTransactionContentAccess(transaction, identity.uid, projectId);
             const cache = new Map(); let reads = 0;
+            // Cache the read promise so concurrent chains share one read per record.
             async function read(collection, recordId) {
                 const key = `${collection}/${recordId}`;
                 if (!cache.has(key)) {
                     if (++reads > LIMITS.hydrationReads) throw new DomainError(413, 'HYDRATION_READ_LIMIT', 'Ancestry exceeds the hydration read budget.');
-                    cache.set(key, readData(await transaction.get(projectCollection(db, projectId, collection).doc(id(recordId, 'record ID')))));
+                    cache.set(key, transaction.get(projectCollection(db, projectId, collection).doc(id(recordId, 'record ID'))).then(readData));
                 }
                 return cache.get(key);
             }
@@ -408,10 +419,18 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
                 return safe;
             }
             const tasks = []; const messages = []; const unavailableTaskIds = []; const unavailableMessageIds = [];
-            for (const taskId of taskIds) { const value = await task(taskId); if (value) tasks.push(value); else unavailableTaskIds.push(taskId); }
-            for (const messageId of messageIds) {
-                const value = await read('discussions', messageId);
-                if (!value || value.projectId !== projectId || !value.taskId || !await task(value.taskId, true)) { unavailableMessageIds.push(messageId); continue; }
+            // Resolve all requested records together; results keep request order.
+            const [taskValues, messageValues] = await Promise.all([
+                Promise.all(taskIds.map(taskId => task(taskId))),
+                Promise.all(messageIds.map(async messageId => {
+                    const value = await read('discussions', messageId);
+                    return value && value.projectId === projectId && value.taskId && await task(value.taskId, true) ? value : null;
+                }))
+            ]);
+            taskIds.forEach((taskId, index) => { if (taskValues[index]) tasks.push(taskValues[index]); else unavailableTaskIds.push(taskId); });
+            for (const [index, messageId] of messageIds.entries()) {
+                const value = messageValues[index];
+                if (!value) { unavailableMessageIds.push(messageId); continue; }
                 const message = { ...value, id: messageId };
                 if (message.moderationState !== 'visible' && access.role !== 'Owner' && message.authorUid !== identity.uid) { message.body = null; message.mentions = []; message.attachmentIds = []; message.redacted = true; }
                 messages.push(message);

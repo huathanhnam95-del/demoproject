@@ -1347,6 +1347,9 @@
     const initialRequestsProjects = normalizeRouteToken(initialHash.replace(/^#/, '').split('/')[0]) === 'projects';
     let initialRouteApplied = false;
     let hashAfterInitialRoute = '';
+    // Download (never execute) the public Projects scripts while sign-in and
+    // access checks run. Execution still waits for confirmed Projects access.
+    if (initialRequestsProjects) window.CrmProjectsLoader?.preload?.();
     const reconcileProjectsRoute = () => {
       if (!initialRouteApplied) return;
       if (state.projectsEnabled && initialRequestsProjects && state.main !== 'projects' && window.location.hash === hashAfterInitialRoute) {

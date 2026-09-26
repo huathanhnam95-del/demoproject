@@ -150,7 +150,8 @@ async function main() {
         path,
         collection: (name) => fakeRef(`${path}/${name}`),
         doc: (idValue) => fakeRef(`${path}/${idValue}`),
-        limit: () => fakeRef(path)
+        limit: () => fakeRef(path),
+        where: () => fakeRef(path)
     });
     const fakeDb = {
         collection: (name) => fakeRef(name),

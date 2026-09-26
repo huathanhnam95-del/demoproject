@@ -6,7 +6,13 @@
         const uid = String(deps.getCurrentUser?.()?.uid || '');
         const byId = id => doc?.getElementById(id);
         const current = () => !disposed && uid && uid === String(deps.getCurrentUser?.()?.uid || '');
-        let initialized = false, disposed = false, selectedProjectId = '', menuDialog = '', page, nav, tableButton, resizeObserver;
+        let initialized = false, disposed = false, selectedProjectId = '', selectedProjectName = '', menuDialog = '', page, nav, tableButton, utilityTitle, resizeObserver;
+        const VIEW_SHORTCUTS = [['board', 'Table'], ['kanban', 'Kanban'], ['gantt', 'Gantt'], ['calendar', 'Calendar'], ['charts', 'Charts']];
+        function renderBackName() {
+            const target = tableButton?.querySelector('[data-back-name]');
+            if (target) target.textContent = selectedProjectName || 'project';
+            if (tableButton) tableButton.disabled = !selectedProjectId;
+        }
         const restore = [], removers = [];
         function listen(node, type, handler) { node?.addEventListener(type, handler); removers.push(() => node?.removeEventListener(type, handler)); }
         function move(node, target) {
@@ -34,6 +40,8 @@
             nav.querySelectorAll('[data-u]').forEach(button => { const active = utility && button.dataset.u === destination; button.setAttribute('aria-selected', String(active)); button.tabIndex = active || (!utility && button.dataset.u === 'assistant') ? 0 : -1; });
             page.querySelectorAll('[data-p]').forEach(pane => { pane.hidden = pane.dataset.p !== destination; pane.classList.toggle('on', !pane.hidden); });
             tableButton.setAttribute('aria-current', utility ? 'false' : 'page');
+            if (utilityTitle) utilityTitle.textContent = utility ? labels[destination] : '';
+            panel.dataset.projectsUtility = utility ? destination : '';
             if (utility) {
                 const pane = byId(`projects-upane-${destination}`);
                 // Keep disclosure ownership: its existing toggle listener loads data.
@@ -61,8 +69,20 @@
                 const boardSection = byId('projects-board-section');
                 attribute(boardSection, 'hidden', boardSection?.getAttribute('hidden'));
                 page = doc.createElement('section'); page.id = 'projects-utility-page'; page.hidden = true; page.setAttribute('aria-label', 'Project utilities'); main.append(page);
-                tableButton = doc.createElement('button'); tableButton.id = 'projects-v2-table'; tableButton.type = 'button'; tableButton.textContent = 'Project views'; tableButton.setAttribute('aria-controls', 'projects-board-section');
-                byId('projects-workspace-rail').append(tableButton);
+                // Side tabs (Inbox, Archive...) keep a clear way back: a named
+                // back button, the page title and the project's view tabs.
+                const header = doc.createElement('div'); header.className = 'crm-projects-utility-header';
+                tableButton = doc.createElement('button'); tableButton.id = 'projects-v2-table'; tableButton.type = 'button'; tableButton.className = 'crm-projects-back'; tableButton.setAttribute('aria-controls', 'projects-board-section');
+                tableButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 18l-6-6 6-6"/></svg><span>Back to <strong data-back-name></strong></span>';
+                utilityTitle = doc.createElement('h2'); utilityTitle.className = 'crm-projects-utility-title';
+                const shortcuts = doc.createElement('nav'); shortcuts.className = 'crm-projects-utility-viewtabs'; shortcuts.setAttribute('aria-label', 'Open this project in');
+                shortcuts.innerHTML = VIEW_SHORTCUTS.map(([view, label]) => `<button type="button" data-open-view="${view}">${label}</button>`).join('');
+                header.append(tableButton, utilityTitle, shortcuts); page.append(header); renderBackName();
+                listen(shortcuts, 'click', event => {
+                    const view = event.target.closest('[data-open-view]')?.dataset.openView; if (!view || !current()) return;
+                    navigate('table');
+                    byId('projects-view-tabs')?.querySelector(`[data-view="${view}"]`)?.click();
+                });
                 move(nav, byId('projects-workspace-rail'));
                 attribute(rail, 'hidden', ''); attribute(byId('ucollapse'), 'hidden', '');
                 rail.querySelectorAll('[data-p]').forEach(pane => { attribute(pane, 'hidden', ''); attribute(pane, 'class', pane.className); move(pane, page); });
@@ -134,12 +154,20 @@
                 syncWidth(); navigate();
             },
             navigate,
-            setSelection(selection) { const id = String(selection?.selectedProjectId || ''); if (byId('projects-v2-members')) byId('projects-v2-members').disabled = !id; if (id !== selectedProjectId) { selectedProjectId = id; menuDialog = ''; closeMenu(); navigate(); } },
+            setSelection(selection) {
+                const id = String(selection?.selectedProjectId || '');
+                const chosen = selection?.selectedProject || (selection?.projects || []).find(project => String(project.id) === id);
+                selectedProjectName = String(chosen?.name || chosen?.title || '');
+                if (byId('projects-v2-members')) byId('projects-v2-members').disabled = !id;
+                if (id !== selectedProjectId) { selectedProjectId = id; menuDialog = ''; closeMenu(); navigate(); }
+                renderBackName();
+            },
+            showBoard() { navigate('table'); },
             closeForNavigation() { navigate(); const details = panel?.querySelector('.crm-projects-view-options'); if (details) details.open = false; },
             dispose() {
                 if (disposed) return;
                 if (initialized) navigate(); disposed = true; resizeObserver?.disconnect(); removers.forEach(remove => remove());
-                closeMenu(); restore.reverse().forEach(undo => undo()); page?.remove(); tableButton?.remove(); panel?.removeAttribute('data-projects-narrow'); panel?.removeAttribute('data-projects-view');
+                closeMenu(); restore.reverse().forEach(undo => undo()); page?.remove(); tableButton?.remove(); panel?.removeAttribute('data-projects-narrow'); panel?.removeAttribute('data-projects-view'); panel?.removeAttribute('data-projects-utility');
             }
         };
     }

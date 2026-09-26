@@ -10,7 +10,7 @@ const ROOT = path.resolve(__dirname, '../..');
 const GROUPS = ['node', 'routes', 'chrome', 'performance', 'emulator-guards', 'emulator', 'quality', 'structure', 'ci'];
 const projectTest = name => `tests/crm/projects/${name}.test.js`;
 const nodeChecks = [
-    ['focused', ['v2-row-editors', 'v2-quick-create', 'v2-task-detail', 'v2-views-navigation', 'v2-automations', 'v2-mobile-accessibility', 'v2-performance-reconciliation', 'v2-rollout-readiness', 'v2-inline-create', 'v2-project-switch-cache', 'crm-admin-projects-reload-route']],
+    ['focused', ['v2-row-editors', 'v2-quick-create', 'v2-task-detail', 'v2-views-navigation', 'v2-automations', 'v2-mobile-accessibility', 'v2-performance-reconciliation', 'v2-rollout-readiness', 'v2-inline-create', 'v2-project-switch-cache', 'v2-open-board', 'v2-project-actions', 'crm-admin-projects-reload-route']],
     ['adjacent', ['phase7-automation-designer-client', 'phase7-automation-designer-contract', 'phase7-automation-preview', 'phase5-views-client', 'views-overhaul-ux', 'views-predecessor-refresh', 'views-project-links-refresh', 'nonvoice-discussion-client', 'phase4-recovery-client', 'task-detail-modal-ux']],
     ['broad-regression', ['board-initial-creation', 'board-keyboard-move-focus', 'board-local-save-lineage', 'board-manual-refresh-readiness', 'board-overhaul-baseline', 'board-presentation', 'board-refresh-interaction', 'board-successor-interaction', 'field-save-feedback', 'projects-ui-scale', 'v2-columns', 'v2-entry', 'v2-shell', 'workspace-presentation']]
 ];

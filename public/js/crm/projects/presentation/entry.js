@@ -15,6 +15,7 @@
             preferences,
             setSelection(value) { shell?.setSelection(value); workspace?.setSelection?.(value); },
             closeForNavigation() { shell?.closeForNavigation(); workspace?.closeForNavigation?.(); },
+            showBoard() { shell?.showBoard?.(); },
             onFieldSaveEvent: event => feedback.accept(event),
             setFieldSaveScope: scope => feedback.setScope(scope),
             init() {

@@ -46,7 +46,11 @@
                 workspaceGroups.get(ws).push({ project, index });
             });
             const railMarkup = projects.length ? Array.from(workspaceGroups.entries()).map(([wsName, items]) => {
-                const itemsHtml = items.map(({ project, index }) => `<button type="button" data-workspace-project="${escape(project.id)}" aria-current="${String(project.id) === String(selected?.id) ? 'page' : 'false'}"><span class="crm-projects-rail-dot" style="--crm-project-group-color:${palette[index % palette.length]}" aria-hidden="true"></span><span>${escape(project.name || project.title || 'Untitled project')}</span></button>`).join('');
+                const itemsHtml = items.map(({ project, index }) => {
+                    const name = project.name || project.title || 'Untitled project';
+                    const trash = canTrash(project) ? `<button type="button" class="crm-projects-rail-trash" data-workspace-trash="${escape(project.id)}" aria-label="Move ${escape(name)} to trash" title="Move to trash">${TRASH_ICON}</button>` : '';
+                    return `<div class="crm-projects-rail-item"><button type="button" data-workspace-project="${escape(project.id)}" aria-current="${String(project.id) === String(selected?.id) ? 'page' : 'false'}"><span class="crm-projects-rail-dot" style="--crm-project-group-color:${palette[index % palette.length]}" aria-hidden="true"></span><span>${escape(name)}</span></button>${trash}</div>`;
+                }).join('');
                 if (workspaceGroups.size === 1 && wsName === 'Workspace') return itemsHtml;
                 return `<div class="crm-rail-workspace-group"><div class="crm-rail-workspace-heading"><span>${escape(wsName)}</span><span class="crm-rail-workspace-count">${items.length}</span></div>${itemsHtml}</div>`;
             }).join('') : '<p class="crm-projects-rail-empty">Your projects will appear here.</p>';
@@ -54,6 +58,15 @@
                 rail.innerHTML = railMarkup;
                 if (focusedProject) Array.from(rail.querySelectorAll('[data-workspace-project]')).find(button => button.dataset.workspaceProject === focusedProject)?.focus();
             }
+            const selectedRole = loaded?.role || selected?.role;
+            const headerTrash = byId('projects-v2-trash');
+            if (headerTrash) {
+                const allowed = !!selected && canTrash({ ...selected, role: selectedRole });
+                headerTrash.disabled = !allowed;
+                headerTrash.title = !selected ? 'Choose a project first' : allowed ? 'Move project to trash' : 'Only the project Owner can move it to trash';
+            }
+            const archiveItem = byId('projects-v2-archive');
+            if (archiveItem) archiveItem.disabled = !selected || !canTrash({ ...selected, role: selectedRole });
             text('projects-workspace-name', loaded?.name || loaded?.title || selected?.name || selected?.title || 'Projects');
             text('projects-workspace-description', loaded?.description || '');
             const onboarding = byId('projects-workspace-onboarding');
@@ -116,11 +129,15 @@
             if (initialized || !panel || !current()) return;
             initialized = true;
             listen(byId('projects-workspace-projects'), 'click', event => {
+                const trash = event.target.closest?.('[data-workspace-trash]');
+                if (trash && current()) { confirmLifecycle(trash.dataset.workspaceTrash, 'trash', trash); return; }
                 const button = event.target.closest?.('[data-workspace-project]');
                 if (!button || !current()) return;
                 const id = button.dataset.workspaceProject;
                 if (!(selection.projects || []).some(project => String(project.id) === id)) return;
-                deps.selectProject?.(id);
+                // The current project returns to its board from Inbox, Archive...
+                if (id === String(selection.selectedProjectId || '')) deps.showBoard?.();
+                else deps.selectProject?.(id);
                 byId('projects-workspace-rail')?.classList.remove('is-open');
                 byId('projects-workspace-rail-toggle')?.setAttribute('aria-expanded', 'false');
             });
@@ -204,6 +221,8 @@
                 filters.querySelectorAll('details').forEach(details => { details.open = false; });
             });
             listen(filters, 'reset', cancelSearch);
+            initProjectActions();
+            initLoadingIndicators();
             // V2 owns utility navigation, while this controller retains dialogs/search.
             if (deps.presentationV2) { render(); return; }
             const utilityRail = byId('projects-utility-rail');
@@ -288,6 +307,123 @@
                 }
             }
             render();
+        }
+        // ---- Project archive / trash: the existing recovery preview, then its command ----
+        const TRASH_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"></path></svg>';
+        // Roles are known for member project lists. An unknown role is left to
+        // the server preview, which explains when the Owner is required.
+        function canTrash(project) { return !!project && (project.lifecycle || 'active') === 'active' && (!project.role || project.role === 'Owner'); }
+        function projectName(id) {
+            const project = (selection.projects || []).find(entry => String(entry.id) === String(id));
+            const loaded = context?.project && String(context.project.id) === String(id) ? context.project : null;
+            return loaded?.name || loaded?.title || project?.name || project?.title || 'this project';
+        }
+        const LIFECYCLE_COPY = {
+            trash: { title: name => `Move "${name}" to trash?`, body: 'The project and its tasks will be hidden for every member. You can restore it later from Archive & trash.', confirm: 'Move to trash', busy: 'Moving to trash…', done: name => `"${name}" moved to trash. You can restore it from Archive & trash.` },
+            archive: { title: name => `Archive "${name}"?`, body: 'Archived projects leave the active list and become read-only. You can restore it later from Archive & trash.', confirm: 'Archive project', busy: 'Archiving…', done: name => `"${name}" archived. You can restore it from Archive & trash.` }
+        };
+        let lifecycleDialog = null, lifecycleRun = 0;
+        function ensureLifecycleDialog() {
+            if (lifecycleDialog || typeof panel?.append !== 'function') return lifecycleDialog;
+            lifecycleDialog = document.createElement('dialog');
+            lifecycleDialog.id = 'projects-lifecycle-dialog';
+            lifecycleDialog.className = 'crm-projects-confirm-dialog';
+            lifecycleDialog.setAttribute('aria-labelledby', 'projects-lifecycle-title');
+            lifecycleDialog.innerHTML = '<h3 id="projects-lifecycle-title"></h3><p data-lifecycle-body></p><p data-lifecycle-status role="status"></p><div class="crm-projects-confirm-actions"><button type="button" class="crm-btn-secondary" data-lifecycle-cancel>Cancel</button><button type="button" class="crm-projects-danger-btn" data-lifecycle-confirm></button></div>';
+            panel.append(lifecycleDialog);
+            removers.push(() => { if (lifecycleDialog?.open) lifecycleDialog.close(); lifecycleDialog?.remove(); lifecycleDialog = null; });
+            return lifecycleDialog;
+        }
+        async function confirmLifecycle(projectId, action, returnFocus = null) {
+            const id = String(projectId || ''), copy = LIFECYCLE_COPY[action];
+            if (!id || !copy || typeof deps.apiFetchJson !== 'function' || !current()) return false;
+            const dialog = ensureLifecycleDialog();
+            if (!dialog) return false;
+            const run = ++lifecycleRun, name = projectName(id);
+            const status = dialog.querySelector('[data-lifecycle-status]');
+            const confirm = dialog.querySelector('[data-lifecycle-confirm]'), cancel = dialog.querySelector('[data-lifecycle-cancel]');
+            dialog.querySelector('h3').textContent = copy.title(name);
+            dialog.querySelector('[data-lifecycle-body]').textContent = copy.body;
+            status.textContent = 'Checking what will change…';
+            status.classList.remove('crm-projects-board-error-text');
+            confirm.textContent = copy.confirm; confirm.disabled = true; cancel.disabled = false;
+            let preview = null, busy = false;
+            const live = () => run === lifecycleRun && current() && dialog.open;
+            const fail = message => { status.textContent = message; status.classList.add('crm-projects-board-error-text'); };
+            cancel.onclick = () => { if (!busy && dialog.open) dialog.close(); };
+            dialog.oncancel = event => { if (busy) event.preventDefault(); };
+            dialog.onclose = () => { lifecycleRun++; if (returnFocus?.isConnected) returnFocus.focus(); };
+            confirm.onclick = async () => {
+                if (!preview?.allowed || busy || !live()) return;
+                busy = true; confirm.disabled = true; cancel.disabled = true; status.textContent = copy.busy;
+                try {
+                    await deps.apiFetchJson(`/api/projects/${encodeURIComponent(id)}/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ operationId: `crm-project-${action}-${Date.now()}-${Math.random().toString(36).slice(2)}`, expectedRevision: preview.expectedRevision, expectedStructureRevision: preview.expectedStructureRevision, expectedAncestorRevisions: preview.expectedAncestorRevisions, restoreChain: false, destinationSectionId: null }) });
+                    busy = false;
+                    if (dialog.open) dialog.close();
+                    deps.showToast?.(copy.done(name), 'success');
+                    deps.onProjectLifecycleChanged?.(id, action);
+                } catch (error) {
+                    busy = false; cancel.disabled = false;
+                    if (live()) fail(`${error?.message || 'The change could not be saved.'} Close and try again.`);
+                }
+            };
+            if (!dialog.open) dialog.showModal();
+            try {
+                const query = new URLSearchParams({ targetType: 'project', targetId: id, action, restoreChain: 'false' });
+                preview = await deps.apiFetchJson(`/api/projects/${encodeURIComponent(id)}/recovery/preview?${query}`);
+                if (!live()) return false;
+                const affected = Array.isArray(preview?.affected) ? preview.affected.length : 0;
+                if (preview?.allowed) status.textContent = affected > 1 ? `${affected} records will change, including the project.` : 'Review, then confirm.';
+                else fail(preview?.reason || 'This change is not allowed for your role.');
+                confirm.disabled = !preview?.allowed;
+            } catch (error) {
+                if (live()) fail(error?.message || 'The change could not be checked. Close and try again.');
+            }
+            return true;
+        }
+        function initProjectActions() {
+            if (typeof panel?.querySelector !== 'function' || typeof document?.createElement !== 'function') return;
+            const actions = panel.querySelector('.crm-projects-workspace-heading-actions');
+            if (actions && !byId('projects-v2-trash')) {
+                const trash = document.createElement('button');
+                trash.type = 'button'; trash.id = 'projects-v2-trash'; trash.className = 'crm-projects-trash-btn';
+                trash.setAttribute('aria-label', 'Move project to trash'); trash.title = 'Move project to trash';
+                trash.innerHTML = TRASH_ICON; trash.disabled = true;
+                actions.append(trash);
+                removers.push(() => trash.remove());
+                listen(trash, 'click', () => { if (current() && selection.selectedProjectId) confirmLifecycle(selection.selectedProjectId, 'trash', trash); });
+            }
+            const menu = panel.querySelector('.crm-projects-view-options-popover');
+            if (menu && !byId('projects-v2-archive')) {
+                const archive = document.createElement('button');
+                archive.type = 'button'; archive.id = 'projects-v2-archive'; archive.className = 'crm-btn-secondary'; archive.textContent = 'Archive project'; archive.disabled = true;
+                menu.append(archive);
+                removers.push(() => archive.remove());
+                listen(archive, 'click', () => {
+                    const details = panel.querySelector('.crm-projects-view-options');
+                    if (details) details.open = false;
+                    if (current() && selection.selectedProjectId) confirmLifecycle(selection.selectedProjectId, 'archive', details?.querySelector('summary'));
+                });
+            }
+        }
+        // ---- Loading indicators: "Loading…" / "Updating…" messages get a spinner ----
+        function initLoadingIndicators() {
+            if (!globalScope.MutationObserver) return;
+            const pattern = /^\s*(Loading|Updating|Refreshing|Checking)\b/i;
+            const mark = node => {
+                const element = node?.nodeType === 1 ? node : node?.parentElement;
+                if (!element) return;
+                const targets = [element.closest?.('[role="status"], #projects-board-status'), ...(element.querySelectorAll?.('[role="status"]') || [])];
+                targets.filter(Boolean).forEach(target => target.classList.toggle('crm-projects-is-loading', pattern.test(target.textContent || '')));
+            };
+            for (const id of ['projects-board-status', 'projects-view-status', 'projects-view-content', 'projects-utility-page']) {
+                const target = byId(id);
+                if (!target) continue;
+                mark(target);
+                const observer = new globalScope.MutationObserver(records => records.forEach(record => { mark(record.target); record.addedNodes?.forEach?.(mark); }));
+                observer.observe(target, { childList: true, subtree: true, characterData: true });
+                observers.push(observer);
+            }
         }
         function dispose() {
             disposed = true; cancelSearch(); observers.forEach(observer => observer.disconnect()); removers.forEach(remove => remove());

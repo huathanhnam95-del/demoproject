@@ -679,3 +679,52 @@
 [data-projects-ui="v2"] .crm-gantt-empty { padding: 32px 0; border-block: 1px solid var(--pj-line); }
 [data-projects-ui="v2"] .crm-gantt-empty strong { font-size: calc(15px * var(--pj-v2-text-scale, 1)); font-weight: 500; }
 [data-projects-ui="v2"] .crm-gantt-empty p { color: var(--pj-muted); font-size: calc(13px * var(--pj-v2-text-scale, 1)); margin: 6px 0 0; }
+
+/* ---------- Side-tab header: a clear way back to the project ---------- */
+[data-projects-ui="v2"] #projects-workspace-rail #projects-v2-table { display: none; }
+[data-projects-ui="v2"] .crm-projects-utility-header { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px 16px; padding: 0 0 12px; }
+[data-projects-ui="v2"] .crm-projects-utility-header .crm-projects-back { grid-row: 1; display: inline-flex; align-items: center; gap: 6px; width: max-content; min-height: 34px; padding: 6px 12px 6px 8px; border: 1px solid var(--pj-line-strong); border-radius: var(--pj-radius-md); background: var(--pj-surface); color: var(--pj-accent-ink); font: inherit; font-size: calc(13px * var(--pj-v2-text-scale, 1)); cursor: pointer; }
+[data-projects-ui="v2"] .crm-projects-back svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+[data-projects-ui="v2"] .crm-projects-back strong { font-weight: 650; }
+[data-projects-ui="v2"] .crm-projects-back:hover { background: var(--pj-accent-soft); border-color: var(--pj-accent-ink); }
+[data-projects-ui="v2"] .crm-projects-utility-title { grid-row: 1; margin: 0; font-size: calc(18px * var(--pj-v2-text-scale, 1)); font-weight: 650; color: var(--pj-ink); }
+[data-projects-ui="v2"] .crm-projects-utility-viewtabs { grid-column: 1 / -1; display: flex; gap: 4px; flex-wrap: wrap; }
+[data-projects-ui="v2"] .crm-projects-utility-viewtabs::before { content: 'Open in'; align-self: center; margin-right: 6px; color: var(--pj-faint); font-size: calc(12px * var(--pj-v2-text-scale, 1)); }
+[data-projects-ui="v2"] .crm-projects-utility-viewtabs button { min-height: 30px; padding: 4px 12px; border: 0; border-radius: var(--pj-radius-md); background: transparent; color: var(--pj-ink-2); font: inherit; font-size: calc(13px * var(--pj-v2-text-scale, 1)); cursor: pointer; }
+[data-projects-ui="v2"] .crm-projects-utility-viewtabs button:hover { background: var(--pj-sunken); color: var(--pj-accent-ink); }
+/* While a side tab is open the project stays marked, but softer than the active tab. */
+[data-projects-ui="v2"]:not([data-projects-utility=""]) #projects-workspace-projects button[aria-current="page"] { background: transparent; box-shadow: inset 3px 0 0 var(--pj-accent-ink); }
+
+/* ---------- Trash: sidebar hover icon, header icon, confirmation ---------- */
+[data-panel="projects"] { --pj-danger: #c93a3a; --pj-danger-soft: rgba(201, 58, 58, 0.1); }
+#projects-workspace-projects .crm-projects-rail-item { position: relative; }
+#projects-workspace-projects .crm-projects-rail-item > button[data-workspace-project] { padding-right: 38px; }
+#projects-workspace-projects button.crm-projects-rail-trash { position: absolute; top: 50%; right: 6px; width: 28px; min-height: 28px; height: 28px; padding: 0; justify-content: center; transform: translateY(-50%); border-radius: var(--pj-radius-md); color: var(--pj-danger); background: transparent; opacity: 0; pointer-events: none; }
+#projects-workspace-projects button.crm-projects-rail-trash::before { content: none; }
+#projects-workspace-projects .crm-projects-rail-item:hover > button.crm-projects-rail-trash,
+#projects-workspace-projects .crm-projects-rail-item:focus-within > button.crm-projects-rail-trash { opacity: 1; pointer-events: auto; }
+#projects-workspace-projects button.crm-projects-rail-trash:hover { background: var(--pj-danger-soft); }
+:is(.crm-projects-rail-trash, .crm-projects-trash-btn) svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+[data-panel="projects"] .crm-projects-trash-btn { display: inline-grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 1px solid color-mix(in srgb, var(--pj-danger) 45%, transparent); border-radius: var(--pj-radius-md); background: var(--pj-surface); color: var(--pj-danger); cursor: pointer; }
+[data-panel="projects"] .crm-projects-trash-btn:hover:not(:disabled) { background: var(--pj-danger-soft); border-color: var(--pj-danger); }
+[data-panel="projects"] .crm-projects-trash-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.crm-projects-confirm-dialog { width: min(440px, calc(100vw - 32px)); padding: 22px 24px; border: 1px solid var(--pj-line); border-radius: 12px; background: var(--pj-surface); color: var(--pj-ink); box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18); }
+.crm-projects-confirm-dialog::backdrop { background: rgba(15, 23, 42, 0.35); }
+.crm-projects-confirm-dialog h3 { margin: 0 0 8px; font-size: 17px; font-weight: 650; overflow-wrap: anywhere; }
+.crm-projects-confirm-dialog p { margin: 0 0 10px; color: var(--pj-ink-2); font-size: 13.5px; line-height: 1.5; }
+.crm-projects-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.crm-projects-danger-btn { min-height: 36px; padding: 6px 16px; border: 0; border-radius: var(--pj-radius-md); background: var(--pj-danger); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.crm-projects-danger-btn:hover:not(:disabled) { filter: brightness(0.92); }
+.crm-projects-danger-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ---------- Loading: spinner beside "Loading…" messages and on the board placeholder ---------- */
+@keyframes crm-projects-spin { to { transform: rotate(360deg); } }
+.crm-projects-spinner, [data-panel="projects"] .crm-projects-is-loading::before { content: ''; display: inline-block; flex: 0 0 auto; width: 14px; height: 14px; border: 2px solid var(--pj-line-strong); border-top-color: var(--pj-accent-ink); border-radius: 50%; animation: crm-projects-spin 0.8s linear infinite; vertical-align: -2px; }
+[data-panel="projects"] .crm-projects-is-loading { display: flex; align-items: center; gap: 8px; color: var(--pj-ink-2); }
+.crm-projects-loading-label { display: flex; align-items: center; gap: 10px; margin: 4px 0 10px; color: var(--pj-ink-2); font-size: 13px; }
+.crm-projects-initial-loading > span { background: linear-gradient(90deg, var(--pj-sunken), var(--pj-raised), var(--pj-sunken)); background-size: 200% 100%; }
+@media (prefers-reduced-motion: reduce) {
+  .crm-projects-spinner, [data-panel="projects"] .crm-projects-is-loading::before { animation-duration: 2.4s; }
+}
+/* The placeholder already says "Loading tasks…"; avoid a second loading line above it. */
+[data-panel="projects"] #projects-board-status:has(+ .crm-projects-initial-loading:not([hidden])) { display: none; }

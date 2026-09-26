@@ -68,6 +68,8 @@ function buildLegacyChecks() {
         ['node', ['tests/crm/projects/v2-rollout-readiness.test.js']],
         ['node', ['tests/crm/projects/v2-inline-create.test.js']],
         ['node', ['tests/crm/projects/v2-project-switch-cache.test.js']],
+        ['node', ['tests/crm/projects/v2-open-board.test.js']],
+        ['node', ['tests/crm/projects/v2-project-actions.test.js']],
         ['node', ['tests/crm/projects/crm-admin-projects-reload-route.test.js']],
         ['node', ['tests/crm/projects/field-save-feedback.test.js']],
         ['node', ['tests/crm/projects/board-local-save-lineage.test.js']],

@@ -2201,6 +2201,19 @@
         getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
         selectProject: projectId => projectsAccessController?.selectProject?.(projectId),
         prefetchProject: projectId => projectsBoardController?.prefetchProject?.(projectId),
+        showBoard: () => projectsWorkspaceController?.showBoard?.(),
+        apiFetchJson: (path, options) => apiFetchJson(path, options),
+        showToast: (message, type) => showToast(message, type),
+        // After archiving or trashing, reload the list and leave that project
+        // for another active one (or the empty state).
+        onProjectLifecycleChanged: async projectId => {
+          await projectsAccessController?.refresh?.().catch(() => false);
+          const current = projectsAccessController?.getSelection?.();
+          if (!current || String(current.selectedProjectId || '') !== String(projectId)) return;
+          const next = (current.projects || []).find(project => String(project.id) !== String(projectId) && (project.lifecycle || 'active') === 'active');
+          if (next) await projectsAccessController?.selectProject?.(next.id);
+          projectsWorkspaceController?.showBoard?.();
+        },
         onManageAccess: () => { window.location.hash = '#staff'; },
         onSettingsOpen: name => projectsAccessController?.refreshSettings?.(name)
       })

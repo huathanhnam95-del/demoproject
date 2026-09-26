@@ -1465,6 +1465,9 @@ async function handleLogout() {
 
   try {
     localStorage.removeItem('crm_auth_session');
+    // Remembered Projects boards and lists belong to the signed-in account.
+    localStorage.removeItem('crmProjectsBoardCache:v1');
+    localStorage.removeItem('crmProjectsListCache:v1');
   } catch (e) {
     /* ignore storage removal error */
   }

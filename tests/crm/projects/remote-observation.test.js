@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createProjectsChangeFeedService, prepareFeedCommit, shardFor, encodeCursor, decodeCursor, hints, LIMITS } = require('../../../functions/src/crm/projects/change-feed-service');
+const { createProjectsChangeFeedService, prepareFeedCommit, shardFor, encodeCursor, decodeCursor, hints, LIMITS, readFeedHeads, handshakeFromSnapshot } = require('../../../functions/src/crm/projects/change-feed-service');
 const { createProjectsCommandService } = require('../../../functions/src/crm/projects/domain/command-service');
 const { createProjectsQueryService } = require('../../../functions/src/crm/projects/domain/query-service');
 require('../../../public/js/crm/projects/remote-observer');
@@ -158,4 +158,34 @@ test('account or project switch cancels a retained handshake retry; terminal ret
         const observer=createController({getCurrentUser:()=>({uid}),apiFetchJson:async()=>{if(++requests===1)throw Object.assign(Error('temporary'),{status:503});if(change==='denial')throw Object.assign(Error('revoked'),{status:403});return{authority:{signature:'Owner'},cursor:'head',taskIds:[],messageIds:[],changes:[],hasMore:false};},onDenied:id=>denials.push(id),apply:async()=>true});
         try{assert.equal(await observer.snapshot('p',async()=>{oldLoads++;return true;}),false);if(change==='project')await observer.snapshot('q',async()=>{newLoads++;return true;});if(change==='account')uid='b';observer.tick();await flush();assert.equal(oldLoads,0);if(change==='project'){assert.equal(newLoads,1);assert.equal(observer.getState().projectId,'q');assert.deepEqual(denials,[]);}else{assert.equal(observer.getState().cursor,'');assert.equal(observer.getState().projectId,'');assert.deepEqual(denials,['p']);observer.tick();await flush();assert.deepEqual(denials,['p']);}}finally{observer.dispose();}
     }
+});
+
+test('an /open snapshot reads heads in its own transaction; polling from its cursor misses nothing',async()=>{
+    const f=fixture();await f.event('before');
+    let transactions=0;const run=f.db.runTransaction.bind(f.db);f.db.runTransaction=work=>{transactions++;return run(work);};
+    const snapshot=await f.query.readSnapshot(f.identity,'p',{readFeedHeads:(tx,id)=>readFeedHeads(tx,f.db,id)});
+    assert.equal(transactions,1,'heads and board records come from one transaction');
+    assert.equal(snapshot.feedHeads.length,16);
+    const opened=handshakeFromSnapshot(f.identity,'p',snapshot.access,snapshot.feedHeads);
+    const handshake=await f.feed.poll(f.identity,'p');
+    assert.deepEqual(decodeCursor(opened.cursor,'a','p',Array(16).fill(100)),decodeCursor(handshake.cursor,'a','p',Array(16).fill(100)));
+    assert.equal(opened.authority.signature,handshake.authority.signature);
+    assert.equal((await f.feed.poll(f.identity,'p',{cursor:opened.cursor})).changes.length,0,'the snapshot already includes earlier changes');
+    await f.event('after');
+    assert.equal((await f.feed.poll(f.identity,'p',{cursor:opened.cursor})).changes.length,1,'a later change is seen from the snapshot cursor');
+    assert.throws(()=>handshakeFromSnapshot(f.identity,'p',snapshot.access,undefined),{status:500});
+});
+test('inline observer snapshots seed the cursor without a handshake, or hand the handshake to the load',async()=>{
+    const requests=[];const authority={signature:'Owner',project:{id:'p'},membership:{role:'Owner'}};
+    const observer=createController({getCurrentUser:()=>({uid:'a'}),apiFetchJson:async url=>{requests.push(url);return{authority,cursor:'head',hasMore:false,changes:[],taskIds:[],messageIds:[]};},apply:async()=>true});
+    try{
+        assert.equal(await observer.snapshot('p',feed=>feed.seed({cursor:'opened',authority}),{inline:true}),true);
+        assert.equal(requests.length,0,'no separate handshake request');assert.equal(observer.getState().cursor,'opened');
+        observer.stop();const order=[];
+        await observer.snapshot('q',async feed=>{assert.equal(await feed.handshake(),true);order.push('reads');return true;},{inline:true});
+        assert.deepEqual(requests,['/api/projects/q/changes']);assert.deepEqual(order,['reads']);assert.equal(observer.getState().cursor,'head');
+        observer.stop();
+        assert.equal(await observer.snapshot('r',feed=>feed.seed({cursor:'x'}),{inline:true}),false,'a seed without authority is rejected');
+        assert.equal(observer.getState().cursor,'');
+    }finally{observer.dispose();}
 });

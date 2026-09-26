@@ -15,6 +15,15 @@ async function main(){
     const run=(operationId,execute)=>command.runCommand({actorUid:identity.uid,projectId,command:'remoteAcceptance',operationId,payload:{},execute:execute||(async()=>({result:{ok:true},affectedPaths:[`crmProjects/${projectId}/tasks/t`]}))});
     try{
         await h.task(c,'t',{title:'Initial'});
+        await h.caseRun('one /open request returns the board and a cursor matching it; outsiders are refused',async()=>{
+            const query=`/open?pageSize=200&filters=${encodeURIComponent(JSON.stringify({parentScope:'root'}))}&includeAncestorContext=true`;
+            const opened=h.expectStatus(await c.get(query,'owner'),200);
+            assert.equal(opened.project.id,projectId);assert.equal(opened.membership.role,'Owner');assert.ok(Array.isArray(opened.people));
+            assert.ok(opened.page.tasks.some(task=>task.id==='t'));assert.equal(opened.project.crmLinks,undefined);
+            assert.equal((await changes(opened.changes.cursor)).changes.length,0,'the cursor matches the returned board');
+            await run(op('after-open'));assert.equal((await changes(opened.changes.cursor)).changes.length,1,'a later change is seen from the /open cursor');
+            assert.ok([403,404].includes((await c.get(query,'unauthorized')).status),'non-members cannot open the board');
+        },results);
         await h.caseRun('committed replay failure and prepared preview/apply have exact counter cardinality',async()=>{
             const before=await head();const operationId=op('single');await run(operationId);await run(operationId);await assert.rejects(run(op('failed'),async()=>{throw Error('failure');}));
             const preparedPayload={operationId:op('preview'),expectedRevision:(await c.revision()).revision,name:'Prepared rename'};

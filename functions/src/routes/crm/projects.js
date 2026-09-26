@@ -18,8 +18,8 @@ const {
 const { isProjectsFeatureEnabled } = require('../../crm/projects/feature-config');
 const { createProjectsCommandService } = require('../../crm/projects/domain/command-service');
 const { createProjectsQueryService } = require('../../crm/projects/domain/query-service');
-const { createProjectsChangeFeedService } = require('../../crm/projects/change-feed-service');
-const { DomainError } = require('../../crm/projects/domain/validation');
+const { createProjectsChangeFeedService, readFeedHeads, handshakeFromSnapshot } = require('../../crm/projects/change-feed-service');
+const { DomainError, id: normalizeRouteProjectId } = require('../../crm/projects/domain/validation');
 const { createProjectsDiscussionService } = require('../../crm/projects/discussion-service');
 const { createProjectsAttachmentService } = require('../../crm/projects/attachment-service');
 const { createProjectsRecoveryService } = require('../../crm/projects/recovery-service');
@@ -421,6 +421,33 @@ function createProjectsRouter(rawDeps = {}) {
     router.post('/:projectId/changes/hydrate', (req, res) => handle(req, res, async () => {
         res.set('Cache-Control', 'no-store');
         return sendSuccess(res, await queryService.hydrateChanges(req.projectsIdentity, req.params.projectId, req.body || {}));
+    }));
+    // Opening a board in one request: one read-only transaction returns the
+    // access check, board records and matching change-feed cursor; project
+    // links and the member directory are read after it, so none is older
+    // than the cursor. Later pages and branches still use /tasks.
+    router.get('/:projectId/open', (req, res) => handle(req, res, async () => {
+        res.set('Cache-Control', 'no-store');
+        const identity = req.projectsIdentity;
+        const projectId = normalizeRouteProjectId(req.params.projectId, 'project ID');
+        const snapshot = await queryService.readSnapshot(identity, projectId, { readFeedHeads: (transaction, id) => readFeedHeads(transaction, deps.db, id) });
+        const [page, linkedRecords, people] = await Promise.all([
+            queryService.queryTasks(identity, projectId, {
+                filters: req.query.filters ? parseQueryObject(req.query.filters, 'filters') : {},
+                sort: req.query.sort ? parseQueryObject(req.query.sort, 'sort') : { field: req.query.sortField, direction: req.query.sortDirection },
+                pageSize: req.query.pageSize,
+                includeAncestorContext: req.query.includeAncestorContext
+            }, snapshot),
+            service.resolveLinkedRecords(snapshot.access.project, identity),
+            service.listProjectMemberDirectory(identity, projectId)
+        ]);
+        return sendSuccess(res, {
+            project: serializeProjectAccess({ ...snapshot.access, linkedRecords }),
+            membership: snapshot.access.membership.data,
+            people,
+            page,
+            changes: handshakeFromSnapshot(identity, projectId, snapshot.access, snapshot.feedHeads)
+        });
     }));
     router.get('/:projectId/tasks', (req, res) => handle(req, res, async () => {
         const result = await queryService.queryTasks(req.projectsIdentity, req.params.projectId, {

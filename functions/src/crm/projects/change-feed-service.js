@@ -37,6 +37,21 @@ function hints(event) {
     if (taskIds.size + messageIds.size > LIMITS.ids) return { taskIds: [], messageIds: [], refresh: true, discussionRefresh: messageIds.size > 0, operationId: event.operationId || null, actorUid: event.actorUid || null, command: event.command || null };
     return { taskIds: [...taskIds], messageIds: [...messageIds], refresh, aggregates, discussionRefresh: false, operationId: event.operationId || null, actorUid: event.actorUid || null, command: event.command || null };
 }
+// Read every shard head of a project in one parallel batch inside the caller's transaction.
+async function readFeedHeads(transaction, db, projectId) {
+    return (await Promise.all(Array.from({ length: SHARDS }, (_, shard) => transaction.get(headRef(db, projectId, shard)))))
+        .map(snapshot => Number(readData(snapshot)?.sequence || 0));
+}
+function feedAuthority(access) {
+    return { project: serializeProjectAccess(access), membership: { role: access.role, revision: Number(access.membership.data.revision || 0) }, signature: JSON.stringify([access.role, access.project.data.membershipRevision || 0, access.project.data.lifecycle || 'active']) };
+}
+// A handshake built from heads read in the same transaction as a board
+// snapshot: the cursor matches that snapshot exactly, so polling from it
+// cannot miss a change the snapshot did not include.
+function handshakeFromSnapshot(identity, projectId, access, heads) {
+    if (!Array.isArray(heads) || heads.length !== SHARDS) throw new DomainError(500, 'CHANGE_FEED_HEADS', 'Change heads were not read with the snapshot.');
+    return { authority: feedAuthority(access), cursor: encodeCursor({ v: 1, actorUid: identity.uid, projectId, ack: heads.slice(), target: null }), hasMore: false, changes: [], taskIds: [], messageIds: [], refresh: false, discussionRefresh: false, costs: { headReads: SHARDS, queryReads: 0, metadataBytes: 2, taskEnumeration: 0 } };
+}
 function encodeCursor(value) { return Buffer.from(JSON.stringify(value)).toString('base64url'); }
 function decodeCursor(raw, actorUid, projectId, heads) {
     let value;
@@ -50,10 +65,8 @@ function createProjectsChangeFeedService({ db, accessService }) {
         const projectId = id(rawProjectId, 'project ID');
         return db.runTransaction(async transaction => {
             const access = await accessService.assertTransactionContentAccess(transaction, identity.uid, projectId);
-            // Read all shard heads together within the same read-only transaction.
-            const heads = (await Promise.all(Array.from({ length: SHARDS }, (_, shard) => transaction.get(headRef(db, projectId, shard)))))
-                .map(snapshot => Number(readData(snapshot)?.sequence || 0));
-            const authority = { project: serializeProjectAccess(access), membership: { role: access.role, revision: Number(access.membership.data.revision || 0) }, signature: JSON.stringify([access.role, access.project.data.membershipRevision || 0, access.project.data.lifecycle || 'active']) };
+            const heads = await readFeedHeads(transaction, db, projectId);
+            const authority = feedAuthority(access);
             let cursor = options.cursor ? decodeCursor(options.cursor, identity.uid, projectId, heads) : { v: 1, actorUid: identity.uid, projectId, ack: heads.slice(), target: null };
             const target = cursor.target || heads.slice(); const ack = cursor.ack.slice();
             const changes = []; const taskIds = new Set(); const messageIds = new Set(); let bytes = 2; let queryReads = 0; let full = false;
@@ -82,4 +95,4 @@ function createProjectsChangeFeedService({ db, accessService }) {
     }
     return { poll };
 }
-module.exports = { createProjectsChangeFeedService, prepareFeedCommit, shardFor, headRef, hints, encodeCursor, decodeCursor, SHARDS, LIMITS };
+module.exports = { createProjectsChangeFeedService, readFeedHeads, handshakeFromSnapshot, prepareFeedCommit, shardFor, headRef, hints, encodeCursor, decodeCursor, SHARDS, LIMITS };

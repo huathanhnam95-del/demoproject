@@ -369,6 +369,9 @@
   function clearCrmAuthSession() {
     try {
       localStorage.removeItem('crm_auth_session');
+      // Remembered Projects boards and lists belong to the signed-in account.
+      localStorage.removeItem('crmProjectsBoardCache:v1');
+      localStorage.removeItem('crmProjectsListCache:v1');
     } catch (e1) {
       /* ignore storage removal error */
     }
@@ -2197,6 +2200,7 @@
         ...options,
         getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
         selectProject: projectId => projectsAccessController?.selectProject?.(projectId),
+        prefetchProject: projectId => projectsBoardController?.prefetchProject?.(projectId),
         onManageAccess: () => { window.location.hash = '#staff'; },
         onSettingsOpen: name => projectsAccessController?.refreshSettings?.(name)
       })
@@ -2269,6 +2273,13 @@
           if (projectsAccountInvalidated || actorUid !== projectsDocumentUid || window.firebase?.auth?.().currentUser?.uid !== actorUid || !state.projectsEnabled || state.main !== requestedRoute) return;
           initializeProjectsWorkspace();
           clearProjectsLoadStatus();
+          // Start the likely board (address or last viewed) alongside the
+          // project list; the server authorizes it and the board only uses it
+          // if that project is then selected.
+          try {
+            const likelyProjectId = new URLSearchParams(window.location.search).get('pjProject') || projectsBoardController?.rememberedProjectId?.();
+            if (likelyProjectId) projectsBoardController?.prefetchProject?.(likelyProjectId);
+          } catch (_) { /* prefetch is optional */ }
           await projectsAccessController.refresh().catch(error => {
             console.error('[CRM Admin] Projects access refresh failed:', error);
             showToast(error?.message || 'Could not refresh Projects.', 'error');

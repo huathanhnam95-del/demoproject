@@ -73,7 +73,7 @@ class FakeDb {
 function makeAuth() {
     const users = new Map();
     const tokens = new Map();
-    const calls = { verify: [] };
+    const calls = { verify: [], getUser: [] };
     return {
         users, tokens, calls,
         verifyIdToken: async (token, checkRevoked) => {
@@ -85,6 +85,7 @@ function makeAuth() {
             return { ...decoded };
         },
         getUser: async (uid) => {
+            calls.getUser.push(uid);
             const user = users.get(uid);
             if (!user) { const error = new Error('missing'); error.code = 'auth/user-not-found'; throw error; }
             return { ...user };
@@ -284,9 +285,18 @@ async function main() {
         assert.strictEqual(response.status, 403);
         response = await request(server, '/api/projects/access', 'revoked');
         assert.strictEqual(response.status, 401);
-        assert.ok(auth.calls.verify.some((call) => call.token === 'suspended-token' && call.checkRevoked === true), 'disabled-user requests must first use revoked-token verification');
-        assert.ok(!auth.calls.verify.some((call) => call.token === 'suspended-token' && call.checkRevoked === false), 'disabled-user requests must not retry token verification without revoked-token checks');
-        assert.ok(auth.calls.verify.filter((call) => call.token !== 'suspended-token').every((call) => call.checkRevoked === true), 'every non-disabled Projects request must request revoked-token verification');
+        // A session revoked after the token's sign-in time is rejected from the
+        // same fresh Auth lookup that also enforces the disabled state.
+        auth.tokens.set('stale-session', { uid: 'owner', auth_time: 1000 });
+        auth.users.set('owner', { ...auth.users.get('owner'), tokensValidAfterTime: new Date(2000 * 1000).toUTCString() });
+        response = await request(server, '/api/projects/access', 'stale-session');
+        assert.strictEqual(response.status, 401, 'a token issued before tokensValidAfterTime must be rejected');
+        assert.strictEqual(response.body.error, 'REVOKED_TOKEN');
+        const lookupsBefore = auth.calls.getUser.length;
+        response = await request(server, '/api/projects/demo', 'suspended-token');
+        assert.strictEqual(response.status, 403, 'a disabled Auth user is rejected on every request');
+        assert.ok(auth.calls.getUser.length > lookupsBefore, 'every Projects request performs a fresh Auth user lookup');
+        assert.ok(auth.calls.verify.every((call) => call.checkRevoked === false), 'token signature verification is local; disabled/revoked checks use the single fresh Auth lookup');
         assert.notStrictEqual(memberDocumentId('a:b', 'c'), memberDocumentId('a', 'b:c'));
         process.stdout.write('crm projects Phase1 API access contract passed\n');
     } finally {

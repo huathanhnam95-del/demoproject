@@ -232,21 +232,16 @@ function createProjectsAccessService(deps = {}) {
         if (!value) throw new ProjectsAccessError(401, 'UNAUTHORIZED', 'Missing bearer token.');
         let decoded;
         try {
-            // checkRevoked is essential here: an old claim-bearing token cannot
-            // retain access after an administrator revokes the session.
-            decoded = await verifyIdToken(value, true);
+            // Verify the signature and expiry locally. The disabled and
+            // revoked-session checks that checkRevoked would add are made below
+            // from one fresh Auth user lookup on every request, with the same
+            // rules, instead of a second lookup inside the verifier.
+            decoded = await verifyIdToken(value, false);
         } catch (error) {
             if (error instanceof ProjectsAccessError) throw error;
             const code = String(error?.code || '').toLowerCase();
-            if (code === 'auth/user-disabled' || code === 'user-disabled') {
-                // Firebase Auth verifies the signed token before checking the
-                // current disabled state. Preserve that trusted provider
-                // decision as the account-inactive response; a second verify
-                // without revoked-token checks can never recover it safely.
-                throw new ProjectsAccessError(403, 'ACCOUNT_INACTIVE', 'Account is not active.');
-            } else {
-                throw new ProjectsAccessError(401, code.includes('revoked') ? 'REVOKED_TOKEN' : 'UNAUTHORIZED', 'Authentication failed.');
-            }
+            if (code === 'auth/user-disabled' || code === 'user-disabled') throw new ProjectsAccessError(403, 'ACCOUNT_INACTIVE', 'Account is not active.');
+            throw new ProjectsAccessError(401, code.includes('revoked') ? 'REVOKED_TOKEN' : 'UNAUTHORIZED', 'Authentication failed.');
         }
         const uid = normalizeUid(decoded?.uid || decoded?.sub || decoded?.user_id);
         if (!uid) throw new ProjectsAccessError(401, 'UNAUTHORIZED', 'Authentication failed.');
@@ -257,11 +252,11 @@ function createProjectsAccessService(deps = {}) {
             ref('users', uid).get(),
             ref(PROJECT_COLLECTIONS.workforce, uid).get()
         ]);
-        const authTime = Number(decoded?.auth_time || 0);
-        const validAfter = authUser?.tokensValidAfterTime
-            ? Math.floor(new Date(authUser.tokensValidAfterTime).getTime() / 1000)
-            : 0;
-        if (validAfter > 0 && authTime > 0 && authTime < validAfter) {
+        // Same order and rules as Firebase checkRevoked: disabled first, then
+        // a session revoked after this token's sign-in time.
+        if (authUser?.disabled === true) throw new ProjectsAccessError(403, 'ACCOUNT_INACTIVE', 'Account is not active.');
+        const validAfterMs = authUser?.tokensValidAfterTime ? new Date(authUser.tokensValidAfterTime).getTime() : 0;
+        if (validAfterMs > 0 && Number(decoded?.auth_time || 0) * 1000 < validAfterMs) {
             throw new ProjectsAccessError(401, 'REVOKED_TOKEN', 'Session has been revoked.');
         }
         const profile = profileSnap?.exists ? (profileSnap.data() || {}) : {};

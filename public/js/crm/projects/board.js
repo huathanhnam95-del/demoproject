@@ -1199,11 +1199,68 @@
             setStatus('Project access is no longer available. Select an authorized project.', 'error');
         }
 
-        // Recently opened boards are kept in memory (never on disk) so switching
-        // back paints at once; a background load then reconciles the snapshot.
-        // Cached membership never authorizes writes: the refresh keeps the
-        // board busy until the server confirms access again.
+        // Recently opened boards are kept in memory so switching back paints at
+        // once, and the last few are also kept in this browser (per account,
+        // expiring, cleared on sign-out) so a reload paints before the network
+        // answers. A background load then reconciles the snapshot. Cached
+        // membership never authorizes writes: the refresh keeps the board busy
+        // until the server confirms access again.
         const PROJECT_SNAPSHOT_LIMIT = 5;
+        const STORED_SNAPSHOT_KEY = 'crmProjectsBoardCache:v1', STORED_SNAPSHOT_LIMIT = 3;
+        const STORED_SNAPSHOT_TTL_MS = 3 * 86400000, STORED_SNAPSHOT_MAX_CHARS = 1500000;
+        function readStoredSnapshots(uid) {
+            try {
+                const value = JSON.parse(globalScope.localStorage?.getItem(STORED_SNAPSHOT_KEY) || 'null');
+                if (!value || typeof value !== 'object' || value.uid !== uid || typeof value.entries !== 'object') return { uid, lastProjectId: '', entries: {} };
+                return value;
+            } catch (_) { return { uid, lastProjectId: '', entries: {} }; }
+        }
+        function writeStoredSnapshots(value) {
+            try { globalScope.localStorage?.setItem(STORED_SNAPSHOT_KEY, JSON.stringify(value)); }
+            catch (_) { try { globalScope.localStorage?.removeItem(STORED_SNAPSHOT_KEY); } catch (__) { /* storage unavailable */ } }
+        }
+        function storeSnapshot(uid, projectId, snapshot) {
+            if (!uid || !projectId) return;
+            const data = {
+                project: snapshot.project, membership: snapshot.membership, members: snapshot.members, sections: snapshot.sections, columns: snapshot.columns,
+                tasks: [...snapshot.tasks], expanded: [...snapshot.expanded], collapsedSections: [...snapshot.collapsedSections],
+                loadedBranches: [...snapshot.loadedBranches], branchCursors: [...snapshot.branchCursors], branchHasMore: [...snapshot.branchHasMore],
+                structureRevision: snapshot.structureRevision, schemaRevision: snapshot.schemaRevision
+            };
+            let serialized;
+            try { serialized = JSON.stringify(data); } catch (_) { return; }
+            const stored = readStoredSnapshots(uid);
+            delete stored.entries[projectId];
+            if (serialized.length <= STORED_SNAPSHOT_MAX_CHARS) stored.entries[projectId] = { savedAt: Date.now(), data };
+            stored.lastProjectId = projectId;
+            const keep = Object.entries(stored.entries).filter(([, entry]) => Date.now() - Number(entry?.savedAt || 0) < STORED_SNAPSHOT_TTL_MS)
+                .sort((a, b) => b[1].savedAt - a[1].savedAt).slice(0, STORED_SNAPSHOT_LIMIT);
+            writeStoredSnapshots({ uid, lastProjectId: stored.lastProjectId, entries: Object.fromEntries(keep) });
+        }
+        function loadStoredSnapshot(uid, projectId) {
+            const entry = readStoredSnapshots(uid).entries[projectId];
+            if (!entry?.data || Date.now() - Number(entry.savedAt || 0) >= STORED_SNAPSHOT_TTL_MS) return null;
+            const data = entry.data;
+            if (String(data.project?.id || '') !== projectId || !Array.isArray(data.tasks)) return null;
+            return {
+                project: data.project, membership: data.membership, members: data.members || [], sections: data.sections || [], columns: data.columns || [],
+                tasks: new Map(data.tasks), expanded: new Set(data.expanded || []), collapsedSections: new Set(data.collapsedSections || []),
+                loadedBranches: new Set(data.loadedBranches || []), branchCursors: new Map(data.branchCursors || []), branchHasMore: new Map(data.branchHasMore || []),
+                structureRevision: Number(data.structureRevision || 0), schemaRevision: Number(data.schemaRevision || 0)
+            };
+        }
+        function forgetStoredSnapshot(projectId) {
+            const uid = String(deps.getCurrentUser?.()?.uid || '');
+            const stored = readStoredSnapshots(uid);
+            if (!stored.entries[projectId] && stored.lastProjectId !== projectId) return;
+            delete stored.entries[projectId];
+            if (stored.lastProjectId === projectId) stored.lastProjectId = '';
+            writeStoredSnapshots(stored);
+        }
+        function rememberedProjectId() {
+            const uid = String(deps.getCurrentUser?.()?.uid || '');
+            return uid ? String(readStoredSnapshots(uid).lastProjectId || '') : '';
+        }
         const projectSnapshots = new Map();
         const snapshotKey = (projectId, actorUid = String(deps.getCurrentUser?.()?.uid || '')) => `${actorUid}|${projectId}`;
         function rememberProjectSnapshot() {
@@ -1212,20 +1269,31 @@
             if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid || (project.lifecycle || 'active') !== 'active') return;
             if ([...tasks.values()].some(task => task.isOptimistic) || sections.some(section => section.isOptimistic) || projectionTaskIds.size) return;
             const key = snapshotKey(id);
-            projectSnapshots.delete(key);
-            projectSnapshots.set(key, {
+            const snapshot = {
                 project, membership, members, sections, columns, tasks: new Map(tasks),
                 expanded: new Set(expanded), collapsedSections: new Set(collapsedSections),
                 loadedBranches: new Set(loadedBranches), branchCursors: new Map(branchCursors), branchHasMore: new Map(branchHasMore),
                 structureRevision: boardRevision.structureRevision, schemaRevision: boardRevision.schemaRevision
-            });
+            };
+            projectSnapshots.delete(key);
+            projectSnapshots.set(key, snapshot);
             while (projectSnapshots.size > PROJECT_SNAPSHOT_LIMIT) projectSnapshots.delete(projectSnapshots.keys().next().value);
+            storeSnapshot(controllerActorUid, id, snapshot);
         }
+        // Keep the stored copy current after confirmed loads and when leaving.
+        let snapshotSaveTimer = null;
+        function scheduleSnapshotSave() {
+            if (typeof globalScope.setTimeout !== 'function') return;
+            globalScope.clearTimeout?.(snapshotSaveTimer);
+            snapshotSaveTimer = globalScope.setTimeout(() => { snapshotSaveTimer = null; rememberProjectSnapshot(); }, 800);
+        }
+        globalScope.addEventListener?.('pagehide', () => rememberProjectSnapshot());
         function forgetProjectSnapshot(projectId) {
             for (const key of [...projectSnapshots.keys()]) if (key.endsWith(`|${projectId}`)) projectSnapshots.delete(key);
+            forgetStoredSnapshot(projectId);
         }
         function hydrateProjectSnapshot(projectId, actorUid) {
-            const cached = projectSnapshots.get(snapshotKey(projectId, actorUid));
+            const cached = projectSnapshots.get(snapshotKey(projectId, actorUid)) || loadStoredSnapshot(actorUid, projectId);
             if (!cached) return false;
             project = cached.project; membership = cached.membership; members = cached.members;
             sections = cached.sections; columns = cached.columns; tasks = new Map(cached.tasks);
@@ -1286,8 +1354,16 @@
                 publishContext();
                 return;
             }
-            if (changed || !project) loadProject(nextId);
+            // A repeated selection (for example a remembered project list and
+            // then the confirmed list) must not start a second load while the
+            // first is still running.
+            const loadKey = `${projectEpoch}|${nextId}`;
+            if (changed || (!project && requestedProjectLoad !== loadKey)) {
+                requestedProjectLoad = loadKey;
+                Promise.resolve(loadProject(nextId)).finally(() => { if (requestedProjectLoad === loadKey) requestedProjectLoad = ''; });
+            }
         }
+        let requestedProjectLoad = '';
 
         function renderProjectPicker() {
             const picker = elements.projectsBoardProjectSelect;
@@ -1313,6 +1389,34 @@
             params.set('includeAncestorContext', 'true');
             if (cursor) params.set('cursor', cursor);
             return `/api/projects/${encodeURIComponent(projectId)}/tasks?${params.toString()}`;
+        }
+
+        function openPath(projectId, queryFilters = sharedFilters) {
+            return queryPath(projectId, null, null, queryFilters).replace('/tasks?', '/open?');
+        }
+
+        // Boards fetched ahead of a click (hover, or the remembered project at
+        // start-up). Each entry is one complete /open response whose cursor
+        // matches its own data, kept briefly for the same account only.
+        const OPEN_PREFETCH_TTL_MS = 10000;
+        const openPrefetches = new Map();
+        function prefetchProject(projectId) {
+            const id = String(projectId || '').trim();
+            const uid = String(deps.getCurrentUser?.()?.uid || '');
+            if (!id || !uid || !apiFetchJson || uid !== controllerActorUid || id === currentProjectId()) return false;
+            const key = `${uid}|${id}`, existing = openPrefetches.get(key);
+            if (existing && Date.now() - existing.at < OPEN_PREFETCH_TTL_MS) return true;
+            const promise = apiFetchJson(openPath(id, {}));
+            promise.catch(() => { if (openPrefetches.get(key)?.promise === promise) openPrefetches.delete(key); });
+            openPrefetches.set(key, { at: Date.now(), promise });
+            while (openPrefetches.size > 4) openPrefetches.delete(openPrefetches.keys().next().value);
+            return true;
+        }
+        function takeOpenPrefetch(projectId, actorUid, queryFilters) {
+            const key = `${actorUid}|${projectId}`, entry = openPrefetches.get(key);
+            openPrefetches.delete(key);
+            if (!entry || Object.keys(queryFilters || {}).length || Date.now() - entry.at >= OPEN_PREFETCH_TTL_MS) return null;
+            return entry.promise;
         }
 
         async function fetchBranch(projectId, parentTaskId = null, loadSequence = refreshSequence, cursor = null) {
@@ -1386,7 +1490,7 @@
             // Capture filter intent before either observer or active-load queues.
             const entryFilterGeneration = options.filterGeneration ?? filterGeneration;
             const requestOptions = { ...options, filterGeneration: entryFilterGeneration, filterSnapshot: { ...(options.filterSnapshot || sharedFilters) } };
-            if (remoteObserver && !options.fenced) return remoteObserver.snapshot(normalized, () => loadProject(normalized, { ...requestOptions, fenced: true }));
+            if (remoteObserver && !options.fenced) return remoteObserver.snapshot(normalized, feed => loadProject(normalized, { ...requestOptions, fenced: true, feed }), { inline: true });
             const entryEpoch = projectEpoch;
             const entryIsCurrent = () => normalized === currentProjectId() && entryEpoch === projectEpoch && entryFilterGeneration === filterGeneration;
             if (!normalized || !entryIsCurrent()) return false;
@@ -1459,21 +1563,42 @@
                     throw error;
                 }
             };
-            // Opening a board requests its first root page alongside the project;
-            // the page is only used once access is confirmed. Refreshes keep the
-            // strict project-then-tasks order so a held refresh reads current tasks.
-            let rootPrefetch = !preserve || hydrated ? apiFetchJson(queryPath(normalized, null, null, loadFilters)).then(value => ({ value }), error => ({ error })) : null;
+            // Opening a board uses one /open request: project, membership,
+            // member directory, first root page and a change cursor read in the
+            // same transaction as that page. Refreshes keep the strict
+            // handshake, project, then tasks order so a held refresh reads
+            // current tasks. The page is only used once access is confirmed.
+            const feed = options.feed || null;
+            const useOpen = !!feed && (!preserve || hydrated);
+            let rootPrefetch = null, projectResponse, memberResponse, openedChanges = null;
             try {
-                const [projectResponse, memberResponse] = await Promise.all([
-                    read(`/api/projects/${encodeURIComponent(normalized)}`),
-                    read(`/api/projects/${encodeURIComponent(normalized)}/member-directory`)
-                ]);
+                if (feed && !useOpen && !await feed.handshake()) return false;
+                if (useOpen) {
+                    // A failed or missing prefetch falls back to a fresh request
+                    // whose access errors are handled by read().
+                    const prefetched = takeOpenPrefetch(normalized, actorUid, loadFilters);
+                    let opened = prefetched ? await prefetched.catch(() => null) : null;
+                    if (!current()) return false;
+                    if (!opened) opened = await read(openPath(normalized, loadFilters));
+                    if (!current()) return false;
+                    projectResponse = { project: opened?.project, membership: opened?.membership };
+                    memberResponse = { people: opened?.people };
+                    openedChanges = opened?.changes || null;
+                    rootPrefetch = Promise.resolve({ value: opened?.page });
+                } else {
+                    rootPrefetch = !preserve || hydrated ? apiFetchJson(queryPath(normalized, null, null, loadFilters)).then(value => ({ value }), error => ({ error })) : null;
+                    [projectResponse, memberResponse] = await Promise.all([
+                        read(`/api/projects/${encodeURIComponent(normalized)}`),
+                        read(`/api/projects/${encodeURIComponent(normalized)}/member-directory`)
+                    ]);
+                }
                 if (!current()) return false;
                 const nextProject = projectResponse?.project;
                 const nextMembership = projectResponse?.membership;
                 if (String(nextProject?.id || '') !== normalized || !['Owner', 'Editor', 'Viewer'].includes(nextMembership?.role)) {
                     invalidateAccess(normalized); return false;
                 }
+                if (useOpen && !feed.seed(openedChanges)) return false;
                 // Publish a downgrade immediately, even while the task GET is held.
                 const previousRole = role();
                 if (presentationV2 && (previousRole !== nextMembership.role || (nextProject.lifecycle || 'active') !== 'active')) clearDetailPresentation();
@@ -1610,7 +1735,7 @@
                     const view = publishView || (preserve ? snapshotView() : null);
                     setBusy(false);
                     if (project) { renderBoard(); restoreView(view); }
-                    if (successMessage !== null && !hasPartialFailure) setStatus(successMessage);
+                    if (successMessage !== null && !hasPartialFailure) { setStatus(successMessage); scheduleSnapshotSave(); }
                 }
             }
         }
@@ -5312,7 +5437,7 @@
                 if (String(deps.getCurrentUser?.()?.uid || '') === controllerActorUid) { renderHeader(); renderVirtualRows(); }
             },
             getFieldSaveScope: () => fieldSaveScope(),
-            attachRemoteObserver(observer) { remoteObserver = observer; }, applyRemote,
+            attachRemoteObserver(observer) { remoteObserver = observer; }, applyRemote, prefetchProject, rememberedProjectId,
             setDensity: (mode, fontScale) => {
                 const scroll = elements.projectsBoardScroll;
                 const anchor = (scroll?.scrollTop || 0) / ROW_HEIGHT;

@@ -124,6 +124,21 @@
                 byId('projects-workspace-rail')?.classList.remove('is-open');
                 byId('projects-workspace-rail-toggle')?.setAttribute('aria-expanded', 'false');
             });
+            // Start loading a project the pointer rests on (or keyboard focus
+            // reaches) so the click usually finds its board already fetched.
+            let hoverTimer = null;
+            const intent = event => {
+                const button = event.target.closest?.('[data-workspace-project]');
+                clearTimeout(hoverTimer);
+                if (!button || !current()) return;
+                const id = button.dataset.workspaceProject;
+                if (!(selection.projects || []).some(project => String(project.id) === id)) return;
+                hoverTimer = setTimeout(() => { if (current()) deps.prefetchProject?.(id); }, 120);
+            };
+            listen(byId('projects-workspace-projects'), 'pointerover', intent);
+            listen(byId('projects-workspace-projects'), 'focusin', intent);
+            listen(byId('projects-workspace-projects'), 'pointerleave', () => clearTimeout(hoverTimer));
+            removers.push(() => clearTimeout(hoverTimer));
             listen(byId('projects-workspace-rail-toggle'), 'click', () => {
                 if (!current()) return;
                 const open = byId('projects-workspace-rail')?.classList.toggle('is-open');

@@ -349,6 +349,7 @@
             const deniedId = String(projectId || '').trim();
             if (!deniedId || (selectedProjectId !== deniedId && !projects.some((project) => String(project.id) === deniedId))) return false;
             contentDeniedProjectIds.delete(deniedId);
+            clearListCache();
             fullRefreshGeneration++; membersRefreshGeneration++; viewGeneration++;
             fullRefreshPromise = null; membersRefreshState = null;
             projects = projects.filter((project) => String(project.id) !== deniedId);
@@ -531,6 +532,34 @@
             return promise;
         }
 
+        // The last confirmed project list is kept in this browser per account
+        // so a reload can show the list and board at once. It only selects
+        // what to show: pickers stay pending and the board stays read-only
+        // until the server list and board load confirm access.
+        const LIST_CACHE_KEY = 'crmProjectsListCache:v1', LIST_CACHE_TTL_MS = 3 * 86400000;
+        function readListCache(uid) {
+            try {
+                const value = JSON.parse(globalScope.localStorage?.getItem(LIST_CACHE_KEY) || 'null');
+                if (!value || value.uid !== uid || value.admin !== adminMode || Date.now() - Number(value.savedAt || 0) >= LIST_CACHE_TTL_MS) return null;
+                return value.data || null;
+            } catch (_) { return null; }
+        }
+        function writeListCache(uid, data) {
+            try { globalScope.localStorage?.setItem(LIST_CACHE_KEY, JSON.stringify({ uid, admin: adminMode, savedAt: Date.now(), data })); }
+            catch (_) { /* storage unavailable */ }
+        }
+        function clearListCache() { try { globalScope.localStorage?.removeItem(LIST_CACHE_KEY); } catch (_) { /* storage unavailable */ } }
+        function showCachedList(uid) {
+            if (!uid || projects.length) return;
+            const cached = readListCache(uid);
+            if (!cached) return;
+            if (!adminMode) { if (Array.isArray(cached.projects)) renderMemberProjects(cached); return; }
+            if (!Array.isArray(cached.projects) || !cached.projects.length) return;
+            projects = cached.projects;
+            applyAdminVisibility();
+            renderProjectPicker();
+        }
+
         function refresh({ internal = false } = {}) {
             if (mutationPending && !internal) return Promise.resolve(false);
             if (!apiFetchJson) return Promise.resolve(false);
@@ -539,10 +568,12 @@
             const actorAtStart = String(getCurrentUser()?.uid || '');
             const viewAtStart = viewGeneration;
             beginRefresh();
+            showCachedList(actorAtStart);
             const promise = (async () => {
                 if (!adminMode) {
                     const response = await apiFetchJson('/api/projects/access');
                     if (actorAtStart !== String(getCurrentUser()?.uid || '') || generation !== fullRefreshGeneration || viewAtStart !== viewGeneration) return false;
+                    writeListCache(actorAtStart, { ...(response || {}), projects: Array.isArray(response?.projects) ? response.projects : [] });
                     renderMemberProjects(response);
                     await refreshMembers({ internal: true });
                     return true;
@@ -550,6 +581,7 @@
                 const projectResponse = await apiFetchJson('/api/projects/');
                 if (actorAtStart !== String(getCurrentUser()?.uid || '') || generation !== fullRefreshGeneration || viewAtStart !== viewGeneration) return false;
                 projects = Array.isArray(projectResponse?.projects) ? projectResponse.projects : [];
+                writeListCache(actorAtStart, { projects });
                 applyAdminVisibility();
                 renderPeople();
                 renderProjectPicker();

@@ -141,20 +141,23 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
     if (!db || typeof db.runTransaction !== 'function') throw new Error('Projects query service requires Firestore db.');
     if (!accessService || typeof accessService.assertTransactionContentAccess !== 'function') throw new Error('Projects query service requires the canonical access service.');
 
-    async function readSnapshot(identity, projectId) {
+    // options.readFeedHeads(transaction, projectId) reads change-feed heads in
+    // the same read-only transaction, so a cursor built from them matches it.
+    async function readSnapshot(identity, projectId, options = {}) {
         let snapshot;
         await db.runTransaction(async (transaction) => {
             const access = await accessService.assertTransactionContentAccess(transaction, identity.uid, projectId, { roles: ['Owner', 'Editor', 'Viewer'] });
             // Independent reads in one read-only transaction run together; the
             // checks below keep their original order and error precedence.
             const bounded = (collectionName, limit) => transaction.get(projectCollection(db, projectId, collectionName).limit(limit + 1));
-            const [projectSnapshot, sectionDocs, columnDocs, taskDocs, calendarDoc, memberDocs] = await Promise.all([
+            const [projectSnapshot, sectionDocs, columnDocs, taskDocs, calendarDoc, memberDocs, feedHeads] = await Promise.all([
                 transaction.get(projectRef(db, projectId)),
                 bounded('sections', MAX_QUERY_SECTIONS),
                 bounded('columns', MAX_QUERY_COLUMNS),
                 bounded('tasks', MAX_QUERY_TASKS),
                 transaction.get(db.collection(PROJECT_COLLECTIONS.organizationConfig).doc('calendar')),
-                transaction.get(db.collection(PROJECT_COLLECTIONS.members).where('projectId', '==', projectId).limit(1001))
+                transaction.get(db.collection(PROJECT_COLLECTIONS.members).where('projectId', '==', projectId).limit(1001)),
+                typeof options.readFeedHeads === 'function' ? options.readFeedHeads(transaction, projectId) : null
             ]);
             if (!projectSnapshot?.exists) throw new DomainError(404, 'PROJECT_NOT_FOUND', 'Project not found.');
             function checkBounded(docs, limit, label) {
@@ -176,7 +179,8 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
                 project: { id: projectId, data: projectSnapshot.data() || {}, updateTime: serializeUpdateTime(projectSnapshot.updateTime) },
                 sections,
                 columns,
-                tasks
+                tasks,
+                ...(feedHeads ? { feedHeads } : {})
             };
         }, { readOnly: true });
         return snapshot;

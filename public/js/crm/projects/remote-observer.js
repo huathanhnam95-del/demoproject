@@ -35,10 +35,24 @@
                 || (error?.name === 'TypeError' && /fetch|network/i.test(String(error.message || '')));
         }
         async function loadSnapshot(record) {
-            const { s, load } = record;
+            const { s, load, inline } = record;
             if (!current(s)) return false;
             let handshaken = false;
             try {
+                if (inline) {
+                    // The load either seeds the cursor from a handshake read in
+                    // the same transaction as its snapshot, or performs this
+                    // separate handshake before its own reads.
+                    const accept = () => { handshaken = true; if (pendingSnapshot === record) pendingSnapshot = null; return true; };
+                    return await load({
+                        seed(result) {
+                            if (!current(s) || typeof result?.cursor !== 'string' || !result.authority) return false;
+                            if (!cursor) { cursor = result.cursor; signature = result.authority.signature; }
+                            return accept();
+                        },
+                        async handshake() { return await handshake(s) ? accept() : false; }
+                    });
+                }
                 if (!await handshake(s)) return false;
                 handshaken = true;
                 if (pendingSnapshot === record) pendingSnapshot = null;
@@ -59,11 +73,11 @@
         // changes detach the old lane; current checks fence its late completions.
         // A late initial,
         // branch or discussion response cannot overwrite an acknowledged event.
-        function snapshot(id, load) {
-            select(String(id)); const s = scope();
+        function snapshot(id, load, options = {}) {
+            select(String(id)); const s = scope(); const inline = options.inline === true;
             return enqueue(async () => {
                 if (!current(s)) return false;
-                try { return await loadSnapshot({ s, load }); }
+                try { return await loadSnapshot({ s, load, inline }); }
                 finally { schedule(s); }
             });
         }

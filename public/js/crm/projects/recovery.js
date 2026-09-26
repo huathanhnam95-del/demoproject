@@ -9,6 +9,9 @@
     let selection = null, epoch = 0, catalogSequence = 0, previewSequence = 0, historySequence = 0;
     let entries = [], operations = [], cursor = null, historyCursor = null, preview = null, pending = false;
     let catalogLoaded = false, catalogLoading = false;
+    let selectionFresh = true, catalogPages = 0;
+    let historyLoading = false, historyLoaded = false, invalidated = false, previewStale = false;
+    let invalidationVersion = 0, invalidationRefresh = null;
     let executionSequence = 0, interactionSequence = 0, activeRequest = null;
     const selectedTasks = new Map(), retries = new Map();
     const currentUid = () => String(deps.getCurrentUser?.()?.uid || '');
@@ -43,6 +46,44 @@
     const current = (scope) => currentTuple(scope) && scope.epoch === epoch;
     const writable = () => !!selection?.actorUid && selection.actorUid === currentUid() && ['Owner', 'Editor'].includes(selection.role);
     function status(text) { if (el('status')) el('status').textContent = text; }
+    function retainFocus(target) {
+      const active = globalScope.document?.activeElement;
+      if (!active || !target?.contains?.(active)) return () => {};
+      const data = { ...active.dataset };
+      const row = active.closest?.('[data-recovery-row]')?.dataset.recoveryRow;
+      return () => {
+        const next = Array.from(target.querySelectorAll('button,input,select')).find(node => {
+          if (row && node.closest?.('[data-recovery-row]')?.dataset.recoveryRow !== row) return false;
+          return Object.entries(data).every(([key, value]) => ['entry', 'select', 'undo'].includes(key) ? key in node.dataset : node.dataset[key] === value);
+        });
+        next?.focus?.({ preventScroll: true });
+      };
+    }
+    function unique(rows, key) { return [...new Map(rows.map(row => [key(row), row])).values()]; }
+    function refreshInvalidated() {
+      if (invalidationRefresh) return invalidationRefresh;
+      if (!invalidated || !selection || !el('disclosure')?.open || pending || catalogLoading || historyLoading || retries.has(selectionKey())) return;
+      const scope = captureScope();
+      const promise = Promise.resolve().then(async () => {
+        while (invalidated && current(scope) && el('disclosure')?.open && !pending && !retries.has(selectionKey())) {
+          invalidated = false;
+          await catalog(false, { preserveSelection: true, quiet: true });
+          if (current(scope) && historyLoaded) await history(false, { quiet: true });
+        }
+      }).finally(() => { if (invalidationRefresh === promise) invalidationRefresh = null; });
+      invalidationRefresh = promise;
+      return promise;
+    }
+    function invalidate(projectId) {
+      if (!selection || String(projectId) !== String(selection.projectId)) return false;
+      invalidated = true; catalogLoaded = false;
+      selectionFresh = false;
+      invalidationVersion++;
+      if (preview) { previewStale = true; renderPreview(); }
+      controls();
+      void refreshInvalidated();
+      return true;
+    }
     function controls() {
       if (!root) return;
       root.hidden = !selection;
@@ -50,74 +91,134 @@
       const unresolved = retries.has(selectionKey());
       if (el('label')) el('label').textContent = `Project records, Archive, Trash and history${unresolved ? ' — Interrupted change: open to retry' : ''}`;
       root.querySelectorAll('[data-action],[data-undo]').forEach((item) => { item.disabled = item.disabled || unresolved; });
-      if (el('apply')) el('apply').disabled = pending || unresolved || !preview?.allowed;
-      if (el('bulk')) el('bulk').disabled = pending || unresolved || !writable() || !selectedTasks.size;
+      if (el('apply')) el('apply').disabled = pending || unresolved || previewStale || !preview?.allowed;
+      if (el('more')) el('more').disabled = pending || catalogLoading;
+      if (el('history-more')) el('history-more').disabled = pending || historyLoading;
+      if (el('bulk')) el('bulk').disabled = pending || catalogLoading || !selectionFresh || unresolved || !writable() || !selectedTasks.size;
       if (el('retry')) { el('retry').hidden = !retries.has(selectionKey()); el('retry').disabled = pending || !writable(); }
       if (el('count')) el('count').textContent = `${selectedTasks.size} selected (maximum 100)`;
     }
     function renderCatalog() {
       if (!el('entries')) return;
-      el('entries').innerHTML = entries.map((entry, i) => `<li class="crm-projects-recovery-row">${entry.targetType === 'task' && entry.lifecycle === 'active' && writable() ? `<input type="checkbox" data-select="${i}" aria-label="Select ${esc(entry.title)}"${selectedTasks.has(entry.targetId) ? ' checked' : ''}>` : ''}<div><strong>${esc(entry.title)}</strong><span class="crm-muted">${esc((entry.ancestorPaths || []).map((a) => a.title).join(' → '))} · ${esc(entry.lifecycle)}</span></div><div class="crm-inline-fields">${['archive', 'trash', 'restore'].map((action) => `<button type="button" class="crm-btn-secondary crm-btn-sm" data-action="${action}" data-entry="${i}"${entry.allowedActions?.[action] ? '' : ' data-denied disabled'}>${action === 'trash' ? 'Move to Trash' : action[0].toUpperCase() + action.slice(1)}</button>`).join('')}</div></li>`).join('') || '<li>No records in this view.</li>';
+      const restoreFocus = retainFocus(el('entries'));
+      el('entries').innerHTML = entries.map((entry, i) => `<li class="crm-projects-recovery-row" data-recovery-row="${esc(`${entry.targetType}:${entry.targetId}`)}">${entry.targetType === 'task' && entry.lifecycle === 'active' && writable() ? `<input type="checkbox" data-select="${i}" aria-label="Select ${esc(entry.title)}"${selectedTasks.has(entry.targetId) ? ' checked' : ''}>` : ''}<div><strong>${esc(entry.title)}</strong>${entry.selectionNeedsRefresh ? '<span class="crm-muted">Selected task needs refresh</span>' : ''}<span class="crm-muted">${esc((entry.ancestorPaths || []).map((a) => a.title).join(' → '))} · ${esc(entry.lifecycle)}</span></div><div class="crm-inline-fields">${['archive', 'trash', 'restore'].map((action) => `<button type="button" class="crm-btn-secondary crm-btn-sm" data-action="${action}" data-entry="${i}"${entry.allowedActions?.[action] ? '' : ' data-denied disabled'}>${action === 'trash' ? 'Move to Trash' : action[0].toUpperCase() + action.slice(1)}</button>`).join('')}</div></li>`).join('') || '<li>No records in this view.</li>';
       el('more').hidden = !cursor;
       controls();
+      restoreFocus();
     }
     async function catalog(append = false, options = {}) {
-      if (!selection || !api || (options.current && !options.current())) return;
+      if (!selection || !api || (options.current && !options.current()) || (append && catalogLoading)) return;
       const scope = captureScope(), sequence = ++catalogSequence;
-      const canPublish = () => current(scope) && sequence === catalogSequence && (!options.current || options.current());
+      const version = invalidationVersion;
+      const canPublish = () => current(scope) && sequence === catalogSequence && version === invalidationVersion && (!options.current || options.current());
       if (!el('disclosure')?.open) { catalogLoaded = false; catalogLoading = false; return; }
       catalogLoading = true;
+      if (options.preserveSelection) selectionFresh = false;
+      controls();
       if (!append && !options.preserveSelection) { previewSequence += 1; preview = null; renderPreview(); entries = []; selectedTasks.clear(); cursor = null; renderCatalog(); }
       const query = new URLSearchParams({ lifecycle: el('lifecycle').value, targetType: el('type').value, limit: '50' });
       if (append && cursor) query.set('cursor', cursor);
       try {
-        const result = await api(`${path()}/recovery?${query}`);
+        let result = await api(`${path()}/recovery?${query}`);
         if (!canPublish()) return;
-        entries = append ? entries.concat(result.entries || []) : result.entries || [];
+        let nextEntries = unique(append ? entries.concat(result.entries || []) : result.entries || [], entry => `${entry.targetType}:${entry.targetId}`);
+        let refreshedPages = 1;
+        const priorPages = !append && options.preserveSelection ? Math.max(1, catalogPages) : 1;
+        const seenCursors = new Set();
+        while (refreshedPages < priorPages && result.hasMore && result.nextCursor && !seenCursors.has(result.nextCursor)) {
+          seenCursors.add(result.nextCursor); query.set('cursor', result.nextCursor);
+          result = await api(`${path()}/recovery?${query}`);
+          if (!canPublish()) return;
+          nextEntries = unique(nextEntries.concat(result.entries || []), entry => `${entry.targetType}:${entry.targetId}`);
+          refreshedPages++;
+        }
+        if (!append && options.preserveSelection) {
+          const eligible = new Map(nextEntries.filter((entry) => entry.targetType === 'task' && entry.lifecycle === 'active' && entry.allowedActions?.archive && writable()).map((entry) => [entry.targetId, entry]));
+          const unavailable = new Set(nextEntries.filter(entry => entry.targetType === 'task' && !eligible.has(entry.targetId)).map(entry => entry.targetId));
+          // Automatic refresh rereads only the previously loaded page range.
+          // Missing selections stay visible and cannot be submitted until the
+          // user explicitly refreshes them; observer updates never fan out into
+          // individual target reads.
+          for (const id of Array.from(selectedTasks.keys())) {
+            if (eligible.has(id) || unavailable.has(id)) continue;
+            if (!options.revalidateSelection) { nextEntries.push({ ...selectedTasks.get(id), selectionNeedsRefresh: true }); continue; }
+            const targetQuery = new URLSearchParams({ targetType: 'task', targetId: id, action: 'archive' });
+            try {
+              const fresh = await api(`${path()}/recovery/preview?${targetQuery}`);
+              if (!canPublish()) return;
+              const entry = fresh?.target;
+              if (!entry || entry.targetType !== 'task' || entry.targetId !== id) throw new Error('A selected task could not be verified.');
+              if (entry.lifecycle === 'active' && entry.allowedActions?.archive && writable()) { eligible.set(id, entry); nextEntries.push(entry); }
+              else unavailable.add(id);
+            } catch (error) {
+              if (!canPublish()) return;
+              if ([403, 404].includes(Number(error?.status))) unavailable.add(id);
+              else throw error;
+            }
+          }
+          if (!canPublish()) return;
+          for (const id of selectedTasks.keys()) {
+            if (eligible.has(id)) selectedTasks.set(id, eligible.get(id));
+            else if (unavailable.has(id)) selectedTasks.delete(id);
+          }
+          selectionFresh = Array.from(selectedTasks.keys()).every(id => eligible.has(id));
+        } else if (!append) selectedTasks.clear();
+        if (!options.preserveSelection && !append) selectionFresh = true;
+        entries = unique(nextEntries, entry => `${entry.targetType}:${entry.targetId}`);
+        catalogPages = append ? catalogPages + 1 : refreshedPages;
         cursor = result.hasMore ? result.nextCursor : null;
         catalogLoaded = true;
-        if (!append && options.preserveSelection) {
-          const eligible = new Map(entries.filter((entry) => entry.targetType === 'task' && entry.lifecycle === 'active' && writable()).map((entry) => [entry.targetId, entry]));
-          for (const id of selectedTasks.keys()) { if (eligible.has(id)) selectedTasks.set(id, eligible.get(id)); else selectedTasks.delete(id); }
-        } else if (!append) selectedTasks.clear();
         renderCatalog(); if (!options.quiet) status(`${entries.length} records loaded.`);
-      } catch (error) { if (canPublish() && !options.quiet) status(error.message || 'Recovery records could not be loaded. Refresh this view.'); }
-      finally { if (current(scope) && sequence === catalogSequence) catalogLoading = false; }
+        if (!selectionFresh) status('Some selected tasks still need checking. Refresh records before updating them.');
+      } catch (error) { if (canPublish()) status(`${error.message || 'Recovery records could not be loaded.'} Your selection is kept. Refresh records to retry.`); }
+      finally { if (current(scope) && sequence === catalogSequence) { catalogLoading = false; controls(); void refreshInvalidated(); } }
     }
     function renderPreview() {
       if (!el('preview')) return;
+      const restoreFocus = retainFocus(el('preview'));
       el('preview').hidden = !preview;
       if (!preview) { el('preview').innerHTML = ''; return; }
       const changes = (preview.affected || []).map((item) => `<li>${esc(item.title)}: ${esc(item.fromLifecycle)} → ${esc(item.toLifecycle)}</li>`).join('');
       el('preview').innerHTML = `<h5>${esc(preview.action)}: ${esc(preview.target?.title)}</h5><p>Record lifecycle: ${esc(preview.target?.localLifecycle)}. Effective lifecycle including ancestors: ${esc(preview.target?.lifecycle)}.</p><p>${esc((preview.target?.ancestorPaths || []).filter((a) => a.lifecycle !== "active").map((a) => `${a.title} (${a.lifecycle})`).join(" → "))}</p><ul>${changes || '<li>No changes are currently permitted.</li>'}</ul>${preview.action === 'restore' ? `<label><input type="checkbox" data-recovery-chain${preview.restoreChain ? ' checked' : ''}${selection.role === 'Owner' || !preview.chainRequiresOwner ? '' : ' data-denied disabled'}> Restore unavailable ancestors${preview.chainRequiresOwner ? ' (Owner required)' : ''}</label>${preview.entry.targetType === 'task' ? `<label>Restore into active section <select data-recovery-destination class="crm-input"><option value="">Keep original location</option>${(preview.destinationOptions || []).map((item) => `<option value="${esc(item.id)}"${preview.destinationSectionId === item.id ? ' selected' : ''}>${esc(item.title)}</option>`).join('')}</select></label>` : ''}` : ''}<p>${preview.allowed ? 'Review these changes before applying.' : esc(preview.reason || 'This action needs a valid active destination or an Owner to restore its ancestors.')}</p><div class="crm-inline-fields"><button type="button" data-recovery-apply class="crm-btn-primary">Apply changes</button><button type="button" data-recovery-cancel class="crm-btn-secondary">Cancel</button></div>`;
       controls();
+      if (previewStale) el('preview').insertAdjacentHTML('afterbegin', '<p role="status">Project records changed. Your choices are retained. Refresh this preview before applying.</p><button type="button" class="crm-btn-secondary" data-recovery-preview-refresh>Refresh preview</button>');
+      controls();
+      restoreFocus();
     }
     async function loadPreview(entry, action, options = {}) {
       if (!entry || !selection || pending) return;
       const scope = captureScope(), sequence = ++previewSequence;
+      const version = invalidationVersion;
+      previewStale = false;
       preview = null; renderPreview();
       const query = new URLSearchParams({ targetType: entry.targetType, targetId: entry.targetId, action, restoreChain: String(!!options.restoreChain) });
       if (options.destinationSectionId) query.set('destinationSectionId', options.destinationSectionId);
       try {
         const result = await api(`${path()}/recovery/preview?${query}`);
         if (!current(scope) || sequence !== previewSequence) return;
-        preview = { ...result, entry, action, restoreChain: !!options.restoreChain, destinationSectionId: options.destinationSectionId || null }; renderPreview();
+        preview = { ...result, entry, action, restoreChain: !!options.restoreChain, destinationSectionId: options.destinationSectionId || null }; previewStale = version !== invalidationVersion; renderPreview();
       } catch (error) { if (current(scope) && sequence === previewSequence) status(error.message || 'Preview could not be loaded.'); }
     }
     async function history(append = false, options = {}) {
-      if (!selection || !el('disclosure')?.open || (options.current && !options.current())) return;
+      if (!selection || !el('disclosure')?.open || (options.current && !options.current()) || (append && historyLoading)) return;
       const scope = captureScope(), sequence = ++historySequence;
-      const canPublish = () => current(scope) && sequence === historySequence && (!options.current || options.current());
+      historyLoading = true; controls();
+      const version = invalidationVersion;
+      const canPublish = () => current(scope) && sequence === historySequence && version === invalidationVersion && (!options.current || options.current());
       const query = new URLSearchParams({ limit: '25' });
       if (append && historyCursor) query.set('cursor', historyCursor);
       try {
         const result = await api(`${path()}/history?${query}`);
         if (!canPublish()) return;
-        operations = append ? operations.concat(result.operations || []) : result.operations || [];
+        operations = unique(append ? operations.concat(result.operations || []) : result.operations || [], entry => entry.operationId);
+        historyLoaded = true;
         historyCursor = result.hasMore ? result.nextCursor : null;
-        el('history-list').innerHTML = operations.map((entry, i) => `<li class="crm-projects-recovery-row"><div><strong>${esc(entry.command)}</strong><span>${esc(entry.actorUid)} · ${esc(entry.createdAt)}</span><span class="crm-muted">${esc((entry.affectedIds || []).join(', '))}</span></div><button type="button" data-undo="${i}" class="crm-btn-secondary crm-btn-sm"${entry.canUndo ? '' : ' data-denied disabled'}>Undo</button></li>`).join('') || '<li>No project history yet.</li>';
+        const restoreFocus = retainFocus(el('history-list'));
+        el('history-list').innerHTML = operations.map((entry, i) => `<li class="crm-projects-recovery-row" data-recovery-row="${esc(entry.operationId)}"><div><strong>${esc(entry.command)}</strong><span>${esc(entry.actorName || entry.actorUid)} · ${esc(Number.isFinite(Date.parse(entry.createdAt)) ? new Date(entry.createdAt).toLocaleString() : '')}</span><span class="crm-muted">${esc((entry.affectedIds || []).join(', '))}</span></div><button type="button" data-undo="${i}" class="crm-btn-secondary crm-btn-sm"${entry.canUndo ? '' : ' data-denied disabled'}>Undo</button></li>`).join('') || '<li>No project history yet.</li>';
         el('history-more').hidden = !historyCursor; controls();
+        restoreFocus();
       } catch (error) { if (canPublish() && !options.quiet) status(error.message || 'History could not be loaded.'); }
+      finally { if (current(scope) && sequence === historySequence) { historyLoading = false; controls(); void refreshInvalidated(); } }
     }
     async function execute(request) {
       if (!request || !selection || pending || !writable()) return;
@@ -161,11 +262,12 @@
         if (ownsExecution()) {
           pending = false; activeRequest = null; controls();
           if (startedInteraction === interactionSequence && !retries.has(selectionKey()) && el('status')?.textContent === 'Applying changes…') status('');
+          void refreshInvalidated();
         }
       }
     }
     function apply() {
-      if (!preview?.allowed) return;
+      if (!preview?.allowed || previewStale) return;
       const { entry, action } = preview;
       const suffix = entry.targetType === 'project' ? '' : `/${entry.targetType === 'task' ? 'tasks' : 'sections'}/${encodeURIComponent(entry.targetId)}`;
       execute({ path: `${path()}${suffix}/${action}`, body: JSON.stringify({ operationId: operationId(), expectedRevision: preview.expectedRevision, expectedStructureRevision: preview.expectedStructureRevision, expectedAncestorRevisions: preview.expectedAncestorRevisions, restoreChain: preview.restoreChain, destinationSectionId: preview.destinationSectionId }) });
@@ -181,7 +283,7 @@
         epoch += 1; catalogSequence += 1; previewSequence += 1; historySequence += 1;
         executionSequence += 1; activeRequest = null;
         pending = false; entries = []; operations = []; selectedTasks.clear(); cursor = null; historyCursor = null; preview = null;
-        catalogLoaded = false; catalogLoading = false;
+        catalogLoaded = false; catalogLoading = false; selectionFresh = true; catalogPages = 0; historyLoading = false; historyLoaded = false; invalidated = false; previewStale = false; invalidationRefresh = null; invalidationVersion++;
         if (projectChanged && el('disclosure')) el('disclosure').open = !!selection && selection.lifecycle !== 'active' && !!selection.lifecycle;
         if (el('history-list')) el('history-list').innerHTML = '';
         renderCatalog(); renderPreview(); status(''); if (selection && el('disclosure')?.open) catalog();
@@ -192,6 +294,7 @@
       if (!root) return;
       root.innerHTML = `<details data-recovery-disclosure><summary data-recovery-toggle><span data-recovery-label>Project records, Archive, Trash and history</span></summary><div class="crm-projects-recovery-content"><div class="crm-inline-fields"><label>Lifecycle <select data-recovery-lifecycle class="crm-input"><option value="active">Active</option><option value="archived">Archive</option><option value="trashed">Trash</option></select></label><label>Record type <select data-recovery-type class="crm-input"><option value="task">Tasks</option><option value="section">Sections</option><option value="project">Project</option></select></label><button type="button" data-recovery-refresh class="crm-btn-secondary">Refresh records</button><button type="button" data-recovery-history class="crm-btn-secondary">Project history</button><button type="button" data-recovery-retry class="crm-btn-secondary" hidden>Retry interrupted change</button></div><p data-recovery-status id="projects-board-recovery-status" role="status"></p><ul data-recovery-entries class="crm-projects-recovery-list"></ul><button type="button" data-recovery-more class="crm-btn-secondary" hidden>Load more records</button><div class="crm-inline-fields"><span data-recovery-count></span><label>Selected tasks status <select data-recovery-bulk-status class="crm-input"><option value="not_started">Not started</option><option value="in_progress">In progress</option><option value="blocked">Blocked</option><option value="done">Done</option></select></label><button type="button" data-recovery-bulk class="crm-btn-secondary">Update selected tasks</button></div><section data-recovery-preview aria-label="Recovery impact preview" hidden></section><ol data-recovery-history-list class="crm-projects-recovery-list"></ol><button type="button" data-recovery-history-more class="crm-btn-secondary" hidden>Load more project history</button></div></details>`;
       el('disclosure').addEventListener('toggle', () => {
+        if (invalidated) { void refreshInvalidated(); return; }
         if (el('disclosure').open && selection && !catalogLoaded && !catalogLoading) catalog();
       });
       root.addEventListener('change', (event) => {
@@ -204,19 +307,20 @@
         interactionSequence += 1;
         const button = event.target.closest('button'); if (!button || button.disabled) return;
         if (button.hasAttribute('data-action')) loadPreview(entries[Number(button.dataset.entry)], button.dataset.action);
+        else if (button.hasAttribute('data-recovery-preview-refresh') && preview) loadPreview(preview.entry, preview.action, { restoreChain: preview.restoreChain, destinationSectionId: preview.destinationSectionId });
         else if (button.hasAttribute('data-recovery-apply')) apply();
         else if (button.hasAttribute('data-recovery-cancel')) { previewSequence += 1; preview = null; renderPreview(); }
-        else if (button.hasAttribute('data-recovery-refresh')) catalog();
+        else if (button.hasAttribute('data-recovery-refresh')) catalog(false, { preserveSelection: selectedTasks.size > 0, revalidateSelection: true });
         else if (button.hasAttribute('data-recovery-more')) catalog(true);
         else if (button.hasAttribute('data-recovery-history')) history();
         else if (button.hasAttribute('data-recovery-history-more')) history(true);
         else if (button.hasAttribute('data-recovery-retry')) execute(retries.get(selectionKey()));
         else if (button.hasAttribute('data-undo')) { const entry = operations[Number(button.dataset.undo)]; if (entry?.canUndo) execute({ path: `${path()}/operations/${encodeURIComponent(entry.operationId)}/undo`, body: JSON.stringify({ operationId: operationId() }) }); }
-        else if (button.hasAttribute('data-recovery-bulk') && selectedTasks.size && selectedTasks.size <= 100) execute({ path: `${path()}/tasks/bulk`, body: JSON.stringify({ operationId: operationId(), changes: Array.from(selectedTasks.values()).map((entry) => ({ taskId: entry.targetId, expectedRevision: entry.revision, patch: { status: el('bulk-status').value } })) }) });
+        else if (button.hasAttribute('data-recovery-bulk') && !catalogLoading && selectionFresh && selectedTasks.size && selectedTasks.size <= 100) execute({ path: `${path()}/tasks/bulk`, body: JSON.stringify({ operationId: operationId(), changes: Array.from(selectedTasks.values()).map((entry) => ({ taskId: entry.targetId, expectedRevision: entry.revision, patch: { status: el('bulk-status').value } })) }) });
       });
       controls();
     }
-    return { init, setSelection, refresh: catalog, getState: () => ({ selection, pending, entries: entries.slice(), preview, selectedTasks: Array.from(selectedTasks.values()) }) };
+    return { init, setSelection, refresh: catalog, invalidate, getState: () => ({ selection, pending, entries: entries.slice(), preview, selectedTasks: Array.from(selectedTasks.values()) }) };
   }
   const api = { createController, setSelection: () => {} };
   globalScope.CrmProjectsRecovery = api;

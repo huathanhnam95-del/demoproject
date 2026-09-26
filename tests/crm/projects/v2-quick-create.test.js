@@ -209,7 +209,15 @@ test('composer acknowledgement never steals external focus',async()=>{
  const h=await fixture();try{h.doc.getElementById('btn-projects-board-add-task').click();const form=h.doc.querySelector('[data-quick-create]'),input=form.querySelector('input');input.value='Title';const release=h.hold();h.key(input,'Enter');const elsewhere=h.doc.createElement('button');h.doc.body.append(elsewhere);elsewhere.focus();release();await tick();assert.equal(h.doc.activeElement,elsewhere);}finally{h.close();}
 });
 test('section failure keeps named form, pending guard and exact uncertain retry',async()=>{
- const h=await fixture();try{h.elements.projectsBoardAddSection.click();h.elements.projectsBoardSectionName.value='Nhóm mới';const release=h.hold();h.malformed(true);h.elements.projectsBoardSectionForm.requestSubmit();h.elements.projectsBoardSectionForm.requestSubmit();await tick();assert.equal(h.writes.length,1);release();await tick();assert.equal(h.elements.projectsBoardSectionName.value,'Nhóm mới');assert.equal(h.elements.projectsBoardSectionForm.hidden,false);const body=h.writes[0].body;h.malformed(false);h.elements.projectsBoardSectionForm.requestSubmit();await tick();assert.deepEqual(h.writes[1].body,body);assert.equal(h.elements.projectsBoardSectionForm.hidden,true);}finally{h.close();}
+ const h=await fixture();try{
+  // Section blocks create "New section" in place; the retained intent makes Add section an exact retry.
+  const release=h.hold();h.malformed(true);h.elements.projectsBoardAddSection.click();h.elements.projectsBoardAddSection.click();await tick();assert.equal(h.writes.length,1);
+  assert.equal(h.writes[0].body.title,'New section');assert.deepEqual(h.writes[0].body.placement,{kind:'after',siblingId:'z'});
+  release();await tick();assert.equal(h.elements.projectsBoardSectionForm.hidden,true);assert.equal(h.board.getState().sections.some(s=>s.isOptimistic),false);
+  const body=h.writes[0].body;h.malformed(false);h.elements.projectsBoardAddSection.click();await tick();assert.deepEqual(h.writes[1].body,body);assert.equal(h.board.getState().sections.some(s=>s.title==='New section'&&!s.isOptimistic),true);
+  const rowInput=h.doc.querySelector(`[data-row-kind="section"][data-section-id="${h.board.getState().sections.at(-1).id}"] .crm-board-section-input`);assert.ok(rowInput);assert.equal(h.doc.activeElement,rowInput);
+  // First-run boards without sections keep the named form.
+ }finally{h.close();}
 });
 test('partial status batch is deterministic and retains failed selection only',async()=>{
  const h=await fixture();try{h.respond((url,body)=>{if(body.changes?.[0].taskId==='u')throw Object.assign(Error('Changed'),{status:409});});h.board.setSelectedTaskIds(['t','u','child']);const el=h.doc.getElementById('projects-batch-status');el.value='done';el.dispatchEvent(new h.win.Event('change'));await tick();assert.deepEqual(h.writes.map(w=>w.body.changes[0].taskId),['t','u','child']);assert.deepEqual(Array.from(h.board.getState().selectedTaskIds),['u']);assert.match(h.doc.querySelector('[data-batch-result]').textContent,/2 saved.*1 conflicts/);}finally{h.close();}
@@ -228,7 +236,7 @@ test('switching composer targets during a delayed success does not resurrect a s
  const h=await fixture();try{h.doc.getElementById('btn-projects-board-add-task').click();const input=h.doc.querySelector('[data-quick-create] input');input.value='Only once';const release=h.hold();h.key(input,'Enter');await tick();h.doc.querySelector('[data-task-id="t"] [data-action="add-subtask"]').click();release();await tick();h.doc.getElementById('btn-projects-board-add-task').click();assert.equal(h.doc.querySelector('[data-quick-create] input').value,'');assert.equal(h.writes.length,1);}finally{h.close();}
 });
 test('task then section creates share a serialized structure revision chain',async()=>{
- const h=await fixture();try{const release=h.hold();const task=h.board.createTask(null,'s',{initialTitle:'T'});await tick();h.elements.projectsBoardAddSection.click();h.elements.projectsBoardSectionName.value='S';const section=h.board.createSection();await tick();assert.equal(h.writes.length,1,'section waits for preceding create');release();await Promise.all([task,section]);assert.deepEqual(h.writes.map(w=>w.body.expectedStructureRevision),[1,2]);}finally{h.close();}
+ const h=await fixture();try{const release=h.hold();const task=h.board.createTask(null,'s',{initialTitle:'T'});await tick();const section=h.board.createSection('S');await tick();assert.equal(h.writes.length,1,'section waits for preceding create');release();await Promise.all([task,section]);assert.deepEqual(h.writes.map(w=>w.body.expectedStructureRevision),[1,2]);}finally{h.close();}
 });
 test('synthetic grouping requires explicit real section and Escape cancels without mutation',async()=>{
  const h=await fixture();try{const group=h.doc.getElementById('projects-board-group-by');group.value='status';group.dispatchEvent(new h.win.Event('change'));h.doc.getElementById('btn-projects-board-add-task').click();const form=h.doc.querySelector('[data-quick-create]');assert.equal(form.querySelector('select').value,'');const input=form.querySelector('input');input.value='Draft';h.key(input,'Enter');await tick();assert.equal(h.writes.length,0);h.key(input,'Escape');assert.equal(h.doc.querySelector('[data-quick-create]'),null);}finally{h.close();}
@@ -465,14 +473,21 @@ test('createSection forwards placement and section-menu opens placement menu in 
 
   editor.querySelector('[data-add-section-above]').click();
   await tick();
-  assert.equal(h.elements.projectsBoardSectionForm.hidden, false);
-
-  h.elements.projectsBoardSectionName.value = 'Submitted Above';
-  h.elements.projectsBoardSectionForm.dispatchEvent(new h.win.Event('submit', { bubbles: true, cancelable: true }));
-  await tick();
-
-  const aboveWrite = h.writes.find(w => w.url.endsWith('/sections') && w.body.title === 'Submitted Above');
+  // The section is added in place above, with its name ready to rename.
+  assert.equal(h.elements.projectsBoardSectionForm.hidden, true);
+  const aboveWrite = h.writes.find(w => w.url.endsWith('/sections') && w.body.title === 'New section');
   assert.ok(aboveWrite);
   assert.deepEqual(aboveWrite.body.placement, { kind: 'before', siblingId: 's' });
+  const created = h.board.getState().sections.find(s => s.title === 'New section');
+  const titleInput = h.doc.querySelector(`[data-row-kind="section"][data-section-id="${created.id}"] .crm-board-section-input`);
+  assert.equal(h.doc.activeElement, titleInput);
+  titleInput.value = 'Submitted Above';
+  titleInput.dispatchEvent(new h.win.Event('input', { bubbles: true }));
+  h.key(titleInput, 'Enter');
+  titleInput.dispatchEvent(new h.win.Event('change', { bubbles: true }));
+  await tick();
+  const renames = h.writes.filter(w => w.url.endsWith(`/sections/${created.id}`));
+  assert.equal(renames.length, 1);
+  assert.equal(renames[0].body.title, 'Submitted Above');
  } finally { h.close(); }
 });

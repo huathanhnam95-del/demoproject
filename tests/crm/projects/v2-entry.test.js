@@ -64,8 +64,12 @@ test('actual CRM composition wires one workspace, scope and flag with ordered sc
     const start = shell.indexOf('    projectsWorkspaceController?.dispose?.();');
     const end = shell.indexOf('    // Controller scopes are document-local.', start);
     assert.ok(start > 0 && end > start);
-    const scriptNames = ['projects/workspace.js', 'projects/presentation/field-feedback.js', 'projects/presentation/ui-preferences.js', 'projects/presentation/shell.js', 'projects/presentation/entry.js', 'src="crm-admin.js'];
-    const positions = scriptNames.map(name => html.indexOf(name));
+    const loader = fs.readFileSync(path.join(root, 'public/js/crm/projects/loader.js'), 'utf8');
+    const scriptNames = ['projects/workspace.js', 'projects/presentation/field-feedback.js', 'projects/presentation/ui-preferences.js', 'projects/presentation/shell.js', 'projects/presentation/entry.js'];
+    const positions = scriptNames.map(name => loader.indexOf(name));
+    assert.ok(html.indexOf('projects/loader.js') < html.indexOf('src="crm-admin.js'));
+    assert.match(html, /src="js\/crm\/projects\/access.js/);
+    assert.doesNotMatch(html, /src="js\/crm\/projects\/(?:board|views|workspace|date-picker).js/);
     assert.ok(positions.every((position, index) => position > 0 && (!index || position > positions[index - 1])));
     assert.match(html, /__CRM_PRESENTATION_CONFIG__ = Object.freeze\(\{ projectsV2: projectsV2Query !== '0' \}\)/);
     assert.match(shell, /onFieldSaveEvent: event => projectsWorkspaceController\?\.onFieldSaveEvent\?\.\(event\)/);
@@ -106,4 +110,80 @@ test('actual inline presentation flag defaults every host to V2 with explicit le
             assert.ok(Object.isFrozen(context.window.__CRM_PRESENTATION_CONFIG__));
         }
     }
+});
+
+function loaderFixture() {
+    const source = fs.readFileSync(path.join(root, 'public/js/crm/projects/loader.js'), 'utf8');
+    const entries = JSON.parse(source.match(/const scripts = (\[[\s\S]*?\]);/)[1]);
+    const appended = [], events = new Map();
+    const context = { URL, setTimeout, clearTimeout, document: { baseURI: 'http://localhost/crm-admin.html',
+        createElement: tag => ({ tag, remove() { this.removed = true; } }),
+        head: { appendChild: node => appended.push(node) }
+    }, addEventListener: (name, fn) => events.set(name, fn), removeEventListener: name => events.delete(name) };
+    vm.runInNewContext(source, context);
+    const script = () => appended.filter(node => node.tag === 'script').at(-1);
+    async function succeedRest() {
+        for (let index = 0; index < entries.length; index++) {
+            const current = script();
+            if (current?.onload) {
+                const entry = entries.find(([src]) => src === current.src);
+                context[entry[1]] = {};
+                current.onload();
+            }
+            await new Promise(resolve => setImmediate(resolve));
+        }
+    }
+    return { context, entries, appended, events, script, succeedRest, api: context.CrmProjectsLoader };
+}
+test('loader preload downloads only; concurrent loads share work and warm loads do not execute again', async () => {
+    const f = loaderFixture();
+    f.api.preload(); f.api.preload();
+    assert.equal(f.appended.length, f.entries.length);
+    assert.ok(f.appended.every(node => node.tag === 'link' && node.as === 'script'));
+    const first = f.api.ensure();
+    assert.equal(f.api.ensure(), first);
+    assert.equal(f.appended.filter(node => node.tag === 'script').length, 1);
+    await f.succeedRest(); await first;
+    assert.deepEqual(f.appended.filter(node => node.tag === 'script').map(node => node.src), f.entries.map(entry => entry[0]));
+    const count = f.appended.length;
+    await f.api.ensure(); assert.equal(f.appended.length, count);
+});
+test('loader retries the failed download without executing successful modules again', async () => {
+    const f = loaderFixture(), first = f.api.ensure();
+    f.context[f.entries[0][1]] = {}; f.script().onload();
+    await new Promise(resolve => setImmediate(resolve));
+    const failed = f.script(); failed.onerror();
+    await assert.rejects(first, /Could not load/);
+    assert.equal(failed.removed, true);
+    const retry = f.api.ensure();
+    assert.equal(f.script().src, f.entries[1][0]);
+    await f.succeedRest(); await retry;
+    assert.equal(f.appended.filter(node => node.tag === 'script' && node.src === f.entries[0][0]).length, 1);
+});
+test('loader rejects missing globals and script evaluation errors before later modules run', async () => {
+    for (const evaluationError of [false, true]) {
+        const f = loaderFixture(), pending = f.api.ensure();
+        if (evaluationError) {
+            f.context[f.entries[0][1]] = {};
+            f.events.get('error')({ filename: new URL(f.entries[0][0], f.context.document.baseURI).href, error: new Error('evaluation failed') });
+        }
+        f.script().onload();
+        await assert.rejects(pending, evaluationError ? /evaluation failed/ : /did not register/);
+        assert.equal(f.appended.filter(node => node.tag === 'script').length, 1);
+        await assert.rejects(f.api.ensure(), error => error.reloadRequired === true);
+    }
+});
+
+test('hung script offers a document restart and cannot be executed twice by retry', async () => {
+    const f = loaderFixture();
+    let expire;
+    f.context.setTimeout = fn => { expire = fn; return 1; };
+    f.context.clearTimeout = () => {};
+    const first = f.api.ensure();
+    const script = f.script();
+    expire();
+    await assert.rejects(first, error => error.reloadRequired === true);
+    assert.equal(script.onload, null);
+    await assert.rejects(f.api.ensure(), error => error.reloadRequired === true);
+    assert.equal(f.appended.filter(node => node.tag === 'script').length, 1);
 });

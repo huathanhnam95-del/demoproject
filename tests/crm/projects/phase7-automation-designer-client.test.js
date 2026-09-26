@@ -8,6 +8,7 @@ require('../../../public/js/crm/projects/automation-definition-editor');
 const E = globalThis.CrmAutomationDefinitionEditor;
 const copy = value => JSON.parse(JSON.stringify(value));
 const deferred = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
+function switchProject(h, id) { h.c.setSelection(id); h.c.setContext(h.snapshot({ project: { id, lifecycle: 'active' } })); }
 const def = () => ({ schemaVersion: 1, trigger: { type: 'task_created' }, steps: [{ nodeId: 'step', type: 'set_field', payload: { target: 'trigger_task', patch: { status: 'done' } } }] });
 const httpError = (status, code) => Object.assign(new Error(code), { status, payload: { success: false, error: code, message: code } });
 function harness({ root } = {}) {
@@ -75,6 +76,41 @@ test('lost acknowledgement blocks changed mutation until exact original payload 
   const request = copy(h.c.getState().pending); h.c.updateDraft({ title: 'Newer title' }); const count = h.calls.length; await h.c.mutate('create'); assert.equal(h.calls.length, count);
   h.handle(async (_url, options) => { assert.deepEqual(JSON.parse(options.body), request.body); return { rule: { ...h.rule, title: request.body.title }, version: { ...h.version, actorUid: 'u1', definition: request.body.definition } }; });
   await h.c.retryMutation(); assert.equal(h.c.getState().pending, null); assert.equal(h.c.getState().draft.title, 'Newer title'); assert.equal(h.c.getState().dirty, true); assert.equal(h.c.getState().rule.ruleId, 'r1');
+});
+
+test('new and edited drafts survive project changes, discard without writes, and clear on account switch', async () => {
+  for (const existing of [false, true]) {
+    const h = harness(); if (existing) await h.c.openRule('r1'); else h.c.newDraft();
+    h.c.updateDraft({ title: 'Keep my work' }); const before = copy(h.c.getState().draft);
+    switchProject(h, 'p2'); h.c.newDraft(); h.c.updateDraft({ title: 'Second project' });
+    switchProject(h, 'p1'); assert.deepEqual(copy(h.c.getState().draft), before);
+    const count = h.calls.length; h.c.discardDraft(); assert.equal(h.calls.length, count); assert.equal(h.c.getState().draft, null); assert.equal(h.c.getState().mode, 'manage');
+    h.c.newDraft(); assert.ok(h.c.getState().draft);
+    h.actor('u3'); switchProject(h, 'p2'); assert.equal(h.c.getState().draft, null);
+    h.actor('u1'); switchProject(h, 'p2'); assert.equal(h.c.getState().draft, null);
+  }
+});
+
+test('uncertain request survives project changes with exact retry identity and blocks discard', async () => {
+  const h = harness(); h.c.newDraft(); h.handle(async () => { throw new Error('lost acknowledgement'); });
+  await h.c.mutate('create'); const original = h.calls.at(-1); h.c.discardDraft(); assert.ok(h.c.getState().draft);
+  switchProject(h, 'p2'); switchProject(h, 'p1');
+  h.handle(async () => ({ rule: h.rule, version: h.version })); await h.c.retryMutation();
+  assert.equal(h.calls.at(-1).url, original.url); assert.equal(h.calls.at(-1).options.body, original.options.body);
+  assert.equal(h.c.getState().pending, null); assert.equal(h.c.getState().inFlight, false);
+});
+
+test('late create acknowledgement settles its project, including a return while still in flight', async () => {
+  for (const returnBeforeAck of [false, true]) {
+    const h = harness(), held = deferred(); h.c.newDraft(); h.handle(() => held.promise);
+    const work = h.c.mutate('create'); h.c.discardDraft(); assert.ok(h.c.getState().draft);
+    switchProject(h, 'p2'); h.c.newDraft(); h.c.updateDraft({ title: 'Other project' });
+    if (returnBeforeAck) { switchProject(h, 'p1'); await h.c.mutate('create'); assert.equal(h.calls.length, 1); }
+    held.resolve({ rule: h.rule, version: h.version }); await work;
+    if (!returnBeforeAck) { assert.equal(h.c.getState().draft.title, 'Other project'); assert.equal(h.c.getState().rule, null); switchProject(h, 'p1'); }
+    assert.equal(h.c.getState().rule.ruleId, 'r1'); assert.equal(h.c.getState().pending, null); assert.equal(h.c.getState().inFlight, false); assert.equal(h.c.getState().dirty, false);
+    await h.c.retryMutation(); assert.equal(h.calls.length, 1);
+  }
 });
 test('Owner403 invalidates immediately; failed Board refresh cannot resurrect Owner or deny Editor content', async () => {
   const h = harness(); await h.c.openRule('r1'); h.failRefresh(); h.handle(async () => { throw httpError(403, 'PROJECT_OWNER_REQUIRED'); }); await h.c.loadList();

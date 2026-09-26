@@ -15,6 +15,9 @@ const cp = require('node:child_process');
 const EXIT_CODES = Object.freeze({ CLEAN: 0, POLICY: 1, INPUT: 2 });
 const ADOPTION_SHA = 'ffbc380ae0790d92eb904ddc6edb183748f00c06';
 const DEFAULT_EXCLUDED = ['.git', 'node_modules', '.venv', 'venv', 'Kokoro-FastAPI', '.firebase'];
+// Root-relative directory boundary; keep the version-1 snapshot exclusions stable.
+const ROOT_DIRECTORY_EXCLUDED = '.tmp.driveupload';
+const isDriveCachePath = (name) => name.startsWith(`${ROOT_DIRECTORY_EXCLUDED}/`);
 const LFS_POINTER = /^version https:\/\/git-lfs\.github\.com\/spec\/v1\n(?:oid sha256:[0-9a-f]+\n)?size \d+\n?$/;
 
 function isSha(value) { return typeof value === 'string' && /^[0-9a-f]{40}$/i.test(value); }
@@ -196,6 +199,7 @@ function listFiles(root, options = {}) {
       if (exclusions.has(entry.name)) continue;
       const stat = fs.lstatSync(absolute);
       if (stat.isSymbolicLink()) { links.push(rel); continue; }
+      if (entry.isDirectory() && rel === ROOT_DIRECTORY_EXCLUDED) continue;
       if (entry.isDirectory()) { visit(absolute); continue; }
       if (!entry.isFile()) continue;
       const meta = { size: stat.size, mtimeMs: stat.mtimeMs, absolute };
@@ -737,7 +741,7 @@ function checkLocal(options) {
     const message = `base tree analysis failed: ${error.message}`;
     return { status: EXIT_CODES.INPUT, blocking: [{ ruleId: 'INPUT.ANALYSIS', path: '', message }], notices: [], actionable: [], errors: [message] };
   }
-  const tree = options.currentFiles instanceof Map ? options.currentFiles : new Map(Object.entries(options.currentFiles || {}).map(([name, value]) => [name, Buffer.isBuffer(value) ? { bytes: value } : typeof value === 'string' ? { bytes: Buffer.from(value) } : value]));
+  const tree = options.currentFiles instanceof Map ? new Map(options.currentFiles) : new Map(Object.entries(options.currentFiles || {}).map(([name, value]) => [name, Buffer.isBuffer(value) ? { bytes: value } : typeof value === 'string' ? { bytes: Buffer.from(value) } : value]));
   const before = new Map(Object.entries(snapshot.files || {}));
   const declared = collectDeclaredChanges(contract);
   const roots = outputRoots(contract, root);
@@ -753,13 +757,25 @@ function checkLocal(options) {
       stagedPaths = index.changed;
     } else {
       stagedPaths = indexPaths(root);
-      try { currentIndex = gitIndexState(root); } catch { currentIndex = null; }
+      currentIndex = gitIndexState(root);
     }
-  } catch { try { stagedPaths = indexPaths(root); } catch { stagedPaths = []; } }
+  } catch (error) {
+    const message = `cannot verify Git index state: ${error.message}`;
+    return { status: EXIT_CODES.INPUT, blocking: [{ ruleId: 'INPUT.INDEX', path: '', message }], notices: [], actionable: [], errors: [message] };
+  }
+  const snapshotIndex = snapshot.index && typeof snapshot.index === 'object' && !Array.isArray(snapshot.index) ? snapshot.index : null;
+  // Older snapshots included untracked Drive cache bytes. Filter both sides,
+  // retaining indexed (including previously indexed) and declared paths for audit.
+  const ignoredCache = (rel) => isDriveCachePath(rel) && !currentIndex[rel] && !(snapshotIndex && snapshotIndex[rel]) && !declared.has(rel);
+  for (const rel of before.keys()) if (ignoredCache(rel)) before.delete(rel);
+  for (const rel of tree.keys()) if (ignoredCache(rel)) tree.delete(rel);
+  changedByGit = changedByGit.filter((rel) => !ignoredCache(rel));
   const staged = new Set(stagedPaths);
   const relevantPaths = new Set([...(options.changedPaths || []), ...changedByGit, ...stagedPaths, ...declared]);
   const allPaths = new Set([...before.keys(), ...tree.keys(), ...stagedPaths]);
+  const unchangedIndexedCache = (rel) => isDriveCachePath(rel) && currentIndex[rel] && snapshotIndex && snapshotIndex[rel] && !staged.has(rel);
   for (const rel of allPaths) {
+    if (unchangedIndexedCache(rel)) continue;
     const current = tree.get(rel);
     const prior = before.get(rel);
     let changed = !current || !prior || staged.has(rel);
@@ -770,6 +786,7 @@ function checkLocal(options) {
     if (!declared.has(rel)) deltaFindings.push(finding('R1.UNDECLARED_CHANGE', rel, 'working-tree change was not declared', { category: 'contract' }));
   }
   const changedPaths = [...allPaths].filter((rel) => {
+    if (unchangedIndexedCache(rel)) return false;
     const current = tree.get(rel); const prior = before.get(rel);
     if (!current || !prior || staged.has(rel)) return true;
     if (relevantPaths.has(rel)) return entryHash(root, rel, current) !== prior.sha256;
@@ -787,7 +804,6 @@ function checkLocal(options) {
   // Other ignored generated files, such as Python bytecode, remain in the file
   // scan after index-only removal. Exclude only a generated artifact that the
   // base policy already classified and whose retained bytes match the snapshot.
-  const snapshotIndex = snapshot.index && typeof snapshot.index === 'object' && !Array.isArray(snapshot.index) ? snapshot.index : null;
   const baseGeneratedPaths = new Set(baseFindings.filter((item) => item.ruleId === 'R4.TRACKED_DEPENDENCY' || item.ruleId === 'R4.TRACKED_CACHE').map((item) => item.path));
   const placementPaths = changedPaths.filter((rel) => {
     const wasIndexed = Boolean(snapshotIndex && Object.prototype.hasOwnProperty.call(snapshotIndex, rel));
@@ -799,9 +815,18 @@ function checkLocal(options) {
     return tree.has(rel);
   });
   const placement = analyzePaths(placementPaths, policy, { treeSha: options.treeSha || SHA_PLACEHOLDER });
+  const cachePaths = new Set(Object.keys(currentIndex).filter(isDriveCachePath));
+  for (const rel of declared) {
+    if (!isDriveCachePath(rel)) continue;
+    const auditedDeletion = (contract.changes.delete || []).includes(rel) && snapshotIndex && snapshotIndex[rel] && !currentIndex[rel] && staged.has(rel);
+    if (!auditedDeletion) cachePaths.add(rel);
+  }
+  // This directory is never a source/output home, even with a baseline or exception.
+  const cacheFindings = [...cachePaths].map((rel) => finding('R4.TRACKED_CACHE', rel, 'Google Drive cache cannot be indexed or declared as task source/output', { category: 'cache' }));
+  placement.findings = placement.findings.filter((item) => !cachePaths.has(item.path));
   const baseline = options.baseline || { schemaVersion: 1, adoptionSha: policy.adoptionSha, findings: [] };
-  const currentLinks = new Set(options.currentLinks || []);
-  const beforeLinks = new Set(snapshot.links || []);
+  const currentLinks = new Set((options.currentLinks || []).filter((rel) => !ignoredCache(rel)));
+  const beforeLinks = new Set((snapshot.links || []).filter((rel) => !ignoredCache(rel)));
   for (const link of currentLinks) if (!beforeLinks.has(link) && !declared.has(link)) deltaFindings.push(finding('R1.UNDECLARED_LINK', link, 'new symlink/junction was not declared', { category: 'contract' }));
   for (const link of beforeLinks) if (!currentLinks.has(link) && !declared.has(link)) deltaFindings.push(finding('R1.UNDECLARED_LINK', link, 'pre-existing symlink/junction was removed without declaration', { category: 'contract' }));
   const comparison = compareFindings({ findings: baseFindings }, { findings: [...placement.findings, ...deltaFindings] }, baseline, { adoptionSha: policy.adoptionSha, adoptionFindings: options.adoptionFindings || [], bootstrap: false, scopePaths: changedPaths, exceptions: policy.exceptions });
@@ -821,9 +846,9 @@ function checkLocal(options) {
     for (const entry of baseline.findings || []) if (!adoptionFingerprints.has(entry.fingerprint)) familyFindings.push({ ...entry, ruleId: 'BASELINE.REPRODUCTION', message: 'baseline entry is not reproducible in fixed adoption tree' });
   }
   const staleBaseline = comparison.actionable.map((item) => ({ ...item, ruleId: 'BASELINE.STALE', message: item.message }));
-  const blocking = [...comparison.blocking, ...commands.findings, ...packageCommands.findings, ...packageRegistry.findings, ...familyFindings, ...staleBaseline];
+  const blocking = [...comparison.blocking, ...cacheFindings, ...commands.findings, ...packageCommands.findings, ...packageRegistry.findings, ...familyFindings, ...staleBaseline];
   const notices = [...comparison.notices, ...comparison.actionable.map((item) => ({ type: 'baseline', message: item.message, finding: item })), ...packageRegistry.notices, ...policyValidation.expired.map((exception) => ({ type: 'exception-triage', message: `exception review date has expired: ${exception.path}`, exception }))];
-  return { status: blocking.length ? EXIT_CODES.POLICY : EXIT_CODES.CLEAN, blocking, notices, actionable: comparison.actionable, errors: [], analysis: { contractSnapshot: { status: 'evaluated' }, outputHistory: { status: 'evaluated' }, scannedPaths: changedPaths, excluded: DEFAULT_EXCLUDED, index: { status: currentIndex ? 'evaluated' : 'fallback-clean-snapshot' } } };
+  return { status: blocking.length ? EXIT_CODES.POLICY : EXIT_CODES.CLEAN, blocking, notices, actionable: comparison.actionable, errors: [], analysis: { contractSnapshot: { status: 'evaluated' }, outputHistory: { status: 'evaluated' }, scannedPaths: [...new Set([...changedPaths, ...cachePaths])], excluded: DEFAULT_EXCLUDED, index: { status: 'evaluated' } } };
 }
 
 function makeCiReport(options) {
@@ -978,7 +1003,9 @@ function runCi(options) {
   const packageRegistryFindings = packageRegistry.findings;
   const comparison = compareFindings(baseAnalysis, { findings: candidateFindings }, candidate.baseline, { adoptionSha: ADOPTION_SHA, adoptionFindings, bootstrap, exceptions: candidate.policy.exceptions, scopePaths: actualChangedPaths });
   const staleBaseline = comparison.actionable.map((item) => ({ ...item, ruleId: 'BASELINE.STALE', message: item.message }));
-  const findings = [...comparison.blocking, ...governance.blocking, ...packageRegistryFindings, ...staleBaseline];
+  const cachePaths = new Set([...candidate.files.keys()].filter(isDriveCachePath));
+  const cacheFindings = [...cachePaths].map((rel) => finding('R4.TRACKED_CACHE', rel, 'Google Drive cache cannot be committed', { category: 'cache' }));
+  const findings = [...comparison.blocking.filter((item) => !cachePaths.has(item.path)), ...cacheFindings, ...governance.blocking, ...packageRegistryFindings, ...staleBaseline];
   const notices = [...comparison.notices, ...comparison.actionable.map((item) => ({ type: 'baseline', message: item.message, finding: item })), ...governance.notices, ...packageRegistry.notices, ...candidatePolicyValidation.expired.map((exception) => ({ type: 'exception-triage', message: `exception review date has expired: ${exception.path}`, exception }))];
   if (options.full && candidate.baseline.findings.some((entry) => !adoptionFindings.some((item) => item.fingerprint === entry.fingerprint))) findings.push({ ruleId: 'BASELINE.REPRODUCTION', path: '', message: 'baseline contains a finding not present at fixed adoption SHA' });
   return { ...makeCiReport({ findings, notices, actionable: comparison.actionable, scannedPaths: [...candidate.files.keys()] }), governance: { status: governance.notices.length || governance.blocking.length ? 'review-required' : 'unchanged' }, head, base: options.base || null, full: Boolean(options.full) };

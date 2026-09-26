@@ -6,7 +6,9 @@
         let pendingPage = null;
         let pendingSnapshot = null;
         const currentUid = () => String(deps.getCurrentUser?.()?.uid || '');
-        const visible = () => !globalScope.document?.hidden;
+        // Polls only while the browser tab is shown and the Projects page is the
+        // active CRM page; resume() catches up as soon as it is shown again.
+        const visible = () => !globalScope.document?.hidden && deps.isActive?.() !== false;
         const scope = () => ({ projectId, actorUid, epoch });
         const current = s => !disposed && s.epoch === epoch && s.projectId === projectId && s.actorUid === currentUid();
         const path = s => `/api/projects/${encodeURIComponent(s.projectId)}/changes`;
@@ -109,7 +111,7 @@
         }
         function visibilityChanged() { if (visible()) tick(); else clearTimeout(timer); }
         globalScope.document?.addEventListener('visibilitychange', visibilityChanged);
-        return { snapshot, tick, stop, dispose() { stop(); disposed = true; globalScope.document?.removeEventListener('visibilitychange', visibilityChanged); }, getState: () => ({ projectId, actorUid, epoch, cursor, signature, queuedPoll }) };
+        return { snapshot, tick, resume() { if (visible()) tick(); }, stop, dispose() { stop(); disposed = true; globalScope.document?.removeEventListener('visibilitychange', visibilityChanged); }, getState: () => ({ projectId, actorUid, epoch, cursor, signature, queuedPoll }) };
     }
     globalScope.CrmProjectsRemoteObserver = { createController };
     if (typeof module !== 'undefined') module.exports = { createController };

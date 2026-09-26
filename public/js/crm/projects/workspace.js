@@ -10,11 +10,23 @@
         const panel = document?.querySelector('[data-panel="projects"]');
         const observers = [], removers = [];
         let selection = {}, context = null, timer = null, disposed = false, initialized = false;
+        let routeActive = true, composing = false, searchGeneration = 0, cancelledComposition = false, ignoreCompositionInput = false;
+        function cancelSearch() { clearTimeout(timer); timer = null; if (composing) cancelledComposition = true; composing = false; searchGeneration++; }
+        function scheduleSearch(input, filters) {
+            clearTimeout(timer);
+            if (composing || !routeActive || !current()) return;
+            const projectId = String(selection.selectedProjectId || '');
+            const generation = searchGeneration;
+            timer = setTimeout(() => {
+                timer = null;
+                if (current() && routeActive && !composing && generation === searchGeneration && projectId === String(selection.selectedProjectId || '') && !input.disabled) filters.requestSubmit();
+            }, 250);
+        }
         const current = () => !disposed && !!actorUid && String(deps.getCurrentUser?.()?.uid || '') === actorUid;
-        function listen(node, event, handler) {
+        function listen(node, event, handler, options) {
             if (!node) return;
-            node.addEventListener(event, handler);
-            removers.push(() => node.removeEventListener(event, handler));
+            node.addEventListener(event, handler, options);
+            removers.push(() => node.removeEventListener(event, handler, options));
         }
         function text(id, value) { const node = byId(id); if (node) node.textContent = value; }
         function render() {
@@ -43,7 +55,7 @@
                 if (focusedProject) Array.from(rail.querySelectorAll('[data-workspace-project]')).find(button => button.dataset.workspaceProject === focusedProject)?.focus();
             }
             text('projects-workspace-name', loaded?.name || loaded?.title || selected?.name || selected?.title || 'Projects');
-            text('projects-workspace-description', loaded?.description || (selected ? 'Keep tasks, updates and your team together.' : 'A shared space to plan work with your team.'));
+            text('projects-workspace-description', loaded?.description || '');
             const onboarding = byId('projects-workspace-onboarding');
             if (onboarding) onboarding.hidden = !needsAccess;
             panel?.classList.toggle('crm-projects-access-needed', needsAccess);
@@ -56,14 +68,18 @@
                 if (button) button.hidden = needsAccess;
             }
         }
-        function activateSettings(name = 'project') {
+        function activateSettings(name = 'project', load = true) {
             const dialog = byId('projects-workspace-settings');
+            const isAdmin = selection.accessSummary?.canManagePeople === true;
+            if (['calendar', 'allowance'].includes(name) && !isAdmin) name = 'project';
             dialog?.querySelectorAll('[data-projects-settings-tab]').forEach(button => {
+                button.hidden = ['calendar', 'allowance'].includes(button.dataset.projectsSettingsTab) && !isAdmin;
                 const active = button.dataset.projectsSettingsTab === name;
                 button.setAttribute('aria-selected', String(active));
                 button.tabIndex = active ? 0 : -1;
             });
             dialog?.querySelectorAll('[data-projects-settings-panel]').forEach(section => { section.hidden = section.dataset.projectsSettingsPanel !== name; });
+            if (load && dialog && !dialog.hidden) deps.onSettingsOpen?.(name);
         }
         function closeDialog(dialog, delegate = true) {
             if (deps.presentationV2 && dialog.id === 'projects-board-detail') {
@@ -124,7 +140,7 @@
                 const opener = event.target.closest?.('[data-projects-open]');
                 if (!opener || !current()) return;
                 const dialog = byId(opener.dataset.projectsOpen);
-                if (dialog?.matches('[data-projects-dialog]')) { activateSettings(opener.dataset.projectsSettingsTab || 'project'); dialog.hidden = false; if (!dialog.open) dialog.showModal(); }
+                if (dialog?.matches('[data-projects-dialog]')) { dialog.hidden = false; activateSettings(opener.dataset.projectsSettingsTab || 'project'); if (!dialog.open) dialog.showModal(); }
             });
             listen(panel, 'keydown', event => {
                 if (event.key === 'Escape') {
@@ -142,7 +158,7 @@
             });
             listen(byId('projects-workspace-settings'), 'keydown', event => {
                 if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) || !event.target.matches?.('[data-projects-settings-tab]')) return;
-                const tabs = Array.from(byId('projects-workspace-settings').querySelectorAll('[data-projects-settings-tab]'));
+                const tabs = Array.from(byId('projects-workspace-settings').querySelectorAll('[data-projects-settings-tab]')).filter(tab => !tab.hidden);
                 const index = tabs.indexOf(event.target);
                 const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
                 event.preventDefault(); activateSettings(tabs[next].dataset.projectsSettingsTab); tabs[next].focus();
@@ -153,16 +169,26 @@
             });
             activateSettings();
             const filters = byId('projects-view-filters');
+            listen(filters, 'compositionstart', event => { if (event.target.name === 'title') { cancelSearch(); cancelledComposition = false; ignoreCompositionInput = false; composing = true; } });
+            listen(filters, 'compositionend', event => {
+                if (event.target.name !== 'title') return;
+                if (cancelledComposition) { cancelledComposition = false; ignoreCompositionInput = true; return; }
+                if (composing) { composing = false; scheduleSearch(event.target, filters); }
+            });
             listen(filters, 'input', event => {
                 if (event.target.name !== 'title') return;
-                clearTimeout(timer);
-                timer = setTimeout(() => { if (current() && !event.target.disabled) filters.requestSubmit(); }, 250);
+                if (ignoreCompositionInput) { ignoreCompositionInput = false; return; }
+                if (event.isComposing || composing) { clearTimeout(timer); return; }
+                scheduleSearch(event.target, filters);
             });
+            listen(filters, 'submit', event => {
+                if (composing || !routeActive || !current()) { event.preventDefault(); event.stopImmediatePropagation(); }
+            }, true);
             listen(filters, 'submit', () => {
                 clearTimeout(timer);
                 filters.querySelectorAll('details').forEach(details => { details.open = false; });
             });
-            listen(filters, 'reset', () => { clearTimeout(timer); });
+            listen(filters, 'reset', cancelSearch);
             // V2 owns utility navigation, while this controller retains dialogs/search.
             if (deps.presentationV2) { render(); return; }
             const utilityRail = byId('projects-utility-rail');
@@ -249,13 +275,13 @@
             render();
         }
         function dispose() {
-            disposed = true; clearTimeout(timer); observers.forEach(observer => observer.disconnect()); removers.forEach(remove => remove());
+            disposed = true; cancelSearch(); observers.forEach(observer => observer.disconnect()); removers.forEach(remove => remove());
             panel?.querySelectorAll('[data-projects-dialog]').forEach(dialog => {
                 if (deps.presentationV2 && dialog.id === 'projects-board-detail') { globalScope.CrmProjectsDetailSurfaceV2?.close(dialog); return; }
                 if (dialog.open) dialog.close(); dialog.hidden = true;
             });
         }
-        return { init, dispose, closeForNavigation() { if (current()) panel?.querySelectorAll('[data-projects-dialog]').forEach(dialog => { if (dialog.open) closeDialog(dialog); }); }, setSelection(value) { selection = value || {}; render(); }, setContext(value) { context = value; render(); } };
+        return { init, dispose, setRouteActive(value) { routeActive = value === true; if (!routeActive) cancelSearch(); }, closeForNavigation() { cancelSearch(); if (current()) panel?.querySelectorAll('[data-projects-dialog]').forEach(dialog => { if (dialog.open) closeDialog(dialog); }); }, setSelection(value) { if (String(value?.selectedProjectId || '') !== String(selection.selectedProjectId || '')) cancelSearch(); selection = value || {}; const dialog = byId('projects-workspace-settings'); const activeTab = dialog?.querySelector('[data-projects-settings-tab][aria-selected="true"]'); activateSettings(activeTab?.dataset.projectsSettingsTab || 'project', false); render(); }, setContext(value) { context = value; render(); } };
     }
     globalScope.CrmProjectsWorkspace = { createController };
 })(typeof window !== 'undefined' ? window : globalThis);

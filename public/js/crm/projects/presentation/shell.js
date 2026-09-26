@@ -100,6 +100,9 @@
                 actions?.prepend(members); restore.push(() => members.remove());
                 move(actions?.querySelector('button[data-projects-open="projects-workspace-settings"]:not(#projects-v2-members)'), menu);
                 move(byId('btn-projects-board-refresh'), menu); move(byId('btn-projects-access-refresh'), menu);
+                // Two "Refresh" entries read as duplicates; name what each one reloads.
+                const accessRefresh = byId('btn-projects-access-refresh');
+                if (accessRefresh) { const original = accessRefresh.textContent; accessRefresh.textContent = 'Refresh project list'; restore.push(() => { accessRefresh.textContent = original; }); }
                 const schema = byId('btn-projects-board-add-column');
                 if (schema) { const original = schema.textContent; schema.textContent = 'Add column (Owner)'; restore.push(() => { schema.textContent = original; }); move(schema, menu); }
                 const recovery = doc.createElement('button'); recovery.type = 'button'; recovery.className = 'crm-btn-secondary'; recovery.textContent = 'Archive & trash'; menu?.append(recovery); restore.push(() => recovery.remove());

@@ -325,6 +325,7 @@
   [data-projects-ui="v2"] #projects-board-scroll { scroll-padding-bottom: 160px; }
   [data-projects-ui="v2"] .crm-projects-board-section-row > div { min-width: 0; max-width: 100%; }
   [data-projects-ui="v2"] .crm-board-section-input { min-width: 0; max-width: 100%; }
+}
 [data-projects-ui="v2"] .crm-board-add-top-btn {
   background: none; border: 1px dashed var(--pj-line); border-radius: 4px;
   color: var(--pj-muted); font-size: 12px; padding: 2px 8px; margin-right: 8px;
@@ -394,3 +395,287 @@
   [data-projects-ui="v2"] #projects-workspace-description:not(:empty) { font-size: .9em; }
   [data-projects-ui="v2"] :is(.crm-projects-workspace-heading-actions button, .crm-projects-workspace-heading-actions summary, #projects-v2-columns > summary) { min-height: 44px; }
 }
+
+/* ==========================================================================
+   Board interaction feedback and section blocks (2026-09-26 audit).
+   ========================================================================== */
+/* Buttons: every action reacts to hover and press. */
+[data-panel="projects"][data-projects-ui="v2"] .crm-btn-primary { transition: background-color .15s ease, box-shadow .15s ease, transform .05s ease; }
+[data-panel="projects"][data-projects-ui="v2"] .crm-btn-primary:hover:not(:disabled) { background: #105a3f; box-shadow: 0 1px 3px #0f3d2a40; }
+[data-panel="projects"][data-projects-ui="v2"] .crm-btn-secondary { transition: background-color .15s ease, border-color .15s ease, color .15s ease; }
+[data-panel="projects"][data-projects-ui="v2"] .crm-btn-secondary:hover:not(:disabled) { background: var(--pj-raised); border-color: color-mix(in srgb, var(--pj-accent) 45%, var(--pj-line)); color: var(--pj-accent-ink); }
+[data-panel="projects"][data-projects-ui="v2"] :is(.crm-btn-primary, .crm-btn-secondary):active:not(:disabled) { transform: translateY(1px); }
+[data-panel="projects"][data-projects-ui="v2"].projects-dark .crm-btn-primary:hover:not(:disabled) { background: #1f8a62; }
+
+/* Task rows highlight on hover; their quiet controls come forward. */
+[data-projects-ui="v2"] .crm-projects-board-row[data-row-kind="task"]:hover,
+[data-projects-ui="v2"] .crm-projects-board-row[data-row-kind="task"]:focus-within { background: color-mix(in srgb, var(--pj-accent) 6%, var(--pj-surface)); }
+[data-projects-ui="v2"] .crm-board-task-menu { opacity: .45; border-radius: 4px; transition: opacity .15s ease, background-color .15s ease; }
+[data-projects-ui="v2"] .crm-projects-board-row[data-row-kind="task"]:is(:hover, :focus-within) .crm-board-task-menu { opacity: 1; }
+[data-projects-ui="v2"] :is(.crm-board-task-menu, .crm-board-section-menu):hover { background: color-mix(in srgb, var(--pj-ink) 9%, transparent); opacity: 1; }
+[data-projects-ui="v2"] .crm-board-title-button:hover { color: var(--pj-accent-ink); text-decoration: underline; text-underline-offset: 3px; }
+[data-projects-ui="v2"] .crm-board-expander { border-radius: 4px; }
+[data-projects-ui="v2"] .crm-board-expander:hover { background: color-mix(in srgb, var(--pj-ink) 9%, transparent); }
+[data-projects-ui="v2"] .crm-board-expander.is-leaf { opacity: .25; }
+[data-projects-ui="v2"] .crm-projects-board-row:is(:hover, :focus-within) .crm-board-expander.is-leaf { opacity: .7; }
+[data-projects-ui="v2"] .crm-board-expander.is-leaf:hover,
+[data-projects-ui="v2"] .crm-board-expander.is-leaf[aria-expanded="true"] { opacity: 1; color: var(--pj-accent-ink); }
+[data-projects-ui="v2"] .crm-people-trigger { border-radius: 4px; transition: background-color .15s ease; }
+[data-projects-ui="v2"] :is(.crm-people-trigger, .crm-board-date-trigger):hover:not(:disabled) { background: color-mix(in srgb, var(--pj-ink) 6%, transparent); }
+
+/* Inline "+ Add task" / "+ Add subtask" rows. */
+[data-projects-ui="v2"] .crm-board-inline-add {
+  border: 0; background: transparent; color: var(--pj-muted); cursor: pointer; text-align: left;
+  padding: 4px 8px; border-radius: 4px; min-height: 28px; font-weight: 500;
+  transition: color .15s ease, background-color .15s ease;
+}
+[data-projects-ui="v2"] .crm-board-inline-add:hover:not(:disabled),
+[data-projects-ui="v2"] .crm-board-inline-add:focus-visible { color: var(--pj-accent-ink); background: color-mix(in srgb, var(--pj-accent) 8%, transparent); }
+[data-projects-ui="v2"] .crm-quick-footer { background: var(--pj-surface); }
+[data-projects-ui="v2"] .crm-quick-footer:hover { background: color-mix(in srgb, var(--pj-accent) 4%, var(--pj-surface)); }
+[data-projects-ui="v2"] .crm-board-subadd-row .crm-board-inline-add { font-size: .93em; }
+[data-projects-ui="v2"] .crm-board-subadd-row .crm-board-tree-elbow { opacity: .45; }
+
+/* The quick composer inside its table row: one line, no redundant section picker. */
+[data-projects-ui="v2"] .crm-board-composer-row { display: flex; align-items: center; background: color-mix(in srgb, var(--pj-accent) 5%, var(--pj-surface)); }
+[data-projects-ui="v2"] .crm-board-composer-cell { flex: 1 1 auto; display: flex; align-items: center; min-width: 0; position: sticky; left: 0; max-width: min(100%, 860px); }
+[data-projects-ui="v2"] .crm-quick-create[data-inline] { flex-wrap: nowrap; align-items: center; gap: 6px; padding: 0; width: 100%; }
+[data-projects-ui="v2"] .crm-quick-create[data-inline] label { flex-direction: row; align-items: center; flex: 1 1 auto; font-size: 0; }
+[data-projects-ui="v2"] .crm-quick-create[data-inline] label:has(select) { display: none; }
+[data-projects-ui="v2"] .crm-quick-create[data-inline] input { flex: 1 1 auto; min-height: 30px; height: 30px; padding: 4px 8px; font-size: calc(14px * var(--pj-v2-text-scale)); border-color: var(--pj-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pj-accent) 14%, transparent); }
+[data-projects-ui="v2"] .crm-quick-create[data-inline] button { min-height: 30px; height: 30px; padding: 2px 12px; flex: 0 0 auto; }
+[data-projects-ui="v2"] .crm-quick-create[data-inline] [role="status"] { flex: 0 1 auto; flex-basis: auto; font-size: 12px; color: var(--pj-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+[data-projects-ui="v2"] .crm-quick-create[data-inline] [role="status"]:empty { display: none; }
+[data-projects-ui="v2"] .crm-quick-create button.crm-btn-primary { border-color: var(--pj-accent); background: var(--pj-accent); color: #fff; }
+
+/* Section blocks: title, then its column labels, tasks and add row, then a gap. */
+[data-projects-ui="v2"] #projects-board-table-wrap:has(#projects-board-table[data-group-blocks]) { border: 0; border-radius: 0; }
+[data-projects-ui="v2"] [data-group-blocks] .crm-projects-board-section-row {
+  background: transparent; border: 0; box-shadow: none; padding-left: 0; align-items: flex-end; padding-bottom: 4px;
+}
+[data-projects-ui="v2"] [data-group-blocks] .crm-projects-board-section-row:hover { background: transparent; }
+[data-projects-ui="v2"] .crm-projects-board-section-row > div:first-child { gap: 4px; flex: 0 1 auto; max-width: 100%; position: sticky; left: 0; }
+[data-projects-ui="v2"] .crm-projects-board-section-row > div:empty { display: none; }
+[data-projects-ui="v2"] .crm-projects-board-section-row :is(.crm-board-section-input, .crm-board-group-title) {
+  font-size: calc(17px * var(--pj-v2-text-scale)); font-weight: 700; line-height: 1.3; letter-spacing: -.01em;
+  color: color-mix(in srgb, var(--crm-project-group-color) var(--pj-hue-amount, 78%), var(--pj-hue-toward, #1b2433));
+}
+[data-projects-ui="v2"] .crm-projects-board-section-row .crm-board-section-input {
+  width: auto; max-width: min(60ch, 70cqw); field-sizing: content; min-width: 6ch; height: 32px; padding: 2px 6px;
+  border: 1px solid transparent; border-radius: 4px; background: transparent;
+}
+[data-projects-ui="v2"] .crm-projects-board-section-row .crm-board-section-input:hover { border-color: var(--pj-line); }
+[data-projects-ui="v2"] .crm-projects-board-section-row .crm-board-section-input:focus { border-color: var(--pj-accent); background: var(--pj-surface); }
+[data-projects-ui="v2"] .crm-projects-board-section-row .crm-board-group-expander { color: var(--crm-project-group-color); border-radius: 4px; height: 28px; font-size: 13px; }
+[data-projects-ui="v2"] .crm-projects-board-section-row .crm-board-group-expander:hover { background: color-mix(in srgb, var(--crm-project-group-color) 14%, transparent); }
+[data-projects-ui="v2"] .crm-projects-board-section-row .crm-board-drag-handle { opacity: 0; transition: opacity .15s ease; }
+[data-projects-ui="v2"] .crm-projects-board-section-row .crm-board-section-menu { margin: 0; opacity: .35; transition: opacity .15s ease, background-color .15s ease; height: 28px; min-width: 28px; }
+[data-projects-ui="v2"] .crm-projects-board-section-row:is(:hover, :focus-within) :is(.crm-board-drag-handle, .crm-board-section-menu) { opacity: 1; }
+[data-projects-ui="v2"] .crm-board-group-count { margin-left: 6px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; color: var(--pj-muted); background: var(--pj-raised); white-space: nowrap; }
+[data-projects-ui="v2"] .crm-projects-board-section-row[data-optimistic] { opacity: .75; }
+
+[data-projects-ui="v2"] .crm-board-group-header {
+  background: var(--pj-surface); color: var(--pj-muted); font-size: calc(13px * var(--pj-v2-text-scale)); font-weight: 500;
+  border-top: 1px solid var(--pj-line); border-top-left-radius: 6px;
+}
+[data-projects-ui="v2"] .crm-board-group-header > [data-column-key] { display: flex; align-items: center; gap: 6px; position: relative; min-width: 0; }
+[data-projects-ui="v2"] .crm-board-group-header > [data-column-key="taskTitle"] { padding-left: 16px; }
+[data-projects-ui="v2"] .crm-board-group-header .crm-projects-board-column-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-projects-ui="v2"] .crm-board-group-header button[data-action="edit-column"] { border: 0; background: transparent; color: var(--pj-muted); font-size: 11px; padding: 2px 4px; border-radius: 4px; opacity: 0; cursor: pointer; }
+[data-projects-ui="v2"] .crm-board-group-header [data-column-key]:hover button[data-action="edit-column"],
+[data-projects-ui="v2"] .crm-board-group-header button[data-action="edit-column"]:focus-visible { opacity: 1; }
+[data-projects-ui="v2"] .crm-board-group-header [data-column-resize] { border-right-width: 1px; opacity: .6; }
+[data-projects-ui="v2"] .crm-board-group-header [data-column-resize]:hover { border-right: 3px solid var(--pj-accent); opacity: 1; }
+[data-projects-ui="v2"] .crm-board-group-header [draggable="true"] { cursor: grab; }
+
+/* The sticky title cell paints over the row, so it carries the group edge. */
+[data-projects-ui="v2"] [data-group-blocks] .crm-projects-board-row:is([data-row-kind="task"], [data-row-kind="summary"], [data-row-kind="subadd"], [data-row-kind="composer"], [data-row-kind="group-header"]) > [data-column-key="taskTitle"] {
+  box-shadow: inset 5px 0 var(--crm-project-group-color);
+}
+[data-projects-ui="v2"] [data-group-blocks] .crm-projects-board-row:is([data-row-kind="task"], [data-row-kind="summary"], [data-row-kind="subadd"], [data-row-kind="composer"], [data-row-kind="group-header"]) { box-shadow: none; }
+[data-projects-ui="v2"] [data-group-blocks] .crm-projects-board-row[data-row-kind="task"].is-selected { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pj-accent) 40%, transparent); }
+[data-projects-ui="v2"] [data-group-blocks] .crm-projects-board-row[data-row-kind="group-header"] { box-shadow: none; }
+[data-projects-ui="v2"] [data-group-blocks] .crm-projects-board-row[data-row-kind="summary"] { border-bottom-left-radius: 6px; }
+[data-projects-ui="v2"] [data-group-blocks] .crm-projects-board-row:is([data-row-kind="task"], [data-row-kind="group-header"]) > [data-column-key]:not(:last-child) { border-right: 1px solid color-mix(in srgb, var(--pj-line) 70%, transparent); }
+[data-projects-ui="v2"] .crm-board-group-gap { background: transparent; border: 0; box-shadow: none; pointer-events: none; }
+
+/* Columns menu: one tidy line per column, floating over the toolbar. */
+[data-projects-ui="v2"] #projects-v2-columns { flex: 0 0 auto; }
+[data-projects-ui="v2"] #projects-v2-columns > div { box-shadow: 0 6px 24px #14203226; }
+[data-projects-ui="v2"] #projects-view-filters #projects-v2-columns label {
+  flex-direction: row; align-items: center; min-width: 0; flex: none; gap: 10px;
+  margin: 0; padding: 6px 4px; border-radius: 4px; font-size: calc(14px * var(--pj-v2-text-scale)); color: var(--pj-ink); cursor: pointer;
+}
+[data-projects-ui="v2"] #projects-view-filters #projects-v2-columns label:hover { background: var(--pj-raised); }
+[data-projects-ui="v2"] #projects-view-filters #projects-v2-columns input[type="checkbox"] { width: 16px; height: 16px; margin: 0; flex: 0 0 auto; accent-color: var(--pj-accent); }
+[data-projects-ui="v2"] #projects-view-filters #projects-v2-columns input[type="number"] { width: 76px; flex: 0 0 76px; min-height: 30px; padding: 2px 6px; }
+[data-projects-ui="v2"] #projects-v2-columns > summary::-webkit-details-marker { display: none; }
+
+/* Menus read as menus: plain rows with hover, not stacks of boxed buttons. */
+[data-projects-ui="v2"] .crm-row-editor:is([data-row-editor="menu"], [data-row-editor="section-menu"]) { padding: 6px; min-width: 200px; box-shadow: 0 8px 28px #14203229; border-radius: 8px; }
+[data-projects-ui="v2"] .crm-row-editor:is([data-row-editor="menu"], [data-row-editor="section-menu"]) button {
+  display: flex; align-items: center; width: 100%; margin: 0; min-height: 34px; padding: 6px 10px;
+  border: 0; border-radius: 5px; background: transparent; text-align: left; color: var(--pj-ink);
+  transition: background-color .12s ease;
+}
+[data-projects-ui="v2"] .crm-row-editor:is([data-row-editor="menu"], [data-row-editor="section-menu"]) button:hover:not(:disabled) { background: color-mix(in srgb, var(--pj-accent) 9%, var(--pj-surface)); color: var(--pj-accent-ink); }
+[data-projects-ui="v2"] .crm-row-editor:is([data-row-editor="menu"], [data-row-editor="section-menu"]) button:last-child:is([data-close-editor], [data-cancel-editor]) { margin-top: 4px; border-top: 1px solid var(--pj-line); border-radius: 0 0 5px 5px; color: var(--pj-muted); }
+[data-projects-ui="v2"] .crm-row-editor button:not([data-row-editor] button) { transition: background-color .12s ease, border-color .12s ease; }
+[data-projects-ui="v2"] .crm-row-editor button:hover:not(:disabled) { border-color: color-mix(in srgb, var(--pj-accent) 45%, var(--pj-line)); background: var(--pj-raised); }
+
+:is([data-panel="projects"][data-projects-ui="v2"], .crm-projects-portal-host) .crm-projects-view-options-popover { padding: 6px; gap: 2px; }
+:is([data-panel="projects"][data-projects-ui="v2"], .crm-projects-portal-host) .crm-projects-view-options-popover > button {
+  border: 0; box-shadow: none; background: transparent; min-height: 34px; padding: 6px 10px; border-radius: 5px; color: var(--pj-ink); font-weight: 500;
+}
+:is([data-panel="projects"][data-projects-ui="v2"], .crm-projects-portal-host) .crm-projects-view-options-popover > button:hover:not(:disabled) { background: color-mix(in srgb, var(--pj-accent) 9%, var(--pj-surface)); color: var(--pj-accent-ink); }
+:is([data-panel="projects"][data-projects-ui="v2"], .crm-projects-portal-host) .crm-projects-view-options-popover .crm-projects-scale-control { padding: 6px 10px; border-block: 1px solid var(--pj-line); margin-block: 4px; }
+
+/* Priority: an empty value is a quiet blank cell, not a grey dropdown. */
+[data-projects-ui="v2"] .crm-projects-board-row select.crm-board-field[data-field-kind="value"] { width: 100%; text-align: center; text-align-last: center; }
+[data-projects-ui="v2"] .crm-projects-board-row select.crm-board-field[data-value="none"] { appearance: none; -webkit-appearance: none; background: transparent; color: transparent; border: 1px dashed transparent; border-radius: 6px; cursor: pointer; }
+[data-projects-ui="v2"] .crm-projects-board-row:is(:hover, :focus-within) select.crm-board-field[data-value="none"] { color: var(--pj-muted); border-color: var(--pj-line); }
+[data-projects-ui="v2"] .crm-projects-board-row select.crm-board-field[data-value="none"] option { color: var(--pj-ink); }
+
+/* Dates: one readable line, left aligned like the other cells. */
+[data-projects-ui="v2"] .crm-board-date-cell { align-items: stretch; }
+[data-projects-ui="v2"] .crm-board-date-cell .crm-board-date-trigger { width: 100%; height: 30px; text-align: left; padding: 4px 8px; border: 0; border-radius: 5px; background: transparent; color: var(--pj-ink); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+[data-projects-ui="v2"] .crm-board-date-empty { color: transparent; }
+[data-projects-ui="v2"] .crm-projects-board-row:is(:hover, :focus-within) .crm-board-date-empty { color: var(--pj-muted); }
+[data-projects-ui="v2"] .crm-board-date-cell[data-due-state="overdue"] .crm-board-date-trigger { color: var(--sig-over-fg, #b42318); font-weight: 600; }
+
+/* Kanban: columns scroll on their own so the page keeps its height; compact status control. */
+[data-projects-ui="v2"] .crm-projects-kanban-cards { max-height: calc(100dvh - 300px); min-height: 120px; overflow-y: auto; overscroll-behavior: contain; padding-right: 2px; }
+[data-projects-ui="v2"] .crm-projects-kanban-count { font-weight: 600; color: var(--pj-muted); }
+[data-projects-ui="v2"] .crm-projects-kanban-status { display: inline-flex; margin-left: auto; font-size: 0; }
+[data-projects-ui="v2"] .crm-projects-kanban-status select { min-height: 26px; height: 26px; width: auto; max-width: 130px; padding: 0 22px 0 8px; font-size: 12px; border-radius: 999px; border: 1px solid var(--pj-line); background-color: var(--pj-surface); cursor: pointer; }
+[data-projects-ui="v2"] .crm-projects-kanban-status select:hover:not(:disabled) { border-color: color-mix(in srgb, var(--pj-accent) 45%, var(--pj-line)); }
+[data-projects-ui="v2"] .crm-projects-kanban-card { transition: box-shadow .15s ease, border-color .15s ease; }
+[data-projects-ui="v2"] .crm-projects-kanban-card:hover { box-shadow: 0 3px 12px #1420321f; border-color: color-mix(in srgb, var(--pj-accent) 35%, var(--pj-line)); }
+[data-projects-ui="v2"] .crm-projects-kanban-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+[data-projects-ui="v2"] .crm-projects-view-more { display: block; width: 100%; margin-top: 6px; }
+
+/* Gantt bars take their status colour. */
+[data-projects-ui="v2"] .crm-projects-gantt-bar.s-not_started { background: var(--st-ns-fg, #6b7a90); }
+[data-projects-ui="v2"] .crm-projects-gantt-bar.s-in_progress { background: var(--g4, #f5a742); }
+[data-projects-ui="v2"] .crm-projects-gantt-bar.s-blocked { background: var(--sig-over-fg, #d9534f); }
+[data-projects-ui="v2"] .crm-projects-gantt-bar.s-done { background: var(--st-dn-fg, #1c7048); }
+[data-projects-ui="v2"] .crm-projects-gantt-row small { color: var(--pj-muted); }
+
+/* Calendar: the long month list is folded away under the grid. */
+[data-projects-ui="v2"] .crm-cal-month-list { margin-top: 16px; border-top: 1px solid var(--pj-line); padding-top: 10px; }
+[data-projects-ui="v2"] .crm-cal-month-list > summary { cursor: pointer; font-weight: 600; color: var(--pj-ink); }
+[data-projects-ui="v2"] .crm-cal-more-badge { font-weight: 600; color: var(--pj-muted); }
+
+/* Desktop task properties and week-spanning calendar rows. */
+[data-projects-ui="v2"] #projects-board-detail .crm-detail-title-input {
+  display: block; width: 100%; min-width: 0; padding: 6px 4px;
+  font-size: calc(22px * var(--pj-v2-text-scale, 1)); font-weight: 500; line-height: 1.35;
+  border: 1px solid transparent; border-radius: 4px; color: var(--pj-ink); background: transparent;
+}
+[data-projects-ui="v2"] #projects-board-detail .crm-detail-title-input:is(:hover, :focus) { border-color: var(--pj-line); background: var(--pj-surface); }
+[data-projects-ui="v2"] #projects-board-detail .crm-detail-fields { gap: 4px; }
+[data-projects-ui="v2"] #projects-board-detail .crm-detail-fields > [data-column-key] {
+  display: grid; grid-template-columns: minmax(100px, 27%) minmax(0, 1fr); gap: 12px; align-items: start;
+}
+[data-projects-ui="v2"] #projects-board-detail .crm-detail-field-label { padding: 10px 0; font-size: .92em; }
+[data-projects-ui="v2"] #projects-board-detail .crm-detail-field-value { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; padding: 3px 0; }
+[data-projects-ui="v2"] #projects-board-detail .crm-detail-field-value > :is(input, select, .crm-board-field) { width: 100%; border-color: transparent; background: transparent; font: inherit; text-align: left; }
+[data-projects-ui="v2"] #projects-board-detail .crm-detail-field-value > :is(input, select, .crm-board-field):is(:hover, :focus) { border-color: var(--pj-line); background: var(--pj-surface); }
+[data-projects-ui="v2"] #projects-board-detail .crm-detail-field-value .crm-field-feedback { flex-basis: 100%; }
+[data-projects-ui="v2"] #projects-board-detail .crm-detail-disclosure { border: 0; border-top: 1px solid var(--pj-line); border-radius: 0; background: transparent; box-shadow: none; }
+[data-projects-ui="v2"] #projects-board-detail .crm-detail-disclosure-content { padding: 10px 0; border: 0; }
+[data-projects-ui="v2"] #projects-workspace-rail #projects-v2-table { border: 0; box-shadow: none; background: transparent; }
+[data-projects-ui="v2"] #projects-workspace-rail #projects-v2-table[aria-current="page"] { background: var(--pj-raised); }
+[data-projects-ui="v2"] .crm-cal-weeks { border: 1px solid var(--pj-line); border-top: 0; border-radius: 0 0 6px 6px; overflow: hidden; }
+[data-projects-ui="v2"] .crm-cal-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-auto-rows: minmax(28px, auto); position: relative; min-height: 132px; border-top: 1px solid var(--pj-line); padding-bottom: 5px; }
+[data-projects-ui="v2"] .crm-cal-week .crm-projects-calendar-day { min-height: 0; min-width: 0; padding: 4px 7px; border-bottom: 0; border-right: 1px solid var(--pj-line); border-radius: 0; pointer-events: none; }
+[data-projects-ui="v2"] .crm-cal-week .crm-projects-calendar-day.off { background: color-mix(in srgb, var(--pj-muted) 8%, var(--pj-surface)); }
+[data-projects-ui="v2"] .crm-cal-week .crm-projects-calendar-day.is-outside { opacity: .55; }
+[data-projects-ui="v2"] .crm-cal-span { display: block; z-index: 1; min-width: 0; margin: 2px 3px; padding: 4px 8px; border: 0; border-left: 3px solid var(--pj-accent-ink); border-radius: 4px; text-align: left; font: inherit; font-size: .88em; line-height: 1.3; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--pj-ink); background: color-mix(in srgb, var(--pj-accent) 20%, var(--pj-surface)); cursor: pointer; }
+[data-projects-ui="v2"] .crm-cal-span[data-status="done"] { border-color: #168258; background: color-mix(in srgb, #168258 16%, var(--pj-surface)); }
+[data-projects-ui="v2"] .crm-cal-span[data-status="blocked"] { border-color: #ba3846; background: color-mix(in srgb, #ba3846 15%, var(--pj-surface)); }
+[data-projects-ui="v2"] .crm-cal-span:hover { filter: brightness(.96); }
+[data-projects-ui="v2"] .crm-cal-span.continues-before { border-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: 0; }
+[data-projects-ui="v2"] .crm-cal-span.continues-after { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: 0; }
+[data-projects-ui="v2"] .crm-cal-span.is-marker { border-left-style: dotted; }
+[data-projects-ui="v2"] .crm-cal-overflow { grid-column: 1 / -1; z-index: 2; min-width: 0; margin: 4px 8px; padding: 4px 0; background: var(--pj-surface); }
+[data-projects-ui="v2"] .crm-cal-overflow summary { cursor: pointer; color: var(--pj-accent-ink); font-size: .9em; }
+[data-projects-ui="v2"] .crm-cal-overflow :is(ul, li) { list-style: none; margin: 0; padding: 0; }
+[data-projects-ui="v2"] .crm-cal-overflow button { max-width: 100%; white-space: normal; }
+[data-projects-ui="v2"] :is(.crm-cal-span, .crm-cal-overflow summary):focus-visible { outline: 2px solid var(--pj-accent-ink); outline-offset: 1px; }
+
+[data-projects-ui="v2"] #projects-board-detail .crm-projects-board-detail-head .crm-eyebrow { display: none; }
+[data-projects-ui="v2"] #projects-board-detail .crm-detail-fields > [data-column-key] > .crm-field-feedback { grid-column: 2; margin: 0; }
+[data-projects-ui="v2"] #projects-board-detail [data-detail-add] { border: 0; border-radius: 4px; padding: 8px; color: var(--pj-accent-ink); background: transparent; text-align: left; cursor: pointer; }
+[data-projects-ui="v2"] #projects-board-detail [data-detail-add]::before { content: '+ '; }
+[data-projects-ui="v2"] #projects-board-detail [data-detail-add]:hover { background: var(--pj-raised); }
+[data-projects-ui="v2"] .crm-cal-span { font-size: calc(14px * var(--pj-v2-text-scale, 1)); }
+[data-projects-ui="v2"] .crm-projects-calendar-grid:has(+ .crm-cal-weeks) { margin-bottom: 0; border-radius: 6px 6px 0 0; }
+
+[data-projects-ui="v2"] #projects-board-detail textarea.crm-detail-title-input { field-sizing: content; resize: none; max-height: min(32vh, 240px); overflow: auto; white-space: normal; }
+[data-projects-ui="v2"] #projects-board-detail .crm-detail-fields > [data-column-key] { grid-template-columns: minmax(100px, 32%) minmax(0, 1fr); }
+[data-projects-ui="v2"] #projects-board-detail .crm-detail-field-label { overflow-wrap: anywhere; }
+
+/* Desktop Gantt: shared filters stay in the workspace toolbar. */
+[data-projects-ui="v2"] .crm-gantt-view { min-width: 0; color: var(--pj-ink); font-family: 'Roboto', 'Noto Sans', sans-serif; font-weight: 400; }
+[data-projects-ui="v2"] .crm-gantt-tools { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 8px 0 16px; }
+[data-projects-ui="v2"] .crm-gantt-tools h3 { margin: 0 0 4px; font-size: calc(18px * var(--pj-v2-text-scale, 1)); font-weight: 500; }
+[data-projects-ui="v2"] .crm-gantt-tools p { margin: 0; font-size: calc(12px * var(--pj-v2-text-scale, 1)); color: var(--pj-muted); }
+[data-projects-ui="v2"] .crm-gantt-controls { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+[data-projects-ui="v2"] .crm-gantt-zoom { display: flex; padding: 3px; border-radius: 6px; background: var(--pj-raised); border: 1px solid var(--pj-line); }
+[data-projects-ui="v2"] .crm-gantt-zoom button { border: 0; border-radius: 4px; background: transparent; color: var(--pj-muted); padding: 6px 12px; font-size: calc(13px * var(--pj-v2-text-scale, 1)); cursor: pointer; }
+[data-projects-ui="v2"] .crm-gantt-zoom button[aria-pressed="true"] { background: var(--pj-surface); color: var(--pj-accent-ink); box-shadow: 0 1px 3px #00000016; font-weight: 500; }
+[data-projects-ui="v2"] :is(.crm-gantt-today-button, .crm-gantt-set-dates, .crm-gantt-more) { color: var(--pj-accent-ink); border: 1px solid var(--pj-line); border-radius: 5px; padding: 6px 10px; background: var(--pj-surface); cursor: pointer; font-size: calc(13px * var(--pj-v2-text-scale, 1)); }
+[data-projects-ui="v2"] .crm-gantt-legend { display: flex; align-items: center; gap: 22px; padding: 0 0 12px; color: var(--pj-muted); font-size: calc(12px * var(--pj-v2-text-scale, 1)); }
+[data-projects-ui="v2"] .crm-gantt-legend span { display: inline-flex; align-items: center; gap: 6px; }
+[data-projects-ui="v2"] .crm-gantt-key-stored { width: 18px; height: 9px; border-radius: 2px; background: var(--pj-accent); }
+[data-projects-ui="v2"] .crm-gantt-key-derived { width: 20px; border-top: 2px dashed var(--pj-muted); }
+[data-projects-ui="v2"] .crm-gantt-scroll { overflow: auto; max-height: min(62dvh, 620px); border-block: 1px solid var(--pj-line); overscroll-behavior: contain; isolation: isolate; }
+[data-projects-ui="v2"] .crm-gantt-chart { width: calc(280px + var(--crm-gantt-width)); position: relative; }
+[data-projects-ui="v2"] .crm-gantt-axis { display: grid; grid-template-columns: 280px var(--crm-gantt-width); height: calc(64px * var(--pj-v2-text-scale, 1)); position: sticky; top: 0; z-index: 6; background: var(--pj-raised); border-bottom: 1px solid var(--pj-line); box-sizing: border-box; }
+[data-projects-ui="v2"] .crm-gantt-axis-label { position: sticky; left: 0; z-index: 7; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: var(--pj-raised); border-right: 1px solid var(--pj-line); font-size: calc(13px * var(--pj-v2-text-scale, 1)); font-weight: 500; }
+[data-projects-ui="v2"] .crm-gantt-axis-label span { color: var(--pj-muted); font-size: calc(12px * var(--pj-v2-text-scale, 1)); font-weight: 400; }
+[data-projects-ui="v2"] .crm-gantt-axis-dates { min-width: 0; overflow: hidden; }
+[data-projects-ui="v2"] .crm-gantt-range { height: calc(30px * var(--pj-v2-text-scale, 1)); box-sizing: border-box; padding: 6px 10px; font-size: calc(12px * var(--pj-v2-text-scale, 1)); font-weight: 500; border-bottom: 1px solid var(--pj-line); }
+[data-projects-ui="v2"] .crm-gantt-ticks { position: relative; height: calc(33px * var(--pj-v2-text-scale, 1)); }
+[data-projects-ui="v2"] .crm-gantt-ticks time { position: absolute; inset-block: 0; box-sizing: border-box; padding: 8px 6px; border-left: 1px solid var(--pj-line); color: var(--pj-muted); font-size: calc(11px * var(--pj-v2-text-scale, 1)); overflow: hidden; white-space: nowrap; }
+[data-projects-ui="v2"] .crm-gantt-body { position: relative; }
+[data-projects-ui="v2"] .crm-gantt-background { position: absolute; inset: 0 0 0 280px; pointer-events: none; overflow: hidden; }
+[data-projects-ui="v2"] :is(.crm-gantt-weekend, .crm-gantt-gridline) { position: absolute; top: 0; bottom: 0; }
+[data-projects-ui="v2"] .crm-gantt-weekend { background: var(--pj-raised); opacity: .85; }
+[data-projects-ui="v2"] .crm-gantt-gridline { border-left: 1px solid var(--pj-line); opacity: .5; }
+[data-projects-ui="v2"] .crm-gantt-today { position: absolute; top: 0; bottom: 0; z-index: 1; border-left: 1px solid var(--pj-accent-ink); }
+[data-projects-ui="v2"] .crm-gantt-today b { position: absolute; top: 0; left: 3px; padding: 1px 3px; font-size: calc(10px * var(--pj-v2-text-scale, 1)); color: var(--pj-accent-ink); background: var(--pj-surface); font-weight: 500; }
+[data-projects-ui="v2"] .crm-gantt-dependencies { position: absolute; top: 0; left: 0; overflow: visible; fill: none; stroke: var(--pj-muted); stroke-width: 1.25; opacity: .6; }
+[data-projects-ui="v2"] .crm-gantt-row { display: grid; grid-template-columns: 280px var(--crm-gantt-width); height: var(--crm-gantt-row); box-sizing: border-box; border-bottom: 1px solid var(--pj-line); }
+[data-projects-ui="v2"] .crm-gantt-task { position: sticky; left: 0; z-index: 3; display: flex; gap: 10px; align-items: center; min-width: 0; padding: 8px 16px; border-right: 1px solid var(--pj-line); background: var(--pj-surface); }
+[data-projects-ui="v2"] .crm-gantt-task > div { min-width: 0; flex: 1; }
+[data-projects-ui="v2"] :is(.crm-gantt-task button, .crm-gantt-undated-task) { display: block; width: 100%; padding: 0; border: 0; background: transparent; color: var(--pj-ink); text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: calc(14px * var(--pj-v2-text-scale, 1)); line-height: 1.25; cursor: pointer; }
+[data-projects-ui="v2"] :is(.crm-gantt-task button, .crm-gantt-undated-task):hover { color: var(--pj-accent-ink); text-decoration: underline; }
+[data-projects-ui="v2"] .crm-gantt-task small { display: block; line-height: 1.2; color: var(--pj-muted); font-size: calc(11px * var(--pj-v2-text-scale, 1)); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+[data-projects-ui="v2"] .crm-gantt-status { display: inline-flex; justify-content: center; align-items: center; width: 19px; height: 19px; flex: 0 0 19px; border: 1px solid currentColor; border-radius: 50%; font-size: calc(12px * var(--pj-v2-text-scale, 1)); font-weight: 500; color: var(--st-ns-fg); }
+[data-projects-ui="v2"] .crm-gantt-status[data-status="in_progress"] { color: var(--st-ip-fg); }
+[data-projects-ui="v2"] .crm-gantt-status[data-status="blocked"] { color: var(--st-bl-fg); }
+[data-projects-ui="v2"] .crm-gantt-status[data-status="done"] { color: var(--st-dn-fg); }
+[data-projects-ui="v2"] .crm-gantt-track { position: relative; min-width: 0; }
+[data-projects-ui="v2"] .crm-gantt-bar { position: absolute; top: 17px; height: 24px; min-width: 3px; box-sizing: border-box; border: 1px solid var(--st-ns-fg); border-radius: 4px; color: var(--st-ns-fg); background: var(--st-ns-bg); padding: 0; cursor: pointer; text-align: left; z-index: 2; }
+[data-projects-ui="v2"] .crm-gantt-bar span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0 7px; font-size: calc(11px * var(--pj-v2-text-scale, 1)); line-height: 20px; }
+[data-projects-ui="v2"] .crm-gantt-bar[data-status="in_progress"] { color: var(--st-ip-fg); background: var(--st-ip-bg); border-color: var(--st-ip-fg); }
+[data-projects-ui="v2"] .crm-gantt-bar[data-status="blocked"] { color: var(--st-bl-fg); background: var(--st-bl-bg); border-color: var(--st-bl-fg); }
+[data-projects-ui="v2"] .crm-gantt-bar[data-status="done"] { color: var(--st-dn-fg); background: var(--st-dn-bg); border-color: var(--st-dn-fg); }
+[data-projects-ui="v2"] .crm-gantt-bar.is-derived { top: 46px; height: 7px; border: 0; border-top: 2px dashed var(--pj-muted); border-radius: 0; background: transparent; }
+[data-projects-ui="v2"] .crm-gantt-bar:hover { filter: brightness(.95); }
+[data-projects-ui="v2"] .crm-gantt-more { margin-top: 12px; }
+[data-projects-ui="v2"] .crm-gantt-note { color: var(--pj-muted); font-size: calc(12px * var(--pj-v2-text-scale, 1)); margin: 10px 0; }
+[data-projects-ui="v2"] .crm-gantt-undated { margin-top: 24px; }
+[data-projects-ui="v2"] .crm-gantt-undated-heading { display: flex; align-items: baseline; gap: 16px; border-bottom: 1px solid var(--pj-line); padding-bottom: 10px; }
+[data-projects-ui="v2"] .crm-gantt-undated-heading h4 { font-size: calc(14px * var(--pj-v2-text-scale, 1)); font-weight: 500; margin: 0; }
+[data-projects-ui="v2"] .crm-gantt-undated-heading h4 span { margin-left: 6px; color: var(--pj-muted); font-size: calc(12px * var(--pj-v2-text-scale, 1)); }
+[data-projects-ui="v2"] .crm-gantt-undated-heading p { font-size: calc(12px * var(--pj-v2-text-scale, 1)); color: var(--pj-muted); margin: 0; }
+[data-projects-ui="v2"] .crm-gantt-undated ul { padding: 0; margin: 0; list-style: none; }
+[data-projects-ui="v2"] .crm-gantt-undated li { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 5px 0; box-sizing: border-box; border-bottom: 1px solid var(--pj-line); }
+[data-projects-ui="v2"] .crm-gantt-undated-task { flex: 1; width: 0; }
+[data-projects-ui="v2"] :is(.crm-gantt-undated-section, .crm-gantt-date-note) { color: var(--pj-muted); font-size: calc(12px * var(--pj-v2-text-scale, 1)); max-width: 200px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+[data-projects-ui="v2"] .crm-gantt-empty { padding: 32px 0; border-block: 1px solid var(--pj-line); }
+[data-projects-ui="v2"] .crm-gantt-empty strong { font-size: calc(15px * var(--pj-v2-text-scale, 1)); font-weight: 500; }
+[data-projects-ui="v2"] .crm-gantt-empty p { color: var(--pj-muted); font-size: calc(13px * var(--pj-v2-text-scale, 1)); margin: 6px 0 0; }

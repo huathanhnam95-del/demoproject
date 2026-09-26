@@ -75,7 +75,7 @@ function policy(overrides = {}) {
     domains: [{ id: 'demo', roots: ['public/js/demo', 'tests/demo'], owner: 'fixture-owner' }],
     artifactClasses: {
       dependency: ['node_modules/**'],
-      cache: ['.cache/**'],
+      cache: ['.cache/**', '.tmp.driveupload/**'],
       'ephemeral-evidence': ['test-results/**']
     },
     commands: [{
@@ -912,6 +912,97 @@ test('pre-existing staged state is captured without being discarded by snapshot'
   assert.equal(git(root, ['status', '--porcelain=v1']).stdout, beforeStatus);
   const result = runCli(root, ['check', '--base', baseSha, '--contract', external.contractPath, '--snapshot', external.snapshotPath, '--json']);
   assert.equal(result.status, 0, result.stdout);
+});
+
+test('Drive cache scan boundary is root-directory-only and preserves old untracked snapshots', (t) => {
+  const root = validFixture();
+  const baseSha = commitAll(root, 'Drive scan base');
+  const external = externalContractAndSnapshot(root, baseSha);
+  writeFile(root, '.tmp.driveupload/live.tmp', 'untracked cache');
+  writeFile(root, 'tests/.tmp.driveupload/source.txt', 'nested source');
+  const readdir = fs.readdirSync;
+  let listing;
+  try {
+    fs.readdirSync = (directory, ...args) => {
+      assert.notEqual(path.resolve(directory), path.join(root, '.tmp.driveupload'), 'must not enumerate root cache');
+      return readdir(directory, ...args);
+    };
+    listing = checker.listFiles(root);
+  } finally { fs.readdirSync = readdir; }
+  assert.equal(listing.files.has('.tmp.driveupload/live.tmp'), false);
+  assert.equal(listing.files.has('tests/.tmp.driveupload/source.txt'), true);
+  fs.unlinkSync(path.join(root, 'tests/.tmp.driveupload/source.txt'));
+  const prior = JSON.parse(fs.readFileSync(external.snapshotPath, 'utf8'));
+  prior.files['.tmp.driveupload/old.tmp'] = { size: 3, mtimeMs: 1, sha256: sha256('old') };
+  prior.links.push('.tmp.driveupload/old-link');
+  fs.writeFileSync(external.snapshotPath, JSON.stringify(prior));
+  const compatible = runCli(root, ['check', '--base', baseSha, '--contract', external.contractPath, '--snapshot', external.snapshotPath, '--json']);
+  assert.equal(compatible.status, 0, compatible.stdout);
+  assert.equal(compatible.report.analysis.scannedPaths.some((name) => name.startsWith('.tmp.driveupload/')), false);
+
+  const fileRoot = tempDir();
+  writeFile(fileRoot, '.tmp.driveupload', 'ordinary root file');
+  assert.equal(checker.listFiles(fileRoot).files.has('.tmp.driveupload'), true);
+  const linkRoot = tempDir();
+  try { fs.symlinkSync(path.join(root, 'public'), path.join(linkRoot, '.tmp.driveupload'), 'junction'); }
+  catch (error) { t.diagnostic(`junction unavailable: ${error.message}`); return; }
+  assert.deepEqual(checker.listFiles(linkRoot).links, ['.tmp.driveupload']);
+});
+
+test('Drive cache is rejected across unchanged, staged, index-only and committed states; declared removal remains audited', () => {
+  const cache = '.tmp.driveupload/tracked.tmp';
+  const cacheFinding = checker.analyzePaths([cache], policy(), { treeSha: ADOPTION }).findings.find((item) => item.ruleId === 'R4.TRACKED_CACHE');
+  const root = validFixture({ policy: policy({ exceptions: [exceptionFor(cacheFinding)] }) });
+  writeFile(root, cache, 'tracked cache');
+  const baseSha = commitAll(root, 'tracked Drive cache');
+  const external = externalContractAndSnapshot(root, baseSha, { changes: { create: [], modify: [], delete: [cache], rename: [] } });
+  const check = () => runCli(root, ['check', '--base', baseSha, '--contract', external.contractPath, '--snapshot', external.snapshotPath, '--json']);
+  const unchanged = check();
+  assert.equal(unchanged.status, 1, unchanged.stdout);
+  assert.equal(unchanged.report.blocking.filter((item) => item.path === cache).length, 1, unchanged.stdout);
+  assert.equal(unchanged.report.blocking.find((item) => item.path === cache).ruleId, 'R4.TRACKED_CACHE');
+  fs.unlinkSync(path.join(root, cache));
+  const missing = check();
+  assert.ok(missing.report.blocking.some((item) => item.path === cache && item.ruleId === 'R4.TRACKED_CACHE'), missing.stdout);
+  git(root, ['rm', '--cached', '--quiet', '--', cache]);
+  const removed = check();
+  assert.equal(removed.status, 0, removed.stdout);
+  assert.ok(removed.report.analysis.scannedPaths.includes(cache));
+
+  writeFile(root, '.tmp.driveupload/new.tmp', 'new staged cache');
+  git(root, ['add', '--force', '--', '.tmp.driveupload/new.tmp']);
+  for (const onDisk of [true, false]) {
+    if (!onDisk) fs.unlinkSync(path.join(root, '.tmp.driveupload/new.tmp'));
+    const added = check();
+    assert.ok(added.report.blocking.some((item) => item.path === '.tmp.driveupload/new.tmp' && item.ruleId === 'R4.TRACKED_CACHE'), added.stdout);
+  }
+  const ci = runCli(root, ['check', '--ci', '--base', baseSha, '--head', baseSha, '--json']);
+  assert.equal(ci.status, 1, ci.stdout);
+  assert.ok(ci.report.blocking.some((item) => item.path === cache && item.ruleId === 'R4.TRACKED_CACHE'), ci.stdout);
+});
+
+test('Drive cache declarations and outputs cannot bypass the boundary, and unavailable index fails closed', () => {
+  const root = validFixture();
+  const baseSha = commitAll(root, 'Drive declarations base');
+  const cache = '.tmp.driveupload/declared.js';
+  const external = externalContractAndSnapshot(root, baseSha, { changes: { create: [cache], modify: [], delete: [], rename: [] } });
+  const result = runCli(root, ['check', '--base', baseSha, '--contract', external.contractPath, '--snapshot', external.snapshotPath, '--json']);
+  assert.ok(result.report.blocking.some((item) => item.path === cache && item.ruleId === 'R4.TRACKED_CACHE'), result.stdout);
+  for (const outputRoot of ['.tmp.driveupload/output', path.join(root, '.tmp.driveupload/output')]) {
+    const c = contract(tempDir(), { baseSha, outputs: [{ root: outputRoot, class: 'ephemeral-evidence', tracked: false }] });
+    assert.equal(checker.validateContract(c, { repositoryRoot: root }).ok, false);
+  }
+  const c = JSON.parse(fs.readFileSync(external.contractPath, 'utf8'));
+  const prior = JSON.parse(fs.readFileSync(external.snapshotPath, 'utf8'));
+  const childProcess = require('node:child_process');
+  const spawn = childProcess.spawnSync;
+  let unavailable;
+  try {
+    childProcess.spawnSync = (program, args, options) => args.includes('ls-files') ? { status: 1, stderr: Buffer.from('fixture index unavailable') } : spawn(program, args, options);
+    unavailable = checker.checkLocal({ root, contract: c, contractBytes: fs.readFileSync(external.contractPath), snapshot: prior, policy: policy(), baseSha, currentFiles: checker.listFiles(root).files });
+  } finally { childProcess.spawnSync = spawn; }
+  assert.equal(unavailable.status, 2);
+  assert.ok(unavailable.blocking.some((item) => item.ruleId === 'INPUT.INDEX'));
 });
 
 test('staged rename status records both old and new paths', () => {

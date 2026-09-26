@@ -53,7 +53,7 @@ test('held member response cannot restore cleared names or enable membership edi
     assert.equal(h.elements.projectsMemberSave.disabled, true);
 });
 test('project denial retains independently authorized global administrator directory', async () => {
-    const h = setup(true); await h.controller.refresh();
+    const h = setup(true); await h.controller.refreshPeople(); await h.controller.refresh();
     assert.match(h.elements.staffProjectsPeopleList.innerHTML, /Independent global directory/);
     h.controller.invalidateProjectAccess('p1');
     assert.match(h.elements.staffProjectsPeopleList.innerHTML, /Independent global directory/);

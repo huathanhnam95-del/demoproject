@@ -51,7 +51,7 @@ test('shared filters survive view changes and full aggregate counts do not deriv
     h.el('projects-view-tabs').listeners.click({ target: { closest: () => ({ dataset: { view: 'charts' } }) } });
     assert.equal(h.controller.getState().filters.status, 'done');
     assert.match(h.el('projects-view-summary').textContent, /640 matching tasks/);
-    assert.match(h.el('projects-view-content').innerHTML, /300 of 600 active leaf tasks/);
+    assert.match(h.el('projects-view-content').innerHTML, /300 of 600 tasks done/);
     h.el('projects-view-tabs').listeners.click({ target: { closest: () => ({ dataset: { view: 'timeline' } }) } });
     assert.match(h.el('projects-view-content').innerHTML, /crm-projects-gantt-axis/);
     assert.doesNotMatch(h.el('projects-view-content').innerHTML, /crm-projects-gantt-bar is-derived/, 'leaf intervals must not be duplicated as descendant spans');
@@ -130,7 +130,7 @@ test('undated parent renders only its legitimate derived timeline span', async (
     const h = harness(); h.task.startDate = null; h.task.dueDate = null; h.task.activeChildCount = 1;
     h.setProject('project-a'); await flush();
     h.el('projects-view-tabs').listeners.click({ target: { closest: () => ({ dataset: { view: 'timeline' } }) } });
-    assert.match(h.el('projects-view-content').innerHTML, /Stored: undated/);
+    assert.match(h.el('projects-view-content').innerHTML, /No dates/);
     assert.match(h.el('projects-view-content').innerHTML, /aria-label="Derived descendant span:/);
     assert.doesNotMatch(h.el('projects-view-content').innerHTML, /aria-label="Stored interval:/);
 });
@@ -186,7 +186,7 @@ test('calendar queries the selected month before paging past out-of-month tasks'
     assert.ok(viewCalls(h).length > before, 'entering Calendar must refetch with month bounds');
     assert.deepEqual(queryFilters(viewCalls(h).at(-1)), { fromDate: '2026-02-01', toDate: '2026-02-28' });
     assert.match(h.el('projects-view-summary').textContent, /matching tasks overlapping 2026-02/);
-    assert.match(h.el('projects-view-content').innerHTML, /Tasks overlapping 2026-02 on this page/);
+    assert.match(h.el('projects-view-content').innerHTML, /Tasks on this month page/);
 });
 
 test('calendar month interval makes records beyond 200 unrelated tasks visible and bounds every page', async () => {

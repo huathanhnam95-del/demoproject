@@ -6,7 +6,7 @@
   function createController(deps = {}) {
     const root = deps.root, api = deps.apiFetchJson;
     let actor = '', epoch = 0, feedSequence = 0, prefsSequence = 0, openSequence = 0;
-    let items = [], cursor = null, loading = false, status = '', projects = [], blocked = new Set();
+    let items = [], cursor = null, loading = false, status = '', projects = [], blocked = new Set(), feedKnown = false;
     let filters = { projectId: '', category: '', unread: '' }, revision = null, muted = [], draft = [], dirty = false, conflict = false, prefsLoading = false, prefsSaving = false, prefsStatus = '';
     const reading = new Set();
     const uid = () => String(deps.getCurrentUser?.()?.uid || '');
@@ -20,10 +20,16 @@
       if (!badge) return;
       const unreadCount = items.filter((item) => !item.read).length;
       badge.textContent = String(unreadCount);
-      badge.hidden = unreadCount === 0;
+      const label = feedKnown ? `${unreadCount} unread among ${items.length} loaded updates in this view` : 'Open Inbox to load project updates';
+      badge.title = label; badge.setAttribute?.('aria-label', label);
+      if (badge.dataset) badge.dataset.scope = 'loaded-results';
+      badge.hidden = !feedKnown || unreadCount === 0;
     }
     function render() {
       if (!root) return;
+      const focused = root.ownerDocument?.activeElement;
+      const focusId = focused?.dataset?.notificationRead || focused?.dataset?.notificationOpen;
+      const focusAction = focused?.dataset?.notificationRead ? 'notificationRead' : 'notificationOpen';
       root.hidden = !actor;
       syncBadge();
       if (el('status')) el('status').textContent = status;
@@ -35,10 +41,14 @@
       if (el('prefs-refresh')) el('prefs-refresh').disabled = prefsLoading || prefsSaving;
       if (el('mute-list')) el('mute-list').innerHTML = draft.map((entry, i) => `<li>${esc(projects.find((p) => p.id === entry.projectId)?.name || projects.find((p) => p.id === entry.projectId)?.title || 'Project')} · ${esc(entry.category)} <button type="button" class="crm-btn-secondary" data-notification-unmute="${i}"${prefsSaving ? ' disabled' : ''}>Unmute</button></li>`).join('') || '<li>No muted categories.</li>';
       if (el('mute-add')) el('mute-add').disabled = prefsSaving || revision === null;
+      if (focusId && !focused.isConnected) {
+        const next = [...(el('list')?.querySelectorAll('button') || [])].find(button => button.dataset[focusAction] === focusId);
+        (next || el('refresh'))?.focus({ preventScroll: true });
+      }
     }
     function clear(message = '') {
       epoch++; feedSequence++; prefsSequence++; openSequence++;
-      items = []; cursor = null; loading = false; reading.clear(); revision = null; muted = []; draft = []; dirty = false; conflict = false; prefsLoading = false; prefsSaving = false; status = message; prefsStatus = '';
+      items = []; cursor = null; feedKnown = false; loading = false; reading.clear(); revision = null; muted = []; draft = []; dirty = false; conflict = false; prefsLoading = false; prefsSaving = false; status = message; prefsStatus = '';
       syncBadge();
       render();
     }
@@ -79,19 +89,21 @@
       const query = new URLSearchParams();
       Object.entries(filters).forEach(([k, v]) => { if (v !== '') query.set(k, v); });
       if (append) query.set('cursor', cursor);
-      else { items = []; cursor = null; }
+      // Keep the visible page and its cursor until a replacement succeeds.
       loading = true; status = 'Loading updates…'; render();
       try {
         const result = await api(`/api/projects/notifications?${query}`);
         if (!current(s) || sequence !== feedSequence) return;
         const page = (result.items || []).filter((item) => !blocked.has(item.projectId)).map((item) => ({ notificationId: item.notificationId, projectId: item.projectId, category: item.category, createdAt: item.createdAt, read: !!item.read, available: !!item.available, ...(item.available ? { message: item.message, taskLabel: item.taskLabel } : {}) }));
         items = [...new Map((append ? items.concat(page) : page).map((item) => [item.notificationId, item])).values()];
-        cursor = result.hasMore ? result.nextCursor : null; status = `${items.length} updates loaded.`;
+        cursor = result.hasMore ? result.nextCursor : null; feedKnown = true; status = `${items.length} updates loaded · ${items.filter(item => !item.read).length} unread in this view.`;
       } catch (error) { if (sequence === feedSequence) failed(error, s, filters.projectId); }
       finally { if (current(s) && sequence === feedSequence) { loading = false; render(); } }
     }
     async function setFilters(next) {
-      filters = { projectId: String(next.projectId || ''), category: categories.includes(next.category) ? next.category : '', unread: ['true', 'false'].includes(next.unread) ? next.unread : '' };
+      const candidate = { projectId: String(next.projectId || ''), category: categories.includes(next.category) ? next.category : '', unread: ['true', 'false'].includes(next.unread) ? next.unread : '' };
+      if (JSON.stringify(candidate) === JSON.stringify(filters) && feedKnown) return;
+      filters = candidate; items = []; cursor = null; feedKnown = false;
       openSequence++; return refresh();
     }
     async function setRead(id, read) {

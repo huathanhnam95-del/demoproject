@@ -99,6 +99,8 @@
 
     function render() {
         if (!popover || !cursor) return;
+        const active = document.activeElement;
+        const focusSelector = popover.contains(active) ? active.matches('[data-datepick-month]') ? '[data-datepick-month]' : active.matches('[data-datepick-year]') ? '[data-datepick-year]' : active.dataset.datepickStep ? `[data-datepick-step="${active.dataset.datepickStep}"]` : null : null;
         const { y, m } = cursor;
         const years = [];
         for (let value = y - 6; value <= y + 6; value += 1) years.push(value);
@@ -121,6 +123,7 @@
               <button type="button" class="crm-datepick-text" data-datepick-today>Today</button>
               <button type="button" class="crm-datepick-text" data-datepick-clear>Clear</button>
             </div>`;
+        if (focusSelector) popover.querySelector(focusSelector)?.focus({ preventScroll: true });
     }
 
     function getScale() {

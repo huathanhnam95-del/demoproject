@@ -25,6 +25,10 @@ The supported local commands are documented in [`README.md`](../README.md). The 
 
 New domain work belongs in an existing supported home: `public`, `functions`, `src`, `backend`, `scripts`, `tests`, `docs`, `agent_docs`, `assets`, `data`, `tools`, or the existing `.github`/`.agent` configuration scope. Existing `.claude`, `.gsd`, `conductor`, `antigravity-logicware`, `database`, `Generated Images`, `outputs`, `work`, `scratch`, `tmp` and `_tmp_pdf_debug` are legacy or specialized roots. They may receive reviewed updates in their established role; new general feature code there needs an explicit exception. Installed engines, caches and ignored directories are not source-placement approvals or automatic cleanup targets.
 
+## Local synchronization cache boundary
+
+The user approved the exact repository-root `.tmp.driveupload/` boundary on September 26, 2026. Google Drive owns this temporary upload directory. Git ignores that root directory, and local structure snapshots/checks omit its ordinary untracked contents. This is not a source root or cleanup permission. Nested directories with the same name, a same-name root file, and symlinks/junctions remain visible to the normal checks. Tracked or staged cache contents and declarations that place source or task output there must still fail; committed-tree checks do not skip the directory. Before snapshots that contain untracked cache entries remain usable without treating excluded entries as task deletions. Other ignored files retain their existing checks.
+
 ## Placement and dependency map
 
 | Work | Home and boundary | Required registration or contract |

@@ -6,6 +6,30 @@ const vm = require('node:vm');
 const path = require('node:path');
 require('../../../public/js/crm/projects/automation-definition-editor');
 const E = globalThis.CrmAutomationDefinitionEditor;
+test('competing warnings use enabled active trigger configuration, never candidate or missing metadata', () => {
+  const row = (ruleId, activeTrigger, extra = {}) => ({ ruleId, title: ruleId, enabled: true, activeTrigger, ...extra });
+  const due = { type: 'due_date', time: '09:00', offsetDays: 0 };
+  const rows = [row('one', due), row('different-time', { ...due, time: '10:00' }), row('different-offset', { ...due, offsetDays: 1 }), row('disabled', due, { enabled: false }), row('missing'), row('missing2'), row('candidate', { type: 'task_created' }, { definition: { trigger: due } })];
+  assert.deepEqual(E.detectCompetingRules(rows), []);
+  const warnings = E.detectCompetingRules([...rows, row('two', due)]);
+  assert.equal(warnings.length, 1); assert.deepEqual(warnings[0].ruleIds, ['one', 'two']);
+});
+test('list exposes active trigger from its existing version reads, separate from the candidate', async () => {
+  const { createAutomationRuleService } = require('../../../functions/src/crm/projects/automation/rule-service');
+  const rules = [{ ruleId: 'r1', projectId: 'p1', enabled: true, currentVersion: 'active', candidateVersion: 'candidate' }, { ruleId: 'r2', projectId: 'p1', enabled: false, currentVersion: 'disabled' }];
+  const versions = {
+    active: { ruleId: 'r1', projectId: 'p1', actorUid: 'u1', definition: { trigger: { type: 'task_created' } } },
+    candidate: { ruleId: 'r1', projectId: 'p1', actorUid: 'u1', definition: { trigger: { type: 'assignment_changed' } } },
+    disabled: { ruleId: 'r2', projectId: 'p1', actorUid: 'u1', definition: { trigger: { type: 'task_created' } } }
+  };
+  const reads = [];
+  const transaction = { get: async ref => { reads.push(ref.key || 'rules'); return ref.key ? { exists: true, data: () => versions[ref.key] } : { docs: rules.map(rule => ({ id: rule.ruleId, data: () => rule })) }; } };
+  const db = { runTransaction: fn => fn(transaction), collection: () => ({ doc: key => ({ key }), where() { return this; }, orderBy() { return this; }, limit() { return this; } }) };
+  const service = createAutomationRuleService({ db, accessService: { assertTransactionContentAccess: async () => {} } });
+  const result = await service.list({ uid: 'u1' }, 'p1');
+  assert.deepEqual(result.items[0].activeTrigger, { type: 'task_created' }); assert.equal(result.items[1].activeTrigger, null);
+  assert.deepEqual(reads, ['rules', 'active', 'candidate', 'disabled']);
+});
 const { validateDefinition } = require('../../../functions/src/crm/projects/automation/definition');
 const context = { sections: [{ id: 's1', title: 'Work' }], members: [{ uid: 'u1', displayName: 'Owner', role: 'Owner' }], project: { statusLabels: { done: 'Finished' } }, columns: [
   { id: 'text', type: 'text', label: 'Notes' }, { id: 'number', type: 'number', label: 'Effort' }, { id: 'date', type: 'date', label: 'Review date' }, { id: 'people', type: 'people', label: 'People' }, { id: 'status', type: 'status', label: 'Stage' }, { id: 'priority', type: 'priority', label: 'Importance' }, { id: 'dropdown', type: 'dropdown', label: 'Team', options: [{ key: 'blue', label: 'Blue' }] }

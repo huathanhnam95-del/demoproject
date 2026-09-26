@@ -37,6 +37,34 @@
     const replyByScope = new Map();
     const composerGenerationByScope = new Map();
     const operationByScope = new Map();
+    const editDrafts = new Map();
+    let loadError = false, loading = false, locateSequence = 0, locating = null;
+
+    function readableTime(value) {
+      const date = new Date(value);
+      return value && Number.isFinite(date.getTime()) ? date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '';
+    }
+
+    function personName(uid) {
+      const state = deps.getBoardState?.();
+      const people = String(state?.project?.id || '') === String(selection?.projectId || '') ? state?.members : null;
+      const person = [...(people || []), ...(memberDirectoryCache.get(`${selection?.actorUid || ''}:${selection?.projectId}`) || [])].find(item => String(item.uid || item.id) === String(uid));
+      return person?.displayName || person?.name || person?.email || uid || 'Member';
+    }
+
+    function preserveFocus(target) {
+      const active = document.activeElement;
+      if (!active || !target?.contains?.(active)) return () => {};
+      const id = active.id, dataset = { ...active.dataset }, tag = active.tagName;
+      const scrollTop = target.scrollTop;
+      return () => {
+        const next = Array.from(target.querySelectorAll('button,input,select,textarea,article')).find(node => id ? node.id === id : node.tagName === tag && Object.keys(dataset).length && Object.entries(dataset).every(([key, value]) => node.dataset?.[key] === value));
+        if (next?.tagName === 'ARTICLE') next.tabIndex = -1;
+        next?.focus?.({ preventScroll: true });
+        if (!next) { target.tabIndex = -1; target.focus?.({ preventScroll: true }); }
+        if (scrollTop !== undefined) target.scrollTop = scrollTop;
+      };
+    }
 
     function currentScope() {
       return selection && selection.actorUid === getCurrentUser()?.uid ? { tuple: scopeTuple, epoch: requestEpoch, actorUid: selection.actorUid } : null;
@@ -106,11 +134,11 @@
       if (elements.projectsBoardDiscussionInput) elements.projectsBoardDiscussionInput.disabled = disabled || unresolved;
       if (elements.projectsBoardDiscussionFile) elements.projectsBoardDiscussionFile.disabled = disabled || unresolved;
       if (elements.projectsBoardDiscussionMention) elements.projectsBoardDiscussionMention.disabled = disabled || unresolved;
-      elements.projectsBoardDiscussionList?.querySelectorAll('[data-discussion-reply],[data-discussion-cancel-reply],[data-discussion-edit],[data-discussion-moderate]').forEach((button) => { button.disabled = disabled || unresolved; });
+      elements.projectsBoardDiscussionList?.querySelectorAll('[data-discussion-reply],[data-discussion-cancel-reply],[data-discussion-edit],[data-discussion-moderate],[data-discussion-edit-discard]').forEach((button) => { button.disabled = disabled || unresolved; });
       const send = document.getElementById('btn-projects-board-discussion-send');
       if (send) send.disabled = disabled || operationByScope.has(`${scopeTuple}:retry`);
       const more = document.getElementById('btn-projects-board-discussion-more');
-      if (more) more.disabled = pending;
+      if (more) more.disabled = pending || loading || !!locating;
       if (elements.projectsBoardDiscussionRetry) {
         const retry = operationByScope.get(`${scopeTuple}:retry`);
         elements.projectsBoardDiscussionRetry.hidden = !retry;
@@ -160,6 +188,7 @@
     function renderHistory() {
       const target = elements.projectsBoardDiscussionHistory;
       if (!target) return;
+      const restoreFocus = preserveFocus(target);
       if (!historyMessageId) {
         target.hidden = true;
         target.innerHTML = '';
@@ -170,14 +199,16 @@
         const body = entry.redacted
           ? '<span class="crm-muted">Unavailable to this member.</span>'
           : entry.body == null ? '' : `<p>${escape(entry.body).replace(/\r?\n/g, '<br>')}</p>`;
-        return `<article class="crm-projects-discussion-history-row"><header><strong>${escape(entry.action || entry.kind || 'change')}</strong><span>${escape(entry.actorUid || 'Member')}</span><time>${escape(entry.createdAt || '')}</time></header>${entry.reason ? `<p class="crm-muted">Reason: ${escape(entry.reason)}</p>` : ''}${body}</article>`;
+        return `<article class="crm-projects-discussion-history-row"><header><strong>${escape(entry.action || entry.kind || 'change')}</strong><span>${escape(personName(entry.actorUid))}</span><time datetime="${escape(entry.createdAt || '')}">${escape(readableTime(entry.createdAt))}</time></header>${entry.reason ? `<p class="crm-muted">Reason: ${escape(entry.reason)}</p>` : ''}${body}</article>`;
       }).join('');
       target.innerHTML = `<div class="crm-projects-board-discussion-history-head"><strong>Message history</strong><button type="button" class="crm-btn-secondary crm-btn-sm" data-discussion-history-close>Close</button></div>${rows || '<p class="crm-muted">No history is available.</p>'}${historyHasMore ? '<button type="button" class="crm-btn-secondary crm-btn-sm" data-discussion-history-more>Load more history</button>' : ''}`;
+      restoreFocus();
     }
 
     function render() {
       const target = elements.projectsBoardDiscussionList;
       if (!target) return;
+      const restoreFocus = preserveFocus(target);
       if (!selection) {
         target.innerHTML = '<p class="crm-muted">Select a task to view its conversation.</p>';
         renderHistory();
@@ -202,16 +233,23 @@
           const own = currentUid && currentUid === message.authorUid;
           const replies = (byParent.get(message.id) || []).map((reply) => renderMessage(reply, depth + 1)).join('');
           const controls = `<button type="button" class="crm-btn-secondary crm-btn-sm" data-discussion-history="${escape(message.id)}">History</button>${canWrite() ? `<button type="button" class="crm-btn-secondary crm-btn-sm" data-discussion-reply="${escape(message.id)}">Reply</button>${own && !hidden ? `<button type="button" class="crm-btn-secondary crm-btn-sm" data-discussion-edit="${escape(message.id)}">Edit</button>` : ''}${selection.role === 'Owner' ? `<button type="button" class="crm-btn-secondary crm-btn-sm" data-discussion-moderate="${escape(message.id)}" data-moderation-action="${hidden ? 'restore' : 'hide'}">${hidden ? 'Restore' : 'Hide'}</button>` : ''}` : ''}`;
-          const mentionLine = !repairing && Array.isArray(message.mentions) && message.mentions.length ? `<p class="crm-muted">Mentioned: ${message.mentions.map((uid) => `@${escape(uid)}`).join(', ')}</p>` : '';
-          return `<article class="crm-projects-discussion-message${hidden ? ' is-moderated' : ''}" data-message-id="${escape(message.id)}" style="margin-left:${Math.min(depth, 3) * 16}px"><header><strong>${escape(message.authorUid || 'Member')}</strong><time>${escape(message.createdAt || '')}</time>${hidden ? '<span class="crm-muted">Moderated</span>' : ''}</header><p>${body}</p>${mentionLine}${repairing ? '' : attachmentButtons(message)}<div class="crm-inline-fields">${repairing ? '' : controls}</div>${replies}</article>`;
+          const mentionLine = !repairing && Array.isArray(message.mentions) && message.mentions.length ? `<p class="crm-muted">Mentioned: ${message.mentions.map((uid) => `@${escape(personName(uid))}`).join(', ')}</p>` : '';
+          return `<article class="crm-projects-discussion-message${hidden ? ' is-moderated' : ''}" data-message-id="${escape(message.id)}" style="margin-left:${Math.min(depth, 3) * 16}px"><header><strong>${escape(personName(message.authorUid))}</strong><time datetime="${escape(message.createdAt || '')}">${escape(readableTime(message.createdAt))}</time>${hidden ? '<span class="crm-muted">Moderated</span>' : ''}</header><p>${body}</p>${mentionLine}${repairing ? '' : attachmentButtons(message)}<div class="crm-inline-fields">${repairing ? '' : controls}</div>${replies}</article>`;
         };
         const visibleIds = new Set(messages.map((message) => message.id));
         target.innerHTML = messages.filter((message) => !message.parentMessageId || !visibleIds.has(message.parentMessageId)).map((message) => renderMessage(message)).join('');
       }
       if (replyParentId) target.insertAdjacentHTML('afterbegin', `<div role="status" class="crm-inline-fields">Replying to the selected update <button type="button" class="crm-btn-secondary crm-btn-sm" data-discussion-cancel-reply>Cancel reply</button></div>`);
       if (hasMore && !document.getElementById('btn-projects-board-discussion-more')) target.insertAdjacentHTML('beforeend', '<button id="btn-projects-board-discussion-more" type="button" class="crm-btn-secondary crm-btn-sm">Load older updates</button>');
+      if (loadError) target.insertAdjacentHTML('afterbegin', '<p>Conversation could not be refreshed. <button type="button" class="crm-btn-secondary" data-discussion-load-retry>Retry loading updates</button></p>');
+      if (locating) target.insertAdjacentHTML('afterbegin', `<p role="status">Looking for the linked update · page ${locating.page}. <button type="button" class="crm-btn-secondary" data-discussion-locate-cancel>Cancel search</button></p>`);
+      for (const draft of editDrafts.values()) {
+        if (draft.scope !== scopeTuple || !canWrite()) continue;
+        target.insertAdjacentHTML('afterbegin', `<section aria-label="Retained update edit"><strong>Your unsaved edit</strong><p>${escape(draft.body).replace(/\r?\n/g, '<br>')}</p><button type="button" class="crm-btn-secondary" data-discussion-edit="${escape(draft.messageId)}">Review retained edit</button> <button type="button" class="crm-btn-secondary" data-discussion-edit-discard="${escape(draft.messageId)}">Discard edit</button></section>`);
+      }
       renderHistory();
       updateDisabled();
+      restoreFocus();
     }
 
     function renderMentionOptions(people = []) {
@@ -246,59 +284,70 @@
         const list = Array.isArray(result?.people) ? result.people : Array.isArray(result?.members) ? result.members : [];
         memberDirectoryCache.set(cacheKey, list);
         renderMentionOptions(list);
+        render();
       } catch (_) {
         if (isCurrent(scope)) renderMentionOptions([]);
       }
     }
 
-    async function load({ append = false, fenced = false } = {}) {
-      if (!apiFetchJson || !selection) return;
+    async function load({ append = false, fenced = false, current = null } = {}) {
+      if (!apiFetchJson || !selection || (current && !current()) || (append && loading)) return false;
       if (remoteObserver && !fenced) {
         const requestedScope = currentScope();
-        return remoteObserver.snapshot(selection.projectId, () => isCurrent(requestedScope) ? load({ append, fenced: true }) : false).catch(() => false);
+        return remoteObserver.snapshot(selection.projectId, () => isCurrent(requestedScope) ? load({ append, fenced: true, current }) : false).catch(() => false);
       }
       const scope = currentScope();
       const sequence = ++loadSequence;
+      loading = true; loadError = false;
       const requestCursor = append ? cursor : '';
       const query = new URLSearchParams({ pageSize: '50', order: 'desc' });
       if (requestCursor) query.set('cursor', requestCursor);
       setStatus(append ? 'Loading older updates…' : 'Loading conversation…');
       try {
         const result = await apiFetchJson(`${taskPath()}?${query.toString()}`);
-        if (!isCurrent(scope) || sequence !== loadSequence) return;
+        if (!isCurrent(scope) || sequence !== loadSequence || (current && !current())) return false;
         const incoming = Array.isArray(result?.messages) ? result.messages : [];
         const alreadyLoaded = messages.length > 0;
         mergeMessages(incoming);
+        selectionLoaded = true;
         if (append || !alreadyLoaded) { cursor = result?.nextCursor || ''; hasMore = Boolean(result?.hasMore && cursor); }
         render();
         setStatus(`${messages.length} update${messages.length === 1 ? '' : 's'}`);
+        return true;
       } catch (error) {
-        if (!isCurrent(scope) || sequence !== loadSequence) return;
+        if (!isCurrent(scope) || sequence !== loadSequence || (current && !current())) return false;
+        loadError = true; selectionLoaded = false;
         render();
         setStatus(error?.message || 'Conversation could not be loaded.', true);
-      }
+        return false;
+      } finally { if (isCurrent(scope) && sequence === loadSequence) { loading = false; updateDisabled(); } }
     }
 
     async function focusMessage(messageId, options = {}) {
       if (!selection || !messageId) return false;
       const scope = currentScope();
-      const valid = () => isCurrent(scope) && (!options.isCurrent || options.isCurrent());
+      const search = ++locateSequence;
+      const valid = () => isCurrent(scope) && search === locateSequence && (!options.isCurrent || options.isCurrent());
       if (!valid()) return false;
-      await load();
-      for (let page = 0; page < 100 && valid(); page++) {
-        if (messages.some((message) => String(message.id) === String(messageId))) {
-          const article = Array.from(elements.projectsBoardDiscussionList?.querySelectorAll('article[data-message-id]') || []).find((node) => node.dataset.messageId === String(messageId));
-          if (article) { article.tabIndex = -1; article.focus({ preventScroll: true }); article.scrollIntoView({ block: 'center' }); return true; }
-          return false;
+      locating = { page: 1 }; render();
+      try {
+        if (!await load({ current: valid })) return false;
+        for (let page = 0; page < 10 && valid(); page++) {
+          if (messages.some((message) => String(message.id) === String(messageId))) {
+            const article = Array.from(elements.projectsBoardDiscussionList?.querySelectorAll('article[data-message-id]') || []).find((node) => node.dataset.messageId === String(messageId));
+            if (article) { article.tabIndex = -1; article.focus({ preventScroll: true }); article.scrollIntoView({ block: 'center' }); return true; }
+            return false;
+          }
+          if (!hasMore || !cursor || page === 9) break;
+          const previousCursor = cursor;
+          locating.page = page + 2; render();
+          if (!await load({ append: true, current: valid })) break;
+          if (!valid()) return false;
+          if (cursor === previousCursor) break;
         }
-        if (!hasMore || !cursor) break;
-        const previousCursor = cursor;
-        await load({ append: true });
-        if (!valid()) return false;
-        if (cursor === previousCursor) break;
-      }
-      if (valid()) setStatus('The linked update could not be located. Load older updates or retry.', true);
-      return false;
+        if (valid()) setStatus('The linked update could not be located within this search. Load older updates or retry.', true);
+        return false;
+      } finally { if (search === locateSequence) { locating = null; render(); } }
     }
 
     async function uploadFile(scope, messageId, file, request) {
@@ -362,7 +411,7 @@
           operationByScope.delete(`${scope.tuple}:retry`);
           await load();
           if (!isCurrent(scope)) return;
-          setStatus(`${error.message || 'This update changed.'} Review the current message and choose Edit or moderation again.`, true);
+          setStatus(`${error.message || 'This update changed.'} ${request.kind === 'edit' ? 'Your edit is retained. Review it against the current message before applying again.' : 'Review the current message and choose moderation again.'}`, true);
           return;
         }
         // Attachment conflicts must keep the successfully created message ID
@@ -382,6 +431,7 @@
         return;
       }
       setStatus(`${error.message || 'Update could not be saved.'} Retry to resume the same request.`, true);
+      render();
     }
 
     async function sendMessage(event) {
@@ -429,12 +479,27 @@
 
     async function edit(messageId) {
       const scope = currentScope();
-      const message = messages.find((entry) => entry.id === messageId);
+      let message = messages.find((entry) => entry.id === messageId);
       if (!scope || !message || pending || !canWrite() || operationByScope.has(`${scopeTuple}:retry`) || message.authorUid !== getCurrentUser()?.uid) return;
-      const body = window.prompt('Edit update:', message.body || '');
-      if (body === null || !body.trim()) return;
       const key = `${scope.tuple}:edit:${messageId}`;
+      const retained = editDrafts.get(key);
+      if (retained) {
+        pending = true; updateDisabled();
+        try {
+          const result = await apiFetchJson(`${taskPathFor(selection)}/messages/${encodeURIComponent(messageId)}/history?pageSize=1`);
+          if (!isCurrent(scope)) return;
+          message = result?.message;
+          if (!message || message.redacted || message.authorUid !== getCurrentUser()?.uid || (message.moderationState && message.moderationState !== 'visible')) { setStatus('This update is unavailable for editing. Your attempted text is retained.', true); return; }
+          mergeMessages([message]); render();
+        } catch (error) { if (isCurrent(scope)) setStatus(error?.message || 'The current update could not be loaded. Your edit is retained.', true); return; }
+        finally { if (isCurrent(scope)) { pending = false; updateDisabled(); } }
+      }
+      if (!isCurrent(scope) || !canWrite()) return;
+      const body = window.prompt(retained ? `Review your retained edit before applying it. The current saved update is:\n\n${message.body || ''}\n\nPress OK to apply your text, or Cancel to keep it for later.` : 'Edit update:', retained?.body ?? message.body ?? '');
+      if (body === null || !body.trim()) return;
       const request = operationByScope.get(key) || { kind: 'edit', messageId, body: body.trim(), expectedRevision: Number(message.revision || 0), operationId: newOperationId('discussion-edit') };
+      const draft = { scope: scope.tuple, messageId, body };
+      editDrafts.set(key, draft);
       operationByScope.set(key, request);
       operationByScope.set(`${scope.tuple}:retry`, request);
       pending = true;
@@ -442,7 +507,10 @@
       updateDisabled();
       try {
         await apiFetchJson(`${taskPathFor(selection)}/messages/${encodeURIComponent(request.messageId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body: request.body, expectedRevision: request.expectedRevision, operationId: request.operationId }) });
-        if (isCurrent(scope)) { operationByScope.delete(key); operationByScope.delete(`${scope.tuple}:retry`); await load(); }
+        if (operationByScope.get(key) === request) operationByScope.delete(key);
+        if (operationByScope.get(`${scope.tuple}:retry`) === request) operationByScope.delete(`${scope.tuple}:retry`);
+        if (editDrafts.get(key) === draft) editDrafts.delete(key);
+        if (isCurrentTuple(scope)) await load();
       } catch (error) {
         await handleMutationError(error, request, scope);
       } finally { if (isCurrent(scope) && mutationToken === activeMutationToken) { pending = false; updateDisabled(); } }
@@ -487,7 +555,7 @@
         else if (request.kind === 'moderate') await apiFetchJson(`${taskPathFor(selection)}/messages/${encodeURIComponent(request.messageId)}/moderate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: request.action, reason: request.reason, expectedRevision: request.expectedRevision, operationId: request.operationId }) });
         if (!isCurrent(scope)) return;
         operationByScope.delete(`${scopeTuple}:retry`);
-        if (request.kind === 'edit') operationByScope.delete(`${scopeTuple}:edit:${request.messageId}`);
+        if (request.kind === 'edit') { operationByScope.delete(`${scopeTuple}:edit:${request.messageId}`); editDrafts.delete(`${scopeTuple}:edit:${request.messageId}`); }
         if (request.kind === 'moderate') operationByScope.delete(`${scopeTuple}:moderate:${request.messageId}`);
         await load();
         if (isCurrent(scope)) setStatus('Update saved.');
@@ -528,7 +596,12 @@
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'attachment';
+        const disposition = response.headers?.get?.('Content-Disposition') || '';
+        const encoded = disposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i);
+        const ordinary = disposition.match(/filename\s*=\s*(?:"([^"]*)"|([^;]+))/i);
+        let filename = ordinary?.[1] || ordinary?.[2] || 'attachment';
+        if (encoded) { try { filename = decodeURIComponent(encoded[1]); } catch (_) { /* Keep the plain filename. */ } }
+        link.download = filename.replace(/[\x00-\x1f\x7f<>:"/\\|?*]/g, '_').replace(/^\.+|[. ]+$/g, '').trim().slice(0, 180) || 'attachment';
         link.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       } catch (error) { if (isCurrent(scope)) showToast(error?.message || 'Download failed.', 'error'); }
@@ -548,6 +621,7 @@
         pending = false;
         activeMutationToken += 1;
         selection = null; selectionLoaded = false; selectionActive = false; remoteRepair = null;
+        loading = false; loadError = false; locating = null; locateSequence++;
         scopeTuple = '';
         authorityKey = '';
         memberDirectoryCache.clear();
@@ -573,6 +647,7 @@
       const tupleChanged = nextTuple !== scopeTuple;
       const authorityChanged = nextAuthority !== authorityKey;
       if (tupleChanged || authorityChanged) {
+        loading = false; loadError = false; locating = null; locateSequence++;
         remoteRepair = null;
         selectionLoaded = false;
         requestEpoch += 1;
@@ -608,8 +683,7 @@
         messageHistory = []; historyMessageId = '';
       }
       render();
-      if (selectionActive && !selectionLoaded) {
-        selectionLoaded = true;
+      if (selectionActive && !selectionLoaded && !loading) {
         const scope = currentScope();
         load();
         loadMentionOptions(scope);
@@ -617,6 +691,10 @@
     }
 
     function onClick(event) {
+      if (event.target.closest('[data-discussion-load-retry]')) { load(); return; }
+      if (event.target.closest('[data-discussion-locate-cancel]')) { locateSequence++; locating = null; render(); setStatus('Linked update search cancelled. Loaded updates remain available.'); return; }
+      const discardEdit = event.target.closest('[data-discussion-edit-discard]');
+      if (discardEdit && !pending && canWrite() && !operationByScope.has(`${scopeTuple}:retry`)) { editDrafts.delete(`${scopeTuple}:edit:${discardEdit.dataset.discussionEditDiscard}`); render(); return; }
       const cancelReply = event.target.closest('[data-discussion-cancel-reply]');
       if (cancelReply && !cancelReply.disabled && canWrite() && !pending && !operationByScope.has(`${scopeTuple}:retry`)) {
         if (replyParentId) composerEdited();

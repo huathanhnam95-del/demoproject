@@ -45,12 +45,14 @@ test('project denial invalidates held target, preferences and feed callbacks', a
   assert.equal(h.opened.length, 0); assert.equal(h.controller.getState().items.length, 0); assert.equal(h.controller.getState().draft.length, 0);
 });
 test('read failure preserves previous state; acknowledgement wins over a held feed', async () => {
-  const h = harness(); await h.controller.refresh(); h.handle(async () => { throw new Error('offline'); });
+  const h = harness(); h.handle(async () => ({ items: [item()], hasMore: true, nextCursor: 'page2' })); await h.controller.refresh(); h.handle(async () => { throw new Error('offline'); });
   await h.controller.setRead('n1', true); assert.equal(h.controller.getState().items[0].read, false);
   const read = deferred(), feed = deferred(); h.handle((url, options) => options ? read.promise : feed.promise);
   const a = h.controller.setRead('n1', true), b = h.controller.refresh(); read.resolve({ notificationId: 'n1', read: true }); await a;
   feed.resolve({ items: [item()] }); await b;
-  assert.equal(h.controller.getState().items.length, 0); // Refresh cleared feed; stale server snapshot is never republished.
+  assert.equal(h.controller.getState().items.length, 1); // Retain the visible feed while refreshing.
+  assert.equal(h.controller.getState().items[0].read, true); // The stale response cannot overwrite acknowledgement.
+  assert.equal(h.controller.getState().cursor, 'page2'); // Cancelling refresh must retain the visible page's continuation.
 });
 test('read mutation after account switch and forbidden response cannot leak content', async () => {
   const h = harness(); await h.controller.refresh(); const held = deferred(); h.handle(() => held.promise);

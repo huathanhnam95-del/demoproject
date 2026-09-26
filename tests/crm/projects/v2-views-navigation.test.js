@@ -5,22 +5,66 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { JSDOM } = require(process.env.CRM_TEST_JSDOM || 'jsdom');
 const root = path.resolve(__dirname, '../../..');
-async function fixture(url = 'https://fixture.invalid/crm-admin.html?keep=yes#projects', presentationV2 = true) {
+async function fixture(url = 'https://fixture.invalid/crm-admin.html?keep=yes#projects', presentationV2 = true, viewApi = null) {
     const dom = new JSDOM(fs.readFileSync(path.join(root, 'public/crm-admin.html'), 'utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ''), { runScripts: 'outside-only', pretendToBeVisual: true, url });
     const win = dom.window;
     win.HTMLDialogElement.prototype.show = win.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
     win.HTMLDialogElement.prototype.close = function () { this.open = false; };
     win.document.querySelector('[data-panel="projects"]').getBoundingClientRect = () => ({ width: 1280 });
     win.document.querySelector('[data-panel="projects"]').dataset.projectsUi = presentationV2 ? 'v2' : 'legacy';
-    for (const name of ['presentation/column-model', 'presentation/table-layout', 'presentation/field-feedback', 'state', 'presentation/detail-surface', 'board', 'views']) win.eval(fs.readFileSync(path.join(root, `public/js/crm/projects/${name}.js`), 'utf8'));
+    for (const name of ['presentation/column-model', 'presentation/table-layout', 'presentation/field-feedback', 'state', 'presentation/detail-surface', 'board', 'gantt', 'views']) win.eval(fs.readFileSync(path.join(root, `public/js/crm/projects/${name}.js`), 'utf8'));
     const createBoard = win.CrmProjectsBoard.createController;
     win.CrmProjectsBoard.createController = deps => createBoard({ ...deps, presentationV2 });
+    if (viewApi) {
+        const createViews = win.CrmProjectsViews.createController;
+        win.CrmProjectsViews.createController = deps => createViews({ ...deps, apiFetchJson: (url, options) => viewApi(url, options, deps.apiFetchJson) });
+    }
     const admin = fs.readFileSync(path.join(root, 'public/crm-admin.js'), 'utf8');
     const bindings = Object.fromEntries([...admin.matchAll(/elements\.(projects\w+) = document.getElementById\('([^']+)'\)/g)].map(m => [m[1], m[2]]));
     win.eval(fs.readFileSync(path.join(root, 'tests/fixtures/crm/projects-v2-views.js'), 'utf8'));
     const h = await win.createProjectsViewsFixture(bindings);
     return Object.assign(h, { win, doc: win.document, dispose() { h.close(); win.close(); } });
 }
+
+test('Gantt separates missing dates from saved and descendant ranges and bounds calendar rendering', async () => {
+    const h = await fixture(); try {
+        const tasks = [
+            { id: 'parent', title: 'Parent <unsafe>', status: 'not_started', activeChildCount: 1, derived: { startDate: '2028-02-28', dueDate: '2028-03-02' } },
+            { id: 'child', title: 'Dated child', parentTaskId: 'parent', status: 'in_progress', startDate: '2028-02-29', dueDate: '2028-02-29', derived: { startDate: '2028-02-29', dueDate: '2028-02-29' } },
+            { id: 'undated', title: 'Needs dates', status: 'not_started' },
+            { id: 'invalid', title: 'Invalid date', startDate: '2028-02-31' }
+        ];
+        const host = h.doc.createElement('div');
+        const render = options => { host.innerHTML = h.win.CrmProjectsGantt.render({ tasks, today: '2028-02-29', zoom: 'days', canWrite: true, ...options }); };
+        render();
+        assert.equal(host.querySelectorAll('.crm-gantt-row').length, 2);
+        assert.equal(host.querySelectorAll('.crm-gantt-bar.is-derived').length, 1, 'leaf rollup must not become a duplicate bar');
+        assert.equal(host.querySelectorAll('.crm-gantt-undated li').length, 2);
+        assert.equal(host.querySelector('unsafe'), null);
+        assert.ok(host.querySelector('time[datetime="2028-02-29"]'));
+        assert.ok(host.querySelector('[data-gantt-today]'));
+        render({ canWrite: false }); assert.equal(host.querySelector('[data-gantt-schedule]'), null);
+        assert.ok(host.querySelector('[data-task-open="undated"]'), 'Viewer retains read-only navigation');
+        render({ tasks: [{ id: 'wide', startDate: '1000-01-01', dueDate: '9999-12-20' }] });
+        assert.ok(host.querySelectorAll('time').length <= 260);
+        assert.doesNotMatch(host.innerHTML, /NaN|Infinity/);
+    } finally { h.dispose(); }
+});
+
+test('Gantt Set dates opens the canonical editor without a new mutation path', async () => {
+    const h = await fixture(); try {
+        const row = h.tasks.find(t => t.id === 'p0');
+        row.startDate = null; row.dueDate = null; row.derived = null; row.activeChildCount = 0;
+        h.views.setView('gantt'); await h.wait();
+        const action = h.doc.querySelector('[data-gantt-schedule="p0"]');
+        assert.ok(action);
+        const mutations = h.calls.filter(c => c.method !== 'GET').length;
+        action.click(); await h.wait();
+        assert.equal(h.board.getState().selectedTaskId, 'p0');
+        assert.ok(h.doc.querySelector('.crm-row-editor input[name="startDate"]'));
+        assert.equal(h.calls.filter(c => c.method !== 'GET').length, mutations);
+    } finally { h.dispose(); }
+});
 test('all views retain one applied filter query, Vietnamese labels and unrelated route parameters', async () => {
     const h = await fixture(); try {
         h.calls.length = 0;
@@ -51,10 +95,14 @@ test('unloaded child uses canonical queue without selecting or claiming its bran
 test('stale revision, foreign scope, Viewer, unknown status and retained draft cannot issue a parallel mutation', async () => {
     const h = await fixture(); try {
         h.tasks[0].revision = 2;
-        await assert.rejects(h.command('p0', 'status', 'done', 1), /changed/);
         await assert.rejects(h.board.setTaskField({ taskId: 'p0', field: 'status', value: 'done', revision: 2, projectId: 'q', actorUid: 'a' }), /context/);
         await assert.rejects(h.command('p0', 'status', 'invented'), /Unknown/);
         assert.equal(h.calls.filter(c => c.method === 'PATCH').length, 0);
+        // A loaded copy at the command's revision saves without a pre-read; the
+        // server's expectedRevision check rejects the stale write and nothing changes.
+        await assert.rejects(h.command('p0', 'status', 'done', 1), /changed|not confirmed/);
+        assert.equal(JSON.stringify(h.calls.filter(c => c.method === 'PATCH').map(c => c.body.expectedRevision)), '[1]');
+        assert.notEqual(h.tasks[0].status, 'done');
         h.role = 'Viewer'; await h.board.refresh(); await assert.rejects(h.command('p0', 'status', 'done'), /unavailable/);
         h.role = 'Owner'; await h.board.refresh();
         h.failures.push({ match: '/tasks/p0', status: 409 });
@@ -120,7 +168,8 @@ test('delayed command read and delayed view projection cannot cross filters, act
         const release = h.hold('/tasks/p0');
         const select = h.doc.querySelector('[data-task-status="p0"]'); select.value = 'done'; select.dispatchEvent(new h.win.Event('change', { bubbles: true }));
         await h.wait(); await h.views.applyFilters({ title: 'Công việc 1' }); release(); await h.wait();
-        assert.equal(h.calls.filter(c => c.method === 'PATCH').length, 0);
+        // The status change is saved when it is made; a later filter change does not cancel it.
+        assert.equal(h.calls.filter(c => c.method === 'PATCH').length, 1);
         await h.views.applyFilters({});
         const releaseView = h.hold('/views?'); const stale = h.views.refresh(); await h.wait();
         await h.command('p0', 'status', 'done'); releaseView(); await stale; await h.wait();
@@ -263,7 +312,7 @@ test('missing deep-link target disappears immediately from active Table without 
         h.win.history.pushState(null, '', '?pjProject=p&pjView=board&pjTask=p0#projects');
         await h.views.restoreNavigation();
         assert.equal(h.doc.querySelector('#projects-board-rows [data-task-id="p0"]'), null);
-        assert.equal(h.doc.querySelector('#projects-view-summary').textContent, '', 'discard stale totals with the vanished task projection');
+        assert.doesNotMatch(h.doc.querySelector('#projects-view-summary').textContent, /matching tasks|%/, 'discard stale totals with the vanished task projection');
         assert.equal(h.board.getState().selectedTaskId, '');
     } finally { h.dispose(); }
 });
@@ -504,7 +553,7 @@ test('returning Table retains its observed revision floor until the current proj
         await h.select('q'); await h.wait();
         h.tasks.find(t => t.id === 'q0').id = 'p0'; await h.board.refresh();
         const own = h.tasks.find(t => t.projectId === 'p' && t.id === 'p0');
-        own.revision = 3; h.views.setProject('p'); await h.wait();
+        own.revision = 3; h.views.setProject('p'); await h.views.refresh(); await h.wait();
         own.revision = 2; await h.select('p'); await h.wait(); await h.wait();
         assert.equal(h.board.getState().project.id, 'p');
         assert.equal(h.board.getState().tasks.get('p0').revision, 2);
@@ -547,7 +596,7 @@ for (const presentationV2 of [false, true]) test(`overlapping project refreshes 
         assert.equal(h.doc.querySelector('#projects-board-table-wrap').hidden, false, 'a completed older refresh must not latch the retry state over the final publication');
         assert.equal(h.board.getState().tasks.get('p0').revision, 3);
 
-        own.revision = 4; h.views.setProject('p'); await h.wait();
+        own.revision = 4; h.views.setProject('p'); await h.views.refresh(); await h.wait();
         own.revision = 2;
         const releaseReturn = h.hold('/projects/p/tasks?'); releases.push(releaseReturn);
         await h.select('p'); await h.wait();
@@ -579,14 +628,14 @@ test('Kanban resolves arbitrary priority IDs, labels multiple fields, and separa
  }finally{h.dispose();}
 });
 
-test('project selection hydrates one snapshot after canonical authority without a reset refresh', async () => {
+test('project selection defers projection reads until a non-Table view needs them', async () => {
     const h = await fixture(); try {
         for (const id of ['p', 'q']) {
             if (id === 'q') { h.calls.length = 0; await h.select(id); await h.wait(); }
-            assert.equal(h.views.getState().response?.project?.id, id);
+            assert.equal(h.views.getState().response, null);
             assert.equal(h.doc.getElementById('projects-view-status').textContent, '');
             assert.equal(h.calls.filter(c => c.url.startsWith(`/api/projects/${id}/tasks?`)).length, 1);
-            assert.equal(h.calls.filter(c => c.url.startsWith(`/api/projects/${id}/views?`)).length, 1);
+            assert.equal(h.calls.filter(c => c.url.startsWith(`/api/projects/${id}/views?`)).length, 0);
         }
         h.calls.length = 0;
         await h.views.applyFilters({ status: 'done' }); await h.wait();
@@ -600,6 +649,7 @@ for (const presentationV2 of [false, true]) test(`initial snapshot recovers afte
     const h = await fixture(undefined, presentationV2);
     let release;
     try {
+        h.views.setView('kanban'); await h.wait();
         release = h.hold('/projects/q/views?');
         await h.select('q'); await h.wait();
         await h.board.refresh(); await h.wait();
@@ -608,4 +658,113 @@ for (const presentationV2 of [false, true]) test(`initial snapshot recovers afte
         assert.equal(h.doc.getElementById('projects-view-status').textContent, '');
         assert.equal(h.board.getState().authorizationReady, true);
     } finally { release?.(); h.dispose(); }
+});
+
+test('Table defers projection totals; unchanged filters retain paging and warm Calendar exits reuse a full-query snapshot', async () => {
+    const h = await fixture(); try {
+        const reads = () => h.calls.filter(c => c.url.includes('/views?')).length;
+        assert.equal(reads(), 0, 'Table startup must not trigger the expensive projection');
+        await h.views.applyFilters({ status: 'not_started' });
+        h.views.setView('kanban'); await h.wait();
+        const before = reads();
+        await h.views.applyFilters({ bogus: 'ignored', status: 'not_started' });
+        assert.equal(reads(), before);
+        assert.equal(h.doc.getElementById('projects-view-summary').textContent.includes('4 matching tasks'), true);
+        h.views.getState().response.aggregates.byStatus = { not_started: 4 };
+        h.views.setView('calendar'); await h.wait();
+        h.views.getState().response.aggregates.byStatus = { not_started: 2 };
+        h.views.getState().response.matchingTaskCount = 2; // Month response must not replace the separately retained full-query count.
+        h.views.setView('board'); await h.wait();
+        assert.match(h.doc.getElementById('projects-view-summary').textContent, /^4 matching tasks/);
+        assert.doesNotMatch(h.doc.getElementById('projects-view-summary').textContent, /overlapping/);
+        assert.equal(h.doc.querySelector('[data-chip-field="status"][data-chip-value="not_started"] .crm-filter-chip-count').textContent, '4');
+        const calendarReads = reads();
+        h.views.setView('kanban'); await h.wait();
+        assert.equal(reads(), calendarReads, 'warm full-query response is reusable after Calendar');
+        await h.views.refresh();
+        assert.equal(reads(), calendarReads + 1, 'explicit refresh bypasses reusable responses');
+    } finally { h.dispose(); }
+});
+
+test('Calendar clips continuous spans at weeks and month edges and exposes overflow tasks', async () => {
+    const h = await fixture(); try {
+        for (const task of h.tasks.filter(t => t.projectId === 'p')) { task.startDate = '2026-08-29'; task.dueDate = '2026-10-03'; }
+        h.tasks.push({ ...h.tasks[0], id: 'extra', title: 'Overflow task' });
+        h.views.setView('calendar'); await h.wait();
+        const input = h.doc.getElementById('projects-view-month');
+        input.value = '2026-09'; input.dispatchEvent(new h.win.Event('change', { bubbles: true })); await h.wait();
+        const spans = h.doc.querySelectorAll('.crm-cal-span[data-task-open="p0"]');
+        assert.equal(spans.length, 5);
+        assert.ok(spans[0].classList.contains('continues-before'));
+        assert.ok(spans[4].classList.contains('continues-after'));
+        assert.equal(spans[1].style.gridColumn, '1 / span 7');
+        const overflow = h.doc.querySelector('.crm-cal-overflow');
+        assert.ok(overflow?.querySelector('summary'));
+        assert.ok(overflow.querySelector('[data-task-open]'));
+        assert.match(h.doc.querySelector('.crm-cal-month-list summary').textContent, /this month page/);
+    } finally { h.dispose(); }
+});
+
+test('Calendar Today uses Vietnam civil date before UTC midnight', async () => {
+    const h = await fixture(); try {
+        const RealDate = h.win.Date;
+        h.win.Date = class extends RealDate { constructor(...args) { super(...(args.length ? args : ['2026-09-30T18:30:00Z'])); } static now() { return new RealDate('2026-09-30T18:30:00Z').getTime(); } };
+        h.views.setView('calendar'); await h.wait();
+        h.doc.querySelector('[data-cal-nav="today"]').click(); await h.wait();
+        assert.equal(h.doc.getElementById('projects-view-month').value, '2026-10');
+        assert.ok(h.doc.querySelector('[data-cal-date="2026-10-01"].is-today'));
+        assert.equal(h.doc.activeElement?.dataset.calNav, undefined); // Programmatic click does not invent keyboard focus.
+    } finally { h.dispose(); }
+});
+
+
+test('initial Table lazily loads editable project links using current canonical revision without a view read', async () => {
+    const linkCalls = [];
+    const h = await fixture(undefined, true, async (url, options, api) => {
+        if (url.endsWith('/links')) {
+            linkCalls.push({ url, method: options?.method || 'GET', body: options?.body ? JSON.parse(options.body) : null });
+            return { canManage: true, links: [{ type: 'lead', recordId: 'lead-1', label: 'Test lead', href: '/crm-admin.html#leads' }] };
+        }
+        return api(url, options);
+    }); try {
+        assert.equal(h.views.getState().response, null);
+        assert.equal(linkCalls.length, 0);
+        const state = h.board.getState;
+        let revision = 7;
+        h.board.getState = () => { const current = state(); return { ...current, project: { ...current.project, revision } }; };
+        const holder = h.doc.getElementById('projects-project-links').closest('details');
+        holder.open = true; await h.wait();
+        assert.equal(linkCalls.length, 1);
+        assert.equal(linkCalls[0].method, 'GET');
+        const remove = h.doc.querySelector('[data-project-link-remove]');
+        assert.ok(remove && !remove.disabled);
+        revision = 8;
+        remove.click(); await h.wait();
+        assert.equal(linkCalls.filter(c => c.method === 'PATCH').length, 0, 'stale loaded links cannot overwrite a newer project revision');
+        holder.open = false; await h.wait(); holder.open = true; await h.wait();
+        h.doc.querySelector('[data-project-link-remove]').click(); await h.wait();
+        assert.equal(linkCalls.find(c => c.method === 'PATCH').body.expectedRevision, 8);
+        assert.equal(h.calls.filter(c => c.url.includes('/views?')).length, 0);
+        h.role = 'Viewer'; await h.board.refresh(); await h.wait();
+        assert.equal(h.doc.querySelector('[data-project-link-remove]'), null, 'link endpoint permission cannot elevate current canonical membership');
+        assert.equal(h.doc.querySelector('#projects-project-link-lookup'), null);
+    } finally { h.dispose(); }
+});
+
+test('warm projection reuse expires thirty seconds after the original read, not the latest cache hit', async () => {
+    const h = await fixture(); try {
+        let now = h.win.Date.now();
+        h.win.Date.now = () => now;
+        const fullReads = () => h.calls.filter(c => c.url.includes('/views?') && !JSON.parse(new URL(c.url, h.win.location).searchParams.get('filters')).fromDate).length;
+        h.views.setView('kanban'); await h.wait();
+        assert.equal(fullReads(), 1);
+        h.views.setView('calendar'); await h.wait();
+        now += 20000;
+        h.views.setView('kanban'); await h.wait();
+        assert.equal(fullReads(), 1, 'twenty-second-old snapshot is reusable');
+        h.views.setView('calendar'); await h.wait();
+        now += 10001;
+        h.views.setView('kanban'); await h.wait();
+        assert.equal(fullReads(), 2, 'a hit cannot extend the original thirty-second freshness window');
+    } finally { h.dispose(); }
 });

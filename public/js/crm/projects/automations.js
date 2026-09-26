@@ -18,21 +18,34 @@
     const base = () => `/api/projects/${encodeURIComponent(projectId)}`;
     const state = () => clone({ actorUid, projectId, epoch, generation, opened, mode, representation, status, rule, version, draft, dirty, preview, diagnostics, items, cursor, loading, filters, pending, inFlight, conflict, sample, search, history, ready: ready(), owner: owner() });
     let activationReview = null, listRequest = null;
+    const retained = new Map();
+    const captureEditor = () => ({ generation, opened, mode, representation, status, rule, version, draft, baseDefinition, dirty, diagnostics, pending, inFlight, conflict, sample, taskLabels });
+    function restoreEditor(saved) {
+      ({ generation, opened, mode, representation, status, rule, version, draft, baseDefinition, dirty, diagnostics, pending, inFlight, conflict, sample, taskLabels } = saved);
+    }
     const hasDraftChanges = () => !!draft && (dirty || draft.title !== rule?.title || draft.folder !== (rule?.folder || ''));
     const draftMatchesVersion = () => !!draft && !!version && draft.actorUid === version.actorUid && JSON.stringify(draft.definition) === baseDefinition;
     const previewUsable = () => !!preview && draftMatchesVersion() && !dirty && !conflict && preview.generation === generation && preview.versionId === version.versionId && !!preview.previewToken && Number.isFinite(Date.parse(preview.expiresAt)) && Date.parse(preview.expiresAt) > Date.now();
     function retainDraft() {
       if (!hasDraftChanges() && !pending && !inFlight) return false;
-      status = 'Your draft is retained. Resume and save it before opening another automation or template.'; render(); return true;
+      status = 'Your draft is retained. Resume and save or discard it before opening another automation or template.'; render(); return true;
     }
     function focusControl(selector) { root?.querySelector?.(selector)?.focus({ preventScroll: true }); }
     function reset(message = '') {
+      retained.delete(projectId);
       activationReview = null; listRequest = null; epoch++; generation++; Object.keys(seq).forEach(key => seq[key]++);
       opened = false; mode = 'manage'; rule = null; version = null; draft = null; baseDefinition = ''; dirty = false; preview = null; diagnostics = []; items = []; cursor = null; loading = false;
       pending = null; inFlight = false; conflict = false; sample = null; search = null; history = { kind: '', items: [], cursor: null }; taskLabels = {}; status = message; render();
     }
-    function setAccount(value) { if (String(value || '') === actorUid) return; actorUid = String(value || ''); projectId = ''; context = {}; contextSignature = ''; blockedAuthority = null; reset(); }
-    function setSelection(value) { const id = String(value || ''); if (id === projectId) return; projectId = id; context = {}; contextSignature = ''; blockedAuthority = null; reset(); }
+    function setAccount(value) { if (String(value || '') === actorUid) return; retained.clear(); actorUid = String(value || ''); projectId = ''; context = {}; contextSignature = ''; blockedAuthority = null; reset(); }
+    function setSelection(value) {
+      const id = String(value || ''); if (id === projectId) return;
+      if (projectId && (draft || pending || inFlight)) retained.set(projectId, captureEditor());
+      const saved = retained.get(id);
+      projectId = id; context = {}; contextSignature = ''; blockedAuthority = null; reset();
+      if (saved) restoreEditor(saved);
+      render();
+    }
     function setContext(snapshot = {}) {
       if (snapshot.actorUid !== actorUid || snapshot.project?.id !== projectId) return;
       const signature = JSON.stringify([snapshot.project?.schemaRevision, snapshot.project?.structureRevision, snapshot.project?.statusLabels, snapshot.columns, snapshot.sections, snapshot.members, snapshot.membership?.role]);
@@ -50,7 +63,7 @@
     const errorCode = error => error?.payload?.error || error?.payload?.code || error?.code || '';
     function fail(error, s, taskReference = false) {
       if (!current(s)) return;
-      if (error?.status === 401) { reset('Account access changed.'); deps.onAccountDenied?.(); return; }
+      if (error?.status === 401) { retained.clear(); reset('Account access changed.'); deps.onAccountDenied?.(); return; }
       if (error?.status === 403 && !taskReference) { ownerDenied(); return; }
       if (error?.status === 404 && !resources.has(errorCode(error)) && !taskReference) { reset('Project access is unavailable.'); deps.onContentDenied?.(s.projectId); return; }
       if (error?.status === 409 && ['STALE_REVISION', 'STALE_PREVIEW', 'OPERATION_CONFLICT'].includes(errorCode(error))) { conflict = true; preview = null; seq.preview++; }
@@ -63,6 +76,12 @@
       if (retainDraft()) return;
       clearPanels(); seq.detail++; rule = null; version = null; baseDefinition = ''; sample = null; diagnostics = []; conflict = false;
       draft = { title: 'New automation', folder: '', actorUid, definition: E.create(context) }; generation++; dirty = true; preview = null; mode = 'edit'; opened = true; render();
+    }
+    function discardDraft() {
+      if (!ready() || pending || inFlight) return;
+      clearPanels(); seq.detail++; seq.preview++; generation++;
+      draft = null; rule = null; version = null; baseDefinition = ''; dirty = false; conflict = false; preview = null; sample = null; diagnostics = []; activationReview = null;
+      mode = 'manage'; status = 'Draft discarded.'; retained.delete(projectId); render();
     }
     async function show() { if (!ready()) return; opened = true; render(); if (mode === 'manage') await loadList(); }
     function loadList(append = false) {
@@ -113,27 +132,40 @@
     function setRepresentation(value) { if (['recipe', 'blocks'].includes(value)) { representation = value; render(); } }
     function validation() { return draft ? [...(!draft.title.trim() ? ['Give the automation a title.'] : []), ...E.validate(draft.definition, context)] : ['Create or open an automation first.']; }
     async function dispatch(request) {
-      if (!ready() || inFlight || !current(request.scope)) return;
+      if (!ready() || inFlight || request.scope.actorUid !== actorUid || request.scope.projectId !== projectId) return;
       pending = request; inFlight = true; status = 'Saving change…'; render();
+      function target() {
+        if (request.scope.actorUid !== actorUid || actorUid !== uid()) return null;
+        const saved = projectId === request.scope.projectId ? captureEditor() : retained.get(request.scope.projectId);
+        return saved?.pending === request ? saved : null;
+      }
+      function settle(saved) {
+        saved.inFlight = false;
+        if (projectId === request.scope.projectId) { restoreEditor(saved); preview = null; seq.preview++; render(); }
+        else retained.set(request.scope.projectId, saved);
+      }
       try {
         const result = await api(request.path, { method: request.method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(request.body) });
-        if (!current(request.scope)) return;
-        pending = null; conflict = false;
-        if (request.kind === 'duplicate') status = 'A disabled copy was created. Open Manage to edit it.';
+        const saved = target(); if (!saved) return;
+        saved.pending = null; saved.conflict = false;
+        if (request.kind === 'duplicate') saved.status = 'A disabled copy was created. Open Manage to edit it.';
         else {
-          rule = clone(result.rule || rule); if (result.version) version = clone(result.version);
+          saved.rule = clone(result.rule || saved.rule); if (result.version) saved.version = clone(result.version);
           if (['create', 'save'].includes(request.kind)) {
-            baseDefinition = JSON.stringify(version.definition);
-            if (generation === request.generation) { draft = { ...draft, ...(request.kind === 'create' ? { title: rule.title, folder: rule.folder || '' } : {}), actorUid: version.actorUid, definition: clone(version.definition) }; dirty = false; } else dirty = true;
-            status = dirty ? 'Earlier change saved. Your newer draft is retained; review and save it.' : rule.enabled && rule.candidateVersion ? 'Candidate saved. The active version continues until this candidate is activated.' : 'Version saved. Preview before activation.';
-          } else status = request.kind === 'activate' ? 'Automation activated.' : request.kind === 'disable' ? 'Automation disabled. Pending effects will stop.' : 'Metadata saved.';
+            saved.baseDefinition = JSON.stringify(saved.version.definition);
+            if (saved.generation === request.generation) { saved.draft = { ...saved.draft, ...(request.kind === 'create' ? { title: saved.rule.title, folder: saved.rule.folder || '' } : {}), actorUid: saved.version.actorUid, definition: clone(saved.version.definition) }; saved.dirty = false; } else saved.dirty = true;
+            saved.status = saved.dirty ? 'Earlier change saved. Your newer draft is retained; review and save it.' : saved.rule.enabled && saved.rule.candidateVersion ? 'Candidate saved. The active version continues until this candidate is activated.' : 'Version saved. Preview before activation.';
+          } else saved.status = request.kind === 'activate' ? 'Automation activated.' : request.kind === 'disable' ? 'Automation disabled. Pending effects will stop.' : 'Metadata saved.';
         }
-        preview = null; seq.preview++;
+        settle(saved);
       } catch (error) {
-        if (!current(request.scope)) return;
-        if (!error.status || error.status >= 500) status = 'Acknowledgement was interrupted. Retry the original change before another mutation. Your newer draft is retained.';
-        else { pending = null; fail(error, request.scope); }
-      } finally { if (current(request.scope)) { inFlight = false; render(); } }
+        const saved = target(); if (!saved) return;
+        if (!error.status || error.status >= 500) { saved.status = 'Acknowledgement was interrupted. Retry the original change before another mutation. Your newer draft is retained.'; settle(saved); }
+        else if (projectId === request.scope.projectId) { saved.pending = null; settle(saved); fail(error, scope()); }
+        else if (error.status === 401) { retained.clear(); reset('Account access changed.'); deps.onAccountDenied?.(); }
+        else if (error.status === 403 || error.status === 404 && !resources.has(errorCode(error))) retained.delete(request.scope.projectId);
+        else { saved.pending = null; saved.conflict = error.status === 409; saved.status = error.message || 'Could not complete this request.'; settle(saved); }
+      }
     }
     async function mutate(kind) {
       if (!ready() || inFlight) return;
@@ -257,6 +289,7 @@
         else if (action === 'manage') { seq.detail++; clearPanels(); activationReview = null; mode = 'manage'; loadList(); }
         else if (action === 'resume') { mode = 'edit'; render(); focusControl('#auto-title'); }
         else if (action === 'create') newDraft();
+        else if (action === 'discard') discardDraft();
         else if (action === 'apply-recipe') {
           const recipe = E.RECIPES?.find(r => r.id === control.dataset.recipeId);
           if (recipe && !retainDraft()) {
@@ -332,13 +365,13 @@
       const e = R.esc, b = R.button, ctx = { ...context, taskLabels }, locked = inFlight || !!pending || conflict;
       const actorName = id => context.members?.find(person => person.uid === id)?.displayName || id || 'Not specified';
       const competingWarnings = E.detectCompetingRules ? E.detectCompetingRules(items) : [];
-      const competingBanner = competingWarnings.length ? `<div class="crm-auto-warning is-competing"><strong><svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5 14.2 13H1.8z"/><path d="M8 6.6v3.1M8 11.4h.01"/></svg> Competing Rules Warning:</strong><ul style="margin: 4px 0 0; padding-left: 18px;">${competingWarnings.map(w => `<li>${e(w.message)}</li>`).join('')}</ul></div>` : '';
+      const competingBanner = competingWarnings.length ? `<div class="crm-auto-warning is-competing"><strong><svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5 14.2 13H1.8z"/><path d="M8 6.6v3.1M8 11.4h.01"/></svg> Matching enabled automations in the loaded results:</strong><ul style="margin: 4px 0 0; padding-left: 18px;">${competingWarnings.map(w => `<li>${e(w.message)}</li>`).join('')}</ul></div>` : '';
       const recipeGallery = R.recipes(E.RECIPES, locked || hasDraftChanges());
-      const manage = `${draft ? `<p class="crm-auto-draft-notice">${hasDraftChanges() ? 'Your unsaved draft is retained.' : 'An automation is open.'} ${b('resume', 'Resume editor')}</p>` : ''}${recipeGallery}${competingBanner}<form data-auto-form="filters" class="crm-auto-fields">${R.input('Search automations', filters.query, 'name="query"', 'search', 'maxlength="200"')}${R.select('Folder', [{ value: 'all', label: 'All folders' }, { value: 'unfiled', label: 'Unfiled' }, { value: 'named', label: 'Named folder' }], filters.folderMode, 'name="folderMode"')}${R.input('Folder name', filters.folder, 'name="folder"', 'text', 'maxlength="200"')}${R.select('State', [{ value: '', label: 'All' }, { value: 'true', label: 'Enabled' }, { value: 'false', label: 'Disabled' }], filters.enabled, 'name="enabled"')}<button class="crm-btn-primary" type="submit">Find automations</button></form>${R.manageList(items, { loading, cursor, actorName, locked: locked || hasDraftChanges() })}`;
+      const manage = `${draft ? `<p class="crm-auto-draft-notice">${hasDraftChanges() ? 'Your unsaved draft is retained.' : 'An automation is open.'} ${b('resume', 'Resume editor')} ${b('discard', 'Discard draft', pending || inFlight ? 'disabled' : '')}</p>` : ''}${recipeGallery}${cursor || filters.query.trim() || filters.folderMode !== 'all' || filters.enabled ? '<p class="crm-muted">Trigger comparison covers only loaded, filtered results.</p>' : ''}${competingBanner}<form data-auto-form="filters" class="crm-auto-fields">${R.input('Search automations', filters.query, 'name="query"', 'search', 'maxlength="200"')}${R.select('Folder', [{ value: 'all', label: 'All folders' }, { value: 'unfiled', label: 'Unfiled' }, { value: 'named', label: 'Named folder' }], filters.folderMode, 'name="folderMode"')}${R.input('Folder name', filters.folder, 'name="folder"', 'text', 'maxlength="200"')}${R.select('State', [{ value: '', label: 'All' }, { value: 'true', label: 'Enabled' }, { value: 'false', label: 'Disabled' }], filters.enabled, 'name="enabled"')}<button class="crm-btn-primary" type="submit">Find automations</button></form>${R.manageList(items, { loading, cursor, actorName, locked: locked || hasDraftChanges() })}`;
       let editor = '';
       if (draft) {
         const errors = validation();
-        editor = `${R.versionSummary(rule, version, dirty)}<div class="crm-auto-fields">${R.input('Automation title', draft.title, 'id="auto-title" data-auto-meta="title"', 'text', 'maxlength="200"')}${R.input('Folder', draft.folder, 'id="auto-folder" data-auto-meta="folder"', 'text', 'maxlength="200"')}<label>Run as Owner<select class="crm-input" id="auto-actor" data-auto-meta="actorUid"${!rule ? ' disabled' : ''}>${R.options((context.members || []).filter(person => person.role === 'Owner').map(person => ({ value: person.uid, label: person.displayName || person.email || person.uid })), draft.actorUid)}</select><span class="crm-muted">Changing the actor creates a new version when saved.</span></label></div><nav class="crm-auto-representations" aria-label="Editor representation">${b('recipe', 'Recipe', `aria-pressed="${representation === 'recipe'}"`)}${b('blocks', 'Connected blocks', `aria-pressed="${representation === 'blocks'}"`)}</nav>${diagnostics.map(item => `<p class="crm-auto-warning">${e(item.message || 'A saved reference needs repair.')}</p>`).join('')}${R.definition(draft.definition, ctx, representation)}${errors.length ? `<details class="crm-auto-validation"><summary>${errors.length} items to review before saving</summary><ul>${errors.map(error => `<li>${e(error)}</li>`).join('')}</ul></details>` : ''}<div class="crm-auto-actions">${b('save', rule ? 'Save new version' : 'Save automation', locked || errors.length ? 'disabled' : '')}${rule ? b('metadata', 'Save title / folder', locked ? 'disabled' : '') : ''}${b('sample-search', sample ? `Sample: ${sample.title}` : 'Choose sample task')}${b('preview', 'Preview effects', dirty || !sample || !draftMatchesVersion() || search?.selecting || locked ? 'disabled' : '')}${b('activate', 'Activate this version', !previewUsable() || locked ? 'disabled' : '')}${rule ? b('disable', 'Disable automation', !rule.enabled || locked ? 'disabled' : '') + b('duplicate', 'Create disabled copy', locked ? 'disabled' : '') + b('refresh-rule', 'Refresh current revision', pending || inFlight ? 'disabled' : '') + b('versions', 'Version history') + b('runs', 'Run history') : ''}</div><section data-auto-preview aria-label="Effect preview">${R.previewContext(preview, sample, previewUsable())}${R.preview(preview, ctx)}</section>`;
+        editor = `${R.versionSummary(rule, version, dirty)}<div class="crm-auto-fields">${R.input('Automation title', draft.title, 'id="auto-title" data-auto-meta="title"', 'text', 'maxlength="200"')}${R.input('Folder', draft.folder, 'id="auto-folder" data-auto-meta="folder"', 'text', 'maxlength="200"')}<label>Run as Owner<select class="crm-input" id="auto-actor" data-auto-meta="actorUid"${!rule ? ' disabled' : ''}>${R.options((context.members || []).filter(person => person.role === 'Owner').map(person => ({ value: person.uid, label: person.displayName || person.email || person.uid })), draft.actorUid)}</select><span class="crm-muted">Changing the actor creates a new version when saved.</span></label></div><nav class="crm-auto-representations" aria-label="Editor representation">${b('recipe', 'Recipe', `aria-pressed="${representation === 'recipe'}"`)}${b('blocks', 'Connected blocks', `aria-pressed="${representation === 'blocks'}"`)}</nav>${diagnostics.map(item => `<p class="crm-auto-warning">${e(item.message || 'A saved reference needs repair.')}</p>`).join('')}${R.definition(draft.definition, ctx, representation)}${errors.length ? `<details class="crm-auto-validation"><summary>${errors.length} items to review before saving</summary><ul>${errors.map(error => `<li>${e(error)}</li>`).join('')}</ul></details>` : ''}<div class="crm-auto-actions">${b('discard', 'Discard draft', pending || inFlight ? 'disabled' : '')}${b('save', rule ? 'Save new version' : 'Save automation', locked || errors.length ? 'disabled' : '')}${rule ? b('metadata', 'Save title / folder', locked ? 'disabled' : '') : ''}${b('sample-search', sample ? `Sample: ${sample.title}` : 'Choose sample task')}${b('preview', 'Preview effects', dirty || !sample || !draftMatchesVersion() || search?.selecting || locked ? 'disabled' : '')}${b('activate', 'Activate this version', !previewUsable() || locked ? 'disabled' : '')}${rule ? b('disable', 'Disable automation', !rule.enabled || locked ? 'disabled' : '') + b('duplicate', 'Create disabled copy', locked ? 'disabled' : '') + b('refresh-rule', 'Refresh current revision', pending || inFlight ? 'disabled' : '') + b('versions', 'Version history') + b('runs', 'Run history') : ''}</div><section data-auto-preview aria-label="Effect preview">${R.previewContext(preview, sample, previewUsable())}${R.preview(preview, ctx)}</section>`;
       }
       const searchUi = search ? `<section class="crm-auto-task-search" aria-label="Find task"><h4>${search.destination.sample ? 'Choose a sample task' : 'Choose target task'}</h4><form data-auto-form="task-search">${R.input('Task title', search.query, 'name="query"', 'search', 'maxlength="200"')}<button class="crm-btn-primary" type="submit">Search tasks</button></form><ul>${search.items.map(task => `<li>${e(task.title)} ${b('choose-task', 'Choose', `data-task-id="${e(task.id)}"`)}</li>`).join('') || '<li>Search to find a current task.</li>'}</ul>${search.cursor ? b('more-tasks', 'Load more tasks') : ''}${b('close-search', 'Close task search')}</section>` : '';
       let historyUi = '';
@@ -363,7 +396,7 @@
         if (target && !target.disabled) { target.focus({ preventScroll: true }); if (focus.start !== null && focus.start !== undefined && typeof target.setSelectionRange === 'function') { try { target.setSelectionRange(focus.start, focus.end); } catch (_) { /* Native selects have no caret. */ } } }
       }
     }
-    return { init, setAccount, setSelection, setContext, show, newDraft, loadList, setFilters, openRule, updateDraft, editDefinition, setRepresentation, mutate, retryMutation, generatePreview, beginSearch, searchTasks, selectSearchTask, loadHistory, showRun, acceptDraft, getState: state };
+    return { init, setAccount, setSelection, setContext, show, newDraft, discardDraft, loadList, setFilters, openRule, updateDraft, editDefinition, setRepresentation, mutate, retryMutation, generatePreview, beginSearch, searchTasks, selectSearchTask, loadHistory, showRun, acceptDraft, getState: state };
   }
   globalScope.CrmAutomations = { createController };
 })(typeof window !== 'undefined' ? window : globalThis);

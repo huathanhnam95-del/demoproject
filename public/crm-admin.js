@@ -134,6 +134,8 @@
   let projectsAccessController = null;
   let projectsBoardController = null;
   let projectsWorkspaceController = null;
+  let projectsRouteGeneration = 0;
+  let activateProjectsWorkspace = null;
   let studentFinanceController = null;
   let liveDeliveryController = null;
   let studentModalController = null;
@@ -1338,6 +1340,29 @@
 
   async function init() {
     let warmCached = readCrmAuthSession();
+    // A reload keeps the page the person was on. Administrators learn Projects
+    // access in the background, so remember the requested route and return to
+    // it once access is confirmed instead of settling on the fallback panel.
+    const initialHash = window.location.hash || '';
+    const initialRequestsProjects = normalizeRouteToken(initialHash.replace(/^#/, '').split('/')[0]) === 'projects';
+    let initialRouteApplied = false;
+    let hashAfterInitialRoute = '';
+    const reconcileProjectsRoute = () => {
+      if (!initialRouteApplied) return;
+      if (state.projectsEnabled && initialRequestsProjects && state.main !== 'projects' && window.location.hash === hashAfterInitialRoute) {
+        try { window.history.replaceState(null, '', initialHash); } catch (_) { return; }
+        applyRouteFromHash();
+        render();
+      } else if (!state.projectsEnabled && state.main === 'projects') {
+        applyRouteFromHash();
+        render();
+      }
+    };
+    // Until routing settles, do not flash the Dashboard for another route.
+    const initialMain = normalizeRouteToken(initialHash.replace(/^#/, '').split('/')[0]);
+    if (initialMain && initialMain !== DEFAULT_ROUTE.main) {
+      document.querySelector('[data-panel="dashboard"]')?.style.setProperty('display', 'none', 'important');
+    }
 
     if (warmCached) {
       state.accessMode = warmCached.accessMode || (warmCached.adminOk ? 'admin' : (warmCached.teacherOk ? 'teacher' : (warmCached.projectsAuthorized ? 'projects' : 'unknown')));
@@ -1347,6 +1372,12 @@
       if (warmCached.projectsAuthorized && elements.projectsNavContainer) {
         state.projectsAuthorized = true;
         elements.projectsNavContainer.style.display = '';
+      }
+      // The server still authorizes every Projects request; this only lets a
+      // returning administrator's reload route straight back to Projects.
+      if (state.accessMode === 'admin' && warmCached.projectsEnabled === true) {
+        state.projectsEnabled = true;
+        if (elements.projectsNavContainer) elements.projectsNavContainer.style.display = '';
       }
       updateAdminCapabilityNav();
       hideGate();
@@ -1383,6 +1414,7 @@
 
     if (warmCached && warmCached.uid && warmCached.uid !== user.uid) {
       clearCrmAuthSession();
+      state.projectsEnabled = false;
       showGateMessage('Checking CRM permissions…', 'Validating access…');
     } else if (!warmCached) {
       showGateMessage('Checking CRM permissions…', 'Validating access…');
@@ -1408,6 +1440,7 @@
         teacherOk: false,
         capabilities: adminCapabilities,
         projectsAuthorized: Boolean(state.projectsAuthorized || warmCached?.projectsAuthorized),
+        projectsEnabled: warmCached?.uid === user.uid && warmCached?.projectsEnabled === true,
         timestamp: Date.now()
       });
 
@@ -1429,7 +1462,9 @@
         }
         updateCrmAuthSession((cur) => {
           cur.projectsAuthorized = projectsOk;
+          cur.projectsEnabled = state.projectsEnabled;
         });
+        reconcileProjectsRoute();
       }).catch((err) => {
         console.warn('[CRM Admin] Background fetchProjectsAccessSummary error:', err);
       });
@@ -1881,8 +1916,89 @@
     if (staffWorkspaceController && typeof staffWorkspaceController.init === 'function') {
       staffWorkspaceController.init();
     }
+    let projectsAssistantTimer = null;
+    let projectsNotificationNavigation = 0, projectsNotificationSelection = '';
+    let projectsWorkspaceInitialized = false, projectsInitializationStarted = false, projectsActivationPending = null;
+    function onProjectsRendered(selection) {
+          if (projectsAccountInvalidated || (window.firebase?.auth?.().currentUser?.uid || user.uid) !== user.uid) return;
+          const deniedIds = new Set(selection.contentDeniedProjectIds || []);
+          const budgetIdentity = selection.accessSummary?.identity;
+          const budgetEligible = budgetIdentity?.uid === user.uid && budgetIdentity?.accountStatus === 'active'
+            && budgetIdentity?.moduleGrants?.projects === true
+            && (selection.accessSummary?.projects || []).some(project => !deniedIds.has(project.id));
+          window.projectsBudgetController?.setEligible(budgetEligible);
+          const selectedContentDenied = deniedIds.has(selection.selectedProjectId);
+          const eligibleProjects = (selection.projects || []).filter((project) => !deniedIds.has(project.id) && (project.lifecycle || 'active') === 'active');
+          let nextContentProjectId = selectedContentDenied ? '' : (selection.selectedProjectId || '');
+          if (!nextContentProjectId && eligibleProjects.length > 0) {
+            const memberProjectIds = new Set((selection.accessSummary?.projects || []).map(p => p.id));
+            const candidate = eligibleProjects.find(p => memberProjectIds.has(p.id)) || eligibleProjects[0];
+            nextContentProjectId = candidate ? candidate.id : '';
+          }
+          const nextSelectedProject = eligibleProjects.find(p => p.id === nextContentProjectId) || null;
+          const contentSelection = {
+            ...selection,
+            projects: eligibleProjects,
+            selectedProjectId: nextContentProjectId,
+            selectedProject: nextSelectedProject
+          };
+          if (projectsNotificationSelection !== contentSelection.selectedProjectId) { projectsNotificationSelection = contentSelection.selectedProjectId; projectsNotificationNavigation++; }
+          window.projectsNotificationsController?.setProjects?.(contentSelection.projects, [...deniedIds]);
+          window.projectsAutomationsController?.setSelection?.(contentSelection.selectedProjectId || '');
+          projectsBoardController?.setProjects?.(contentSelection);
+          projectsWorkspaceController?.setSelection?.(contentSelection);
+          window.projectsAutomationsController?.setContext?.(projectsBoardController?.getState?.() || {});
+          window.projectsViewsController?.setProject?.(contentSelection.selectedProjectId || '');
+          if (contentSelection.projects.length) queueMicrotask(() => window.projectsViewsController?.startNavigation?.());
+    }
+    const projectsAccessApiFetchJson = async (path, options) => {
+      const actorUid = window.firebase?.auth?.().currentUser?.uid || user.uid;
+      try { return await apiFetchJson(path, options); }
+      catch (error) {
+        if (actorUid === (window.firebase?.auth?.().currentUser?.uid || user.uid) && path === '/api/projects/access' && [401, 403].includes(error?.status)) window.projectsBudgetController?.setEligible(false);
+        throw error;
+      }
+    };
+    const projectsDocumentUid = String(user.uid || '');
+    let projectsAccountInvalidated = false;
+    const preloadProjectsOnIntent = () => {
+      if (projectsAccountInvalidated || !state.projectsEnabled || String(window.firebase?.auth?.().currentUser?.uid || '') !== projectsDocumentUid) return;
+      window.CrmProjectsLoader?.preload?.();
+    };
+    elements.navItems.filter(button => button.dataset.main === 'projects').forEach(button => {
+      button.addEventListener('mouseenter', preloadProjectsOnIntent);
+      button.addEventListener('focus', preloadProjectsOnIntent);
+    });
+    projectsAccessController = window.CrmProjectsAccess && typeof window.CrmProjectsAccess.createController === 'function'
+      ? window.CrmProjectsAccess.createController({
+        elements,
+        showToast,
+         apiFetchJson: projectsAccessApiFetchJson,
+         escapeHtml,
+         getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
+         adminMode: state.accessMode === 'admin',
+        accessSummary: state.projectsAccessSummary,
+        onProjectsRendered
+      })
+      : null;
+    if (projectsAccessController && typeof projectsAccessController.init === 'function') {
+      projectsAccessController.init();
+    }
+    function initializeProjectsWorkspace() {
+      projectsInitializationStarted = true;
     window.projectsAssistantController?.dispose?.();
     window.projectsAssistantController = null;
+    let projectsRecoverySnapshot = null;
+    function syncProjectsRecoveryContext(snapshot) {
+      if (!snapshot?.project || !snapshot.authorizationReady || snapshot.mutationPending) return;
+      const previous = projectsRecoverySnapshot;
+      const revision = JSON.stringify([snapshot.project.revision, snapshot.project.structureRevision, snapshot.project.schemaRevision]);
+      projectsRecoverySnapshot = { actorUid: snapshot.actorUid, projectId: snapshot.project.id, revision, tasks: snapshot.tasks };
+      if (previous?.actorUid === snapshot.actorUid && previous.projectId === snapshot.project.id &&
+          (previous.revision !== revision || previous.tasks !== snapshot.tasks)) {
+        window.projectsRecoveryController?.invalidate?.(snapshot.project.id);
+      }
+    }
     projectsBoardController = window.CrmProjectsBoard && typeof window.CrmProjectsBoard.createController === 'function'
       ? window.CrmProjectsBoard.createController({
         presentationV2: window.__CRM_PRESENTATION_CONFIG__?.projectsV2 === true,
@@ -1892,7 +2008,7 @@
         showToast,
         adminMode: state.accessMode === 'admin',
         getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
-        onContextChanged: (snapshot) => { projectsWorkspaceController?.setContext?.(snapshot); window.projectsAutomationsController?.setContext?.(snapshot); syncProjectsAssistantContext(snapshot); },
+        onContextChanged: (snapshot) => { projectsWorkspaceController?.setContext?.(snapshot); window.projectsAutomationsController?.setContext?.(snapshot); syncProjectsAssistantContext(snapshot); syncProjectsRecoveryContext(snapshot); },
         onFieldSaveEvent: event => projectsWorkspaceController?.onFieldSaveEvent?.(event),
         onFieldSaveScopeChanged: scope => projectsWorkspaceController?.setFieldSaveScope?.(scope),
         onTaskSelection: (task) => { window.projectsViewsController?.setTask?.(task); window.projectsViewsController?.syncBoard?.(); },
@@ -1945,12 +2061,14 @@
     window.projectsRemoteObserver?.dispose?.();
     window.projectsRemoteObserver = window.CrmProjectsRemoteObserver?.createController({
       apiFetchJson,
+      isActive: () => state.main === 'projects',
       getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
       onDenied: projectId => projectsBoardController?.invalidateAccess?.(projectId),
       apply: async change => {
         if (await projectsBoardController?.applyRemote?.(change) === false) return false;
         if (!change.isCurrent() || await window.projectsDiscussionController?.applyRemote?.(change) === false) return false;
         if (await window.projectsViewsController?.reconcileRemote?.(change) === false) return false;
+        if (change.isCurrent()) window.projectsRecoveryController?.invalidate?.(projectsBoardController?.getState?.()?.project?.id);
         return change.isCurrent();
       }
     });
@@ -1967,7 +2085,7 @@
       window.projectsRecoveryController.init();
     }
     window.projectsViewsController?.dispose?.();
-    window.projectsViewsController = window.CrmProjectsViews?.createController({ apiFetchJson, board: projectsBoardController, selectProject: id => projectsAccessController?.selectProject?.(id), openStudentLink: async (recordId, isCurrent) => {
+    window.projectsViewsController = window.CrmProjectsViews?.createController({ apiFetchJson, board: projectsBoardController, isActive: () => state.main === 'projects', getRouteGeneration: () => projectsRouteGeneration, selectProject: id => projectsAccessController?.selectProject?.(id), openStudentLink: async (recordId, isCurrent) => {
       const linkedUserUid = window.firebase?.auth?.().currentUser?.uid || user.uid;
       if (state.accessMode !== 'admin' || !isCurrent()) return;
       const result = await apiFetchJson(`/api/admin/students/${encodeURIComponent(recordId)}`);
@@ -2006,12 +2124,13 @@
     function projectsAssistantReady() {
       const board = projectsBoardController?.getSnapshot?.() || {};
       const actorUid = window.firebase?.auth?.().currentUser?.uid || '';
-      return !!actorUid && board.actorUid === actorUid && board.authorizationReady === true && !!board.project?.id;
+      return state.main === 'projects' && !!actorUid && board.actorUid === actorUid && board.authorizationReady === true && !!board.project?.id;
     }
     let projectsAssistantFingerprint = '';
     function syncProjectsAssistantContext(snapshot) {
       const controller = window.projectsAssistantController;
       if (!controller) return;
+      controller.setActive?.(state.main === 'projects');
       controller.syncIdentity();
       controller.setContext(projectsAssistantHints());
       if (snapshot?.project) {
@@ -2032,18 +2151,10 @@
       onUsageChanged: () => window.projectsBudgetController?.refresh?.(),
       onAutomationDraft: definition => window.projectsAutomationsController?.acceptDraft?.({ actorUid: user.uid, projectId: projectsAssistantHints().projectId, definition }, { newAutomation: true })
     });
+    window.projectsAssistantController?.setActive?.(state.main === 'projects');
     window.projectsAssistantController?.init();
-    const projectsAssistantTimer = setInterval(() => syncProjectsAssistantContext(), 1000);
+    projectsAssistantTimer = setInterval(() => { if (state.main === 'projects') syncProjectsAssistantContext(); }, 1000);
     window.addEventListener('pagehide', () => { clearInterval(projectsAssistantTimer); window.projectsAssistantController?.dispose?.(); }, { once: true });
-    const projectsAccessApiFetchJson = async (path, options) => {
-      const actorUid = window.firebase?.auth?.().currentUser?.uid || user.uid;
-      try { return await apiFetchJson(path, options); }
-      catch (error) {
-        if (actorUid === (window.firebase?.auth?.().currentUser?.uid || user.uid) && path === '/api/projects/access' && [401, 403].includes(error?.status)) window.projectsBudgetController?.setEligible(false);
-        throw error;
-      }
-    };
-    let projectsNotificationNavigation = 0, projectsNotificationSelection = '';
     window.projectsNotificationsController = window.CrmProjectsNotifications?.createController({
       root: document.getElementById('projects-notifications'), apiFetchJson,
       getNavigationGeneration: () => projectsNotificationNavigation,
@@ -2061,62 +2172,16 @@
         const result = await apiFetchJson(`/api/projects/${encodeURIComponent(target.projectId)}/tasks/${encodeURIComponent(target.taskId)}`);
         if (!inProject()) return;
         if (!result.task) throw new Error('This task is no longer available.');
+        document.getElementById('projects-v2-table')?.click();
         projectsBoardController?.selectTask?.(result.task);
         if (target.messageId) {
+          projectsBoardController?.activateDetailTab?.('updates');
           await window.projectsDiscussionController?.focusMessage?.(target.messageId, { isCurrent: inProject });
         }
       }
     });
     window.projectsNotificationsController?.init();
     window.projectsNotificationsController?.setAccount(user.uid);
-    const projectsDocumentUid = String(user.uid || '');
-    let projectsAccountInvalidated = false;
-    projectsAccessController = window.CrmProjectsAccess && typeof window.CrmProjectsAccess.createController === 'function'
-      ? window.CrmProjectsAccess.createController({
-        elements,
-        showToast,
-         apiFetchJson: projectsAccessApiFetchJson,
-         escapeHtml,
-         getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
-         adminMode: state.accessMode === 'admin',
-        accessSummary: state.projectsAccessSummary,
-        onProjectsRendered: (selection) => {
-          if (projectsAccountInvalidated || (window.firebase?.auth?.().currentUser?.uid || user.uid) !== user.uid) return;
-          const deniedIds = new Set(selection.contentDeniedProjectIds || []);
-          const budgetIdentity = selection.accessSummary?.identity;
-          const budgetEligible = budgetIdentity?.uid === user.uid && budgetIdentity?.accountStatus === 'active'
-            && budgetIdentity?.moduleGrants?.projects === true
-            && (selection.accessSummary?.projects || []).some(project => !deniedIds.has(project.id));
-          window.projectsBudgetController?.setEligible(budgetEligible);
-          const selectedContentDenied = deniedIds.has(selection.selectedProjectId);
-          const eligibleProjects = (selection.projects || []).filter((project) => !deniedIds.has(project.id) && (project.lifecycle || 'active') === 'active');
-          let nextContentProjectId = selectedContentDenied ? '' : (selection.selectedProjectId || '');
-          if (!nextContentProjectId && eligibleProjects.length > 0) {
-            const memberProjectIds = new Set((selection.accessSummary?.projects || []).map(p => p.id));
-            const candidate = eligibleProjects.find(p => memberProjectIds.has(p.id)) || eligibleProjects[0];
-            nextContentProjectId = candidate ? candidate.id : '';
-          }
-          const nextSelectedProject = eligibleProjects.find(p => p.id === nextContentProjectId) || null;
-          const contentSelection = {
-            ...selection,
-            projects: eligibleProjects,
-            selectedProjectId: nextContentProjectId,
-            selectedProject: nextSelectedProject
-          };
-          if (projectsNotificationSelection !== contentSelection.selectedProjectId) { projectsNotificationSelection = contentSelection.selectedProjectId; projectsNotificationNavigation++; }
-          window.projectsNotificationsController?.setProjects?.(contentSelection.projects, [...deniedIds]);
-          window.projectsAutomationsController?.setSelection?.(contentSelection.selectedProjectId || '');
-          projectsBoardController?.setProjects?.(contentSelection);
-          projectsWorkspaceController?.setSelection?.(contentSelection);
-          window.projectsAutomationsController?.setContext?.(projectsBoardController?.getState?.() || {});
-          window.projectsViewsController?.setProject?.(contentSelection.selectedProjectId || '');
-          if (contentSelection.projects.length) queueMicrotask(() => window.projectsViewsController?.startNavigation?.());
-        }
-      })
-      : null;
-    if (projectsAccessController && typeof projectsAccessController.init === 'function') {
-      projectsAccessController.init();
-    }
     projectsWorkspaceController?.dispose?.();
     projectsWorkspaceController = window.CrmProjectsPresentationV2.createController({
       config: window.__CRM_PRESENTATION_CONFIG__,
@@ -2129,13 +2194,89 @@
         ...options,
         getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
         selectProject: projectId => projectsAccessController?.selectProject?.(projectId),
-        onManageAccess: () => { window.location.hash = '#staff'; }
+        onManageAccess: () => { window.location.hash = '#staff'; },
+        onSettingsOpen: name => projectsAccessController?.refreshSettings?.(name)
       })
     });
     projectsWorkspaceController?.init?.();
+    projectsWorkspaceController?.setRouteActive?.(state.main === 'projects');
     projectsWorkspaceController?.setFieldSaveScope?.(projectsBoardController?.getFieldSaveScope?.());
     projectsWorkspaceController?.setSelection?.(projectsAccessController?.getSelection?.());
     projectsWorkspaceController?.setContext?.(projectsBoardController?.getState?.());
+    // Controller scopes are document-local.
+        onProjectsRendered(projectsAccessController.getSelection());
+        projectsWorkspaceInitialized = true;
+    }
+    let projectsLoadStatus = null;
+    let projectsLoadNeedsReload = false;
+    const projectsLoadingChildren = new Map();
+    function clearProjectsLoadStatus() {
+      for (const [child, previous] of projectsLoadingChildren) {
+        child.inert = previous.inert;
+        child.style.visibility = previous.visibility;
+      }
+      projectsLoadingChildren.clear();
+      document.querySelector('[data-panel="projects"]')?.removeAttribute('aria-busy');
+      projectsLoadStatus?.remove(); projectsLoadStatus = null;
+    }
+    function showProjectsLoadStatus(failed = false, reloadRequired = false) {
+      const panel = document.querySelector('[data-panel="projects"]');
+      if (!panel) return;
+      projectsLoadNeedsReload = projectsLoadNeedsReload || reloadRequired;
+      panel.setAttribute('aria-busy', String(!failed));
+      for (const child of panel.children) {
+        if (child === projectsLoadStatus || projectsLoadingChildren.has(child)) continue;
+        projectsLoadingChildren.set(child, { inert: child.inert, visibility: child.style.visibility });
+        child.inert = true;
+        child.style.visibility = 'hidden';
+      }
+      if (!projectsLoadStatus) {
+        projectsLoadStatus = document.createElement('div');
+        projectsLoadStatus.setAttribute('role', 'status');
+        panel.prepend(projectsLoadStatus);
+      }
+      projectsLoadStatus.replaceChildren();
+      projectsLoadStatus.textContent = failed ? (projectsLoadNeedsReload ? 'Projects could not finish loading. Reload to try again. ' : 'Projects could not load. ') : 'Loading Projects…';
+      if (failed) {
+        const retry = document.createElement('button');
+        retry.type = 'button'; retry.textContent = 'Retry';
+        retry.addEventListener('click', () => {
+          // A controller failure may have installed listeners. Restart the document
+          // instead of creating a second controller over partially initialized UI.
+          if (projectsLoadNeedsReload || (projectsInitializationStarted && !projectsWorkspaceInitialized)) window.location.reload();
+          else activateProjectsWorkspace();
+        });
+        projectsLoadStatus.appendChild(retry);
+      }
+    }
+    activateProjectsWorkspace = () => {
+      if (projectsAccountInvalidated || !state.projectsEnabled || state.main !== 'projects') return Promise.resolve();
+      if (projectsActivationPending) return projectsActivationPending;
+      if (projectsInitializationStarted && !projectsWorkspaceInitialized) return Promise.resolve();
+      if (projectsWorkspaceInitialized) {
+        clearProjectsLoadStatus();
+        return projectsAccessController.refresh().catch(error => console.error('[CRM Admin] Projects access refresh failed:', error));
+      }
+      const actorUid = window.firebase?.auth?.().currentUser?.uid;
+      const requestedRoute = state.main;
+      showProjectsLoadStatus();
+      projectsActivationPending = (async () => {
+        try {
+          await window.CrmProjectsLoader.ensure();
+          if (projectsAccountInvalidated || actorUid !== projectsDocumentUid || window.firebase?.auth?.().currentUser?.uid !== actorUid || !state.projectsEnabled || state.main !== requestedRoute) return;
+          initializeProjectsWorkspace();
+          clearProjectsLoadStatus();
+          await projectsAccessController.refresh().catch(error => {
+            console.error('[CRM Admin] Projects access refresh failed:', error);
+            showToast(error?.message || 'Could not refresh Projects.', 'error');
+          });
+        } catch (error) {
+          console.error('[CRM Admin] Projects workspace load failed:', error);
+          if (!projectsAccountInvalidated && state.main === 'projects') showProjectsLoadStatus(true, error.reloadRequired === true);
+        } finally { projectsActivationPending = null; }
+      })();
+      return projectsActivationPending;
+    };
     // Controller scopes are document-local. Re-enter the existing access gate
     // after an account change instead of retaining the previous account's roles.
     firebase.auth().onAuthStateChanged((nextUser) => {
@@ -2177,6 +2318,9 @@
     }
     applyRouteFromHash({ initial: true });
     render();
+    initialRouteApplied = true;
+    hashAfterInitialRoute = window.location.hash;
+    reconcileProjectsRoute();
 
     if (state.accessMode === 'admin') {
       refreshStudentLists().catch((e) => {
@@ -6062,7 +6206,11 @@
     // Panels
     const activePanel = state.sub ? `${state.main}/${state.sub}` : state.main;
     const routeChanged = lastRenderedPanel !== activePanel;
+    if (routeChanged) projectsRouteGeneration++;
+    projectsWorkspaceController?.setRouteActive?.(activePanel === 'projects');
+    window.projectsAssistantController?.setActive?.(activePanel === 'projects');
     if (activePanel !== 'projects') projectsWorkspaceController?.closeForNavigation?.();
+    else if (routeChanged) window.projectsRemoteObserver?.resume?.();
     if (lastRenderedPanel === 'dashboard' && activePanel !== 'dashboard') {
       dashboardController?.dispose?.();
     }
@@ -6161,9 +6309,7 @@
     }
 
     if (activePanel === 'projects' && projectsAccessController) {
-      projectsAccessController.refresh().catch((error) => {
-        console.error('[CRM Admin] Projects access refresh failed:', error);
-      });
+      activateProjectsWorkspace?.();
     }
 
     if (activePanel === 'recycle') {

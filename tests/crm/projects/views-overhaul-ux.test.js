@@ -322,7 +322,7 @@ test('gantt timeline handles zoom toggles, milestone markers, and safe empty dat
     assert.match(emptyHarness.el('projects-view-content').innerHTML, /No dated tasks on this page/);
 });
 
-test('calendar view navigates months via data-cal-nav and renders weekend styles', async () => {
+test('calendar view navigates months and waits for organization rules before shading days', async () => {
     const h = createViewsHarness();
     await flush();
 
@@ -334,14 +334,14 @@ test('calendar view navigates months via data-cal-nav and renders weekend styles
     assert.match(content, /data-cal-nav="-1"/);
     assert.match(content, /data-cal-nav="1"/);
     assert.match(content, /data-cal-nav="today"/);
-    assert.match(content, /crm-projects-calendar-day off/, 'Weekend days should have .off class');
+    assert.doesNotMatch(content, /crm-projects-calendar-day off/, 'Weekends alone must not imply organization non-working days');
 
     h.el('projects-view-content').listeners.click({
         target: { closest: (sel) => sel.includes('data-cal-nav') ? { dataset: { calNav: 'today' } } : null }
     });
     await flush();
 
-    const expectedMonth = new Date().toISOString().slice(0, 7);
+    const expectedMonth = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit' }).format(new Date());
     const monthInput = h.el('projects-view-content').innerHTML;
     assert.match(monthInput, new RegExp(`value="${expectedMonth}"`));
 });
@@ -358,8 +358,8 @@ test('charts view renders SVG donut with correct percentage and active leaf bars
     assert.match(content, /<svg viewBox="0 0 140 140"/);
     assert.match(content, /40%/, 'Should render 40% complete');
     assert.match(content, /4 of 10/, 'Should render 4 of 10 active leaf tasks');
-    assert.match(content, /Active leaves by status/);
-    assert.match(content, /Active leaves by accountable owner/);
+    assert.match(content, /Tasks by status/);
+    assert.match(content, /Tasks by owner/);
 });
 
 test('notifications controller synchronizes #projects-notifications-badge count', async () => {
@@ -521,10 +521,10 @@ test('charts view honors response.project.statusLabels and handles zero active l
 
     const content = h.el('projects-view-content').innerHTML;
     assert.match(content, /crm-projects-charts-grid/, 'Charts grid should render');
-    assert.match(content, /Active leaf completion/, 'Completion donut should render');
+    assert.match(content, /Completion/, 'Completion donut should render');
 });
 
-test('gantt view renders dedicated gantt chart with proper filters cluster and supports gantt/timeline aliases', async () => {
+test('gantt view renders the chart with zoom only (filters are the shared toolbar Filter) and supports gantt/timeline aliases', async () => {
     const h = createViewsHarness();
     await flush();
 
@@ -535,13 +535,9 @@ test('gantt view renders dedicated gantt chart with proper filters cluster and s
 
     const content = h.el('projects-view-content').innerHTML;
     assert.match(content, /crm-projects-gantt-tools/, 'Gantt tools should be rendered');
-    assert.match(content, /crm-projects-gantt-filter-cluster/, 'Gantt filter cluster should be rendered');
-    assert.match(content, /data-gantt-filter="status"/, 'Status filter should exist');
-    assert.match(content, /data-gantt-filter="sectionId"/, 'Section filter should exist');
-    assert.match(content, /data-gantt-filter="ownerUid"/, 'Owner filter should exist');
-    assert.match(content, /data-gantt-filter="assigneeUid"/, 'Assignee filter should exist');
-    assert.match(content, /data-gantt-filter="fromDate"/, 'From date filter should exist');
-    assert.match(content, /data-gantt-filter="toDate"/, 'To date filter should exist');
+    // One shared Filter serves every view; Gantt no longer repeats its own copy.
+    assert.doesNotMatch(content, /crm-projects-gantt-filter-cluster|data-gantt-filter=/, 'Gantt must not duplicate the shared filters');
+    assert.match(content, /data-gantt-zoom="weeks"/, 'Zoom controls should exist');
     assert.match(content, /crm-projects-gantt-axis/, 'Gantt axis should be rendered for dated tasks');
     assert.match(content, /crm-projects-gantt-legend/, 'Gantt legend should be rendered');
 
@@ -575,34 +571,6 @@ test('gantt view completely suppresses chart layout when data is empty and avoid
     assert.equal(emptyHarness.el('projects-view-content').innerHTML, '', 'Timeline alias on empty data must also suppress chart completely');
 });
 
-test('gantt view filter interactions update filters, board state, and clear filters correctly', async () => {
-    const h = createViewsHarness();
-    await flush();
-
-    h.el('projects-view-tabs').listeners.click({
-        target: { closest: () => ({ dataset: { view: 'gantt' } }) }
-    });
-    await flush();
-
-    await h.el('projects-view-content').listeners.change({
-        target: {
-            dataset: { ganttFilter: 'status' },
-            value: 'done'
-        }
-    });
-    await flush();
-
-    assert.equal(h.controller.getState().filters.status, 'done', 'Filter status should be updated to done');
-
-    h.el('projects-view-content').listeners.click({
-        target: {
-            closest: (sel) => sel.includes('data-gantt-action="clear-filters"') ? { dataset: { ganttAction: 'clear-filters' } } : null
-        }
-    });
-    await flush();
-
-    assert.equal(h.controller.getState().filters.status, undefined, 'Clear filters should reset filter status');
-});
 
 test('gantt view with only undated tasks suppresses chart axis and tracks but renders filters and undated list', async () => {
     const h = createViewsHarness({
@@ -620,7 +588,6 @@ test('gantt view with only undated tasks suppresses chart axis and tracks but re
 
     const content = h.el('projects-view-content').innerHTML;
     assert.match(content, /crm-projects-gantt-tools/, 'Gantt tools should be rendered even when all tasks are undated');
-    assert.match(content, /crm-projects-gantt-filter-cluster/, 'Gantt filter cluster should be rendered');
     assert.doesNotMatch(content, /crm-projects-gantt-axis/, 'No chart axis should render when there are no dated tasks');
     assert.doesNotMatch(content, /crm-projects-gantt-legend/, 'No chart legend should render when there are no dated tasks');
     assert.doesNotMatch(content, /class="crm-projects-gantt-bar"/, 'No chart bars should render');
@@ -643,16 +610,12 @@ test('gantt view with active filters matching 0 tasks retains filter toolbar and
     h.tasks.length = 0;
 
     // Set filter to something that has 0 matches
-    await h.el('projects-view-content').listeners.change({
-        target: {
-            dataset: { ganttFilter: 'status' },
-            value: 'blocked'
-        }
-    });
+    // The shared toolbar Filter drives every view.
+    await h.controller.applyFilters({ status: 'blocked' });
     await flush();
 
     const content = h.el('projects-view-content').innerHTML;
-    assert.match(content, /crm-projects-gantt-tools/, 'Filter tools must stay visible when active filters yield 0 results');
+    assert.match(content, /crm-projects-gantt-tools/, 'Zoom tools must stay visible when active filters yield 0 results');
     assert.match(content, /data-gantt-action="clear-filters"/, 'Reset filters button must be available');
     assert.match(content, /No tasks match the active filters/, 'Helpful empty filter notice must be displayed');
     assert.doesNotMatch(content, /crm-projects-gantt-axis/, 'No chart axis on 0 matches');
@@ -670,46 +633,6 @@ test('gantt view with active filters matching 0 tasks retains filter toolbar and
     assert.match(h.el('projects-view-content').innerHTML, /crm-projects-gantt-axis/, 'Chart axis returns after resetting filters');
 });
 
-test('gantt view date filter clamps inverted date ranges to prevent API errors and validates date format', async () => {
-    const h = createViewsHarness();
-    await flush();
-
-    h.el('projects-view-tabs').listeners.click({
-        target: { closest: () => ({ dataset: { view: 'gantt' } }) }
-    });
-    await flush();
-
-    // First set toDate
-    await h.el('projects-view-content').listeners.change({
-        target: {
-            dataset: { ganttFilter: 'toDate' },
-            value: '2026-09-10'
-        }
-    });
-    await flush();
-    assert.equal(h.controller.getState().filters.toDate, '2026-09-10');
-
-    // Now set fromDate after toDate -> should clamp toDate to 2026-09-20
-    await h.el('projects-view-content').listeners.change({
-        target: {
-            dataset: { ganttFilter: 'fromDate' },
-            value: '2026-09-20'
-        }
-    });
-    await flush();
-    assert.equal(h.controller.getState().filters.fromDate, '2026-09-20');
-    assert.equal(h.controller.getState().filters.toDate, '2026-09-20', 'toDate should be clamped to fromDate when inverted');
-
-    // Invalid date format should be discarded
-    await h.el('projects-view-content').listeners.change({
-        target: {
-            dataset: { ganttFilter: 'fromDate' },
-            value: 'not-a-valid-date'
-        }
-    });
-    await flush();
-    assert.equal(h.controller.getState().filters.fromDate, undefined, 'Corrupt fromDate value should be removed from filters');
-});
 
 test('gantt view renders dependency connector line for tasks with predecessorTaskIds', async () => {
     const h = createViewsHarness({

@@ -30,7 +30,12 @@
         }
         const widths = Object.create(null);
         all.forEach(c => { const value = valid.widths?.[c.key]; widths[c.key] = typeof value === 'number' && Number.isFinite(value) ? Math.round(Math.max(c.min, Math.min(c.max, value))) : c.width; });
-        return { version: 1, order: ['taskTitle', ...order, ...all.map(c => c.key).filter(key => key !== 'taskTitle' && !order.includes(key))], hidden: [...new Set((Array.isArray(valid.hidden) ? valid.hidden : []).filter(key => key !== 'taskTitle' && keys.has(key)))], widths };
+        const combined = ['taskTitle', ...order, ...all.map(c => c.key).filter(key => key !== 'taskTitle' && !order.includes(key))];
+        // Custom-column sequence belongs to the project schema, including when
+        // older width/visibility records contain a snapshot of that sequence.
+        const custom = all.filter(c => c.source).map(c => c.key);
+        let customIndex = 0;
+        return { version: 1, order: combined.map(key => key.startsWith('custom:') ? custom[customIndex++] : key), hidden: [...new Set((Array.isArray(valid.hidden) ? valid.hidden : []).filter(key => key !== 'taskTitle' && keys.has(key)))], widths };
     }
     function resolve(columns, preferences = {}) {
         const all = new Map(descriptors(columns).map(c => [c.key, c])), prefs = normalize(preferences, columns);

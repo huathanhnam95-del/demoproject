@@ -50,6 +50,8 @@ merriam-webster api key
 *.crt
 
 # Temporary files
+# Google Drive upload staging at the repository root
+/.tmp.driveupload/
 *.tmp
 *.temp
 .tempmediaStorage/

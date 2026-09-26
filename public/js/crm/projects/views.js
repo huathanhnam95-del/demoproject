@@ -23,8 +23,12 @@
         let cursor = null, previous = [], pageIndex = 0, loading = false, mutation = false, calendarSequence = 0;
         let projectLinks = [], projectLinkAccess = false, projectLinkSequence = 0, projectLookupSequence = 0, projectLinkBusy = false;
         let taskLinkSequence = 0;
-        let projectLinkLayoutKey = '';
-        let taskKey = '', datesVersion = 0, calendarMonth = new Date().toISOString().slice(0, 7), ganttZoom = 'weeks';
+        let projectLinkLayoutKey = '', projectLinksContext = '';
+        let projectLinksRequest = null;
+        const businessToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+        let taskKey = '', datesVersion = 0, calendarMonth = businessToday().slice(0, 7), ganttZoom = 'weeks';
+        const viewCache = new Map();
+        let fullQuerySummary = null;
         const calendarCache = new Map();
         let viewStale = false, listStale = false, listRefresh = null, listProjectPending = false, projectSnapshotPending = false;
         let viewRequest = null, calendarRequest = null, applyingSnapshot = false;
@@ -34,6 +38,11 @@
         let boardSignature = '', navigationGeneration = 0, restoring = false, navigationReady = false, routeProject = '';
         let dragScope = null, queryGeneration = 0, restorationSequence = 0, selectingRouteTask = false;
         const removers = [];
+        // Large boards draw a first batch per column or chart; "Show more" adds the rest.
+        const VIEW_BATCH = 40;
+        // Keep the first Kanban paint small; each column retains its Show more control.
+        const KANBAN_BATCH = 20;
+        const viewLimits = new Map();
         function listen(node, type, handler) {
             node?.addEventListener?.(type, handler);
             removers.push(() => node?.removeEventListener?.(type, handler));
@@ -48,7 +57,15 @@
         const taskCurrent = (s) => current(s) && s.taskId === task?.id && s.taskGeneration === taskGeneration;
         const base = () => `/api/projects/${encodeURIComponent(projectId)}`;
         const canWrite = () => !disposed && !!response && !!projectId && !!actorUid && uid() === actorUid && board?.getState()?.authorizationReady !== false && ['Owner', 'Editor'].includes(board?.getState()?.membership?.role || response?.membership?.role) && (!response?.membership?.role || ['Owner', 'Editor'].includes(response.membership.role)) && (response?.project?.lifecycle || 'active') === 'active';
-        const status = (message) => { if (el('projects-view-status')) el('projects-view-status').textContent = message; };
+        // Confirmations clear themselves; problems stay until replaced.
+        let statusTimer = null;
+        const status = (message) => {
+            const node = el('projects-view-status'); if (!node) return;
+            node.textContent = message;
+            if (statusTimer !== null) globalScope.clearTimeout?.(statusTimer);
+            statusTimer = null;
+            if (message && /(saved|updated)\.?$/i.test(message)) statusTimer = globalScope.setTimeout?.(() => { if (node.textContent === message) node.textContent = ''; }, 3000);
+        };
         const taskStatus = (message) => { if (el('projects-task-status')) el('projects-task-status').textContent = message; };
         function writeNavigation(push = false) {
             if (!navigationReady || restoring || disposed || !globalScope.history || !globalScope.location || uid() !== actorUid) return;
@@ -59,6 +76,7 @@
             if (url.href !== globalScope.location.href) globalScope.history[push ? 'pushState' : 'replaceState'](globalScope.history.state, '', url.href);
         }
         function invalidateViews() {
+            viewCache.clear(); fullQuerySummary = null;
             viewStale = true; readSequence++; loading = false;
             if (refreshTimer !== null) globalScope.clearTimeout(refreshTimer);
             refreshTimer = null;
@@ -77,11 +95,14 @@
             listProjectPending = false;
             return true;
         }
+        let boardTaskMap = null, boardTaskSignature = '';
         function onBoardContext(snapshot) {
             if (disposed || snapshot.actorUid !== actorUid || snapshot.project?.id !== projectId) return;
             const authority = JSON.stringify([snapshot.membership, snapshot.project?.membershipRevision, snapshot.project?.lifecycle, snapshot.authorityRevision, snapshot.authorizationReady]);
             if (authority !== calendarAuthority) {
-                calendarAuthority = authority;
+                calendarAuthority = authority; viewCache.clear(); fullQuerySummary = null;
+                projectLinkSequence++; projectLookupSequence++; projectLinksRequest = null;
+                projectLinksContext = ''; projectLinkAccess = false; projectLinks = []; renderProjectLinks();
                 calendarAuthorityInvalidated ||= Boolean(calendarRequest || calendarCache.size || view === 'calendar');
                 invalidateCalendar();
             }
@@ -92,8 +113,14 @@
                 response = null; viewStale = true;
                 render();
             }
+            // The board republishes the same task map until its tasks change, so
+            // serialize the tasks only when a different map arrives.
+            if (snapshot.tasks !== boardTaskMap || !boardTaskSignature) {
+                boardTaskMap = snapshot.tasks;
+                boardTaskSignature = JSON.stringify(Array.from(snapshot.tasks || []).map(([id, entry]) => [id, entry.revision, entry.status, entry.title, entry.startDate, entry.dueDate, entry.ownerUid, entry.assigneeUids, entry.parentTaskId, entry.sectionId, entry.rank, entry.values]));
+            }
             const signature = JSON.stringify([snapshot.project, snapshot.membership, snapshot.authorityRevision, snapshot.authorizationReady, snapshot.sections, snapshot.columns,
-                Array.from(snapshot.tasks || []).map(([id, entry]) => [id, entry.revision, entry.status, entry.title, entry.startDate, entry.dueDate, entry.ownerUid, entry.assigneeUids, entry.parentTaskId, entry.sectionId, entry.rank, entry.values]), snapshot.mutationPending]);
+                boardTaskSignature, snapshot.mutationPending]);
             if (snapshot.mutationPending && Object.keys(filters).length) listStale = true;
             if (signature !== boardSignature) {
                 const changed = !!boardSignature; boardSignature = signature;
@@ -111,19 +138,28 @@
             }
             if (snapshot.projectionChanged && !applyingSnapshot) invalidateViews();
             if (settleListProject(snapshot)) {
-                if (!response && !loading) refresh();
+                if (!response && !loading && (!presentationV2() || view !== 'board')) refresh();
+                if (presentationV2() && view === 'board') projectSnapshotPending = false;
                 // The first publication of a returned project can already be settled.
                 // It must release its selection fence even without an older signature.
                 if (listStale && !listRefresh) invalidateViews();
                 render();
             }
             syncTaskPermissions(); fillFilters();
+            if (projectLinksContext && projectLinksContext !== projectLinkContextKey()) {
+                projectLinksContext = ''; projectLinkAccess = false; projectLinks = []; clearProjectLookup();
+                renderProjectLinks();
+            }
+            const linksHolder = el('projects-project-links')?.closest?.('details');
+            if (linksHolder?.open && !projectLinksContext && !projectLinkBusy) loadProjectLinks();
         }
         async function applyFilters(next, { history = true } = {}) {
-            listStale = false; listRefresh = null; listRevisionFloor.clear();
+            const candidate = cleanFilters(next);
+            if (candidate.fromDate && candidate.toDate && candidate.fromDate > candidate.toDate) candidate.toDate = candidate.fromDate;
+            if (JSON.stringify(candidate) === JSON.stringify(filters)) return;
+            listStale = false; listRefresh = null; listRevisionFloor.clear(); viewLimits.clear(); fullQuerySummary = null;
             const version = ++queryGeneration;
-            filters = cleanFilters(next); filterDrafts = { ...filters };
-            if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) filters.toDate = filters.fromDate;
+            filters = candidate; filterDrafts = { ...filters };
             const form = el('projects-view-filters');
             filterNames.forEach(name => { const control = form?.elements?.namedItem(name); if (control) control.value = filters[name] || ''; });
             readSequence++; loading = false; status(''); response = null; cursor = null; previous = []; pageIndex = 0; viewStale = true;
@@ -264,7 +300,7 @@
         function renderFilterChips() {
             const form = el('projects-view-filters');
             if (!form || typeof form.querySelectorAll !== 'function') return;
-            const counts = response?.aggregates || {};
+            const counts = (view === 'board' ? fullQuerySummary?.aggregates : response?.aggregates) || {};
             const countFor = { status: counts.byStatus, ownerUid: counts.byOwnerUid };
             form.querySelectorAll('[data-filter-chips]').forEach((host) => {
                 const name = host.dataset.filterChips;
@@ -390,7 +426,7 @@
                 else if (diff <= 2) { cls += ' is-soon'; flag = `<span class="crm-board-due-badge crm-board-due-soon">${diff}d</span>`; }
             }
             const label = t.dueDate || t.startDate;
-            return `<span class="${cls}"><span class="crm-muted">${escape(label)}</span>${flag}</span>`;
+            return `<span class="${cls}" title="${escape(label)}"><span class="crm-muted">${escape(shortDate(label))}</span>${flag}</span>`;
         }
         function kanbanPriorityPill(priority) {
             if (!priority || priority === 'none') return '';
@@ -411,7 +447,7 @@
             const der = t.derived;
             const hasProgress = der && Number(der.activeLeafCount) > 0;
             const pct = hasProgress ? Math.max(0, Math.min(100, Math.round(Number(der.completionPercent ?? (der.completedLeafCount / der.activeLeafCount * 100)) || 0))) : 0;
-            const statusEditor = `<label>Move to status… <select data-task-status="${escape(t.id)}" class="crm-input"${canWrite() && !mutation ? '' : ' disabled'}>${Object.entries(STATUSES).map(([key, label]) => `<option value="${key}"${t.status === key ? ' selected' : ''}>${escape(response?.project?.statusLabels?.[key] || label)}</option>`).join('')}</select></label>`;
+            const statusEditor = `<label class="crm-projects-kanban-status"><span class="sr-only">Move to status</span><select data-task-status="${escape(t.id)}" class="crm-input"${canWrite() && !mutation ? '' : ' disabled'}>${Object.entries(STATUSES).map(([key, label]) => `<option value="${key}"${t.status === key ? ' selected' : ''}>${escape(response?.project?.statusLabels?.[key] || label)}</option>`).join('')}</select></label>`;
             return `<article class="crm-projects-kanban-card" draggable="${canWrite() && !mutation ? 'true' : 'false'}" data-kanban-task="${escape(t.id)}" data-card="${escape(t.id)}">
                 ${sec ? `<span class="crm-projects-kanban-sec">${escape(sec)}</span>` : ''}
                 ${v2 && ancestors.length ? `<span class="crm-projects-kanban-ancestors" aria-label="Parent tasks">${escape(ancestors.join(' → '))}</span>` : ''}
@@ -425,12 +461,16 @@
                 </div>
             </article>`;
         }
+        const limitFor = key => viewLimits.get(key) || (key.startsWith('kanban:') ? KANBAN_BATCH : VIEW_BATCH);
+        const moreButton = (key, shown, total) => total > shown ? `<button type="button" class="crm-btn-secondary crm-btn-sm crm-projects-view-more" data-view-more="${escape(key)}">Show ${Math.min(VIEW_BATCH * 2, total - shown)} more of ${total - shown}</button>` : '';
         function kanbanColumn(key, label, tasks) {
             const colTasks = tasks.filter((t) => t.status === key);
+            const shown = colTasks.slice(0, limitFor(`kanban:${key}`));
             return `<section class="crm-projects-kanban-col" data-status-column="${key}" data-col="${key}" aria-label="${escape(label)}">
-                <header><span class="crm-projects-status-pill s-${key}">${escape(label)}</span><b class="crm-projects-kanban-count" title="Tasks on this loaded page">${colTasks.length} loaded</b></header>
+                <header><span class="crm-projects-status-pill s-${key}">${escape(label)}</span><b class="crm-projects-kanban-count" title="${colTasks.length} task${colTasks.length === 1 ? '' : 's'} in this column${response?.hasMore ? ' on this page' : ''}">${colTasks.length}</b></header>
                 <div class="crm-projects-kanban-cards">
-                    ${colTasks.map(kanbanCard).join('') || '<p class="crm-muted crm-projects-kanban-empty">No tasks on this page.</p>'}
+                    ${shown.map(kanbanCard).join('') || '<p class="crm-muted crm-projects-kanban-empty">No tasks here.</p>'}
+                    ${moreButton(`kanban:${key}`, shown.length, colTasks.length)}
                 </div>
             </section>`;
         }
@@ -463,13 +503,33 @@
         }
         function render() {
             const host = el('projects-view-content'), active = document.activeElement;
-            const identity = host?.contains?.(active) ? { id: active.dataset?.taskStatus || active.dataset?.taskOpen, status: !!active.dataset?.taskStatus } : null;
+            const attributes = ['id', 'data-task-status', 'data-task-open', 'data-view-more', 'data-cal-nav', 'data-gantt-zoom', 'data-gantt-action', 'data-gantt-schedule'];
+            const identity = host?.contains?.(active) ? attributes.map(name => [name, active.getAttribute?.(name)]).find(([, value]) => value) : null;
             const scroll = [host?.scrollTop || 0, host?.scrollLeft || 0];
+            const scrollNodes = Array.from(host?.querySelectorAll?.('.crm-projects-kanban-cards') || []).map(node => ({ key: node.closest('[data-status-column]')?.dataset.statusColumn, top: node.scrollTop, left: node.scrollLeft }));
+            const ganttScroller = host?.querySelector?.('[data-gantt-scroll]');
+            const ganttScroll = ganttScroller ? [ganttScroller.scrollLeft, ganttScroller.scrollTop] : null;
+            const moreColumn = active?.closest?.('[data-status-column]')?.dataset.statusColumn;
+            const moreKey = active?.dataset?.viewMore;
+            const moreTaskSelector = moreKey === 'gantt' ? '.crm-gantt-task [data-task-open]' : moreKey === 'gantt-undated' ? '.crm-gantt-undated [data-task-open]' : '[data-task-open]';
+            const previousTaskCount = moreKey ? (active.closest('[data-status-column]') || host)?.querySelectorAll?.(moreTaskSelector).length : 0;
+            const openDetails = Array.from(host?.querySelectorAll?.('details[open]') || []).map(node => node.dataset.calWeek || (node.classList.contains('crm-cal-month-list') ? 'month' : 'rules'));
             renderContent();
-            if (host) { host.scrollTop = scroll[0]; host.scrollLeft = scroll[1]; }
-            if (identity?.id && !active.isConnected) {
-                const candidate = Array.from(host?.querySelectorAll?.(identity.status ? '[data-task-status]' : '[data-task-open]') || []).find(node => (node.dataset.taskStatus || node.dataset.taskOpen) === identity.id);
-                candidate?.focus?.({ preventScroll: true });
+            // New column nodes start at zero. Writing zero after replacing their
+            // markup forces layout during first paint without preserving any state.
+            if (host) { if (scroll[0]) host.scrollTop = scroll[0]; if (scroll[1]) host.scrollLeft = scroll[1]; }
+            scrollNodes.forEach(saved => { const node = Array.from(host?.querySelectorAll?.('.crm-projects-kanban-cards') || []).find(item => item.closest('[data-status-column]')?.dataset.statusColumn === saved.key); if (node) { if (saved.top) node.scrollTop = saved.top; if (saved.left) node.scrollLeft = saved.left; } });
+            if (ganttScroll) {
+                const next = host?.querySelector?.('[data-gantt-scroll]');
+                if (next) { if (ganttScroll[0]) next.scrollLeft = ganttScroll[0]; if (ganttScroll[1]) next.scrollTop = ganttScroll[1]; }
+            }
+            Array.from(host?.querySelectorAll?.('details') || []).forEach(node => { if (openDetails.includes(node.dataset.calWeek || (node.classList.contains('crm-cal-month-list') ? 'month' : 'rules'))) node.open = true; });
+            if (identity && !active.isConnected) {
+                const [attribute, value] = identity;
+                const candidate = Array.from(host?.querySelectorAll?.(`[${attribute}]`) || []).find(node => node.getAttribute(attribute) === value);
+                const fallbackHost = moreColumn ? Array.from(host?.querySelectorAll?.('[data-status-column]') || []).find(node => node.dataset.statusColumn === moreColumn) : host;
+                const tasks = Array.from(fallbackHost?.querySelectorAll?.(moreTaskSelector) || []);
+                (candidate || tasks[previousTaskCount] || tasks.at(-1))?.focus?.({ preventScroll: true });
             }
         }
         function renderContent() {
@@ -498,21 +558,31 @@
             const fullSummary = response ? `${response.matchingTaskCount} matching tasks ${view === 'calendar' ? `overlapping ${calendarMonth} with the shared filters` : 'in the full project'}. Showing ${rows.length ? pageIndex * 200 + 1 : 0}–${pageIndex * 200 + rows.length} in this ${view === 'calendar' ? 'month' : 'view'} page. Active-leaf completion: ${a?.completedLeafTaskCount ?? 0}/${a?.activeLeafTaskCount ?? 0} (${a?.completionPercent ?? 0}%). Context ancestors are excluded from matching totals.` : '';
             const summary = el('projects-view-summary');
             summary.textContent = response ? `${response.matchingTaskCount} matching tasks${view === 'calendar' ? ` overlapping ${calendarMonth}` : ''} · ${a?.completionPercent ?? 0}% complete${rows.length < response.matchingTaskCount ? ` · Showing ${rows.length ? pageIndex * 200 + 1 : 0}–${pageIndex * 200 + rows.length} in this ${view === 'calendar' ? 'month' : 'view'} page` : ''}` : '';
-            summary.title = fullSummary;
-            summary.setAttribute?.('aria-label', fullSummary);
+            if (view === 'board') summary.textContent = fullQuerySummary ? `${fullQuerySummary.matchingTaskCount} matching tasks · ${fullQuerySummary.aggregates?.completionPercent ?? 0}% complete` : '';
+            summary.title = view === 'board' ? summary.textContent : fullSummary;
+            summary.setAttribute?.('aria-label', summary.title);
             if (view === 'board') return;
             if (!response && view === 'calendar') { renderCalendar([]); return; }
-            if (!response) { el('projects-view-content').innerHTML = '<p class="crm-muted">Choose a project or refresh the view.</p>'; return; }
+            if (!response) { el('projects-view-content').innerHTML = `<p class="crm-muted" role="status">${loading ? 'Loading tasks…' : projectId ? 'Tasks could not be loaded. Refresh to retry.' : 'Choose a project.'}</p>`; return; }
             if (view === 'kanban') {
                 el('projects-view-content').innerHTML = `<div class="crm-projects-kanban">${Object.entries(STATUSES).map(([key, label]) => kanbanColumn(key, response.project?.statusLabels?.[key] || label, rows)).join('')}</div>`;
             } else if (isGantt(view)) {
                 const hasActiveFilters = Boolean(filters.title || filters.status || filters.sectionId || filters.ownerUid || filters.assigneeUid || filters.fromDate || filters.toDate);
+                if (presentationV2() && globalScope.CrmProjectsGantt) {
+                    el('projects-view-content').innerHTML = globalScope.CrmProjectsGantt.render({
+                        tasks: rows, sections: response.sections, zoom: ganttZoom,
+                        limit: limitFor('gantt'), undatedLimit: limitFor('gantt-undated'),
+                        today: businessToday(), canWrite: canWrite() && !mutation && !loading,
+                        hasActiveFilters, hasMore: response.hasMore, matchingTaskCount: response.matchingTaskCount, pageIndex
+                    });
+                    return;
+                }
                 if (!rows.length) {
                     if (!hasActiveFilters) {
                         el('projects-view-content').innerHTML = '';
                         return;
                     }
-                    el('projects-view-content').innerHTML = `${ganttToolsMarkup()}<p class="crm-muted">No tasks match the active filters.</p>`;
+                    el('projects-view-content').innerHTML = `${ganttToolsMarkup()}<p class="crm-muted">No tasks match the active filters. <button type="button" class="crm-btn-secondary crm-btn-sm" data-gantt-action="clear-filters">Clear filters</button></p>`;
                     return;
                 }
                 const hasInterval = (t) => t.startDate || t.dueDate || (hasDerivedTimelineSpan(t, rows) && (t.derived?.startDate || t.derived?.dueDate));
@@ -531,12 +601,12 @@
                 const donutCircle = pctComplete > 0
                     ? `<circle cx="70" cy="70" r="${R}" fill="none" stroke="var(--pj-accent)" stroke-width="15" stroke-linecap="round" stroke-dasharray="${strokeDash} ${C.toFixed(1)}" transform="rotate(-90 70 70)"/>`
                     : '';
-                const donut = `<div class="crm-projects-chart-donut"><svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="${escape(pctComplete)} percent of active leaf tasks complete"><circle cx="70" cy="70" r="${R}" fill="none" stroke="var(--pj-sunken)" stroke-width="15"/>${donutCircle}<text x="70" y="70" text-anchor="middle" dominant-baseline="central" fill="var(--pj-ink)" font-size="26" font-weight="700">${escape(pctComplete)}%</text><text x="70" y="93" text-anchor="middle" fill="var(--pj-muted)" font-size="10.5">${escape(a?.completedLeafTaskCount ?? 0)} of ${escape(a?.activeLeafTaskCount ?? 0)}</text></svg><p>Active leaf completion</p></div>`;
+                const donut = `<div class="crm-projects-chart-donut"><svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="${escape(pctComplete)} percent of active leaf tasks complete"><circle cx="70" cy="70" r="${R}" fill="none" stroke="var(--pj-sunken)" stroke-width="15"/>${donutCircle}<text x="70" y="70" text-anchor="middle" dominant-baseline="central" fill="var(--pj-ink)" font-size="26" font-weight="700">${escape(pctComplete)}%</text><text x="70" y="93" text-anchor="middle" fill="var(--pj-muted)" font-size="10.5">${escape(a?.completedLeafTaskCount ?? 0)} of ${escape(a?.activeLeafTaskCount ?? 0)}</text></svg><p>Completion</p></div>`;
                 const colorOf = { not_started: 'var(--st-ns-fg)', in_progress: 'var(--g4, #f5a742)', blocked: 'var(--sig-over-fg)', done: 'var(--st-dn-fg)' };
                 const chart = (title, values, isStatus = false) => {
                     const entries = Object.entries(values || {});
                     if (!entries.length) {
-                        return `<section class="crm-projects-chart crm-projects-chart-set"><h4>${title}</h4><p class="crm-muted">No active leaf tasks.</p></section>`;
+                        return `<section class="crm-projects-chart crm-projects-chart-set"><h4>${title}</h4><p class="crm-muted">No tasks yet.</p></section>`;
                     }
                     const maxVal = Math.max(1, ...entries.map(([, count]) => Number(count) || 0));
                     return `<section class="crm-projects-chart crm-projects-chart-set"><h4>${title}</h4>${entries.map(([key, count]) => {
@@ -547,7 +617,7 @@
                         return `<div class="crm-projects-chart-row"><span>${label}</span><span class="crm-projects-chart-track"><meter min="0" max="${totalActive}" value="${n}" style="display:none;">${n}</meter><i style="width:${barPct}%;background:${bg}"></i></span><b>${n}</b></div>`;
                     }).join('')}</section>`;
                 };
-                el('projects-view-content').innerHTML = `<p class="crm-muted">Complete server snapshot · matching active leaf tasks. Only matching tasks that are leaves in the full active project contribute. Parent rows and page size do not change this denominator.</p><p><strong>${escape(a?.completionPercent ?? 0)}% complete</strong> — ${escape(a?.completedLeafTaskCount ?? 0)} of ${escape(a?.activeLeafTaskCount ?? 0)} active leaf tasks</p><div class="crm-projects-charts-grid">${donut}<div>${chart('Active leaves by status', a?.byStatus, true)}${chart('Active leaves by accountable owner', a?.byOwnerUid, false)}</div></div>`;
+                el('projects-view-content').innerHTML = `<p title="Tasks that have subtasks are counted through their subtasks."><strong>${escape(a?.completionPercent ?? 0)}% complete</strong> — ${escape(a?.completedLeafTaskCount ?? 0)} of ${escape(a?.activeLeafTaskCount ?? 0)} tasks done</p><div class="crm-projects-charts-grid">${donut}<div>${chart('Tasks by status', a?.byStatus, true)}${chart('Tasks by owner', a?.byOwnerUid, false)}</div></div>`;
             }
         }
         function hasDerivedTimelineSpan(t, rows) {
@@ -555,11 +625,13 @@
         }
         const hasDerivedGanttSpan = hasDerivedTimelineSpan;
         function ganttToolsMarkup() {
-            const hasActiveFilters = Boolean(filters.title || filters.status || filters.sectionId || filters.ownerUid || filters.assigneeUid || filters.fromDate || filters.toDate);
-            const sections = array(board?.getState()?.sections);
-            const members = array(board?.getState()?.members);
-            return `<div class="crm-projects-gantt-tools" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;"><div style="display:flex;align-items:center;gap:10px;"><div class="seg" role="group" aria-label="Gantt zoom"><button type="button" class="crm-btn-secondary${ganttZoom === 'days' ? ' is-active' : ''}" data-gantt-zoom="days"${ganttZoom === 'days' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Days</button><button type="button" class="crm-btn-secondary${ganttZoom === 'weeks' ? ' is-active' : ''}" data-gantt-zoom="weeks"${ganttZoom === 'weeks' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Weeks</button><button type="button" class="crm-btn-secondary${ganttZoom === 'months' ? ' is-active' : ''}" data-gantt-zoom="months"${ganttZoom === 'months' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Months</button></div></div><div class="crm-projects-gantt-filter-cluster" role="group" aria-label="Gantt chart filters" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><input type="search" class="crm-input crm-input-sm" data-gantt-filter="title" placeholder="Search tasks…" value="${escape(filters.title || '')}" aria-label="Search Gantt tasks" style="width:130px;"><select class="crm-input crm-input-sm" data-gantt-filter="status" aria-label="Filter by status"><option value="">All statuses</option>${Object.entries(STATUSES).map(([key, label]) => `<option value="${key}"${filters.status === key ? ' selected' : ''}>${escape(response?.project?.statusLabels?.[key] || label)}</option>`).join('')}</select><select class="crm-input crm-input-sm" data-gantt-filter="sectionId" aria-label="Filter by section"><option value="">All sections</option>${sections.map((s) => `<option value="${escape(s.id)}"${String(filters.sectionId || '') === String(s.id) ? ' selected' : ''}>${escape(s.title)}</option>`).join('')}</select><select class="crm-input crm-input-sm" data-gantt-filter="ownerUid" aria-label="Filter by owner"><option value="">All owners</option>${members.map((m) => `<option value="${escape(m.uid || m.id)}"${String(filters.ownerUid || '') === String(m.uid || m.id) ? ' selected' : ''}>${escape(m.displayName || m.name || m.email || m.uid || m.id)}</option>`).join('')}</select><select class="crm-input crm-input-sm" data-gantt-filter="assigneeUid" aria-label="Filter by assignee"><option value="">All assignees</option>${members.map((m) => `<option value="${escape(m.uid || m.id)}"${String(filters.assigneeUid || '') === String(m.uid || m.id) ? ' selected' : ''}>${escape(m.displayName || m.name || m.email || m.uid || m.id)}</option>`).join('')}</select><label class="crm-gantt-date-label" style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--pj-muted);">From<input type="date" class="crm-input crm-input-sm" data-gantt-filter="fromDate" value="${escape(filters.fromDate || '')}" aria-label="Gantt start date" style="padding:2px 4px;font-size:11px;"></label><label class="crm-gantt-date-label" style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--pj-muted);">To<input type="date" class="crm-input crm-input-sm" data-gantt-filter="toDate" value="${escape(filters.toDate || '')}" aria-label="Gantt due date" style="padding:2px 4px;font-size:11px;"></label>${hasActiveFilters ? '<button type="button" class="crm-btn-secondary crm-btn-sm" data-gantt-action="clear-filters" style="font-size:11px;padding:3px 8px;">Reset filters</button>' : ''}</div></div>`;
+            return `<div class="crm-projects-gantt-tools" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;"><div style="display:flex;align-items:center;gap:10px;"><div class="seg" role="group" aria-label="Gantt zoom"><button type="button" class="crm-btn-secondary${ganttZoom === 'days' ? ' is-active' : ''}" data-gantt-zoom="days"${ganttZoom === 'days' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Days</button><button type="button" class="crm-btn-secondary${ganttZoom === 'weeks' ? ' is-active' : ''}" data-gantt-zoom="weeks"${ganttZoom === 'weeks' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Weeks</button><button type="button" class="crm-btn-secondary${ganttZoom === 'months' ? ' is-active' : ''}" data-gantt-zoom="months"${ganttZoom === 'months' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Months</button></div></div></div>`;
         }
+        const shortDateFormatter = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' });
+        const shortDate = value => {
+            const date = new Date(`${value}T00:00:00`);
+            return Number.isFinite(date.getTime()) ? shortDateFormatter.format(date) : String(value || '');
+        };
         function ganttMarkup(rows) {
             const hasDerivedSpan = (t) => hasDerivedTimelineSpan(t, rows);
             const day = (value) => Date.parse(`${value}T00:00:00Z`) / 86400000;
@@ -571,8 +643,8 @@
             const dates = rows.flatMap((t) => [t.startDate, t.dueDate, ...(hasDerivedSpan(t) ? [t.derived?.startDate, t.derived?.dueDate] : [])]).map(safeDay).filter((v) => v !== null);
             if (!rows.length || !dates.length) return '<p class="crm-muted">No dated tasks on this page.</p>';
             const start = Math.min(...dates), end = Math.max(...dates), span = Math.max(1, end - start + 1);
-            const dateLabel = (offset) => new Date((start + offset) * 86400000).toISOString().slice(0, 10);
-            const bar = (from, to, derivedBar) => {
+            const dateLabel = (offset) => new Date((start + offset) * 86400000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+            const bar = (from, to, derivedBar, statusKey = '') => {
                 const d1 = safeDay(from || to);
                 const d2 = safeDay(to || from);
                 if (d1 === null && d2 === null) return '';
@@ -581,7 +653,7 @@
                 const left = Math.max(0, ((fromDay - start) / span) * 100);
                 const width = Math.max(0.5, ((toDay - fromDay + 1) / span) * 100);
                 const label = `${derivedBar ? 'Derived descendant span' : 'Stored interval'}: ${from || to} through ${to || from}`;
-                return `<span class="crm-projects-gantt-bar${derivedBar ? ' is-derived' : ''}" role="img" aria-label="${escape(label)}" style="left:${left.toFixed(2)}%;width:${Math.min(100 - left, width).toFixed(2)}%" title="${escape(label)}"></span>`;
+                return `<span class="crm-projects-gantt-bar${derivedBar ? ' is-derived' : ''}${statusKey ? ` s-${escape(statusKey)}` : ''}" role="img" aria-label="${escape(label)}" style="left:${left.toFixed(2)}%;width:${Math.min(100 - left, width).toFixed(2)}%" title="${escape(label)}"></span>`;
             };
             const zoomWidths = { days: '2200px', weeks: '1200px', months: '850px' };
             const minW = zoomWidths[ganttZoom] || '1200px';
@@ -637,37 +709,57 @@
 
             const legend = `<div class="crm-projects-gantt-legend"><span><i style="background:var(--pj-accent)"></i>Stored interval</span><span><i class="crm-projects-gantt-key-derived"></i>Derived descendant span</span><span><i class="crm-projects-gantt-key-dep"></i>Dependency</span><span><i class="crm-projects-gantt-key-milestone"></i>Milestone</span><span><i class="crm-projects-gantt-key-today"></i>Today</span></div>`;
 
-            return `<p class="crm-muted">Blue bars show stored dates. Dashed gray bars show derived descendant spans. Open a task to preview a date change.</p><div class="crm-projects-gantt" style="min-width:${minW};"><div class="crm-projects-gantt-axis" style="min-width:${minW};"><span>Task</span><div>${Array.from({ length: 5 }, (_, i) => `<time style="left:${i * 25}%">${dateLabel(Math.floor((span - 1) * i / 4))}</time>`).join('')}${todayMarker}</div></div>${rows.map((t) => `<div class="crm-projects-gantt-row" style="min-width:${minW};" data-view-task="${escape(t.id)}"><div>${taskButton(t)}<small>Stored: ${t.startDate || t.dueDate ? `${escape(t.startDate || t.dueDate)} → ${escape(t.dueDate || t.startDate)}` : 'undated'}</small>${hasDerivedSpan(t) ? derived(t) : ''}</div><div class="crm-projects-gantt-track${hasDerivedSpan(t) ? ' has-derived-span' : ''}">${weekendBands}${todayMarker}${milestone(t)}${depConnectors(t)}${bar(t.startDate, t.dueDate, false)}${hasDerivedSpan(t) ? bar(t.derived?.startDate, t.derived?.dueDate, true) : ''}</div></div>`).join('')}</div>${legend}`;
+            return `<div class="crm-projects-gantt" style="min-width:${minW};"><div class="crm-projects-gantt-axis" style="min-width:${minW};"><span>Task</span><div>${Array.from({ length: 5 }, (_, i) => `<time style="left:${i * 25}%">${dateLabel(Math.floor((span - 1) * i / 4))}</time>`).join('')}${todayMarker}</div></div>${rows.slice(0, limitFor('gantt')).map((t) => `<div class="crm-projects-gantt-row" style="min-width:${minW};" data-view-task="${escape(t.id)}"><div>${taskButton(t)}<small>${t.startDate || t.dueDate ? `${escape(shortDate(t.startDate || t.dueDate))} – ${escape(shortDate(t.dueDate || t.startDate))}` : 'No dates'}</small>${hasDerivedSpan(t) ? derived(t) : ''}</div><div class="crm-projects-gantt-track${hasDerivedSpan(t) ? ' has-derived-span' : ''}">${weekendBands}${todayMarker}${milestone(t)}${depConnectors(t)}${bar(t.startDate, t.dueDate, false, t.status)}${hasDerivedSpan(t) ? bar(t.derived?.startDate, t.derived?.dueDate, true) : ''}</div></div>`).join('')}</div>${moreButton('gantt', Math.min(rows.length, limitFor('gantt')), rows.length)}${legend}`;
         }
         const timelineMarkup = (rows) => (rows && rows.length ? ganttMarkup(rows) : '');
         function memberName(id) {
             const m = array(board?.getState()?.members).find((m) => (m.uid || m.id) === id);
             return m?.displayName || m?.name || m?.email || 'Project member';
         }
+        let calendarRows = [];
         function renderCalendar(rows) {
+            calendarRows = rows;
             const [year, month] = calendarMonth.split('-').map(Number);
             const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            const monthTitle = `${monthNames[month - 1] || ''} ${year}`;
-            const todayIso = new Date().toISOString().slice(0, 10);
-            el('projects-view-content').innerHTML = `<div class="crm-projects-calendar-bar"><div class="crm-cal-nav-cluster"><div class="crm-cal-nav-group"><button type="button" class="crm-btn-secondary crm-cal-nav-btn" data-cal-nav="-1" aria-label="Previous month">‹</button><button type="button" class="crm-btn-secondary crm-cal-nav-btn is-today-btn" data-cal-nav="today">Today</button><button type="button" class="crm-btn-secondary crm-cal-nav-btn" data-cal-nav="1" aria-label="Next month">›</button></div><h3 class="crm-cal-month-title">${escape(monthTitle)}</h3><span id="projects-calendar-view-provenance" class="crm-cal-provenance-tag">Vietnam calendar</span></div><label class="crm-cal-month-picker-label">Visible calendar month <input id="projects-view-month" type="month" class="crm-input crm-cal-month-input" value="${escape(calendarMonth)}"></label></div><div class="crm-projects-calendar-grid">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((name) => `<strong>${name}</strong>`).join('')}${'<span class="crm-cal-empty-slot" aria-hidden="true"></span>'.repeat((new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7)}${Array.from({ length: days }, (_, i) => {
-                const date = `${calendarMonth}-${String(i + 1).padStart(2, '0')}`;
-                const cur = new Date(Date.UTC(year, month - 1, i + 1));
-                const dow = cur.getUTCDay();
-                const isWeekend = dow === 0 || dow === 6;
-                const isToday = date === todayIso;
-                const matches = rows.filter((t) => {
-                    if (!t.startDate && !t.dueDate) return false;
-                    const startVal = t.startDate && t.dueDate ? (t.startDate <= t.dueDate ? t.startDate : t.dueDate) : (t.startDate || t.dueDate);
-                    const dueVal = t.startDate && t.dueDate ? (t.startDate <= t.dueDate ? t.dueDate : t.startDate) : (t.dueDate || t.startDate);
-                    return startVal <= date && dueVal >= date;
+            const monthTitle = new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+            const todayIso = businessToday();
+            const offset = (new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7;
+            const iso = day => `${calendarMonth}-${String(day).padStart(2, '0')}`;
+            const intervals = rows.filter(t => t.startDate || t.dueDate).map(t => { const dates = [t.startDate || t.dueDate, t.dueDate || t.startDate].sort(); return { t, start: dates[0], end: dates[1] }; }).sort((a, b) => a.start.localeCompare(b.start) || a.end.localeCompare(b.end) || String(a.t.id).localeCompare(String(b.t.id)));
+            const weeks = [];
+            for (let slot = 0; slot < days + offset; slot += 7) {
+                const first = Math.max(1, slot - offset + 1), last = Math.min(days, slot - offset + 7);
+                const from = iso(first), to = iso(last);
+                const matches = intervals.filter(item => item.start <= to && item.end >= from);
+                const laneEnds = [], visible = [], overflow = [];
+                matches.forEach(item => {
+                    const startDay = item.start < from ? first : Number(item.start.slice(8));
+                    const endDay = item.end > to ? last : Number(item.end.slice(8));
+                    const startCol = startDay + offset - slot, endCol = endDay + offset - slot;
+                    let lane = laneEnds.findIndex(end => end < startCol);
+                    if (lane < 0) lane = laneEnds.length;
+                    if (lane >= 5) { overflow.push(item); return; }
+                    laneEnds[lane] = endCol;
+                    const before = item.start < from, after = item.end > to;
+                    visible.push(`<button type="button" class="crm-projects-task-open crm-cal-span${before ? ' continues-before' : ''}${after ? ' continues-after' : ''}${item.start === item.end ? ' is-marker' : ''}" data-task-open="${escape(item.t.id)}" data-task-revision="${escape(item.t.revision)}" data-status="${escape(item.t.status || 'not_started')}" style="grid-column:${startCol} / span ${endCol - startCol + 1};grid-row:${lane + 2}" title="${escape(item.t.title)} · ${escape(shortDate(item.start))} – ${escape(shortDate(item.end))}" aria-label="${escape(item.t.title)}; ${escape(shortDate(item.start))} to ${escape(shortDate(item.end))}${before ? '; continues from previous week' : ''}${after ? '; continues next week' : ''}">${before ? '‹ ' : ''}${escape(item.t.title || 'Untitled task')}${after ? ' ›' : ''}</button>`);
                 });
-                return `<section class="crm-projects-calendar-day${isWeekend ? ' off' : ''}${isToday ? ' is-today' : ''}"><div class="crm-cal-day-header"><span class="crm-cal-day-num">${String(i + 1).padStart(2, '0')}</span><h5>${escape(date)}</h5></div><div class="crm-cal-day-tasks">${matches.slice(0, 5).map(taskButton).join('')}</div>${matches.length > 5 ? `<span class="crm-cal-more-badge">${matches.length - 5} more on this date; use the dated list below.</span>` : ''}</section>`;
-            }).join('')}</div><h4>Tasks overlapping ${escape(calendarMonth)} on this page</h4>${calendarQuery().empty ? '<p class="crm-muted">The shared date filters do not overlap this month. No tasks match.</p>' : ''}${rows.map((t) => taskRow(t)).join('')}<details class="crm-calendar-tech-drawer" style="margin-top:24px;border-top:1px solid var(--pj-line, #e2e8f0);padding-top:12px;"><summary class="crm-muted" style="cursor:pointer;font-size:12px;font-weight:500;">Vietnam calendar details &amp; holiday rules</summary><div id="projects-calendar-details" class="crm-muted" style="margin-top:8px;font-size:12px;line-height:1.6;"></div><div id="projects-calendar-availability" style="margin-top:8px;"></div></details>`;
+                const dayCells = Array.from({ length: 7 }, (_, column) => {
+                    const day = slot + column - offset + 1;
+                    if (day < 1 || day > days) return `<span class="crm-cal-empty-slot" style="grid-column:${column + 1};grid-row:1 / ${Math.max(3, laneEnds.length + 2)}" aria-hidden="true"></span>`;
+                    const date = iso(day);
+                    return `<section data-cal-date="${date}" class="crm-projects-calendar-day${date === todayIso ? ' is-today' : ''}" style="grid-column:${column + 1};grid-row:1 / ${Math.max(3, laneEnds.length + 2)}"><div class="crm-cal-day-header"><span class="crm-cal-day-num">${day}</span><h5>${date}</h5></div></section>`;
+                }).join('');
+                weeks.push(`<div class="crm-cal-week">${dayCells}${visible.join('')}${overflow.length ? `<details class="crm-cal-overflow" data-cal-week="${from}" style="grid-column:1 / -1;grid-row:${Math.max(3, laneEnds.length + 2)}"><summary>More tasks this week (${overflow.length})</summary>${overflow.map(item => taskRow(item.t)).join('')}</details>` : ''}</div>`);
+            }
+            el('projects-view-content').innerHTML = `<div class="crm-projects-calendar-bar"><div class="crm-cal-nav-cluster"><div class="crm-cal-nav-group"><button type="button" class="crm-btn-secondary crm-cal-nav-btn" data-cal-nav="-1" aria-label="Previous month">‹</button><button type="button" class="crm-btn-secondary crm-cal-nav-btn is-today-btn" data-cal-nav="today">Today</button><button type="button" class="crm-btn-secondary crm-cal-nav-btn" data-cal-nav="1" aria-label="Next month">›</button></div><h3 class="crm-cal-month-title">${escape(monthTitle)}</h3><span id="projects-calendar-view-provenance" class="crm-cal-provenance-tag">Vietnam calendar</span></div><label class="crm-cal-month-picker-label"><span class="sr-only">Visible calendar month</span><input id="projects-view-month" type="month" class="crm-input crm-cal-month-input" value="${escape(calendarMonth)}"></label></div>${loading ? '<p role="status" class="crm-muted">Loading tasks…</p>' : ''}<p class="crm-muted">Bars run from start to due date. Shaded days are organization days off; individual availability is shown below.</p><div class="crm-projects-calendar-grid">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(name => `<strong>${name}</strong>`).join('')}</div><div class="crm-cal-weeks">${weeks.join('')}</div><details class="crm-cal-month-list"><summary>Tasks on this month page (${rows.length}${response?.hasMore ? ` of ${response.matchingTaskCount} matches; use Load more below` : ''})</summary>${calendarQuery().empty ? '<p class="crm-muted">The shared date filters do not overlap this month. No tasks match.</p>' : ''}<div data-cal-month-list></div></details><details class="crm-calendar-tech-drawer"><summary>Vietnam calendar details &amp; owner availability</summary><div id="projects-calendar-details" class="crm-muted"></div><div id="projects-calendar-availability"></div></details>`;
             if (response) loadCalendar(`${calendarMonth}-01`, `${calendarMonth}-${days}`);
         }
         function applyCalendarData(c) {
             if (!c) return;
+            array(c.days).forEach(day => {
+                const cell = Array.from(el('projects-view-content')?.querySelectorAll?.('[data-cal-date]') || []).find(node => node.dataset.calDate === day.date);
+                if (cell) { cell.classList.toggle('off', day.organization?.working === false); cell.title = `${day.date}: organization ${day.organization?.working === false ? 'non-working' : 'working'} day`; }
+            });
             const prov = el('projects-calendar-view-provenance');
             if (prov) {
                 prov.textContent = `Vietnam calendar${c?.coverage?.status === 'verified' ? ' · Verified' : ''}`;
@@ -694,7 +786,7 @@
             calendarSequence++; calendarRequest = null; calendarCache.clear();
         }
         function explicitRefresh(...args) {
-            invalidateCalendar();
+            invalidateCalendar(); viewCache.clear(); fullQuerySummary = null;
             return refresh(...args);
         }
         async function readCalendar(fromDate, toDate) {
@@ -743,6 +835,7 @@
             // awaits that same read before acknowledging, including failed retries.
             const changes = array(change.changes);
             if (change.authorityChanged || change.refresh) {
+                viewCache.clear(); fullQuerySummary = null;
                 // The board may already have fenced this authority transition
                 // before awaiting its canonical reload. Do not discard that new
                 // generation's read when the observer reaches this controller.
@@ -760,12 +853,16 @@
             if (disposed || !projectId || !uid() || uid() !== actorUid) return;
             if (refreshTimer !== null) globalScope.clearTimeout(refreshTimer); refreshTimer = null;
             const s = scope(), sequence = ++readSequence;
-            loading = true; status('Loading project snapshot…');
+            loading = true; status('Loading…');
             const query = view === 'calendar' ? calendarQuery() : { filters, empty: false };
+            const isCalendarQuery = view === 'calendar';
+            const cacheKey = JSON.stringify([generation, actorUid, projectId, calendarAuthority, isCalendarQuery, query, nextCursor, nextIndex]);
             const params = new URLSearchParams({ pageSize: '200', filters: JSON.stringify(query.filters) });
             if (nextCursor) params.set('cursor', nextCursor);
             try {
-                let result = await api(`${base()}/views?${params}`);
+                const cached = presentationV2() ? viewCache.get(cacheKey) : null;
+                const reusable = cached && Date.now() - cached.at < 30000;
+                let result = reusable ? JSON.parse(JSON.stringify(cached.result)) : await api(`${base()}/views?${params}`);
                 if (query.empty) result = { ...result, tasks: [], matchingTaskCount: 0, hasMore: false, nextCursor: null, aggregates: { activeLeafTaskCount: 0, completedLeafTaskCount: 0, completionPercent: 0, byStatus: {}, byOwnerUid: {} } };
                 if (!current(s) || sequence !== readSequence) return;
                 if (result.project?.id && result.project.id !== projectId) throw new Error('Project snapshot identity mismatch.');
@@ -773,7 +870,17 @@
                     await board.refresh();
                     if (!current(s) || sequence !== readSequence) return;
                 }
+                // Reuse only successful, short-lived snapshots within the same actor,
+                // project, authority, query and page. Every board/remote change clears them.
+                if (presentationV2() && !board?.getState()?.mutationPending && !listStale && array(result.tasks).every(entry => {
+                    const canonical = sameListProject(board?.getState()) ? board.getState()?.tasks?.get?.(entry.id) : null;
+                    return !canonical || Number(canonical.revision) === Number(entry.revision);
+                })) {
+                    viewCache.set(cacheKey, { at: reusable ? cached.at : Date.now(), result: JSON.parse(JSON.stringify(result)) });
+                    if (viewCache.size > 8) viewCache.delete(viewCache.keys().next().value);
+                }
                 response = result; viewStale = false; projectSnapshotPending = false;
+                if (!isCalendarQuery) fullQuerySummary = { matchingTaskCount: result.matchingTaskCount, aggregates: result.aggregates };
                 const boardState = board?.getState();
                 // Task IDs are only unique within their project. During an observer
                 // handshake Board can still expose the previous project's cache.
@@ -833,7 +940,7 @@
             projectSnapshotPending = false; projectId = ''; response = null; task = null; taskKey = ''; preview = null; filters = {}; filterDrafts = {};
             links = []; canManageLinks = false; projectLinks = []; projectLinkAccess = false;
             cursor = null; previous = []; pageIndex = 0; loading = false; mutation = false; projectLinkBusy = false;
-            calendarCache.clear();
+            calendarCache.clear(); viewCache.clear(); fullQuerySummary = null;
             if (notifyBoard) board?.invalidateAccess?.(deniedProjectId, false);
             const form = el('projects-view-filters');
             if (form) {
@@ -860,10 +967,11 @@
             const next = String(id || ''), nextUid = uid();
             if (disposed || next === projectId && nextUid === actorUid) return;
             if (!restoring || routeProject !== next) { navigationGeneration++; restoring = false; routeProject = ''; }
+            viewLimits.clear();
             boardSignature = ''; calendarAuthority = ''; calendarAuthorityInvalidated = false; calendarRemoteKey = ''; dragScope = null; viewStale = true; listStale = false; listRefresh = null; listRevisionFloor.clear();
             generation++; queryGeneration++; readSequence++; calendarSequence++; projectId = next; actorUid = nextUid;
             listProjectPending = !!board?.subscribeContext; projectSnapshotPending = !!next;
-            calendarCache.clear();
+            calendarCache.clear(); viewCache.clear(); fullQuerySummary = null;
             filters = {}; filterDrafts = {}; response = null; cursor = null; previous = []; pageIndex = 0; loading = false; mutation = false;
             const wasRestoring = restoring; restoring = true;
             const form = el('projects-view-filters');
@@ -873,13 +981,34 @@
                 if (control) { control.innerHTML = '<option value="">Loading project options…</option>'; control.value = ''; }
             }
             setTask(null); render();
-            projectLinks = []; projectLinkAccess = false; projectLinkSequence++; projectLookupSequence++; projectLinkBusy = false; renderProjectLinks();
+            projectLinks = []; projectLinkAccess = false; projectLinksContext = ''; projectLinksRequest = null; projectLinkSequence++; projectLookupSequence++; projectLinkBusy = false; renderProjectLinks();
             // The canonical loader owns initial authority; reading earlier can
             // trigger a competing refresh that invalidates this first snapshot.
-            if (projectId && (!listProjectPending || settleListProject(board?.getState()) || board?.getState()?.authorizationReady === true)) refresh();
+            if (projectId && (!listProjectPending || settleListProject(board?.getState()) || board?.getState()?.authorizationReady === true)) {
+                if (!presentationV2() || view !== 'board') refresh();
+                else projectSnapshotPending = false;
+            }
             restoring = wasRestoring; writeNavigation(true);
         }
-        const canEditProjectLinks = () => projectLinkAccess && response?.membership?.role === 'Owner' && response?.project?.lifecycle === 'active';
+        function projectLinkContext() {
+            if (disposed || !projectId || !actorUid || uid() !== actorUid) return null;
+            const state = board?.getState();
+            if (board?.subscribeContext || presentationV2()) {
+                return state?.actorUid === actorUid && state?.project?.id === projectId && state.authorizationReady === true ? state : null;
+            }
+            // Older hosts do not publish canonical authority snapshots.
+            if (state?.authorizationReady === false || state?.membership?.role && state.membership.role !== 'Owner') return null;
+            return response?.project?.id === projectId ? response : null;
+        }
+        function projectLinkContextKey() {
+            const context = projectLinkContext();
+            return context ? JSON.stringify([generation, actorUid, projectId, context.project.revision, context.project.membershipRevision, context.project.lifecycle, context.membership, context.authorityRevision]) : '';
+        }
+        const canEditProjectLinks = () => {
+            const context = projectLinkContext();
+            return projectLinkAccess && projectLinksContext && projectLinksContext === projectLinkContextKey()
+                && context?.membership?.role === 'Owner' && context?.project?.lifecycle === 'active' && Number.isInteger(context.project.revision) && context.project.revision > 0;
+        };
         function syncProjectLinkControls() {
             el('projects-project-links')?.querySelectorAll?.('#projects-project-link-lookup input, #projects-project-link-lookup select, #projects-project-link-lookup button, #projects-project-link-options button, [data-project-link-remove]').forEach((control) => {
                 control.disabled = projectLinkBusy || !canEditProjectLinks();
@@ -892,9 +1021,9 @@
         function renderProjectLinks() {
             const target = el('projects-project-links'); if (!target) return;
             if (!projectId) { projectLinkLayoutKey = ''; target.innerHTML = ''; return; }
-            const readable = projectLinkAccess || projectLinks.length > 0;
+            const readable = projectLinksContext === projectLinkContextKey() && (projectLinkAccess || projectLinks.length > 0);
             const editable = canEditProjectLinks();
-            const layoutKey = JSON.stringify([projectId, actorUid, generation, readable, editable, response?.membership?.role, response?.project?.lifecycle]);
+            const layoutKey = JSON.stringify([projectId, actorUid, generation, readable, editable, projectLinkContextKey()]);
             const list = projectLinks.map((link, i) => `<li>${escape(link.label)} (${escape(link.type)})${link.type === 'student' ? ` <button type="button" data-project-student-link="${i}">Open student</button>` : (safeHref(link.href) ? ` <a href="${escape(link.href)}">${link.type === 'lead' ? 'View leads' : 'View classrooms'}</a>` : '')}${editable ? ` <button type="button" data-project-link-remove="${i}"${projectLinkBusy ? ' disabled' : ''}>Remove</button>` : ''}</li>`).join('');
             if (layoutKey !== projectLinkLayoutKey) {
                 // A scope or authority transition invalidates lookup results.
@@ -908,13 +1037,26 @@
             }
             syncProjectLinkControls();
         }
+        // Linked CRM records load independently of the expensive view projection.
         async function loadProjectLinks() {
+            const holder = el('projects-project-links')?.closest?.('details');
+            if (holder && !holder.open) return;
+            const contextKey = projectLinkContextKey();
+            if (!contextKey) return;
+            if (projectLinksRequest?.key === contextKey) return projectLinksRequest.promise;
             const s = scope(), sequence = ++projectLinkSequence;
-            try {
-                const result = await api(`${base()}/links`);
-                if (!current(s) || sequence !== projectLinkSequence) return;
-                projectLinkAccess = result.canManage === true; projectLinks = array(result.links); renderProjectLinks();
-            } catch (error) { if (current(s) && sequence === projectLinkSequence) { projectLinkAccess = false; projectLinks = []; renderProjectLinks(); } }
+            const request = { key: contextKey };
+            request.promise = (async () => {
+                try {
+                    const result = await api(`${base()}/links`);
+                    if (!current(s) || sequence !== projectLinkSequence || contextKey !== projectLinkContextKey()) return;
+                    projectLinksContext = contextKey; projectLinkAccess = result.canManage === true; projectLinks = array(result.links); renderProjectLinks();
+                } catch (error) {
+                    if (current(s) && sequence === projectLinkSequence) { projectLinksContext = ''; projectLinkAccess = false; projectLinks = []; renderProjectLinks(); }
+                } finally { if (projectLinksRequest === request) projectLinksRequest = null; }
+            })();
+            projectLinksRequest = request;
+            return request.promise;
         }
         async function lookupProjectLinks() {
             if (projectLinkBusy || !canEditProjectLinks()) return;
@@ -932,14 +1074,16 @@
         }
         async function saveProjectLinks(next) {
             if (projectLinkBusy || !canEditProjectLinks()) return;
-            const s = scope(); projectLinkBusy = true; syncProjectLinkControls();
-            const body = JSON.stringify({ operationId: operationId(), expectedRevision: response.project.revision, links: [...new Map(next.map((l) => [`${l.type}:${l.recordId}`, { type: l.type, recordId: l.recordId }])).values()] });
+            const s = scope(), contextKey = projectLinkContextKey(), context = projectLinkContext(); projectLinkBusy = true; syncProjectLinkControls();
+            const body = JSON.stringify({ operationId: operationId(), expectedRevision: context.project.revision, links: [...new Map(next.map((l) => [`${l.type}:${l.recordId}`, { type: l.type, recordId: l.recordId }])).values()] });
             try {
                 const request = () => api(`${base()}/links`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
-                try { await request(); } catch (error) { if (error.status || !current(s)) throw error; await request(); }
+                try { await request(); } catch (error) { if (error.status || !current(s) || contextKey !== projectLinkContextKey()) throw error; await request(); }
                 if (!current(s)) return;
                 clearProjectLookup();
-                await refresh(); if (current(s)) await loadProjectLinks();
+                if (presentationV2() && view === 'board') await board?.refresh();
+                else await refresh();
+                if (current(s)) await loadProjectLinks();
             } catch (error) {
                 if (current(s)) {
                     if ([401, 403].includes(error.status)) { projectLinks = []; projectLinkAccess = false; renderProjectLinks(); }
@@ -1182,11 +1326,30 @@
                 event.preventDefault();
                 applyChip(chip.dataset.chipField, chip.dataset.chipValue);
             });
+            listen(el('projects-project-links')?.closest?.('details'), 'toggle', event => { if (event.target.open && projectId) loadProjectLinks(); });
             listen(el('projects-view-filters'), 'input', captureFilterDraft);
             listen(el('projects-view-filters'), 'change', captureFilterDraft);
             listen(el('projects-view-filters'), 'submit', (event) => {
                 event.preventDefault();
+                closeFilterPopover(false);
                 applyFilters(Object.fromEntries(new FormData(event.target)));
+            });
+            // The Filter popover behaves like a menu: Escape or a click elsewhere closes it.
+            const filterPopover = () => el('projects-view-filters')?.querySelector?.('.crm-projects-workspace-filter');
+            function closeFilterPopover(focusSummary) {
+                const details = filterPopover();
+                if (!details?.open) return;
+                details.open = false;
+                if (focusSummary) details.querySelector('summary')?.focus();
+            }
+            listen(el('projects-view-filters'), 'keydown', (event) => {
+                if (event.key !== 'Escape' || !filterPopover()?.open || !filterPopover().contains?.(event.target)) return;
+                event.preventDefault(); event.stopPropagation();
+                closeFilterPopover(true);
+            });
+            listen(globalScope.document, 'pointerdown', (event) => {
+                const details = filterPopover();
+                if (details?.open && !details.contains?.(event.target) && !event.target?.closest?.('.crm-datepick')) closeFilterPopover(false);
             });
             listen(el('projects-view-filters'), 'reset', () => {
                 // setProject resets controls while establishing the new scope.
@@ -1198,16 +1361,48 @@
             listen(el('projects-view-previous'), 'click', () => { if (!loading && previous.length) refresh(previous.at(-1), previous.slice(0, -1), pageIndex - 1); });
             listen(el('projects-view-retry'), 'click', () => explicitRefresh());
             listen(el('btn-projects-board-refresh'), 'click', () => explicitRefresh());
+            // The month list is built only when opened ("toggle" does not bubble).
+            const monthListToggle = (event) => {
+                const holder = event.target?.closest?.('.crm-cal-month-list');
+                const list = holder?.querySelector?.('[data-cal-month-list]');
+                if (holder?.open && list && !list.childElementCount) list.innerHTML = calendarRows.map((t) => taskRow(t)).join('');
+            };
+            el('projects-view-content')?.addEventListener?.('toggle', monthListToggle, true);
+            removers.push(() => el('projects-view-content')?.removeEventListener?.('toggle', monthListToggle, true));
             listen(el('projects-view-content'), 'click', (event) => {
+                const moreBtn = event.target.closest('[data-view-more]');
+                if (moreBtn) {
+                    const key = moreBtn.dataset.viewMore;
+                    viewLimits.set(key, limitFor(key) + VIEW_BATCH * 2);
+                    render();
+                    return;
+                }
+                const clearFiltersBtn = event.target.closest('[data-gantt-action="clear-filters"]');
+                if (clearFiltersBtn) { applyFilters({}); return; }
+                const todayBtn = event.target.closest('[data-gantt-action="today"]');
+                if (todayBtn) {
+                    const scroller = el('projects-view-content')?.querySelector?.('[data-gantt-scroll]');
+                    const marker = scroller?.querySelector?.('[data-gantt-today]');
+                    const label = scroller?.querySelector?.('.crm-gantt-axis-label');
+                    if (marker && scroller) scroller.scrollLeft += marker.getBoundingClientRect().left - scroller.getBoundingClientRect().left - ((label?.getBoundingClientRect().width || 0) + scroller.clientWidth) / 2;
+                    return;
+                }
+                const scheduleBtn = event.target.closest('[data-gantt-schedule]');
+                if (scheduleBtn) {
+                    if (deps.isActive?.() === false || !canWrite() || mutation || loading) return;
+                    const id = scheduleBtn.dataset.ganttSchedule, s = scope();
+                    const routeGeneration = deps.getRouteGeneration?.();
+                    openTask(id, { tab: 'details' }).then(opened => {
+                        if (!opened || deps.isActive?.() === false || routeGeneration !== deps.getRouteGeneration?.() || !current(s) || !isGantt(view) || !canWrite() || mutation || board?.getState()?.selectedTaskId !== id) return;
+                        const editor = el('projects-board-detail')?.querySelector?.('[data-action="edit-dates"]');
+                        if (editor && !editor.disabled) { editor.focus(); editor.click(); }
+                    });
+                    return;
+                }
                 const zoomBtn = event.target.closest('[data-gantt-zoom]');
                 if (zoomBtn) {
                     ganttZoom = zoomBtn.dataset.ganttZoom;
                     writeNavigation(); render();
-                    return;
-                }
-                const clearFiltersBtn = event.target.closest('[data-gantt-action="clear-filters"]');
-                if (clearFiltersBtn) {
-                    applyFilters({});
                     return;
                 }
                 const calNavBtn = event.target.closest('[data-cal-nav]');
@@ -1215,7 +1410,7 @@
                     const nav = calNavBtn.dataset.calNav;
                     let nextMonth;
                     if (nav === 'today') {
-                        nextMonth = new Date().toISOString().slice(0, 7);
+                        nextMonth = businessToday().slice(0, 7);
                     } else {
                         const [y, m] = calendarMonth.split('-').map(Number);
                         const targetDate = new Date(Date.UTC(y, m - 1 + Number(nav), 1));
@@ -1283,66 +1478,9 @@
             });
             listen(el('projects-view-content'), 'change', async (event) => {
                 if (event.target.id === 'projects-view-month') { const next = event.target.value; if (view === 'calendar' && /^[1-9]\d{3}-(0[1-9]|1[0-2])$/.test(next) && next !== calendarMonth) { calendarMonth = next; writeNavigation(); resetViewPage(); } return; }
-                const ganttFilterField = event.target.dataset?.ganttFilter;
-                if (ganttFilterField) {
-                    let val = event.target.value;
-                    if ((ganttFilterField === 'fromDate' || ganttFilterField === 'toDate') && val && !/^\d{4}-\d{2}-\d{2}$/.test(val)) {
-                        val = '';
-                        event.target.value = '';
-                    }
-                    if (ganttFilterField === 'fromDate' && val && filters.toDate && val > filters.toDate) {
-                        filters.toDate = val;
-                        filterDrafts.toDate = val;
-                        const toControl = el('projects-view-filters')?.elements?.namedItem('toDate');
-                        if (toControl) toControl.value = val;
-                        const ganttToInput = el('projects-view-content')?.querySelector?.('[data-gantt-filter="toDate"]');
-                        if (ganttToInput) ganttToInput.value = val;
-                    } else if (ganttFilterField === 'toDate' && val && filters.fromDate && val < filters.fromDate) {
-                        filters.fromDate = val;
-                        filterDrafts.fromDate = val;
-                        const fromControl = el('projects-view-filters')?.elements?.namedItem('fromDate');
-                        if (fromControl) fromControl.value = val;
-                        const ganttFromInput = el('projects-view-content')?.querySelector?.('[data-gantt-filter="fromDate"]');
-                        if (ganttFromInput) ganttFromInput.value = val;
-                    }
-                    const form = el('projects-view-filters');
-                    const control = form?.elements?.namedItem(ganttFilterField);
-                    if (control) {
-                        control.value = val;
-                        if (typeof Event === 'function') control.dispatchEvent(new Event('change', { bubbles: true }));
-                        else if (typeof control.dispatchEvent === 'function') control.dispatchEvent({ type: 'change', bubbles: true });
-                    }
-                    applyFilters({ ...filters, [ganttFilterField]: val });
-                    return;
-                }
                 const id = event.target.dataset.taskStatus;
                 if (id) {
                     await applyStatus(id, event.target.value);
-                }
-            });
-            listen(el('projects-view-content'), 'search', (event) => {
-                if (event.target.dataset?.ganttFilter === 'title') {
-                    const val = event.target.value;
-                    const form = el('projects-view-filters');
-                    const control = form?.elements?.namedItem('title');
-                    if (control) control.value = val;
-                    applyFilters({ ...filters, title: val });
-                }
-            });
-            listen(el('projects-view-content'), 'input', (event) => {
-                const ganttFilterField = event.target.dataset?.ganttFilter;
-                if (ganttFilterField) {
-                    filterDrafts[ganttFilterField] = event.target.value;
-                    const form = el('projects-view-filters');
-                    const control = form?.elements?.namedItem(ganttFilterField);
-                    if (control) control.value = event.target.value;
-                }
-            });
-            listen(el('projects-view-content'), 'keydown', (event) => {
-                if (event.key === 'Enter' && event.target.dataset?.ganttFilter === 'title') {
-                    event.preventDefault();
-                    const val = event.target.value;
-                    if (!event.isComposing) applyFilters({ ...filters, title: val });
                 }
             });
             listen(el('projects-task-planning'), 'submit', (event) => {
@@ -1380,7 +1518,7 @@
             });
         }
         return { init, setProject, setTask, refresh: explicitRefresh, reconcileRemote, invalidateAccess, applyFilters, setView, openTask, startNavigation, restoreNavigation, invalidateViews,
-            dispose() { disposed = true; calendarCache.clear(); calendarRequest = null; viewRequest = null; response = null; task = null; links = []; projectLinks = []; listRevisionFloor.clear(); navigationGeneration++; generation++; unsubscribe?.(); removers.splice(0).forEach(remove => remove()); if (refreshTimer !== null) globalScope.clearTimeout(refreshTimer); globalScope.removeEventListener?.('popstate', restoreNavigation); },
+            dispose() { disposed = true; viewCache.clear(); fullQuerySummary = null; calendarCache.clear(); calendarRequest = null; viewRequest = null; response = null; task = null; links = []; projectLinks = []; listRevisionFloor.clear(); navigationGeneration++; generation++; unsubscribe?.(); removers.splice(0).forEach(remove => remove()); if (refreshTimer !== null) globalScope.clearTimeout(refreshTimer); globalScope.removeEventListener?.('popstate', restoreNavigation); },
             syncBoard: fillFilters, getState: () => ({ projectId, actorUid, filters: { ...filters }, view, response, selectedTaskId: task?.id }) };
     }
     globalScope.CrmProjectsViews = { createController };

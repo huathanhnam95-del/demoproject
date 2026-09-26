@@ -47,6 +47,7 @@
         let memberDirectory = [];
         let projects = [];
         let members = [];
+        let membersStatus = 'idle';
         let selectedProjectId = '';
         let selectedProject = null;
         let suppressAutoSelection = false;
@@ -71,6 +72,7 @@
             if (target) target.textContent = `Verified Vietnam holiday data is merged with these settings. ${choices.tetScheme && choices.nationalDayAdjacent ? 'Employer holiday choices are configured for this year.' : 'Choose a Tet scheme and National Day adjacent holiday for this year.'} See the project Calendar view for coverage, verification date and source links. Unverified annual dates remain unresolved.`;
         }
         let allowance = { revision: 0, monthlyAllowanceCents: 500 };
+        let calendarLoaded = false, allowanceLoaded = false;
         let accessSummary = deps.accessSummary || null;
 
         function peopleTarget() {
@@ -85,6 +87,7 @@
                 elements.projectsRefresh,
                 elements.projectsCalendarSave,
                 elements.projectsAllowanceSave,
+                elements.projectsAllowanceUsd,
                 elements.projectsCalendarLeaveAdd,
                 elements.projectsMemberSave,
                 elements.projectsProjectSelect,
@@ -95,7 +98,9 @@
                 elements.projectsMemberPerson,
                 elements.projectsMemberRole
             ].forEach((control) => { if (control) control.disabled = pending; });
-            [elements.projectsMemberPerson, elements.projectsMemberRole, elements.projectsMemberSave].forEach((control) => { if (control) control.disabled = pending || !canManageSelectedProject(); });
+            [elements.projectsMemberPerson, elements.projectsMemberRole, elements.projectsMemberSave].forEach((control) => { if (control) control.disabled = pending || membersStatus !== 'ready' || !canManageSelectedProject(); });
+            if (elements.projectsCalendarSave) elements.projectsCalendarSave.disabled = pending || !adminMode || !calendarLoaded;
+            if (elements.projectsAllowanceSave) elements.projectsAllowanceSave.disabled = pending || !adminMode || !allowanceLoaded;
             [elements.projectsPeopleList, elements.staffProjectsPeopleList, elements.staffAccountList]
                 .filter(Boolean)
                 .forEach((target) => target.querySelectorAll(
@@ -316,6 +321,7 @@
             elements.projectsProjectSelect.value = selectedProjectId;
             elements.projectsProjectSelect.disabled = pending;
             selectedProject = projects.find((project) => project.id === selectedProjectId) || null;
+            if (current !== selectedProjectId) { members = []; memberDirectory = []; eligibleCandidates = []; membersStatus = 'idle'; renderMembers(); }
             if (elements.projectsMemberEditor) elements.projectsMemberEditor.hidden = !canManageSelectedProject();
             renderPeopleOptions(elements.projectsMemberPerson);
             onProjectsRendered({
@@ -369,10 +375,15 @@
                 return true;
             }
             selectedProjectId = nextId;
+            members = []; memberDirectory = []; eligibleCandidates = []; membersStatus = 'idle';
+            membersRefreshGeneration++; membersRefreshState = null;
             viewGeneration += 1;
             selectedProject = projects.find((project) => project.id === selectedProjectId) || null;
             if (elements.projectsProjectSelect) elements.projectsProjectSelect.value = selectedProjectId;
             if (elements.projectsMemberEditor) elements.projectsMemberEditor.hidden = !canManageSelectedProject();
+            renderPeopleOptions(elements.projectsMemberPerson);
+            renderMembers();
+            applyPendingState();
             onProjectsRendered({
                 projects: projects.slice(),
                 selectedProjectId,
@@ -389,6 +400,13 @@
             if (!target) return;
             if (!selectedProjectId) {
                 target.innerHTML = '<p class="crm-muted">Select a project to view memberships.</p>';
+                return;
+            }
+            if (membersStatus !== 'ready') {
+                const projectName = escape(selectedProject?.name || selectedProject?.title || selectedProjectId);
+                target.innerHTML = membersStatus === 'error'
+                    ? `<p role="status">Members of ${projectName} could not be loaded.</p><button type="button" class="crm-btn-secondary crm-projects-members-retry">Retry</button>`
+                    : `<p class="crm-muted" role="status">Loading members of ${projectName}…</p>`;
                 return;
             }
             const currentActorUid = String(getCurrentUser()?.uid || '');
@@ -438,6 +456,8 @@
             const generation = ++membersRefreshGeneration;
             const actorAtStart = String(getCurrentUser()?.uid || '');
             const canManage = canManageProject(projectId);
+            membersStatus = 'loading'; members = []; memberDirectory = []; eligibleCandidates = [];
+            renderMembers();
             beginRefresh();
             const promise = (async () => {
                 if (canManage) {
@@ -463,6 +483,7 @@
                 }
                 const project = projects.find((candidate) => candidate.id === projectId);
                 if (project) selectedProject = project;
+                membersStatus = 'ready';
                 renderPeopleOptions(elements.projectsMemberPerson);
                 renderMembers();
                 return true;
@@ -472,6 +493,7 @@
                 members = [];
                 memberDirectory = [];
                 eligibleCandidates = [];
+                membersStatus = 'error';
                 renderMembers();
                 if (error?.status !== 403) showToast(error?.message || 'Project memberships could not be loaded.', 'error');
                 return false;
@@ -488,10 +510,11 @@
             if (!adminMode || !apiFetchJson) return Promise.resolve(false);
             if (peopleRefreshState) return peopleRefreshState.promise;
             const generation = ++peopleRefreshGeneration;
+            const actorAtStart = String(getCurrentUser()?.uid || '');
             beginRefresh();
             const promise = (async () => {
                 const response = await apiFetchJson('/api/projects/people');
-                if (generation !== peopleRefreshGeneration) return false;
+                if (generation !== peopleRefreshGeneration || actorAtStart !== String(getCurrentUser()?.uid || '')) return false;
                 people = Array.isArray(response?.people) ? response.people : [];
                 renderPeople();
                 renderPeopleOptions(elements.projectsCalendarLeavePerson);
@@ -524,18 +547,11 @@
                     await refreshMembers({ internal: true });
                     return true;
                 }
-                const [peopleOk, calendarResponse, allowanceResponse, projectResponse] = await Promise.all([
-                    refreshPeople({ internal: true }),
-                    apiFetchJson('/api/projects/calendar'),
-                    apiFetchJson('/api/projects/allowance'),
-                    apiFetchJson('/api/projects/')
-                ]);
-                if (!peopleOk || actorAtStart !== String(getCurrentUser()?.uid || '') || generation !== fullRefreshGeneration || viewAtStart !== viewGeneration) return false;
+                const projectResponse = await apiFetchJson('/api/projects/');
+                if (actorAtStart !== String(getCurrentUser()?.uid || '') || generation !== fullRefreshGeneration || viewAtStart !== viewGeneration) return false;
                 projects = Array.isArray(projectResponse?.projects) ? projectResponse.projects : [];
                 applyAdminVisibility();
                 renderPeople();
-                renderCalendar(calendarResponse?.calendar);
-                renderAllowance(allowanceResponse?.allowance);
                 renderProjectPicker();
                 await refreshMembers({ internal: true });
                 return true;
@@ -548,6 +564,52 @@
                 endRefresh();
             });
             fullRefreshPromise = promise;
+            return promise;
+        }
+
+        const settingsRequests = new Map();
+        function refreshSettings(name, { internal = false } = {}) {
+            if (name === 'project') return Promise.resolve(true);
+            if (!internal && !mutationPending && pending) {
+                const waiting = fullRefreshPromise || membersRefreshState?.promise || peopleRefreshState?.promise;
+                if (waiting) return waiting.then(() => refreshSettings(name));
+            }
+            if (name === 'members' && !adminMode) return refreshMembers();
+            if (!adminMode || !apiFetchJson || (pending && !internal)) return Promise.resolve(false);
+            if (settingsRequests.has(name)) return settingsRequests.get(name);
+            const actor = String(getCurrentUser()?.uid || '');
+            const draftVersion = calendarDraftVersion;
+            const promise = (async () => {
+                if (name === 'members') { await refreshPeople({ internal }); renderMembers(); return refreshMembers({ internal }); }
+                if (!['calendar', 'allowance'].includes(name)) return false;
+                if (name === 'calendar') calendarLoaded = false;
+                else allowanceLoaded = false;
+                beginRefresh();
+                try {
+                    const response = await apiFetchJson(`/api/projects/${name}`);
+                    if (actor !== String(getCurrentUser()?.uid || '')) { calendarLoaded = false; allowanceLoaded = false; return false; }
+                    const settings = response?.[name];
+                    if (!settings || !Number.isSafeInteger(Number(settings.revision)) || Number(settings.revision) < 0) throw new Error('Settings could not be verified.');
+                    if (name === 'calendar') {
+                        if (draftVersion !== calendarDraftVersion) {
+                            showToast('Your calendar changes are kept. Reopen Calendar to load and review the current settings before saving.', 'error');
+                            return false;
+                        }
+                        renderCalendar(settings);
+                        calendarLoaded = true;
+                        await refreshPeople({ internal: true });
+                        if (actor !== String(getCurrentUser()?.uid || '')) { calendarLoaded = false; allowanceLoaded = false; return false; }
+                    } else { renderAllowance(settings); allowanceLoaded = true; }
+                    return true;
+                } finally { endRefresh(); }
+            })().catch(error => {
+                if (name === 'calendar') calendarLoaded = false;
+                if (name === 'allowance') allowanceLoaded = false;
+                applyPendingState();
+                if (actor === String(getCurrentUser()?.uid || '')) showToast(`${error?.message || 'Settings could not be loaded.'} Your changes are kept. Reopen this section to retry before saving.`, 'error');
+                return false;
+            }).finally(() => settingsRequests.delete(name));
+            settingsRequests.set(name, promise);
             return promise;
         }
 
@@ -564,13 +626,14 @@
             } catch (error) {
                 showToast(error?.message || 'People & Access update failed.', 'error');
             } finally {
+                await refreshPeople({ internal: true });
                 await refresh({ internal: true });
                 setPending(false);
             }
         }
 
         async function saveCalendar() {
-            if (pending) return;
+            if (pending || !adminMode || !calendarLoaded) return;
             const saveUid = String(getCurrentUser()?.uid || ''), saveGeneration = viewGeneration;
             captureHolidayChoices();
             const saveVersion = calendarDraftVersion;
@@ -587,11 +650,11 @@
                 calendarSaved = true;
                 showToast('Project calendar settings saved.', 'success');
             } catch (error) { if (saveUid === String(getCurrentUser()?.uid || '') && saveGeneration === viewGeneration) showToast(error?.message || 'Calendar settings could not be saved.', 'error'); }
-            finally { if (saveUid === String(getCurrentUser()?.uid || '') && saveGeneration === viewGeneration) { if (calendarSaved && saveVersion === calendarDraftVersion) await refresh({ internal: true }); setPending(false); } }
+            finally { if (saveUid === String(getCurrentUser()?.uid || '') && saveGeneration === viewGeneration) { if (calendarSaved && saveVersion === calendarDraftVersion) await refreshSettings('calendar', { internal: true }); setPending(false); } }
         }
 
         async function saveAllowance() {
-            if (pending) return;
+            if (pending || !adminMode || !allowanceLoaded) return;
             const cents = parseUsd(elements.projectsAllowanceUsd?.value);
             if (Number.isNaN(cents)) {
                 showToast('Enter a USD amount from 0 to 5 with up to two decimal places.', 'error');
@@ -604,7 +667,7 @@
                 });
                 showToast('Starting allowance saved.', 'success');
             } catch (error) { showToast(error?.message || 'Allowance could not be saved.', 'error'); }
-            finally { await refresh({ internal: true }); setPending(false); }
+            finally { await refreshSettings('allowance', { internal: true }); setPending(false); }
         }
 
         async function savePersonAllowance(uid) {
@@ -622,11 +685,11 @@
                 });
                 showToast('Account allowance saved.', 'success');
             } catch (error) { showToast(error?.message || 'Account allowance could not be saved.', 'error'); }
-            finally { await refresh({ internal: true }); setPending(false); }
+            finally { await refreshPeople({ internal: true }); setPending(false); }
         }
 
         async function saveMember(uid, role) {
-            if (pending) return;
+            if (pending || membersStatus !== 'ready' || !canManageSelectedProject()) return;
             if (!selectedProjectId || !role) return;
             setPending(true);
             try {
@@ -648,8 +711,12 @@
         }
 
         async function removeMember(uid) {
-            if (pending) return;
+            if (pending || membersStatus !== 'ready' || !canManageSelectedProject()) return;
             if (!selectedProjectId) return;
+            const person = getDirectoryPerson(uid);
+            const label = person?.displayName || person?.email || uid;
+            const projectName = selectedProject?.name || selectedProject?.title || selectedProjectId;
+            if (!globalScope.confirm(`Remove ${label} from ${projectName}? They will lose their project membership and its access.${uid === String(getCurrentUser()?.uid || '') ? ' This removes your own membership.' : ''}`)) return;
             setPending(true);
             try {
                 await apiFetchJson(`/api/projects/${encodeURIComponent(selectedProjectId)}/members/${encodeURIComponent(uid)}`, {
@@ -661,8 +728,13 @@
         }
 
         async function transferOwner(uid) {
-            if (pending) return;
+            if (pending || membersStatus !== 'ready' || !canManageSelectedProject()) return;
             if (!selectedProjectId) return;
+            const person = getDirectoryPerson(uid);
+            const label = person?.displayName || person?.email || uid;
+            const owner = getDirectoryPerson(selectedProject?.ownerUid);
+            const ownerLabel = owner?.displayName || owner?.email || selectedProject?.ownerUid || 'The current owner';
+            if (!globalScope.confirm(`Transfer ownership of ${selectedProject?.name || selectedProject?.title || selectedProjectId} to ${label}? ${label} will become Owner. ${ownerLabel} will become Editor.`)) return;
             setPending(true);
             try {
                 await apiFetchJson(`/api/projects/${encodeURIComponent(selectedProjectId)}/owner-transfer`, {
@@ -677,6 +749,9 @@
         function init() {
             if (bound) return;
             bound = true;
+            applyAdminVisibility();
+            applyPendingState();
+            renderMembers();
             [elements.projectsPeopleList, elements.staffProjectsPeopleList, elements.staffAccountList].filter(Boolean).forEach((target) => {
                 target.addEventListener('change', (event) => {
                     const grant = event.target.closest('.crm-projects-account-grant');
@@ -724,6 +799,7 @@
             });
             elements.projectsMemberSave?.addEventListener('click', () => saveMember(elements.projectsMemberPerson?.value, elements.projectsMemberRole?.value));
             elements.projectsMembersList?.addEventListener('click', (event) => {
+                if (event.target.closest('.crm-projects-members-retry')) { refreshMembers(); return; }
                 const join = event.target.closest('.crm-projects-join-self');
                 if (join) {
                     saveMember(join.dataset.uid, 'Owner');
@@ -745,6 +821,7 @@
         return {
             init,
             refresh,
+            refreshSettings,
             refreshPeople,
             renderPeople,
             selectProject,

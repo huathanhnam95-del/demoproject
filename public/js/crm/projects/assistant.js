@@ -6,11 +6,11 @@
     function createController({ root, apiFetchJson, getCurrentUser, getContext, isProjectReady = () => true, onApplied = () => {}, onUsageChanged = () => {}, onAutomationDraft = () => {}, transportFactory } = {}) {
         let actor = '', hints = {}, contextKey = '', generation = 0, voiceGeneration = 0, disposed = false, initialized = false, busy = false;
         let instruction = '', answer = '', notices = [], status = '', config = null, draft = null, preview = null, actionId = '', transport = null, prepared = null, abort = null, stream = null, voiceActive = false, voiceFinishing = false;
-        let creationMode = false, creationSourceProject = '', responseAudioMuted = false;
+        let creationMode = false, creationSourceProject = '', responseAudioMuted = false, routeActive = true, routeGeneration = 0;
         const effectiveContext = () => creationMode && (getContext()?.projectId || '') === creationSourceProject ? { mode: 'create_project' } : (getContext() || {});
         const hasContext = () => !!hints.projectId || hints.mode === 'create_project';
         // Readiness is deliberately separate from context identity and voice lifetime.
-        const actionReady = () => !!actor && actor === uid() && (hints.mode === 'create_project' || (!!hints.projectId && isProjectReady() === true));
+        const actionReady = () => routeActive && !!actor && actor === uid() && (hints.mode === 'create_project' || (!!hints.projectId && isProjectReady() === true));
         let renderedReady = null;
         const transcripts = new Set(), proofs = new Set();
         const uid = () => getCurrentUser()?.uid || '';
@@ -18,7 +18,7 @@
         const draftId = () => draft?.draftId || draft?.id || null;
         const storageKey = () => `crm-projects-assistant:${actor}:${hints.projectId || hints.mode || ''}`;
         function remember() { try { if (draftId()) globalScope.sessionStorage?.setItem(storageKey(), draftId()); } catch (_) { /* Optional recovery reference. */ } }
-        function current(epoch) { return !disposed && generation === epoch && actor === uid() && stable(effectiveContext()) === contextKey; }
+        function current(epoch) { return !disposed && routeActive && generation === epoch && actor === uid() && stable(effectiveContext()) === contextKey; }
         const requestId = () => globalScope.crypto.randomUUID();
         function contextHints() { return { ...clone(hints), ...(draftId() && preview ? { draftId: draftId(), previewId: preview.previewId } : {}) }; }
         function describe(action) {
@@ -38,12 +38,36 @@
             return (impact.schedule || []).map(row => `${row.taskId}: ${row.startDate || 'No start date'} to ${row.dueDate || 'No due date'}; ${row.workingDayCount ?? 'unknown'} working days. ${(row.nonWorkingDays || []).length} non-working days. ${(row.warnings || []).map(warning => String(warning.code || 'Schedule warning').replace(/_/g, ' ').toLowerCase()).join('; ')}`).join('\n');
         }
         function invalidatePreview() { generation++; preview = null; busy = false; void stopVoice(); status = 'Project data changed. Create a fresh preview before confirming.'; render(); }
+        function setActive(active) {
+            const next = active === true;
+            if (next === routeActive || disposed) return;
+            routeActive = next; routeGeneration++; generation++; busy = false;
+            if (!next) {
+                preview = null;
+                status = 'Voice stopped. Your instructions and draft are retained; preview again before confirming.';
+                void stopVoice();
+            } else syncReadinessControls();
+        }
         function render() {
             if (disposed) return;
             renderedReady = actionReady();
+            const editor = root.querySelector?.('[data-assistant-instruction]');
+            const focused = editor && root.ownerDocument?.activeElement === editor;
+            const caret = focused ? [editor.selectionStart, editor.selectionEnd, editor.selectionDirection, editor.scrollTop] : null;
             const expanded = root.querySelector?.('details')?.open ?? false;
             const actions = draft?.actions || [];
             root.innerHTML = `<details ${expanded ? 'open' : ''}><summary>Project assistance</summary><button type="button" data-assistant-action="creation" ${busy || !actor ? 'disabled' : ''}>${creationMode ? 'Use current project' : 'Create a new project'}</button><p>${escape((hints.selectedTaskIds || []).length)} selected tasks · ${escape(hints.view || 'board')} view</p><p>${config?.nativePaidAvailable ? 'Voice assistance is available. Usage is monitored against your monthly target; some costs may remain provisional.' : config?.engineeringOnly ? 'Engineering voice test. Native paid assistance is unavailable.' : 'Native paid assistance is unavailable.'}</p><label>Instructions<textarea data-assistant-instruction maxlength="8000">${escape(instruction)}</textarea></label><div>${[['plan', 'Plan'], ['draft', 'Draft changes'], ['automation', 'Propose automation']].map(([key, label]) => `<button type="button" data-assistant-action="${key}" ${busy || !actor || !hasContext() || !renderedReady ? 'disabled' : ''}>${label}</button>`).join('')}</div><p role="status" aria-live="polite">${escape(status)}</p><p data-assistant-answer>${escape(answer)}</p><ul>${notices.map(note => `<li>${escape(note)}</li>`).join('')}</ul>${draft ? `<h4>Current draft · revision ${escape(draft.revision)}</h4><ol>${actions.map(action => `<li>${escape(describe(action))}</li>`).join('')}</ol>${draft.status === 'committed' ? '<p>This draft has been committed.</p>' : `<label>Action to correct<select data-assistant-correction>${actions.map(action => `<option value="${escape(action.actionId)}" ${action.actionId === actionId ? 'selected' : ''}>${escape(describe(action))}</option>`).join('')}</select></label><button type="button" data-assistant-action="correct" ${busy || !renderedReady ? 'disabled' : ''}>Request correction</button><button type="button" data-assistant-action="preview" ${busy || !renderedReady ? 'disabled' : ''}>Preview changes</button><button type="button" data-assistant-action="decline" ${busy || !renderedReady ? 'disabled' : ''}>Decline draft</button>`}` : ''}<button type="button" data-assistant-action="restore" ${busy || !renderedReady ? 'disabled' : ''}>Restore saved draft</button>${preview ? `<h4>Visible preview</h4><ol>${(preview.actions || actions).map(action => `<li>${escape(describe(action))}</li>`).join('')}</ol><p>${escape(impactText(preview.impact))}</p><p>Review these changes. Confirm this preview by speaking when voice is connected.</p>` : ''}<button type="button" data-assistant-action="start" ${busy || voiceActive || !config?.voiceAvailable || !actor || !renderedReady ? 'disabled' : ''}>Start voice</button><button type="button" data-assistant-action="finish" ${!voiceActive || voiceFinishing ? 'disabled' : ''}>Finish speaking</button><button type="button" data-assistant-action="stop">Stop voice</button><button type="button" data-assistant-action="interrupt" ${!voiceActive || responseAudioMuted ? 'disabled' : ''}>Mute response</button></details>`;
+            // Keep the user's editor node and selection through async status updates.
+            const replacement = root.querySelector?.('[data-assistant-instruction]');
+            if (editor && replacement) {
+                if (editor.value !== instruction) editor.value = instruction;
+                replacement.replaceWith(editor);
+                if (focused) {
+                    editor.focus({ preventScroll: true });
+                    editor.setSelectionRange?.(caret[0], caret[1], caret[2]);
+                    editor.scrollTop = caret[3];
+                }
+            }
         }
         function syncReadinessControls() {
             renderedReady = actionReady();
@@ -125,7 +149,8 @@
         async function decline() { return perform(async epoch => { if (!draftId() || draft.status === 'committed') return; const result = await post(`drafts/${encodeURIComponent(draftId())}/decline`, { expectedRevision: draft.revision, requestId: requestId() }); if (!current(epoch)) return; acceptDraft(result.draft || result); status = 'Draft declined. It remains available for recovery.'; }); }
         async function startVoice() {
             syncIdentity(); setContext(); if (!config?.voiceAvailable || !actor || !hasContext() || disposed || busy || !actionReady()) return;
-            await stopVoice(); const epoch = generation, voiceEpoch = ++voiceGeneration, owner = actor;
+            await stopVoice(); if (!actionReady() || disposed) return;
+            const epoch = generation, voiceEpoch = ++voiceGeneration, owner = actor;
             abort = new globalScope.AbortController();
             try {
                 const factory = transportFactory || globalScope.CrmAiVoiceTransport?.createTransport;
@@ -147,7 +172,7 @@
                         // A proof delivered while authorization is pending is discarded,
                         // never queued or replayed when the board becomes ready again.
                         if (!actionReady()) { proofs.add(event.attestationId); status = 'Project access is refreshing. Confirm again after it is ready.'; render(); return; }
-                        const visible = preview.previewId, id = draftId(), applyOwner = actor, applyProject = hints.projectId;
+                        const visible = preview.previewId, id = draftId(), applyOwner = actor, applyProject = hints.projectId, applyRoute = routeGeneration;
                         void perform(async () => {
                             if (preview?.previewId !== visible || draftId() !== id) return;
                             proofs.add(event.attestationId);
@@ -157,13 +182,13 @@
                             // A committed draft changes server context before its
                             // HTTP response may arrive. Preserve same-scope
                             // completion while still fencing account/navigation.
-                            if (disposed || uid() !== applyOwner || actor !== applyOwner || hints.projectId !== applyProject || effectiveContext().projectId !== applyProject) return;
+                            if (disposed || !routeActive || routeGeneration !== applyRoute || uid() !== applyOwner || actor !== applyOwner || hints.projectId !== applyProject || effectiveContext().projectId !== applyProject) return;
                             if (draftId() !== id) return;
                             const committedDraft = draft;
                             preview = null; draft.status = 'committed'; status = 'Confirmed changes applied.';
                             if (voiceGeneration === voiceEpoch) await stopVoice();
                             await onApplied(result);
-                            if (disposed || uid() !== applyOwner || actor !== applyOwner || hints.projectId !== applyProject || getContext()?.projectId !== applyProject || draft !== committedDraft || draftId() !== id) return;
+                            if (disposed || !routeActive || routeGeneration !== applyRoute || uid() !== applyOwner || actor !== applyOwner || hints.projectId !== applyProject || getContext()?.projectId !== applyProject || draft !== committedDraft || draftId() !== id) return;
                             preview = null; draft.status = 'committed'; status = 'Confirmed changes applied.'; busy = false; render();
                         }, false);
                     } else if (event.type === 'interrupted' && event.scope === 'response_audio') { responseAudioMuted = true; status = 'Response audio muted. Processing continues.'; render();
@@ -197,7 +222,7 @@
             if (initialized || disposed) return; root.addEventListener('click', click); root.addEventListener('input', input); root.addEventListener('change', input); syncIdentity(); setContext(); initialized = true; render(); await loadConfig();
         }
         function dispose() { disposed = true; generation++; void stopVoice(); root.removeEventListener('click', click); root.removeEventListener('input', input); root.removeEventListener('change', input); root.innerHTML = ''; }
-        return { init, setContext, invalidatePreview, syncIdentity, dispose, restoreDraft, getState: () => clone({ actorUid: actor, context: hints, draft, preview, instruction, status, answer, voiceActive, responseAudioMuted, busy }) };
+        return { init, setActive, setContext, invalidatePreview, syncIdentity, dispose, restoreDraft, getState: () => clone({ actorUid: actor, context: hints, draft, preview, instruction, status, answer, voiceActive, responseAudioMuted, busy }) };
     }
     globalScope.CrmProjectsAssistant = Object.freeze({ createController });
 })(typeof window !== 'undefined' ? window : globalThis);

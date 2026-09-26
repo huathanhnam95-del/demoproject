@@ -98,7 +98,8 @@ async function fixture(v2 = true) {
         const dialog=h.elements.projectsBoardDetail, body=h.elements.projectsBoardDetailBody;
         assert.equal(dialog.open,true);assert.equal(dialog.dataset.detailMode,'drawer');
         assert.equal(body.closest('[data-detail-panel]').dataset.detailPanel,'details');
-        assert.ok(body.querySelector('[data-field-kind="title"]'));
+        assert.ok(h.elements.projectsBoardDetailTitle.querySelector('[data-field-kind="title"]'));
+        assert.equal(body.querySelector('[data-field-kind="title"]'),null);
         const notes=body.querySelector('.crm-board-field[data-column-id="notes"]'); notes.focus();notes.value='Nháp mới';h.input(notes);
         h.remote({status:'done'});assert.equal(body.querySelector('.crm-board-field[data-column-id="notes"]'),notes);assert.equal(notes.value,'Nháp mới');
         h.change(notes);await tick();assert.equal(h.writes.length,1,'stale revision is sent through the canonical save');assert.equal(h.events.at(-1).phase,'conflict');assert.equal(notes.value,'Nháp mới');assert.ok(dialog.querySelector('[data-remote-conflict-review]'));
@@ -341,4 +342,18 @@ for (const loss of ['task', 'close-reopen', 'actor', 'project', 'access', 'role'
         assert.equal(h.doc.querySelectorAll('[data-remote-conflict-review]').length, 0);
         review.click(); await tick(); assert.equal(h.reads.length, 1, 'stale retained action cannot read');
     } finally { h.close(); }
+});
+
+test('desktop drawer has one editable heading with canonical draft and save feedback',async()=>{
+    const h=await fixture();try{
+        h.row().querySelector('[data-action="open-detail"]').click();
+        const heading=h.elements.projectsBoardDetailTitle, input=heading.querySelector('[data-field-kind="title"]');
+        assert.ok(input);assert.equal(h.elements.projectsBoardDetailBody.querySelector('[data-field-kind="title"]'),null);
+        input.focus();input.value='Renamed in heading';h.input(input);
+        assert.equal(heading.querySelector('[data-field-feedback="title"]').dataset.phase,'dirty');
+        h.change(input);await tick();assert.equal(h.writes.length,1);assert.equal(h.writes[0].body.title,'Renamed in heading');
+        assert.equal(heading.querySelector('[data-field-feedback="title"]').dataset.phase,'saved');
+        assert.equal(heading.querySelector('[data-field-kind="title"]'),input);
+        assert.equal(h.elements.projectsBoardDetailBody.querySelectorAll('[data-column-key="taskTitle"]').length,0);
+    }finally{h.close();}
 });

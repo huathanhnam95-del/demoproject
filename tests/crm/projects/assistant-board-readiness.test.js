@@ -82,7 +82,7 @@ test('admin readiness accessor validates board authorization and current actor w
     const start=admin.indexOf('    function projectsAssistantReady() {'), end=admin.indexOf('    let projectsAssistantFingerprint',start);
     assert.ok(start>=0 && end>start,'admin supplies a separate readiness accessor');
     let board={actorUid:'u',authorizationReady:true,project:{id:'p'}}, user={uid:'u'};
-    const sandbox={projectsBoardController:{getSnapshot:()=>board},window:{firebase:{auth:()=>({currentUser:user})}}};
+    const sandbox={state:{main:'projects'},projectsBoardController:{getSnapshot:()=>board},window:{firebase:{auth:()=>({currentUser:user})}}};
     vm.runInNewContext(admin.slice(start,end)+';this.ready = projectsAssistantReady;',sandbox);
     const wiringStart=admin.indexOf('    window.projectsAssistantController = window.CrmProjectsAssistant?.createController({');
     const wiringEnd=admin.indexOf('    window.projectsAssistantController?.init();',wiringStart);
@@ -90,7 +90,7 @@ test('admin readiness accessor validates board authorization and current actor w
     sandbox.document={getElementById:()=>({})};sandbox.apiFetchJson=()=>{};sandbox.projectsAssistantHints=()=>({projectId:'p',selectedTaskIds:['t1']});
     vm.runInNewContext(admin.slice(wiringStart,wiringEnd),sandbox);
     assert.equal(configured.isProjectReady(),true);assert.deepEqual(configured.getContext(),{projectId:'p',selectedTaskIds:['t1']});
-    assert.equal(sandbox.ready(),true);board.authorizationReady=false;assert.equal(sandbox.ready(),false);board.authorizationReady=true;user={uid:'other'};assert.equal(sandbox.ready(),false);user={uid:'u'};board.project=null;assert.equal(sandbox.ready(),false);
+    assert.equal(sandbox.ready(),true);sandbox.state.main='students';assert.equal(sandbox.ready(),false);sandbox.state.main='projects';board.authorizationReady=false;assert.equal(sandbox.ready(),false);board.authorizationReady=true;user={uid:'other'};assert.equal(sandbox.ready(),false);user={uid:'u'};board.project=null;assert.equal(sandbox.ready(),false);
 });
 test('actual DOM instruction node, active focus and caret survive readiness-only pending and ready notifications', async () => {
     assert.ok(JSDOM, 'Required DOM verification dependency missing: install external jsdom and set CRM_TEST_JSDOM to its absolute module path, or use run-focused.ps1.');
@@ -107,4 +107,29 @@ test('actual DOM instruction node, active focus and caret survive readiness-only
         assert.equal(f.root.querySelector('[data-assistant-action="start"]').disabled,true);
     }
     assert.deepEqual(f.lifecycle,lifecycle); assert.equal(f.controller.getState().voiceActive,true);
+});
+
+test('route departure stops capture and rejects old proof after returning, preserving instructions and draft', async () => {
+    const f = fixture(); await readyDraft(f); await f.click('start');
+    f.controller.setActive(false); await tick();
+    assert.equal(f.controller.getState().voiceActive, false);
+    assert.ok(f.lifecycle.includes('track-stop')); assert.ok(f.lifecycle.includes('close'));
+    assert.equal(f.controller.getState().instruction, 'Change these tasks');
+    assert.equal(f.controller.getState().draft.draftId, 'd');
+    const before = f.calls.length; await f.click('start'); await f.click('draft');
+    f.controller.setActive(true); f.emit({ type: 'confirmation_ready', attestationId: 'departed' }); await tick();
+    assert.equal(f.calls.length, before); assert.equal(f.controller.getState().preview, null);
+    const g = fixture(); await readyDraft(g); const held = deferred(); g.prepare(() => held.promise);
+    await g.click('start'); g.controller.setActive(false);
+    held.resolve({ connect: async () => assert.fail('inactive capture connected') }); await tick();
+    assert.equal(g.lifecycle.includes('microphone'), false);
+});
+test('instruction focus and caret survive a full asynchronous assistance render', async () => {
+    const f = fixture(); await f.controller.init();
+    const editor = f.root.querySelector('[data-assistant-instruction]');
+    editor.value = 'Keep this sentence'; f.input(editor.value); editor.focus(); editor.setSelectionRange(5, 9);
+    f.controller.invalidatePreview(); await tick();
+    assert.equal(f.root.querySelector('[data-assistant-instruction]'), editor);
+    assert.equal(f.root.ownerDocument.activeElement, editor);
+    assert.equal(editor.selectionStart, 5); assert.equal(editor.selectionEnd, 9);
 });

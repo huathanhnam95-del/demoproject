@@ -59,7 +59,7 @@
   ],
   "artifactClasses": {
     "dependency": ["node_modules/**", "**/node_modules/**"],
-    "cache": [".cache/**", "__pycache__/**", "**/__pycache__/**"],
+    "cache": [".cache/**", "__pycache__/**", "**/__pycache__/**", ".tmp.driveupload/**"],
     "ephemeral-evidence": ["test-results/**", "outputs/**"]
   },
   "commands": [

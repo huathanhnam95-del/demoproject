@@ -18,7 +18,7 @@ test('canonical descriptors retain real IDs, seed one priority and preserve unkn
 });
 test('malformed preference fields clamp widths, keep identity and drop absent keys without changing schema', () => {
     const cols = model.resolve(schema, { order: ['custom:new', 'custom:new', 'missing', 'status'], hidden: ['taskTitle', 'dates', 'missing'], widths: { taskTitle: -1, status: 9000, 'custom:new': '200' } });
-    assert.equal(cols.map(c => c.key).join(','), 'taskTitle,custom:new,status,ownerUid,assigneeUids,custom:priority');
+    assert.equal(cols.map(c => c.key).join(','), 'taskTitle,custom:priority,status,ownerUid,assigneeUids,custom:new');
     assert.equal(cols[0].width, 300); assert.equal(cols[2].width, 320); assert.equal(cols[1].width, 160);
     const layout = model.geometry(cols); assert.equal(layout.minimumWidth, cols.reduce((n,c) => n+c.width,0));
     assert.equal(layout.template, cols.map(c => `${c.width}px`).join(' '));
@@ -64,13 +64,14 @@ test('keyed reconciliation retains a focused custom draft across reorder/hide an
         editor.focus(); editor.value = 'Uncommitted draft'; editor.setSelectionRange(3,7); editor.dispatchEvent(new h.win.Event('input',{bubbles:true}));
         h.board.setColumnPreferences({order:['custom:unknown','status','custom:text'],hidden:['ownerUid'],widths:{'custom:text':220}});
         assert.equal(h.doc.activeElement,editor); assert.equal(editor.value,'Uncommitted draft'); assert.equal(editor.selectionStart,3);
-        assert.equal(row.children[1].dataset.columnKey,'custom:unknown');
+        assert.equal(row.children[1].dataset.columnKey,'custom:text');
         assert.equal(row.querySelector('[data-column-key="ownerUid"]'),null);
         assert.equal(row.querySelector('[data-column-key="custom:unknown"] input'),null);
         assert.match(row.querySelector('[data-column-key="custom:unknown"]').textContent,/preserved.*true.*unavailable/);
         const headerKeys=[...h.elements.projectsBoardHeader.children].map(c=>c.dataset.columnKey);
         assert.deepEqual([...row.children].map(c=>c.dataset.columnKey),headerKeys);
-        assert.equal(row.getAttribute('aria-rowindex'),'3');
+        // Row 2 is the section title and row 3 its column labels.
+        assert.equal(row.getAttribute('aria-rowindex'),'4');
         assert.equal(h.writes.length,0); assert.deepEqual(h.task.values.unknown,{preserved:true});
     } finally {h.close();}
 });
@@ -122,7 +123,9 @@ test('branch expansion inserts its loaded child before the next retained root', 
         for (let i=0;i<15;i++) await new Promise(setImmediate);
         assertLogicalDomOrder(h);
         assert.equal(root.nextElementSibling.dataset.taskId, 't1');
-        assert.equal(root.nextElementSibling.nextElementSibling, next);
+        // The expanded branch ends with its "+ Add subtask" row.
+        assert.equal(root.nextElementSibling.nextElementSibling.dataset.rowId, 'subadd:t');
+        assert.equal(root.nextElementSibling.nextElementSibling.nextElementSibling, next);
         assert.equal(h.doc.querySelector('[data-task-id="t"]'), root);
         assert.equal(h.writes.length, 0);
     } finally { h.close(); }
@@ -171,4 +174,29 @@ test('status remains the canonical mutation field after personal column reorder'
         assert.equal(h.writes.length,1);assert.equal(h.writes[0].body.status,'done');assert.equal(h.writes[0].body.values,undefined);
         assert.match(h.writes[0].url,/\/tasks\/t$/);
     } finally {h.close();}
+});
+
+test('stored width and visibility snapshots follow later shared custom column ordering',()=>{
+    const original=[{id:'first',type:'text'},{id:'second',type:'text'}];
+    const saved=model.normalize({widths:{'custom:first':230},hidden:['custom:second']},original);
+    const reordered=model.normalize(saved,[original[1],original[0]]);
+    assert.deepEqual(Array.from(reordered.order.filter(k=>k.startsWith('custom:'))),['custom:second','custom:first']);
+    assert.equal(reordered.widths['custom:first'],230);assert.deepEqual(Array.from(reordered.hidden),['custom:second']);
+});
+for (const surface of ['shared','section']) test(`pointer resize on ${surface} header batches frames, flushes once on release and restores on cancellation`,async()=>{
+    const stored=[];const h=await boardFixture({getItem:()=>null,setItem:(key,value)=>stored.push(JSON.parse(value))});try{
+        const frames=new Map();let next=0;
+        h.win.requestAnimationFrame=callback=>{frames.set(++next,callback);return next;};
+        h.win.cancelAnimationFrame=id=>frames.delete(id);
+        const handle=()=>(surface==='shared'?h.elements.projectsBoardHeader:h.elements.projectsBoardRows.querySelector('[data-row-kind="group-header"]')).querySelector('[data-column-resize="status"]');
+        const pointer=(node,type,x)=>{node.setPointerCapture=()=>{};const event=new h.win.MouseEvent(type,{bubbles:true,cancelable:true,button:0,clientX:x});Object.defineProperty(event,'pointerId',{value:1});node.dispatchEvent(event);};
+        const width=()=>Number(handle().getAttribute('aria-valuenow'));
+        const before=width();pointer(handle(),'pointerdown',100);pointer(handle(),'pointermove',110);pointer(handle(),'pointermove',125);
+        assert.equal(width(),before);assert.equal(frames.size,1);
+        const captured=handle();const callback=[...frames.values()][0];frames.clear();callback();assert.equal(handle(),captured);assert.equal(width(),before+25);assert.equal(stored.length,0);
+        pointer(handle(),'pointermove',130);pointer(handle(),'pointerup',140);
+        assert.equal(width(),before+40);assert.equal(stored.length,1);assert.equal(frames.size,0);
+        pointer(handle(),'pointerdown',100);pointer(handle(),'pointermove',140);pointer(handle(),'pointercancel',140);
+        assert.equal(width(),before+40);assert.equal(stored.length,2);assert.equal(frames.size,0);
+    }finally{h.close();}
 });

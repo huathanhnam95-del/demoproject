@@ -104,7 +104,7 @@ function createAutomationRuleService({ db, accessService, now = () => new Date()
                     const active = record.enabled ? data(await transaction.get(ref(db, 'versions', record.currentVersion))) : null;
                     const draft = record.enabled && draftId === record.currentVersion ? active : data(await transaction.get(ref(db, 'versions', draftId)));
                     const actor = version => version?.ruleId === document.id && version.projectId === projectId ? version.actorUid : null;
-                    items.push({ ...record, activeActorUid: actor(active), draftActorUid: actor(draft), validationState: 'not_checked' });
+                    items.push({ ...record, activeActorUid: actor(active), draftActorUid: actor(draft), activeTrigger: actor(active) ? active.definition?.trigger || null : null, validationState: 'not_checked' });
                 } else items.push(record);
                 if (items.length === limit) break;
             }

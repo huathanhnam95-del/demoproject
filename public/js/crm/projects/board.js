@@ -142,6 +142,7 @@
             : null;
         const feedbackStore = presentationV2 ? globalScope.CrmProjectsFieldFeedbackV2?.createStore() : null;
         let renameSession = null, rowEditor = null;
+        let renderedMobileList = false;
         let mobileList = false, mobileLimit = 50, mobileProject = '', layoutObserver = null, mobileMore = null, mobilePrevious = null;
         const MOBILE_WINDOW = 200;
         function availableRows() { return mobileList ? logicalRows.slice(0, mobileLimit) : logicalRows; }
@@ -158,14 +159,14 @@
         function rowNavigationStops() {
             if (!presentationV2) return;
             const rows = Array.from(elements.projectsBoardRows.querySelectorAll('[data-row-id]'));
-            if (!availableRows().some(row => row.id === focusedRowId)) focusedRowId = availableRows().find(row => row.kind !== 'summary')?.id || '';
+            if (!availableRows().some(row => row.id === focusedRowId)) focusedRowId = availableRows().find(row => row.kind === 'task' || row.kind === 'section')?.id || '';
             rows.forEach(node => {
                 const active = node.dataset.rowId === focusedRowId;
                 node.tabIndex = active ? 0 : -1;
-                node.querySelectorAll('button, input, select, a[href]').forEach(control => {
+                node.querySelectorAll('button, input, select, a[href], [data-column-resize]').forEach(control => {
                     // Hidden canonical controls are never additional tab stops.
                     const hidden = control.matches('.crm-board-status-select, .crm-board-people-field') || control.matches('select') && control.previousElementSibling?.matches('.crm-people-trigger');
-                    control.tabIndex = (active || node.dataset.rowKind === 'summary') && !hidden ? 0 : -1;
+                    control.tabIndex = (active || ['summary', 'subadd', 'composer'].includes(node.dataset.rowKind)) && !hidden ? 0 : -1;
                 });
             });
         }
@@ -177,19 +178,21 @@
             rows.setAttribute('role', mobileList ? 'list' : 'rowgroup');
             if (mobileList) { rows.setAttribute('aria-label', 'Project tasks and groups'); table.removeAttribute('aria-rowcount'); table.removeAttribute('aria-colcount'); }
             else { rows.removeAttribute('aria-label'); table.setAttribute('aria-rowcount', String(logicalRows.length + 1)); table.setAttribute('aria-colcount', String(visibleColumns.length)); }
-            elements.projectsBoardHeader.hidden = mobileList;
+            elements.projectsBoardHeader.hidden = mobileList || groupBlocks();
+            table.toggleAttribute('data-group-blocks', groupBlocks());
             rows.style.height = mobileList ? 'auto' : `${Math.max(logicalRows.length * ROW_HEIGHT, ROW_HEIGHT)}px`;
             rows.querySelectorAll('[data-row-id]').forEach(node => {
-                const logical = logicalRows.find(row => row.id === node.dataset.rowId);
+                const logical = logicalRows[rowIndexById.get(String(node.dataset.rowId))] || logicalRows.find(row => row.id === node.dataset.rowId);
+                if (!logical) return;
                 node.setAttribute('role', mobileList ? 'listitem' : 'row');
                 node.removeAttribute('aria-selected');
                 if (mobileList) { node.removeAttribute('aria-rowindex'); node.setAttribute('aria-posinset', String(logical.index + 1)); node.setAttribute('aria-setsize', String(Math.min(logicalRows.length, mobileLimit))); }
                 else { node.setAttribute('aria-rowindex', String(logical.index + 2)); node.removeAttribute('aria-posinset'); node.removeAttribute('aria-setsize'); }
                 if (logical.task) node.setAttribute('aria-label', `${logical.task.title}. Level ${Number(logical.depth || 0) + 1}${selectedTaskIds.includes(String(logical.task.id)) ? '. Selected' : ''}`);
                 Array.from(node.children).forEach((cell, index) => {
-                    cell.setAttribute('role', mobileList ? 'presentation' : 'cell');
+                    cell.setAttribute('role', mobileList || logical.kind === 'gap' ? 'presentation' : logical.kind === 'group-header' ? 'columnheader' : 'cell');
                     if (mobileList) { cell.removeAttribute('aria-colindex'); cell.removeAttribute('aria-colspan'); }
-                    else if (logical.kind === 'section') cell.setAttribute('aria-colspan', String(visibleColumns.length));
+                    else if (SPANNING_ROWS.has(logical.kind)) cell.setAttribute('aria-colspan', String(visibleColumns.length));
                     else cell.setAttribute('aria-colindex', String(index + 1));
                 });
                 node.querySelector('[data-action="pick-status"]')?.setAttribute('aria-label', `Change status for ${logical.task?.title}: ${project?.statusLabels?.[effectiveField(logical.task?.id, 'status')] || STATUS_LABELS[effectiveField(logical.task?.id, 'status')] || logical.task?.status || ''}`);
@@ -290,10 +293,19 @@
             const input = node.querySelector('input'), target = node.querySelector('select'), submit = node.querySelector('[type="submit"]'), status = node.querySelector('[role="status"]');
             input.value = draft.text; target.value = sectionId || ''; target.disabled = !!parentId;
             const composer = { key, parentId, node, input, scope, draft, status, paint: null, placement: options.placement, inDrawer }; quickComposer = composer;
+            node.querySelector('[type="submit"]').className = 'crm-btn-primary crm-btn-sm';
+            node.querySelector('[data-cancel-create]').className = 'crm-btn-secondary crm-btn-sm';
+            input.placeholder = parentId ? 'Subtask name' : 'Task name';
             if (inDrawer) {
                 const drawerSubtasks = elements.projectsBoardDetailBody?.querySelector('[data-detail-children]');
                 if (drawerSubtasks) drawerSubtasks.append(node);
                 else elements.projectsBoardTableWrap?.before(node);
+            } else if (groupBlocks()) {
+                // Mounted into its own table row where the new task will appear.
+                composer.inline = true; node.dataset.inline = 'true';
+                if (parentId) expanded.add(String(parentId));
+                renderVirtualRows();
+                revealComposerRow();
             } else {
                 elements.projectsBoardTableWrap?.before(node);
             }
@@ -307,7 +319,25 @@
             composer.paint = paint;
             input.addEventListener('compositionstart', () => { composing = true; });
             input.addEventListener('compositionend', () => { composing = false; });
-            const cancel = () => { node.remove(); if (quickComposer === composer) quickComposer = null; if (scopeIsCurrent(scope) && trigger?.isConnected) trigger.focus(); };
+            const cancel = (restoreFocus = true) => {
+                const sectionId = target.value;
+                node.remove(); if (quickComposer === composer) quickComposer = null;
+                if (!scopeIsCurrent(scope)) return;
+                if (composer.inline) renderVirtualRows();
+                if (!restoreFocus) return;
+                if (trigger?.isConnected) trigger.focus();
+                else if (composer.inline) elements.projectsBoardRows?.querySelector(`[data-row-id="${cssEscape(composer.parentId ? `subadd:${composer.parentId}` : `create:${sectionId}`)}"] button`)?.focus();
+            };
+            // Like an inline spreadsheet row: leaving an empty composer closes it.
+            node.addEventListener('focusout', () => {
+                if (!composer.inline) return;
+                setTimeout(() => {
+                    if (!node.ownerDocument?.defaultView) return;
+                    if (quickComposer !== composer || node.contains(document.activeElement) || input.value.trim() || creationIntents.has(draft.intentId)) return;
+                    if (document.activeElement === document.body && node.isConnected) return;
+                    cancel(false);
+                }, 0);
+            });
             target.addEventListener('change', () => { draft.text = input.value; openQuickComposer(composer.parentId, target.value, options); });
             input.addEventListener('input', () => { draft.text = input.value; });
             node.addEventListener('keydown', e => {
@@ -343,6 +373,28 @@
                 active.paint();
             });
             paint(); input.focus();
+        }
+        // Scrolls the table so the inline composer row is mounted and visible.
+        function revealComposerRow() {
+            const scroll = elements.projectsBoardScroll;
+            const index = logicalRows.findIndex(row => row.kind === 'composer');
+            if (index < 0) {
+                // The target (for example a collapsed section) has no row; keep
+                // the form usable above the table rather than losing it.
+                if (quickComposer && !quickComposer.node.isConnected) elements.projectsBoardTableWrap?.before(quickComposer.node);
+                return;
+            }
+            if (!scroll) return;
+            const header = elements.projectsBoardHeader?.hidden ? 0 : (elements.projectsBoardHeader?.offsetHeight || 0);
+            const top = index * ROW_HEIGHT, viewport = Math.max(ROW_HEIGHT, (scroll.clientHeight || 420) - header);
+            if (top < scroll.scrollTop || top + ROW_HEIGHT > scroll.scrollTop + viewport) {
+                scroll.scrollTop = Math.max(0, top - Math.max(0, viewport - ROW_HEIGHT * 3));
+                renderVirtualRows({ viewportOnly: true, focusRowId: 'composer' });
+            }
+            if (typeof scroll.scrollIntoView === 'function' && typeof scroll.getBoundingClientRect === 'function') {
+                const rect = scroll.getBoundingClientRect();
+                if (rect.bottom > (globalScope.innerHeight || rect.bottom) || rect.top < 0) scroll.scrollIntoView({ block: 'nearest' });
+            }
         }
         const branchLoading = new Set();
         let bound = false;
@@ -405,6 +457,8 @@
                 paintFieldFeedback(taskId);
                 const detailFields = elements.projectsBoardDetailBody?.querySelector?.('[data-detail-fields]');
                 if (detailFields?.dataset.taskId === String(taskId)) paintFieldFeedback(taskId, detailFields);
+                const heading = elements.projectsBoardDetailTitle;
+                if (heading?.dataset.taskId === String(taskId)) paintFieldFeedback(taskId, heading);
                 deps.onFieldSaveEvent?.(event);
             }
             catch (_) { /* feedback is observational */ }
@@ -446,12 +500,23 @@
         }
 
         const feedbackLabels = { dirty: 'Unsaved', saving: 'Saving…', saved: 'Saved', error: 'Not saved', conflict: 'Conflict — review', uncertain: 'Not confirmed — review', cancelled: 'Not saved' };
+        const SAVED_FEEDBACK_MS = 2000;
+        const savedFeedbackSeen = new Map();
         function paintFieldFeedback(taskId, target = elements.projectsBoardRows?.querySelector(`[data-task-id="${cssEscape(taskId)}"]`)) {
             if (!presentationV2 || !target || !feedbackStore) return;
             for (const record of feedbackStore.getSnapshot().filter(item => item.taskId === String(taskId))) {
                 const key = record.field === 'title' ? 'taskTitle' : record.field.startsWith('value:') ? `custom:${record.field.slice(6)}` : ['dates', 'startDate', 'dueDate'].includes(record.field) ? 'dates' : record.field;
-                const cell = Array.from(target.children).find(node => node.dataset.columnKey === key);
+                const cell = target.dataset.columnKey === key ? target : Array.from(target.children).find(node => node.dataset.columnKey === key);
                 if (!cell) continue;
+                // "Saved" is a brief confirmation in the table; problems stay until resolved.
+                if (record.phase === 'saved' && !target.closest?.('#projects-board-detail')) {
+                    const seenKey = `${record.taskId}|${record.field}|${record.editVersion}`;
+                    if (!savedFeedbackSeen.has(seenKey)) {
+                        savedFeedbackSeen.set(seenKey, Date.now());
+                        globalScope.setTimeout?.(() => { if (elements.projectsBoardRows?.isConnected) paintFieldFeedback(taskId); }, SAVED_FEEDBACK_MS + 50);
+                    }
+                    if (Date.now() - savedFeedbackSeen.get(seenKey) >= SAVED_FEEDBACK_MS) { cell.querySelector('[data-field-feedback]')?.remove(); continue; }
+                }
                 let label = cell.querySelector('[data-field-feedback]');
                 if (!label) { label = document.createElement('span'); label.className = 'crm-field-feedback'; label.setAttribute('role', 'status'); label.setAttribute('aria-live', 'polite'); cell.appendChild(label); }
                 label.dataset.fieldFeedback = record.field; label.dataset.phase = record.phase;
@@ -541,11 +606,19 @@
             if (entries.length) await Promise.all(entries.map((promise) => Promise.resolve(promise).catch(() => {})));
         }
 
+        let statusClearTimer = null;
         function setStatus(message, kind = 'muted') {
             lastError = kind === 'error' ? message : null;
             if (!elements.projectsBoardStatus) return;
             elements.projectsBoardStatus.textContent = message || '';
             elements.projectsBoardStatus.classList.toggle('crm-projects-board-error-text', kind === 'error');
+            // Confirmations fade out; errors and warnings stay until replaced.
+            if (statusClearTimer !== null) globalScope.clearTimeout?.(statusClearTimer);
+            statusClearTimer = null;
+            if (message && kind === 'muted' && /(saved|created|updated|moved|restored|archived)\.?$/i.test(message)) {
+                const shown = message;
+                statusClearTimer = globalScope.setTimeout?.(() => { if (elements.projectsBoardStatus?.textContent === shown) elements.projectsBoardStatus.textContent = ''; }, 3000);
+            }
         }
 
         function syncSectionForm() {
@@ -578,8 +651,44 @@
             syncSectionForm();
         }
 
+        // Section blocks add a named "New section" in place and put its title
+        // into rename mode, instead of sending people to a form above the table.
+        function focusSectionTitle(sectionId, selectAll) {
+            const index = logicalRows.findIndex(row => row.kind === 'section' && String(row.section.id) === String(sectionId));
+            if (index < 0) return false;
+            const scroll = elements.projectsBoardScroll;
+            if (scroll && !mobileList) {
+                const viewport = Math.max(ROW_HEIGHT, scroll.clientHeight || 420);
+                if (index * ROW_HEIGHT < scroll.scrollTop || (index + 3) * ROW_HEIGHT > scroll.scrollTop + viewport) scroll.scrollTop = Math.max(0, index * ROW_HEIGHT - ROW_HEIGHT);
+            }
+            renderVirtualRows({ viewportOnly: true, focusRowId: `section:${sectionId}` });
+            const input = elements.projectsBoardRows?.querySelector(`[data-row-id="${cssEscape(`section:${sectionId}`)}"] .crm-board-section-input`);
+            if (!input) return false;
+            input.focus({ preventScroll: true });
+            if (selectAll) input.select?.(); else input.setSelectionRange?.(input.value.length, input.value.length);
+            return true;
+        }
+        async function createSectionInPlace(placement) {
+            const existing = sections.filter(section => !section.isOptimistic);
+            const effective = placement || (existing.length ? { kind: 'after', siblingId: existing[existing.length - 1].id } : null);
+            const before = new Set(sections.map(section => String(section.id)));
+            const pending = createSection('New section', effective);
+            const optimistic = sections.find(section => section.isOptimistic && !before.has(String(section.id)));
+            if (!optimistic) { await pending; return; }
+            const scope = captureScope();
+            focusSectionTitle(optimistic.id, true);
+            const created = await pending;
+            if (!scopeIsCurrent(scope) || !globalScope.document?.activeElement) return;
+            const optimisticInput = `section:${optimistic.id}`;
+            // The saved section replaces the temporary row; keep the rename going.
+            if (created && !created.isOptimistic && (document.activeElement === document.body || !document.activeElement?.isConnected || document.activeElement?.closest?.('[data-row-id]')?.dataset.rowId === optimisticInput)) {
+                focusSectionTitle(created.id, drafts.get(draftKey(created.id, 'title')) === undefined);
+            }
+        }
+
         function openSectionForm(placement = null) {
             if (!canSchema() || busy || sectionCreatePending) return;
+            if (groupBlocks() && !quickTaskAfterSection && sections.some(section => !section.isOptimistic)) { createSectionInPlace(placement); return; }
             activeSectionPlacement = placement;
             if (elements.projectsBoardSectionForm) elements.projectsBoardSectionForm.hidden = false;
             if (elements.projectsBoardSectionName) {
@@ -609,7 +718,8 @@
                 setStatus('Name the first section. Your task form will open next.');
                 return;
             }
-            openQuickComposer(null);
+            // Like a spreadsheet board, "New task" opens a row at the top of the section.
+            openQuickComposer(null, null, groupBlocks() ? { placement: { kind: 'start' } } : {});
         }
 
         function selectableTask(task) {
@@ -1053,6 +1163,7 @@
         }
 
         function invalidateAccess(deniedProjectId, notifyViews = true) {
+            forgetProjectSnapshot(String(deniedProjectId || ''));
             if (String(deniedProjectId || '') !== currentProjectId()) return;
             clearQuickCreation();
             closePeoplePicker(); closeStatusPicker(); closeRowEditor(false); renameSession = null;
@@ -1088,11 +1199,49 @@
             setStatus('Project access is no longer available. Select an authorized project.', 'error');
         }
 
+        // Recently opened boards are kept in memory (never on disk) so switching
+        // back paints at once; a background load then reconciles the snapshot.
+        // Cached membership never authorizes writes: the refresh keeps the
+        // board busy until the server confirms access again.
+        const PROJECT_SNAPSHOT_LIMIT = 5;
+        const projectSnapshots = new Map();
+        const snapshotKey = (projectId, actorUid = String(deps.getCurrentUser?.()?.uid || '')) => `${actorUid}|${projectId}`;
+        function rememberProjectSnapshot() {
+            const id = currentProjectId();
+            if (!id || !project || String(project.id) !== id || authorityPending || loadBusy || Object.keys(sharedFilters).length) return;
+            if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid || (project.lifecycle || 'active') !== 'active') return;
+            if ([...tasks.values()].some(task => task.isOptimistic) || sections.some(section => section.isOptimistic) || projectionTaskIds.size) return;
+            const key = snapshotKey(id);
+            projectSnapshots.delete(key);
+            projectSnapshots.set(key, {
+                project, membership, members, sections, columns, tasks: new Map(tasks),
+                expanded: new Set(expanded), collapsedSections: new Set(collapsedSections),
+                loadedBranches: new Set(loadedBranches), branchCursors: new Map(branchCursors), branchHasMore: new Map(branchHasMore),
+                structureRevision: boardRevision.structureRevision, schemaRevision: boardRevision.schemaRevision
+            });
+            while (projectSnapshots.size > PROJECT_SNAPSHOT_LIMIT) projectSnapshots.delete(projectSnapshots.keys().next().value);
+        }
+        function forgetProjectSnapshot(projectId) {
+            for (const key of [...projectSnapshots.keys()]) if (key.endsWith(`|${projectId}`)) projectSnapshots.delete(key);
+        }
+        function hydrateProjectSnapshot(projectId, actorUid) {
+            const cached = projectSnapshots.get(snapshotKey(projectId, actorUid));
+            if (!cached) return false;
+            project = cached.project; membership = cached.membership; members = cached.members;
+            sections = cached.sections; columns = cached.columns; tasks = new Map(cached.tasks);
+            expanded = new Set(cached.expanded); collapsedSections.clear(); cached.collapsedSections.forEach(id => collapsedSections.add(id));
+            loadedBranches = new Set(cached.loadedBranches); branchCursors = new Map(cached.branchCursors); branchHasMore = new Map(cached.branchHasMore);
+            boardRevision.structureRevision = cached.structureRevision; boardRevision.schemaRevision = cached.schemaRevision;
+            invalidateHierarchy();
+            return true;
+        }
+
         function setProjects(nextSelection = {}) {
             const nextProjects = asArray(nextSelection.projects);
             const nextId = String(Object.prototype.hasOwnProperty.call(nextSelection, 'selectedProjectId') ? (nextSelection.selectedProjectId || '') : (nextProjects[0]?.id || '')).trim();
             const changed = nextId !== currentProjectId();
             if (changed) {
+                rememberProjectSnapshot();
                 projectionTaskIds.clear();
                 if (presentationV2) clearDetailPresentation();
                 clearQuickCreation();
@@ -1263,7 +1412,14 @@
             const loadIsCurrent = () => normalized === currentProjectId() && expectedEpoch === projectEpoch && expectedFilterGeneration === filterGeneration
                 && actorUid === controllerActorUid && actorUid === String(deps.getCurrentUser?.()?.uid || '');
             if (!normalized || !apiFetchJson || !loadIsCurrent()) return false;
-            const preserve = options.preserve === true && String(project?.id || '') === normalized;
+            let hydrated = false;
+            if (options.preserve !== true && String(project?.id || '') !== normalized && !Object.keys(loadFilters).length) {
+                drafts = new Map(); settingsDrafts.clear();
+                selectedTaskId = ''; selectedTaskIds = []; stateModel?.setSelectedTaskIds?.([]); focusedRowId = '';
+                hydrated = hydrateProjectSnapshot(normalized, actorUid);
+                if (hydrated) { authorityPending = true; renderBoard(); }
+            }
+            const preserve = (options.preserve === true || hydrated) && String(project?.id || '') === normalized;
             if (!preserve) {
                 drafts = new Map(); settingsDrafts.clear(); expanded = new Set(); collapsedSections.clear();
                 selectedTaskId = ''; selectedTaskIds = []; stateModel?.setSelectedTaskIds?.([]); focusedRowId = '';
@@ -1285,7 +1441,7 @@
             // Cached membership never authorizes writes during or after a failed refresh.
             authorityPending = true;
             setBusy(true);
-            if (preserve) { renderBoard(); setStatus('Refreshing project board…'); }
+            if (preserve) { renderBoard(); setStatus(hydrated ? 'Updating…' : 'Refreshing project board…'); }
             else {
                 if (elements.projectsBoardWorkspace) elements.projectsBoardWorkspace.hidden = true;
                 if (elements.projectsBoardEmpty) elements.projectsBoardEmpty.hidden = true;
@@ -1303,6 +1459,10 @@
                     throw error;
                 }
             };
+            // Opening a board requests its first root page alongside the project;
+            // the page is only used once access is confirmed. Refreshes keep the
+            // strict project-then-tasks order so a held refresh reads current tasks.
+            let rootPrefetch = !preserve || hydrated ? apiFetchJson(queryPath(normalized, null, null, loadFilters)).then(value => ({ value }), error => ({ error })) : null;
             try {
                 const [projectResponse, memberResponse] = await Promise.all([
                     read(`/api/projects/${encodeURIComponent(normalized)}`),
@@ -1329,7 +1489,14 @@
                     do {
                         let response;
                         try {
-                            response = await read(queryPath(normalized, parentTaskId, cursor, loadFilters));
+                            if (parentTaskId === null && cursor === null && rootPrefetch) {
+                                const prefetched = await rootPrefetch; rootPrefetch = null;
+                                if (prefetched.error) {
+                                    if (current() && [401, 403, 404].includes(Number(prefetched.error?.status))) invalidateAccess(normalized);
+                                    throw prefetched.error;
+                                }
+                                response = prefetched.value;
+                            } else response = await read(queryPath(normalized, parentTaskId, cursor, loadFilters));
                         } catch (pageError) {
                             if (pageCount > 0 && current()) {
                                 setStatus(`Some tasks could not be loaded: ${pageError.message || 'connection error'}. Refresh to retry.`, 'warning');
@@ -1570,23 +1737,47 @@
             return !loadedBranches.has(key) || branchHasMore.get(key) === true;
         }
 
+        // Section grouping on the desktop table renders each section as its own
+        // block (title, column labels, tasks, add row) and keeps creation
+        // composers inside the table where the new row will appear.
+        function groupBlocks() { return presentationV2 && !mobileList && currentGroupBy === 'section'; }
+        function inlineComposer() {
+            return groupBlocks() && quickComposer && !quickComposer.inDrawer ? quickComposer : null;
+        }
+
         function flattenRows() {
             ensureHierarchy();
             const rows = [];
+            const blocks = groupBlocks();
+            const composer = inlineComposer();
+            const composerSection = composer ? String(composer.node.querySelector('select')?.value || '') : '';
+            const placement = composer?.placement || null;
+            const anchorId = composer ? String(placement?.siblingId || '') : '';
+            const composerRow = (depth) => ({ kind: 'composer', id: 'composer', depth, sectionId: composerSection });
             const appendTask = (task, depth) => {
                 // Hierarchy caches ordering; ordinary edits replace canonical records.
                 task = taskFor(task.id) || task;
-                rows.push({ kind: 'task', id: `task:${String(task.id)}`, task, depth });
-                if (!expanded.has(String(task.id))) return;
-                (childrenByParent.get(String(task.id)) || []).forEach((child) => appendTask(child, depth + 1));
+                const id = String(task.id);
+                if (anchorId === id && placement?.kind === 'before') rows.push(composerRow(depth));
+                rows.push({ kind: 'task', id: `task:${id}`, task, depth });
+                if (expanded.has(id)) {
+                    (childrenByParent.get(id) || []).forEach((child) => appendTask(child, depth + 1));
+                    if (blocks && composer && String(composer.parentId || '') === id && !anchorId) rows.push(composerRow(depth + 1));
+                    else if (blocks && canWrite() && !task.contextOnly && !task.isOptimistic) rows.push({ kind: 'subadd', id: `subadd:${id}`, task, depth: depth + 1 });
+                }
+                if (anchorId === id && placement?.kind !== 'before') rows.push(composerRow(depth));
             };
             const groups = activeGroups();
             groups.forEach((group) => {
                 rows.push({ kind: 'section', id: `section:${group.id}`, section: group, depth: 0 });
                 if (!collapsedSections.has(String(group.id))) {
+                    const topLevelComposer = composer && !composer.parentId && !anchorId && composerSection === String(group.id);
+                    if (blocks) rows.push({ kind: 'group-header', id: `ghead:${group.id}`, sectionId: group.id, depth: 0 });
+                    if (topLevelComposer && placement?.kind === 'start') rows.push(composerRow(0));
                     const groupRoots = rootsForGroup(group.id);
                     groupRoots.forEach((task) => appendTask(task, 0));
-                    if (presentationV2 && currentGroupBy === 'section') rows.push({ kind: 'summary', id: `create:${group.id}`, sectionId: group.id, depth: 0 });
+                    if (topLevelComposer && placement?.kind !== 'start') rows.push(composerRow(0));
+                    else if (presentationV2 && currentGroupBy === 'section') rows.push({ kind: 'summary', id: `create:${group.id}`, sectionId: group.id, depth: 0 });
                 }
             });
             rowIndexById.clear();
@@ -1737,6 +1928,21 @@
             return `<span class="crm-board-date-control"><input class="crm-board-field" data-field-kind="${kind}" type="date" value="${escape(value)}" aria-label="${label}" tabindex="-1"${disabled}><button type="button" class="crm-board-date-trigger" data-action="pick-date" aria-haspopup="dialog" aria-label="${label}: ${escape(value || 'not set')}"${disabled}>${escape(text)}</button></span>`;
         }
 
+        // Short, readable dates for the table ("Sep 2 – Oct 1"); exact values stay in the editor.
+        function friendlyDate(value) {
+            if (!value) return '';
+            const date = new Date(`${value}T00:00:00`);
+            if (!Number.isFinite(date.getTime())) return value;
+            const sameYear = date.getFullYear() === new Date().getFullYear();
+            return date.toLocaleDateString('en', sameYear ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        function friendlyRange(startDate, dueDate) {
+            if (!startDate && !dueDate) return '<span class="crm-board-date-empty">Set dates</span>';
+            if (!startDate) return `Due ${escape(friendlyDate(dueDate))}`;
+            if (!dueDate) return `From ${escape(friendlyDate(startDate))}`;
+            return `${escape(friendlyDate(startDate))} – ${escape(friendlyDate(dueDate))}`;
+        }
+
         function taskRowMarkup(row) {
             const task = row.task;
             const selected = String(task.id) === String(selectedTaskId);
@@ -1750,8 +1956,9 @@
             const assignees = assigneeDraft === undefined ? asArray(task.assigneeUids) : assigneeDraft;
             const startDateKey = draftKeyFor(task.id, 'startDate');
             const dueDateKey = draftKeyFor(task.id, 'dueDate');
-            const startDate = drafts.has(startDateKey) ? drafts.get(startDateKey) : (task.startDate || '');
-            const dueDate = drafts.has(dueDateKey) ? drafts.get(dueDateKey) : (task.dueDate || '');
+            const rangeDraft = presentationV2 ? drafts.get(draftKeyFor(task.id, 'dates')) : null;
+            const startDate = rangeDraft ? rangeDraft.startDate || '' : drafts.has(startDateKey) ? drafts.get(startDateKey) : (task.startDate || '');
+            const dueDate = rangeDraft ? rangeDraft.dueDate || '' : drafts.has(dueDateKey) ? drafts.get(dueDateKey) : (task.dueDate || '');
             const depth = Math.min(4, Math.max(0, Number(row.depth) || 0));
             const indent = depth * 22;
             const treeElbow = depth > 0 ? '<span class="crm-board-tree-elbow" aria-hidden="true"></span>' : '';
@@ -1761,7 +1968,9 @@
             const isExp = expanded.has(String(task.id));
             const expander = hasKids
                 ? `<button type="button" class="crm-board-expander" data-action="toggle-task" aria-label="${isExp ? 'Collapse' : 'Expand'} ${escape(title)}" aria-expanded="${isExp ? 'true' : 'false'}">${isExp ? '▾' : '▸'}</button>`
-                : presentationV2 ? '<span class="crm-board-leaf-space" aria-hidden="true"></span>' : `<button type="button" class="crm-board-expander is-leaf" data-action="add-subtask" aria-label="Add subtask to ${escape(title)}" title="Add subtask (Ctrl+N)">▸</button>`;
+                : presentationV2 && !(canWrite() && !task.contextOnly && !task.isOptimistic) ? '<span class="crm-board-leaf-space" aria-hidden="true"></span>'
+                : presentationV2 ? `<button type="button" class="crm-board-expander is-leaf" data-action="toggle-task" aria-label="${isExp ? 'Hide' : 'Add'} subtasks for ${escape(title)}" aria-expanded="${isExp ? 'true' : 'false'}" title="Subtasks">${isExp ? '▾' : '▸'}</button>`
+                : `<button type="button" class="crm-board-expander is-leaf" data-action="add-subtask" aria-label="Add subtask to ${escape(title)}" title="Add subtask (Ctrl+N)">▸</button>`;
             const selectionInput = `<input type="checkbox" data-action="select-task" aria-label="Select ${escape(title)}"${selectedTaskIds.includes(String(task.id)) ? ' checked' : ''}>`;
             const selectionCheckbox = selectableTask(task) ? (presentationV2 ? `<label class="crm-board-selection-hit">${selectionInput}</label>` : selectionInput) : '';
             const inputState = (authorityPending || busy) && canRenderTaskEditor() ? ' readonly' : disabled;
@@ -1770,7 +1979,7 @@
                 : canRenderTaskEditor()
                 ? `<input class="crm-board-title-input crm-board-field" data-field-kind="title" type="text" value="${escape(title)}" aria-label="Task title"${inputState}>${presentationV2 ? `<button type="button" data-action="save-rename" aria-label="Save task name"${disabled}>✓</button><button type="button" data-action="cancel-rename" aria-label="Cancel rename">×</button>` : ''}`
                 : `<span class="crm-board-title-text">${escape(title)}</span>`;
-            const dState = presentationV2 ? 'none' : dueState(task);
+            const dState = dueState(presentationV2 ? { ...task, dueDate, status } : task);
             const relDue = relativeDue(dueDate);
             const dueBadge = relDue && dState !== 'none' && dState !== 'normal' ? `<span class="crm-board-due-badge crm-board-due-${dState}">${escape(relDue)}</span>` : '';
             const workingDays = presentationV2 ? null : computeWorkingDays(startDate, dueDate);
@@ -1783,7 +1992,7 @@
               <div class="crm-projects-board-cell crm-board-status-cell" role="cell" data-column-key="status" data-status="${escape(status)}">${statusBatteryBar(task)}${statusPillMarkup(status, project?.statusLabels || {}, disabled, 'status')}</div>
               <div class="crm-projects-board-cell crm-board-owner-cell" role="cell" data-column-key="ownerUid"><button type="button" class="crm-people-trigger" data-action="pick-people" data-people-kind="ownerUid" aria-haspopup="listbox" aria-label="Change accountable owner for ${escape(title)}${presentationV2 ? `: ${escape(memberName(ownerUid) || 'Unassigned')}` : ''}"${disabled}><span class="crm-board-owner-avatar" aria-hidden="true">${escape(ownerInitials(ownerUid))}</span><span class="crm-people-trigger-name">${escape(memberName(ownerUid) || (presentationV2 ? 'Unassigned' : 'Assign'))}</span></button><select class="crm-board-field" data-field-kind="ownerUid" aria-label="Accountable owner"${disabled}>${memberOptions(ownerUid)}</select></div>
               <div class="crm-projects-board-cell crm-board-assignees-cell" role="cell" data-column-key="assigneeUids"><button type="button" class="crm-people-trigger is-stack" data-action="pick-people" data-people-kind="assigneeUids" aria-haspopup="listbox" aria-label="${presentationV2 ? `Collaborators for ${escape(title)}: ${escape(asArray(assignees).map(memberName).join(', ') || 'Add collaborators')}` : `Change assignees for ${escape(title)}`}"${disabled}>${peopleStack(assignees) || `<span class="crm-people-trigger-name">${presentationV2 ? 'Add collaborators' : 'Assign'}</span>`}</button><select multiple class="crm-board-field crm-board-people-field" data-field-kind="assigneeUids" aria-label="Additional assignees"${disabled}>${memberOptions(assignees, true)}</select></div>
-              <div class="crm-projects-board-cell crm-board-date-cell" role="cell" data-column-key="dates" data-due-state="${dState}">${presentationV2 ? `<button type="button" class="crm-board-date-trigger" data-action="edit-dates" aria-haspopup="dialog" aria-label="Edit dates for ${escape(title)}"${disabled}>${escape(startDate || 'No start')} → ${escape(dueDate || 'No due')}</button><span class="crm-working-days">Working days not confirmed</span>` : `${dueBadge}${durationBadge}${dateControl('startDate', startDate, disabled)}${dateControl('dueDate', dueDate, disabled)}`}</div>
+              <div class="crm-projects-board-cell crm-board-date-cell" role="cell" data-column-key="dates" data-due-state="${dState}">${presentationV2 ? `<button type="button" class="crm-board-date-trigger" data-action="edit-dates" aria-haspopup="dialog" aria-label="Edit dates for ${escape(title)}" title="${escape(startDate || 'No start')} → ${escape(dueDate || 'No due')}"${disabled}>${friendlyRange(startDate, dueDate)}</button>` : `${dueBadge}${durationBadge}${dateControl('startDate', startDate, disabled)}${dateControl('dueDate', dueDate, disabled)}`}</div>
               ${columns.map((column) => `<div class="crm-projects-board-cell" role="cell" data-column-key="custom:${escape(column.id)}" data-column-id="${escape(column.id)}">${customCell(task, column)}</div>`).join('')}
             </div>`;
         }
@@ -1795,17 +2004,24 @@
             const editable = canSchema() && !busy
                 ? `<input class="crm-board-section-input crm-board-field" data-field-kind="section-title" type="text" value="${escape(title)}" aria-label="Section title">`
                 : `<span class="crm-board-group-title">${escape(title)}</span>`;
-            const addTaskTopBtn = presentationV2 && canWrite() && !busy
-                ? `<button type="button" class="crm-board-add-top-btn" data-action="add-task-top" data-section-id="${escape(section.id)}" aria-label="Add task at top of ${escape(title)}">+ Add task</button>`
-                : '';
+            const collapsed = collapsedSections.has(String(section.id));
             const sectionMenuBtn = presentationV2 && canSchema() && !busy
                 ? `<button type="button" class="crm-board-section-menu crm-board-action-btn" data-action="section-menu" data-section-id="${escape(section.id)}" aria-label="Section options for ${escape(title)}">⋯</button>`
                 : '';
-            return `<div class="crm-projects-board-section-row" role="row" tabindex="0" draggable="${canSchema() && !busy ? 'true' : 'false'}" data-row-kind="section" data-row-id="${escape(row.id)}" data-section-id="${escape(section.id)}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${groupColor(section.id)}"><div role="cell"><button type="button" class="crm-board-group-expander" data-action="toggle-section" aria-expanded="${collapsedSections.has(String(section.id)) ? 'false' : 'true'}" aria-label="${collapsedSections.has(String(section.id)) ? 'Expand' : 'Collapse'} group ${escape(title)}">${collapsedSections.has(String(section.id)) ? '&#9656;' : '&#9662;'}</button><span class="crm-board-drag-handle" aria-hidden="true">⠿</span>${editable}</div><div role="cell">${addTaskTopBtn}${sectionMenuBtn}<span class="crm-muted">${rootsForSection(section.id).length} root task${rootsForSection(section.id).length === 1 ? '' : 's'}</span></div></div>`;
+            if (presentationV2) {
+                // Monday-style group title: coloured, bold and sized to its text,
+                // with the count shown only when the tasks are hidden.
+                const count = collapsed ? rootsForSection(section.id).length : 0;
+                const titleControl = canSchema() && !busy
+                    ? `<input class="crm-board-section-input crm-board-field" data-field-kind="section-title" type="text" value="${escape(title)}" size="${Math.max(6, Math.min(60, title.length + 1))}" aria-label="Section title">`
+                    : `<span class="crm-board-group-title">${escape(title)}</span>`;
+                return `<div class="crm-projects-board-section-row" role="row" tabindex="0" draggable="${canSchema() && !busy ? 'true' : 'false'}" data-row-kind="section" data-row-id="${escape(row.id)}" data-section-id="${escape(section.id)}"${section.isOptimistic ? ' data-optimistic="true"' : ''} style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${groupColor(section.id)}"><div role="cell"><button type="button" class="crm-board-group-expander" data-action="toggle-section" aria-expanded="${collapsed ? 'false' : 'true'}" aria-label="${collapsed ? 'Expand' : 'Collapse'} group ${escape(title)}">${collapsed ? '&#9656;' : '&#9662;'}</button><span class="crm-board-drag-handle" aria-hidden="true">⠿</span>${titleControl}${sectionMenuBtn}${collapsed ? `<span class="crm-board-group-count">${count} task${count === 1 ? '' : 's'}</span>` : ''}</div><div role="cell"></div></div>`;
+            }
+            return `<div class="crm-projects-board-section-row" role="row" tabindex="0" draggable="${canSchema() && !busy ? 'true' : 'false'}" data-row-kind="section" data-row-id="${escape(row.id)}" data-section-id="${escape(section.id)}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${groupColor(section.id)}"><div role="cell"><button type="button" class="crm-board-group-expander" data-action="toggle-section" aria-expanded="${collapsed ? 'false' : 'true'}" aria-label="${collapsed ? 'Expand' : 'Collapse'} group ${escape(title)}">${collapsed ? '&#9656;' : '&#9662;'}</button><span class="crm-board-drag-handle" aria-hidden="true">⠿</span>${editable}</div><div role="cell">${sectionMenuBtn}<span class="crm-muted">${rootsForSection(section.id).length} root task${rootsForSection(section.id).length === 1 ? '' : 's'}</span></div></div>`;
         }
 
         function sectionSummaryRowMarkup(row) {
-            if (presentationV2) return `<div class="crm-projects-board-row crm-quick-footer" role="row" data-row-kind="summary" data-row-id="${escape(row.id)}" data-section-id="${escape(row.sectionId)}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px">${visibleColumns.map(column => `<div class="crm-projects-board-cell" role="cell" data-column-key="${escape(column.key)}">${column.key === 'taskTitle' ? `<button type="button" data-action="quick-task"${canWrite() && !busy ? '' : ' disabled'}>Add a task…</button>` : ''}</div>`).join('')}</div>`;
+            if (presentationV2) return `<div class="crm-projects-board-row crm-quick-footer" role="row" data-row-kind="summary" data-row-id="${escape(row.id)}" data-section-id="${escape(row.sectionId)}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${groupColor(row.sectionId)}">${visibleColumns.map(column => `<div class="crm-projects-board-cell" role="cell" data-column-key="${escape(column.key)}">${column.key === 'taskTitle' ? `<button type="button" class="crm-board-inline-add" data-action="quick-task" aria-label="Add task to ${escape(asText(sections.find(s => String(s.id) === String(row.sectionId))?.title, 'section'))}"${canWrite() && !busy ? '' : ' disabled'}>+ Add task</button>` : ''}</div>`).join('')}</div>`;
 
             const groupTasks = Array.from(tasks.values()).filter((t) => {
                 if ((t.effectiveLifecycle || t.lifecycle || 'active') !== 'active') return false;
@@ -1880,20 +2096,63 @@
             elements.projectsBoardHeader.innerHTML = base.concat(columns.map((column) => column.label || column.id)).map((label, index) => `<div role="columnheader"${index >= 5 && schema ? ' class="crm-projects-board-column-editable"' : ''}${index >= 5 && schema && !busy ? ` draggable="true" data-column-id="${escape(columns[index - 5].id)}"` : ''}><span class="crm-projects-board-column-label" title="${escape(label)}">${escape(label)}</span>${index >= 5 && schema ? `<button type="button" data-action="edit-column" data-column-id="${escape(columns[index - 5].id)}" aria-label="Edit column ${escape(label)}"${busy ? ' disabled' : ''}>Edit column</button>` : ''}</div>`).join('');
         }
 
+        function rowGroupColor(row) {
+            if (row.kind === 'section') return groupColor(row.section.id);
+            if (row.sectionId) return groupColor(row.sectionId);
+            return row.task ? taskGroupColor(row.task) : '';
+        }
+        const rowFrame = (row, className, extra = '') => `<div class="${className}" role="row" data-row-kind="${row.kind}" data-row-id="${escape(row.id)}"${extra} style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${rowGroupColor(row)}">`;
+        const emptyCells = (fill = () => '') => visibleColumns.map(column => `<div class="crm-projects-board-cell" role="cell" data-column-key="${escape(column.key)}">${fill(column)}</div>`).join('');
+
+        // Repeats the column labels under each section title. Column editing,
+        // reordering and resizing stay available here because the shared
+        // header is hidden while sections render as blocks.
+        function groupHeaderRowMarkup(row) {
+            const schema = canSchema();
+            return `${rowFrame(row, 'crm-projects-board-row crm-board-group-header', ` data-section-id="${escape(row.sectionId)}"`)}${visibleColumns.map(c => `<div class="crm-projects-board-cell" role="columnheader" data-column-key="${escape(c.key)}"${c.source ? ` data-column-id="${escape(c.source.id)}"${schema && !busy ? ' draggable="true"' : ''}` : ''}><span class="crm-projects-board-column-label" title="${escape(c.label)}">${escape(c.label)}</span>${c.source && schema ? `<button type="button" data-action="edit-column" data-column-id="${escape(c.source.id)}" aria-label="Edit column ${escape(c.label)}"${busy ? ' disabled' : ''}>Edit column</button>` : ''}<span role="separator" tabindex="-1" aria-orientation="vertical" aria-label="Resize ${escape(c.label)}" aria-valuemin="${c.min}" aria-valuemax="${c.max}" aria-valuenow="${c.width}" aria-valuetext="${c.width} pixels" data-column-resize="${escape(c.key)}"></span></div>`).join('')}</div>`;
+        }
+
+        function gapRowMarkup(row) {
+            return `${rowFrame(row, 'crm-projects-board-row crm-board-group-gap', ' aria-hidden="true"')}<div class="crm-projects-board-cell" role="presentation" data-column-key="taskTitle"></div></div>`;
+        }
+
+        // The quick composer form is created once by openQuickComposer and
+        // adopted into this row, so its drafts, retries and focus survive.
+        function composerRowMarkup(row) {
+            return `${rowFrame(row, 'crm-projects-board-row crm-board-composer-row', ` data-depth="${Number(row.depth) || 0}"`)}<div class="crm-projects-board-cell crm-board-composer-cell" role="cell" data-column-key="taskTitle" style="padding-left:${10 + Math.min(4, Number(row.depth) || 0) * 22}px"></div></div>`;
+        }
+
+        function subtaskAddRowMarkup(row) {
+            const title = asText(row.task.title, 'Untitled task');
+            const indent = 10 + Math.min(4, Number(row.depth) || 0) * 22;
+            return `${rowFrame(row, 'crm-projects-board-row crm-quick-footer crm-board-subadd-row', ` data-parent-task-id="${escape(row.task.id)}" data-depth="${Number(row.depth) || 0}"`)}${emptyCells(column => column.key === 'taskTitle' ? `<span class="crm-board-tree-elbow" aria-hidden="true"></span><button type="button" class="crm-board-inline-add" data-action="quick-subtask" aria-label="Add subtask to ${escape(title)}"${canWrite() && !busy ? '' : ' disabled'}>+ Add subtask</button>` : '').replace('data-column-key="taskTitle">', `data-column-key="taskTitle" style="padding-left:${indent}px">`)}</div>`;
+        }
+
         function rowMarkup(row) {
             if (row.kind === 'section') return sectionRowMarkup(row);
             if (row.kind === 'summary') return sectionSummaryRowMarkup(row);
+            if (row.kind === 'group-header') return groupHeaderRowMarkup(row);
+            if (row.kind === 'gap') return gapRowMarkup(row);
+            if (row.kind === 'composer') return composerRowMarkup(row);
+            if (row.kind === 'subadd') return subtaskAddRowMarkup(row);
             return taskRowMarkup(row);
         }
+        const SPANNING_ROWS = new Set(['section', 'gap', 'composer']);
+        // Rows that hold no task or section and never take part in drag and drop.
+        const CHROME_ROWS = new Set(['summary', 'group-header', 'gap', 'composer', 'subadd']);
 
-        function createRowNode(row) {
+        function createRowNode(row, markup = rowMarkup(row)) {
             const template = document.createElement('template');
-            template.innerHTML = rowMarkup(row).trim();
+            template.innerHTML = markup.trim();
             const node = template.content.firstElementChild;
             if (presentationV2 && node) {
                 node.querySelectorAll('.crm-board-field[data-column-id]').forEach(control => { control.dataset.columnType = columns.find(c => String(c.id) === control.dataset.columnId)?.type || ''; });
                 node.setAttribute('aria-rowindex', String(row.index + 2));
-                if (row.kind !== 'section') {
+                if (row.kind === 'composer') {
+                    if (quickComposer?.node) node.firstElementChild.append(quickComposer.node);
+                } else if (row.kind === 'gap') {
+                    // A spacer between section blocks; nothing to reorder.
+                } else if (row.kind !== 'section') {
                     const cells = new Map(Array.from(node.children).map(cell => [cell.dataset.columnKey, cell]));
                     const rowColumns = mobileList && row.kind === 'task' ? [...['taskTitle', 'ownerUid', 'status'].map(key => ({ key })), ...visibleColumns.filter(c => !['taskTitle', 'ownerUid', 'status'].includes(c.key))] : visibleColumns;
                     node.replaceChildren(...rowColumns.map((c, index) => { const cell = cells.get(c.key); cell.setAttribute('aria-colindex', String(index + 1)); return cell; }));
@@ -2016,13 +2275,32 @@
             return `${dragState.kind}:${String(dragState.id || '')}`;
         }
 
+        // Rows whose markup, column layout and presentation are unchanged keep
+        // their DOM; only position moves. This skips rebuilding every mounted
+        // row on each edit, selection or remote update.
+        function rowSignature(markup) {
+            return `${mobileList}|${visibleColumns.map(c => c.key).join(',')}|${columns.map(c => `${c.id}:${c.type}`).join(',')}|${markup}`;
+        }
         function updateExistingRow(node, row, activeElement, interactionPinned = false) {
             node.style.top = `${row.index * ROW_HEIGHT}px`;
             node.style.height = `${ROW_HEIGHT}px`;
-            const fresh = createRowNode(row);
+            if (row.kind === 'composer') {
+                const cell = node.firstElementChild;
+                if (quickComposer?.node && cell && quickComposer.node.parentNode !== cell) cell.append(quickComposer.node);
+                const indent = `${10 + Math.min(4, Number(row.depth) || 0) * 22}px`;
+                if (cell && cell.style.paddingLeft !== indent) cell.style.paddingLeft = indent;
+                return;
+            }
+            const markup = rowMarkup({ ...row, index: 0 });
+            const signature = presentationV2 ? rowSignature(markup) : '';
+            if (presentationV2 && node.__pjSignature === signature) { node.setAttribute('aria-rowindex', String(row.index + 2)); return; }
+            const fresh = createRowNode(row, markup);
             if (!fresh) return;
+            // A retained focused editor or pinned interaction may keep older
+            // cells; only a complete refresh may be reused next time.
+            node.__pjSignature = interactionPinned || (activeElement && node.contains(activeElement)) ? '' : signature;
             syncRowMetadata(node, fresh);
-            node.style.setProperty('--crm-project-group-color', row.kind === 'section' ? groupColor(row.section.id) : (row.kind === 'summary' ? groupColor(row.sectionId) : taskGroupColor(row.task)));
+            node.style.setProperty('--crm-project-group-color', rowGroupColor(row));
             // Refresh decoration without replacing a focused native editor.
             for (const selector of (presentationV2 ? [] : ['.crm-board-status-cell', '[data-field-kind="status"]', '.crm-board-status-pill'])) {
                 const current = node.querySelector(selector), next = fresh.querySelector(selector);
@@ -2056,6 +2334,11 @@
                 const cell = keyed ? cellsByKey.get(freshCell?.dataset?.columnKey) : cells[index];
                 if (keyed && cell && freshCell) cell.setAttribute('aria-colindex', freshCell.getAttribute('aria-colindex'));
                 if (keyed && interactionPinned && cell && freshCell) continue;
+                if (presentationV2 && row.kind === 'group-header' && cell?.contains(activeElement) && activeElement?.dataset.columnResize && freshCell) {
+                    const freshHandle = freshCell.querySelector('[data-column-resize]');
+                    for (const name of ['aria-valuemin', 'aria-valuemax', 'aria-valuenow', 'aria-valuetext']) activeElement.setAttribute(name, freshHandle.getAttribute(name));
+                    continue; // Keep pointer capture and keyboard focus while resizing.
+                }
                 if (cell && cell === focusedCell && ['toggle-section', 'open-detail', 'pick-status', 'pick-people'].includes(activeElement?.dataset?.action)) {
                     const action = activeElement.dataset.action;
                     const next = freshCell?.querySelector(`[data-action="${action}"]`);
@@ -2106,17 +2389,32 @@
         let renderedRowHeight = ROW_HEIGHT, renderedProject = '';
         function renderVirtualRows({ viewportOnly = false, focusRowId = '' } = {}) {
             if (!elements.projectsBoardRows || !elements.projectsBoardScroll) return;
+            // Moving the inline composer between rows (or out of the table)
+            // would blur it; remember its caret and restore it afterwards.
+            const composerActive = quickComposer?.inline && quickComposer.node.contains(document.activeElement) ? document.activeElement : null;
+            const composerCaret = composerActive ? [composerActive.selectionStart, composerActive.selectionEnd] : null;
+            try { renderVirtualRowsInner({ viewportOnly, focusRowId }); }
+            finally {
+                if (composerActive && composerActive.isConnected && document.activeElement !== composerActive) {
+                    composerActive.focus({ preventScroll: true });
+                    if (composerCaret && typeof composerCaret[0] === 'number') { try { composerActive.setSelectionRange(composerCaret[0], composerCaret[1]); } catch (_) { /* optional */ } }
+                }
+            }
+        }
+        function renderVirtualRowsInner({ viewportOnly = false, focusRowId = '' } = {}) {
             // Scroll only changes which current rows are mounted. Data, schema,
             // permissions and selection always use the default full render.
             if (!viewportOnly) {
                 const oldPosition = (elements.projectsBoardScroll.scrollTop || 0) / renderedRowHeight;
-                const anchor = presentationV2 && !mobileList && renderedProject === currentProjectId() ? logicalRows[Math.floor(oldPosition)]?.id : null;
+                // List and table layouts have different rows (section column labels
+                // exist only in the table), so only re-anchor within one layout.
+                const anchor = presentationV2 && !mobileList && renderedMobileList === mobileList && renderedProject === currentProjectId() ? logicalRows[Math.floor(oldPosition)]?.id : null;
                 logicalRows = flattenRows().map((row, index) => ({ ...row, index }));
                 if (mobileProject !== currentProjectId()) { mobileProject = currentProjectId(); mobileLimit = 50; }
                 const totalHeight = logicalRows.length * ROW_HEIGHT;
                 elements.projectsBoardRows.style.height = `${Math.max(totalHeight, ROW_HEIGHT)}px`;
                 if (anchor) { const index = logicalRows.findIndex(row => row.id === anchor); if (index >= 0) elements.projectsBoardScroll.scrollTop = (index + oldPosition % 1) * ROW_HEIGHT; }
-                renderedRowHeight = ROW_HEIGHT; renderedProject = currentProjectId();
+                renderedRowHeight = ROW_HEIGHT; renderedProject = currentProjectId(); renderedMobileList = mobileList;
                 elements.projectsBoardTable?.setAttribute('aria-rowcount', String(logicalRows.length + (presentationV2 ? 1 : 0)));
             }
             reconcileRowEditors();
@@ -2166,12 +2464,18 @@
             desiredRows.forEach((row) => {
                 let node = existing.get(String(row.id));
                 if (!node) {
-                    node = createRowNode(row);
+                    if (presentationV2 && row.kind !== 'composer') {
+                        const markup = rowMarkup({ ...row, index: 0 });
+                        node = createRowNode(row, markup);
+                        if (node) { node.__pjSignature = rowSignature(markup); node.style.top = `${row.index * ROW_HEIGHT}px`; }
+                    } else node = createRowNode(row);
                     if (!node) return;
                     elements.projectsBoardRows.appendChild(node);
                     existing.set(String(row.id), node);
                 } else if (!viewportOnly) {
-                    const interactionPinned = String(row.id) === sourceRowId || String(row.id) === dragHoverTargetRowId || (presentationV2 && String(row.task?.id) === String(pickerRowId));
+                    // Only a task row can host an open picker; rows without a task (add rows,
+                    // section labels) must never match an absent picker id.
+                    const interactionPinned = String(row.id) === sourceRowId || String(row.id) === dragHoverTargetRowId || (presentationV2 && !!pickerRowId && row.kind === 'task' && String(row.task?.id) === String(pickerRowId));
                     updateExistingRow(node, row, activeElement, interactionPinned);
                     if (!presentationV2) {
                         const expected = elements.projectsBoardRows.children[desiredRows.indexOf(row)];
@@ -2208,6 +2512,7 @@
                 }
             }
             if (presentationV2) { syncListSemantics(); elements.projectsBoardRows.querySelectorAll('[data-task-id]').forEach(row => paintFieldFeedback(row.dataset.taskId, row)); }
+            if (quickComposer?.inline && !rowIndexById.has('composer') && !quickComposer.node.isConnected) elements.projectsBoardTableWrap?.before(quickComposer.node);
         }
 
         // The drawer used to be one long scroll that put dates, dependencies and
@@ -2240,7 +2545,7 @@
                 const changed = String(task.id) !== String(lastDetailTaskId);
                 if (changed) { detailGeneration++; clearRemoteConflictReview(); globalScope.CrmProjectsDiscussion?.setSelection(null); }
                 lastDetailTaskId = String(task.id);
-                if (elements.projectsBoardDetailTitle) elements.projectsBoardDetailTitle.textContent = asText(task.title, 'Task details');
+                renderDetailHeading(task);
                 renderOverview(task);
                 const discussionContext = { projectId: currentProjectId(), taskId: task.id, taskRevision: Number(task.revision || 0), role: role(), lifecycle: task.effectiveLifecycle || task.lifecycle || 'active' };
                 const nextDiscussionKey = JSON.stringify(discussionContext);
@@ -2378,6 +2683,8 @@
             else if (kind === 'dates') {
                 const range = dateRange(value);
                 if (range.startDate && range.dueDate && (!control.schedulePreview?.token || !control.schedulePreview.canApply)) throw new Error('Preview the date range before applying it.');
+                const preview = control.schedulePreview;
+                if (preview?.token && (Date.now() - preview.preparedAt >= 15 * 60000 || preview.expectedRevision !== Number(taskFor(taskId)?.revision) || JSON.stringify(range) !== JSON.stringify(dateRange(preview.after)))) throw new Error('The preview is no longer current. Review saved dates and save again.');
             } else if (['startDate', 'dueDate'].includes(kind)) {
                 dateRange({ startDate: kind === 'startDate' ? value : effectiveField(taskId, 'startDate'), dueDate: kind === 'dueDate' ? value : effectiveField(taskId, 'dueDate') });
             } else if (kind === 'ownerUid' || kind === 'assigneeUids') {
@@ -2411,7 +2718,7 @@
         function closeRowEditor(restore = true) {
             if (!rowEditor) return;
             const old = rowEditor; rowEditor = null; globalScope.CrmProjectsDatePicker?.close(); old.node.remove();
-            if (restore && scopeIsCurrent(old.scope)) { renderVirtualRows(); focusRowControl(old.taskId, old.returnSelector); }
+            if (restore && scopeIsCurrent(old.scope)) { renderVirtualRows(); renderDetail(); focusRowControl(old.taskId, old.returnSelector); }
         }
         function reconcileRowEditors() {
             if (!presentationV2) return;
@@ -2500,15 +2807,32 @@
         function openDateRange(taskId, trigger) {
             const retained = effectiveField(taskId, 'dates');
             const range = retained || { startDate: effectiveField(taskId, 'startDate'), dueDate: effectiveField(taskId, 'dueDate') };
-            const editor = openRowEditor(taskId, 'dates', trigger, `<label>Start <input type="date" name="startDate" value="${escape(range.startDate || '')}"></label><label>Due <input type="date" name="dueDate" value="${escape(range.dueDate || '')}"></label><p data-date-result role="status">Working days not confirmed</p><button type="button" data-preview-dates>Preview dates</button><button type="button" data-apply-dates disabled>Apply dates</button><button type="button" data-review-dates>Review saved dates</button><button type="button" data-rebase-dates hidden>Keep my dates</button><button type="button" data-discard-dates hidden>Discard draft</button>`);
+            const editor = openRowEditor(taskId, 'dates', trigger, `<label>Start <input type="date" name="startDate" value="${escape(range.startDate || '')}"></label><label>Due <input type="date" name="dueDate" value="${escape(range.dueDate || '')}"></label><p data-date-result role="status">Working days not confirmed</p><button type="button" data-save-dates>Save dates</button><button type="button" data-preview-dates>Preview dates</button><button type="button" data-apply-dates hidden disabled>Apply reviewed dates</button><button type="button" data-review-dates hidden>Review saved dates</button><button type="button" data-rebase-dates hidden>Keep my dates</button><button type="button" data-discard-dates hidden>Discard draft</button>`);
             if (!editor) return;
             const key = draftKeyFor(taskId, 'dates');
             if (!draftBases.has(key)) draftBases.set(key, Number(taskFor(taskId).revision || 0));
             const read = () => ({ startDate: editor.node.querySelector('[name="startDate"]').value || null, dueDate: editor.node.querySelector('[name="dueDate"]').value || null });
             const message = editor.node.querySelector('[data-date-result]');
-            let generation = 0, preview = null, applying = false, reviewed = null;
+            if (['conflict', 'error', 'uncertain'].includes(feedbackStore?.get(taskId, 'dates')?.phase)) editor.node.querySelector('[data-review-dates]').hidden = false;
+            let generation = 0, preview = null, applying = false, preparing = false, reviewed = null;
             const current = () => rowEditor === editor && scopeIsCurrent(editor.scope) && canWrite() && !busy;
-            editor.node.addEventListener('input', () => { generation++; preview = null; editor.node.querySelector('[data-apply-dates]').disabled = true; drafts.set(key, read()); draftVersions.set(key, (draftVersions.get(key) || 0) + 1); dirtyField(editor.scope, taskId, 'dates'); message.textContent = 'Preview these dates before applying.'; });
+            const applyPreview = async () => {
+                if (!current() || applying || !preview?.canApply) return;
+                if (preview.token && (Date.now() - preview.preparedAt >= 15 * 60000 || preview.expectedRevision !== Number(taskFor(taskId)?.revision) || JSON.stringify(dateRange(read())) !== JSON.stringify(dateRange(preview.after)))) {
+                    preview = null; editor.node.querySelector('[data-apply-dates]').disabled = true; editor.node.querySelector('[data-review-dates]').hidden = false;
+                    message.textContent = 'The preview is no longer current. Review saved dates and save again.'; return;
+                }
+                const appliedGeneration = generation;
+                applying = true; editor.node.querySelector('[data-apply-dates]').disabled = true; editor.node.querySelector('[data-save-dates]').disabled = true;
+                const lineage = await saveTaskField(taskId, 'dates', { value: read(), dataset: {}, schedulePreview: preview });
+                applying = false;
+                if (!current()) return;
+                editor.node.querySelector('[data-save-dates]').disabled = false;
+                if (lineage && generation === appliedGeneration) closeRowEditor();
+                else if (lineage) message.textContent = 'Previous dates saved. Save your current dates to review them again.';
+                else { preview = null; editor.node.querySelector('[data-review-dates]').hidden = false; message.textContent = 'Dates were not confirmed. Draft retained. Review saved dates, then save again.'; }
+            };
+            editor.node.addEventListener('input', () => { generation++; preview = null; editor.node.querySelector('[data-apply-dates]').disabled = true; drafts.set(key, read()); draftVersions.set(key, (draftVersions.get(key) || 0) + 1); dirtyField(editor.scope, taskId, 'dates'); editor.node.querySelector('[data-apply-dates]').hidden = true; message.textContent = 'Unsaved dates. Save to check and apply them.'; });
             editor.node.addEventListener('click', async event => {
                 if (!current() || applying) return;
                 if (event.target.closest('[data-review-dates]')) {
@@ -2536,7 +2860,7 @@
                         editor.node.querySelector('[name="startDate"]').value = reviewed.startDate || '';
                         editor.node.querySelector('[name="dueDate"]').value = reviewed.dueDate || '';
                     }
-                    // Review changes only the draft base. A new preview and explicit Apply are mandatory.
+                    // Review changes only the draft base; saving must obtain a new preview.
                     draftBases.set(key, reviewed.revision);
                     drafts.set(key, read());
                     draftVersions.set(key, (draftVersions.get(key) || 0) + 1);
@@ -2547,8 +2871,13 @@
                     reviewed = null;
                     editor.node.querySelector('[data-rebase-dates]').hidden = true;
                     editor.node.querySelector('[data-discard-dates]').hidden = true;
+                    editor.node.querySelector('[data-review-dates]').hidden = true;
                     message.textContent = 'Draft ready for a new preview. Dates have not been applied.';
-                } else if (event.target.closest('[data-preview-dates]')) {
+                } else if (event.target.closest('[data-preview-dates], [data-save-dates]')) {
+                    if (preparing) return;
+                    const saveRequested = !!event.target.closest('[data-save-dates]');
+                    preparing = true;
+                    const preparedAt = Date.now();
                     const version = ++generation; preview = null; reviewed = null;
                     editor.node.querySelector('[data-rebase-dates]').hidden = true;
                     editor.node.querySelector('[data-discard-dates]').hidden = true;
@@ -2558,43 +2887,49 @@
                         // The calendar API requires two dates. Clearing remains one atomic task command.
                         if (!value.startDate || !value.dueDate) {
                             preview = { canApply: true, after: value };
-                            message.textContent = 'Add both dates to preview working days. Apply to save this incomplete range.';
+                            message.textContent = 'Working days need both dates. This range will be saved together.';
                             editor.node.querySelector('[data-apply-dates]').disabled = false;
+                            editor.node.querySelector('[data-apply-dates]').hidden = false;
+                            if (saveRequested) await applyPreview();
                             return;
                         }
-                        const response = await apiFetchJson(`/api/projects/${encodeURIComponent(editor.scope.projectId)}/schedule-preview`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId, expectedRevision: draftBases.get(key), ...value }) });
+                        const expectedRevision = draftBases.get(key);
+                        const response = await apiFetchJson(`/api/projects/${encodeURIComponent(editor.scope.projectId)}/schedule-preview`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taskId, expectedRevision, ...value }) });
                         if (!current() || version !== generation) return;
-                        preview = response?.preview;
+                        preview = response?.preview ? { ...response.preview, preparedAt, expectedRevision } : null;
                         if (!preview?.token || preview.taskId !== taskId || JSON.stringify(dateRange(preview.after || {})) !== JSON.stringify(value)) throw new Error('Preview could not be confirmed. Preview again.');
                         message.textContent = `${Number.isFinite(preview.workingDayCount) ? `${preview.workingDayCount} working days` : 'Working days not confirmed'}${asArray(preview.warnings).length ? ` · ${preview.warnings.map(w => w.message || w.code || 'Calendar warning').join(', ')}` : ''}${preview.canApply ? '' : ' · Resolve calendar configuration before applying.'}`;
                         editor.node.querySelector('[data-apply-dates]').disabled = !preview.canApply;
-                    } catch (error) { if (current() && version === generation) message.textContent = `${error.message || 'Preview failed.'} Review saved dates to rebase or discard your retained draft.`; }
+                        editor.node.querySelector('[data-apply-dates]').hidden = !preview.canApply;
+                        if (saveRequested && preview.canApply && !asArray(preview.warnings).length) await applyPreview();
+                    } catch (error) { if (current() && version === generation) { editor.node.querySelector('[data-review-dates]').hidden = false; message.textContent = `${error.message || 'Preview failed.'} Review saved dates to rebase or discard your retained draft.`; } }
+                    finally { preparing = false; }
                 } else if (event.target.closest('[data-apply-dates]') && preview?.canApply) {
-                    const appliedGeneration = generation;
-                    applying = true; editor.node.querySelector('[data-apply-dates]').disabled = true;
-                    const lineage = await saveTaskField(taskId, 'dates', { value: read(), dataset: {}, schedulePreview: preview });
-                    applying = false;
-                    if (!current()) return;
-                    if (lineage && generation === appliedGeneration) closeRowEditor();
-                    else if (lineage) message.textContent = 'Previous dates saved. Preview your current dates before applying.';
-                    else { preview = null; message.textContent = 'Dates were not confirmed. Draft retained. Review saved dates, then preview again.'; }
+                    await applyPreview();
                 }
             });
         }
         function openMoveEditor(taskId, trigger) {
             const task = taskFor(taskId);
             const parents = Array.from(tasks.values()).filter(t => t.id !== taskId && !asArray(t.ancestorIds || t.pathIds).includes(taskId) && (t.lifecycle || 'active') === 'active');
-            const editor = openRowEditor(taskId, 'move', trigger, `<label>Section <select name="sectionId">${sections.map(s => `<option value="${escape(s.id)}"${s.id === (task.effectiveSectionId || task.sectionId) ? ' selected' : ''}>${escape(s.title || s.name)}</option>`).join('')}</select></label><label>Parent (loaded tasks) <select name="parentTaskId"><option value="">Root task</option>${parents.map(t => `<option value="${escape(t.id)}">${escape(t.title)}</option>`).join('')}</select></label><p role="status" data-move-result>Moves to the end of the selected branch.</p><button type="button" data-apply-move>Move task</button>`);
+            const editor = openRowEditor(taskId, 'move', trigger, `<label>Section <select name="sectionId">${sections.map(s => `<option value="${escape(s.id)}"${s.id === (task.effectiveSectionId || task.sectionId) ? ' selected' : ''}>${escape(s.title || s.name)}</option>`).join('')}</select></label><label>Parent (loaded tasks) <select name="parentTaskId"><option value="">Root task</option>${task.parentTaskId && !parents.some(t => String(t.id) === String(task.parentTaskId)) ? `<option value="${escape(task.parentTaskId)}" selected>Current parent (not loaded)</option>` : ''}${parents.map(t => `<option value="${escape(t.id)}"${String(t.id) === String(task.parentTaskId || '') ? ' selected' : ''}>${escape(t.title)}</option>`).join('')}</select></label><p role="status" data-move-result>Moves to the end of the selected branch.</p><button type="button" data-apply-move>Move task</button>`);
             if (!editor) return;
             editor.node.addEventListener('click', async event => {
                 const button = event.target.closest('[data-apply-move]');
                 if (!button || button.disabled || rowEditor !== editor || !scopeIsCurrent(editor.scope) || !canWrite()) return;
                 button.disabled = true;
                 const parentTaskId = editor.node.querySelector('[name="parentTaskId"]').value || null, sectionId = editor.node.querySelector('[name="sectionId"]').value;
-                const index = parentTaskId ? await appendIndexForParent(parentTaskId, editor.scope) : rootsForSection(sectionId).filter(t => t.id !== taskId).length;
-                if (index === null || rowEditor !== editor || !scopeIsCurrent(editor.scope) || !canWrite()) return;
-                closeRowEditor(false); await moveTask(taskId, { parentTaskId, sectionId: parentTaskId ? null : sectionId, index });
-                if (scopeIsCurrent(editor.scope)) focusRowControl(taskId);
+                const latest = taskFor(taskId);
+                if (String(parentTaskId || '') === String(latest?.parentTaskId || '') && (parentTaskId || sectionId === (latest?.effectiveSectionId || latest?.sectionId))) { closeRowEditor(); return; }
+                try {
+                    const index = parentTaskId ? await appendIndexForParent(parentTaskId, editor.scope) : rootsForSection(sectionId).filter(t => t.id !== taskId).length;
+                    if (rowEditor !== editor || !scopeIsCurrent(editor.scope) || !canWrite()) return;
+                    if (index === null) throw new Error('Could not load the destination. Your choices are retained. Try Move task again.');
+                    closeRowEditor(false); await moveTask(taskId, { parentTaskId, sectionId: parentTaskId ? null : sectionId, index });
+                    if (scopeIsCurrent(editor.scope)) focusRowControl(taskId);
+                } catch (error) {
+                    if (rowEditor === editor && scopeIsCurrent(editor.scope)) editor.node.querySelector('[data-move-result]').textContent = error.message || 'Could not load the destination. Try Move task again.';
+                } finally { if (rowEditor === editor && scopeIsCurrent(editor.scope)) button.disabled = false; }
             });
         }
         function openCustomField(taskId, column, trigger, source) {
@@ -2698,8 +3033,10 @@
             if (event.defaultPrevented || event.isComposing) return true;
             const row = event.target.closest('[data-row-id]');
             if (!row) return false;
-            if (event.target.matches('input[data-field-kind="title"]') && ['Enter', 'Escape'].includes(event.key)) { event.preventDefault(); event.stopPropagation(); finishRename(event.target, event.key === 'Escape'); return true; }
-            if (event.key === 'F2' && (event.target === row || event.target.matches('.crm-board-title-button'))) { event.preventDefault(); beginRename(row.dataset.taskId); return true; }
+            if (event.target.matches('.crm-board-section-input') && event.key === 'Enter') { event.preventDefault(); event.target.blur(); return true; }
+            if (event.target.matches('[data-field-kind="title"]') && ['Enter', 'Escape'].includes(event.key)) { event.preventDefault(); event.stopPropagation(); finishRename(event.target, event.key === 'Escape'); return true; }
+            if (row.dataset.rowKind === 'group-header' && event.target === row && event.key === 'Enter') { event.preventDefault(); row.querySelector('[data-action="edit-column"], [data-column-resize]')?.focus(); return true; }
+            if (event.key === 'F2' && row.dataset.rowKind === 'task' && (event.target === row || event.target.matches('.crm-board-title-button'))) { event.preventDefault(); beginRename(row.dataset.taskId); return true; }
             if (event.target !== row) {
                 if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); focusNavigationRow(row.dataset.rowId); }
                 return true; // Native controls own their editing keys.
@@ -2723,7 +3060,7 @@
             }
             if (event.key === ' ' && row.dataset.taskId) { event.preventDefault(); toggleSelection(row.dataset.taskId); return true; }
             if (!event.altKey && ['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
-                event.preventDefault(); const navigationRows = availableRows().filter(r => r.kind !== 'summary');
+                event.preventDefault(); const navigationRows = availableRows().filter(r => r.kind === 'task' || r.kind === 'section' || r.kind === 'group-header');
                 const index = navigationRows.findIndex(r => r.id === row.dataset.rowId);
                 const target = navigationRows[event.key === 'Home' ? 0 : event.key === 'End' ? navigationRows.length - 1 : Math.max(0, Math.min(navigationRows.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)))];
                 if (target) focusNavigationRow(target.id);
@@ -2795,7 +3132,7 @@
                 if (presentationV2 && kind === 'ownerUid' && value && asArray(task.assigneeUids).includes(value)) patch.assigneeUids = task.assigneeUids.filter(uid => uid !== value);
                 const previous = { ...task, values: { ...(task.values || {}) } };
                 const next = { ...task, ...patch, values: { ...(task.values || {}), ...(patch.values || {}) } };
-                const opId = operationId(`edit-${taskId}`);
+                const opId = kind === 'dates' && ctrl.schedulePreview ? (ctrl.schedulePreview.operationId ||= operationId(`edit-${taskId}`)) : operationId(`edit-${taskId}`);
                 const operationPendingKey = pendingKeyFor(mutationScope, taskId);
                 const structural = ['parentTaskId', 'sectionId', 'rank', 'lifecycle'].includes(kind) ||
                     (currentGroupBy === 'status' && kind === 'status') ||
@@ -2909,6 +3246,7 @@
             });
         }
 
+        const sectionRenamesInFlight = new Map();
         async function saveSection(sectionId, control) {
             if (refreshRequested()) return;
             if (!canSchema()) return;
@@ -2933,6 +3271,10 @@
             }
             const key = draftKey(resolvedSectionId, 'title');
             const draftVersion = draftVersions.get(key) || 0;
+            // Blur and the post-create draft hand-off can both submit one rename.
+            const inflightKey = `${mutationProjectId}:${resolvedSectionId}`;
+            if (sectionRenamesInFlight.get(inflightKey) === title) return;
+            sectionRenamesInFlight.set(inflightKey, title);
             try {
                 const response = await requestMutation(`/api/projects/${encodeURIComponent(mutationProjectId)}/sections/${encodeURIComponent(resolvedSectionId)}`, { operationId: operationId('section-edit'), expectedRevision: section.revision, title }, { method: 'PATCH' });
                 if (!scopeIsCurrent(mutationScope)) return;
@@ -2949,26 +3291,59 @@
                 if (!scopeIsCurrent(mutationScope)) return;
                 if (control && typeof control === 'object' && 'value' in control) control.value = section.title;
                 setStatus(error?.message || 'Section could not be renamed.', 'error');
+            } finally {
+                if (sectionRenamesInFlight.get(inflightKey) === title) sectionRenamesInFlight.delete(inflightKey);
             }
         }
 
+        let projectCreateIntent = null, projectCreatePending = false;
         async function createProject() {
-            if (!apiFetchJson || !elements.projectsBoardProjectName) return;
-            const name = String(elements.projectsBoardProjectName.value || '').trim();
-            if (!name) { showToast('Enter a project name.', 'error'); return; }
+            if (!apiFetchJson || !elements.projectsBoardProjectName || projectCreatePending) return;
             const creationActor = String(deps.getCurrentUser?.()?.uid || '');
+            if (!creationActor || creationActor !== controllerActorUid) return;
+            if (projectCreateIntent?.actor !== creationActor) projectCreateIntent = null;
+            const name = String(elements.projectsBoardProjectName.value || '').trim();
+            if (!projectCreateIntent && !name) { showToast('Enter a project name.', 'error'); return; }
+            const intent = projectCreateIntent || { actor: creationActor, payload: { operationId: operationId('project-create'), name, description: String(elements.projectsBoardProjectDescription?.value || '') }, created: null };
+            projectCreateIntent = intent; projectCreatePending = true;
+            const button = document.getElementById('btn-projects-board-save-project');
+            const current = () => String(deps.getCurrentUser?.()?.uid || '') === creationActor && projectCreateIntent === intent;
+            if (button) { button.disabled = true; button.textContent = intent.created ? 'Refreshing…' : 'Creating…'; }
             try {
-                const response = await requestMutation('/api/projects', { operationId: operationId('project-create'), name, description: String(elements.projectsBoardProjectDescription?.value || '') }, { retries: 0 });
-                const created = response?.project || response?.result?.project;
-                if (elements.projectsBoardCreateProject) elements.projectsBoardCreateProject.hidden = true;
-                if (elements.projectsBoardProjectName) elements.projectsBoardProjectName.value = '';
-                if (elements.projectsBoardProjectDescription) elements.projectsBoardProjectDescription.value = '';
-                const refreshed = await refreshProjects();
-                if (created?.id && refreshed !== false && String(deps.getCurrentUser?.()?.uid || '') === creationActor) {
-                    await selectProject(created.id);
+                if (!intent.created) {
+                    const response = await requestMutation('/api/projects', intent.payload, { retries: 0 });
+                    const created = response?.project || response?.result?.project;
+                    if (!created?.id) throw new Error('Project creation was not confirmed. Retry to check the same request.');
+                    intent.created = created;
                 }
+                if (!current()) return;
+                try {
+                    const refreshed = await refreshProjects();
+                    if (!current()) return;
+                    if (refreshed === false) throw new Error('Project list could not be refreshed.');
+                    await selectProject(intent.created.id);
+                } catch (_) {
+                    if (current()) showToast('Project created. The project list could not be refreshed. Use Refresh project list to recover without creating another project.', 'warning');
+                    return;
+                }
+                if (!current()) return;
+                if (elements.projectsBoardCreateProject) elements.projectsBoardCreateProject.hidden = true;
+                elements.projectsBoardProjectName.value = '';
+                if (elements.projectsBoardProjectDescription) elements.projectsBoardProjectDescription.value = '';
+                projectCreateIntent = null;
                 showToast('Project created.', 'success');
-            } catch (error) { showToast(error?.message || 'Project could not be created.', 'error'); }
+            } catch (error) {
+                if (!current()) return;
+                const uncertain = !error?.status || Number(error.status) >= 500;
+                if (!uncertain) projectCreateIntent = null;
+                showToast(uncertain ? 'Project creation was not confirmed. Retry creation to check the same request; your original project details are retained.' : error?.message || 'Project could not be created.', 'error');
+            } finally {
+                projectCreatePending = false;
+                if (button && String(deps.getCurrentUser?.()?.uid || '') === creationActor) {
+                    button.disabled = false;
+                    button.textContent = projectCreateIntent?.created ? 'Refresh project list' : projectCreateIntent ? 'Retry creation' : 'Create project';
+                }
+            }
         }
 
         let sectionCreateQueue = Promise.resolve();
@@ -3108,10 +3483,11 @@
                     if (error.status && Number(error.status) < 500) sectionIntent = null;
                     sections = sections.filter((s) => s.id !== optId);
                     renderBoard();
-                    if (canSchema()) {
+                    if (canSchema() && !(groupBlocks() && sections.some(section => !section.isOptimistic))) {
                         if (elements.projectsBoardSectionName) elements.projectsBoardSectionName.value = title;
                         if (elements.projectsBoardSectionForm) elements.projectsBoardSectionForm.hidden = false;
                     }
+                    // In-place creation keeps the same request; Add section retries it exactly.
                     setStatus(error?.message || 'Section could not be created.', 'error');
                 } finally {
                     if (scopeIsCurrent(scope)) { sectionCreatePending = false; syncSectionForm(); }
@@ -3571,6 +3947,30 @@
             invalidateHierarchy();
         }
 
+        // Shows a drag-and-drop move at once. Returns an undo for a rejected
+        // move, or null when the destination's siblings are not loaded yet.
+        function applyOptimisticMove(taskId, destination) {
+            const task = taskFor(taskId);
+            const parentId = destination?.parentTaskId ? String(destination.parentTaskId) : null;
+            if (!task || String(taskId).startsWith('opt-task-') || String(destination?.sectionId || '').startsWith('opt-sec-')) return null;
+            if (parentId && (parentId.startsWith('opt-task-') || !taskFor(parentId) || !loadedBranches.has(parentId) && Number(taskFor(parentId).activeChildCount || 0) > 0)) return null;
+            const sectionId = parentId ? null : destination.sectionId;
+            const siblings = siblingsFor(parentId, parentId ? resolveEffectiveSectionId(parentId) : sectionId).filter(entry => String(entry.id) !== String(taskId));
+            const index = Math.max(0, Math.min(Number(destination.index) || 0, siblings.length));
+            const rank = computeOptimisticRank(siblings, index >= siblings.length ? { kind: 'end' } : { kind: 'before', siblingId: siblings[index].id });
+            const previous = new Map();
+            const remember = entry => { if (entry && !previous.has(String(entry.id))) previous.set(String(entry.id), { ...entry }); };
+            remember(task); remember(taskFor(task.parentTaskId)); remember(parentId ? taskFor(parentId) : null);
+            const collect = id => childrenOf(id).forEach(child => { remember(child); collect(child.id); });
+            collect(taskId);
+            const structure = boardRevision.structureRevision;
+            reconcileTaskMove(taskId, { parentTaskId: parentId, sectionId }, { task: { ...task, rank }, structureRevision: structure });
+            return () => {
+                previous.forEach((entry, id) => { if (tasks.has(id)) tasks.set(id, entry); });
+                invalidateHierarchy();
+            };
+        }
+
         async function moveTask(taskId, destination) {
             if (refreshRequested()) return;
             const mutationScope = captureScope();
@@ -3594,6 +3994,7 @@
             setBusy(loadBusy);
             movePending.add(operationPendingKey);
             pending.set(operationPendingKey, opId);
+            const undoOptimisticMove = presentationV2 ? applyOptimisticMove(taskId, destination) : null;
             renderBoard();
             try {
                 if (destination.sectionId && (String(destination.sectionId).startsWith('opt-sec-') || sections.some(s => s.id === destination.sectionId && s.isOptimistic))) {
@@ -3610,6 +4011,7 @@
                 await loadProject(mutationProjectId, { preserve: true });
             } catch (error) {
                 if (!scopeIsCurrent(mutationScope)) return;
+                undoOptimisticMove?.();
                 setStatus(error?.message || 'Move conflicted; refresh and retry.', 'error');
             } finally {
                 if (pending.get(operationPendingKey) === opId) pending.delete(operationPendingKey);
@@ -3763,7 +4165,16 @@
 
         async function toggleTask(taskId) {
             const id = String(taskId || '');
-            if (!id || (presentationV2 && !hasPotentialChildren(taskFor(id) || {}))) return;
+            if (!id) return;
+            if (presentationV2 && !hasPotentialChildren(taskFor(id) || {})) {
+                // A task without subtasks opens straight into "add a subtask".
+                if (!groupBlocks() || !canWrite()) return;
+                if (!expanded.has(id)) { openQuickComposer(id); return; }
+                expanded.delete(id);
+                if (quickComposer?.inline && String(quickComposer.parentId || '') === id) { quickComposer.node.remove(); quickComposer = null; }
+                renderBoard();
+                return;
+            }
             if (expanded.has(id)) { expanded.delete(id); renderBoard(); return; }
             expanded.add(id);
             renderBoard();
@@ -3773,6 +4184,8 @@
                 branchLoading.add(id); renderVirtualRows();
                 try { if (!await loadBranch(id)) return; }
                 finally { branchLoading.delete(id); if (scopeIsCurrent(scope)) renderVirtualRows(); }
+                // Opening a task that turns out to have no subtasks starts one.
+                if (current() && expanded.has(id) && !childrenOf(id).length && groupBlocks() && canWrite() && !quickComposer) openQuickComposer(id);
             } else if (!loadedBranches.has(id) && !await loadAllBranch(id)) return;
             // Reopening a collapsed branch restores only reachable expanded paths.
             // Descendants behind another collapsed ancestor remain unloaded.
@@ -3877,12 +4290,35 @@
             return event.shiftKey || event.altKey || event.clientX > rect.left + rect.width * .56;
         }
 
+        // Column labels live in the shared header and, for section blocks, in
+        // every section's header row; both use the same reorder commands.
+        function columnDragStart(event) {
+            const column = event.target.closest('[role="columnheader"][data-column-id]');
+            if (!column) return false;
+            if (event.target.closest('button, [data-column-resize]') || !canSchema() || busy) { event.preventDefault(); return true; }
+            clearDragInteraction();
+            dragState = { kind: 'column', id: column.dataset.columnId, handled: false };
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', `column:${dragState.id}`);
+            return true;
+        }
+        async function columnDrop(event) {
+            if (!dragState || dragState.kind !== 'column') return;
+            event.preventDefault();
+            const target = event.target.closest('[data-column-id]');
+            if (!target) { clearDragInteraction(); return; }
+            const index = columns.findIndex((entry) => String(entry.id) === String(target.dataset.columnId));
+            const source = dragState; clearDragInteraction();
+            await moveColumn(source.id, index);
+        }
+
         function onDragStart(event) {
             if (refreshRequested()) { event.preventDefault(); return; }
             if (event.target.closest('[data-action="select-task"]')) { event.preventDefault(); return; }
             if (!canWrite()) { event.preventDefault(); return; }
+            if (columnDragStart(event)) return;
             const row = event.target.closest('[data-row-kind]');
-            if (!row || row.dataset.rowKind === 'summary') return;
+            if (!row || CHROME_ROWS.has(row.dataset.rowKind)) return;
             clearDragInteraction();
             dragState = { kind: row.dataset.rowKind, id: row.dataset.rowKind === 'task' ? row.dataset.taskId : row.dataset.sectionId, handled: false };
             event.dataTransfer.effectAllowed = 'move';
@@ -3893,8 +4329,9 @@
             if (!dragState) return;
             event.preventDefault();
             updateDragAutoScroll(event);
+            if (dragState.kind === 'column') return;
             const target = event.target.closest('[data-row-kind]');
-            if (!target || target.dataset.rowKind === 'summary') return;
+            if (!target || CHROME_ROWS.has(target.dataset.rowKind)) return;
             dragHoverTargetRowId = target.dataset.rowId || '';
             clearDropClasses();
             const asParent = target.dataset.rowKind === 'task' && (event.shiftKey || event.altKey || event.clientX > target.getBoundingClientRect().left + target.getBoundingClientRect().width * .56);
@@ -3913,8 +4350,9 @@
             if (refreshRequested()) { event.preventDefault(); clearDragInteraction(); return; }
             if (!dragState || dragState.handled) return;
             event.preventDefault();
+            if (dragState.kind === 'column') { await columnDrop(event); return; }
             const target = event.target.closest('[data-row-kind]');
-            if (!target || target.dataset.rowKind === 'summary') return;
+            if (!target || CHROME_ROWS.has(target.dataset.rowKind)) return;
             if (dragState.kind === 'task' && isParentDrop(event, target)) {
                 const scope = captureScope();
                 const index = await appendIndexForParent(target.dataset.taskId, scope);
@@ -4071,6 +4509,22 @@
             more.onclick = () => { void load(true); };
             if (unloaded && !state.pending && !state.error && !busy && state.current()) void load();
         }
+        function renderDetailHeading(task) {
+            const heading = elements.projectsBoardDetailTitle;
+            if (!heading) return;
+            heading.dataset.taskId = task.id; heading.dataset.columnKey = 'taskTitle';
+            let input = heading.querySelector('[data-field-kind="title"]');
+            if (!input || input.dataset.taskId !== String(task.id)) {
+                heading.replaceChildren(); input = document.createElement('textarea');
+                input.rows = 1; input.addEventListener('blur', () => { input.scrollTop = 0; input.scrollLeft = 0; }); input.addEventListener('input', () => { if (/[\r\n]/.test(input.value)) input.value = input.value.replace(/[\r\n]+/g, ' '); });
+                input.maxLength = 200; input.className = 'crm-board-field crm-detail-title-input';
+                input.dataset.fieldKind = 'title'; input.dataset.taskId = task.id;
+                input.setAttribute('aria-label', 'Task title'); heading.append(input);
+            }
+            if (document.activeElement !== input) input.value = effectiveField(task.id, 'title') ?? task.title ?? '';
+            input.disabled = !canWrite() || busy;
+            paintFieldFeedback(task.id, heading);
+        }
         function renderOverview(task) {
             const body = elements.projectsBoardDetailBody;
             if (!body) return;
@@ -4092,11 +4546,12 @@
             const template = document.createElement('template');
             template.innerHTML = taskRowMarkup({ kind: 'task', id: `task:${task.id}`, task, depth: 0, index: 0 });
             const cells = Array.from(template.content.firstElementChild.children);
-            const title = cells.find(cell => cell.dataset.columnKey === 'taskTitle');
-            title.innerHTML = `<input class="crm-board-field" data-field-kind="title" type="text" maxlength="200" aria-label="Task title" value="${escape(effectiveField(task.id, 'title') || task.title)}"${canWrite() && !busy ? '' : ' disabled'}>`;
             const keys = new Set();
             for (const fresh of cells) {
-                const key = fresh.dataset.columnKey; keys.add(key);
+                const key = fresh.dataset.columnKey;
+                if (key === 'taskTitle') continue;
+                keys.add(key);
+                const value = document.createElement('div'); value.className = 'crm-detail-field-value'; value.append(...fresh.childNodes); fresh.append(value);
                 fresh.setAttribute('role', 'group');
                 const descriptor = key.startsWith('custom:') ? columns.find(column => `custom:${column.id}` === key) : null;
                 const labels = { taskTitle: 'Task title', status: 'Status', ownerUid: 'Owner', assigneeUids: 'Collaborators', dates: 'Dates' };
@@ -4430,8 +4885,15 @@
         function onBoardClick(event) {
             const row = event.target.closest('[data-row-id]');
             if (row?.dataset?.rowKind === 'summary' && !event.target.closest('[data-action="quick-task"]')) return;
+            if (['gap', 'composer'].includes(row?.dataset?.rowKind)) return;
             const action = event.target.closest('[data-action]')?.dataset?.action;
             if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) { invalidateAccess(currentProjectId()); return; }
+            if (row?.dataset?.rowKind === 'group-header') {
+                const button = event.target.closest('[data-action="edit-column"]');
+                if (button) openColumnForm(button.dataset.columnId);
+                return;
+            }
+            if (action === 'quick-subtask' && row?.dataset?.parentTaskId) { event.stopPropagation(); openQuickComposer(row.dataset.parentTaskId, null, { trigger: event.target.closest('button') }); return; }
             if (action === 'toggle-section' && row?.dataset?.rowKind === 'section') {
                 const id = String(row.dataset.sectionId || '');
                 if (!sections.some((section) => String(section.id) === id)) return;
@@ -4451,7 +4913,7 @@
             if (action === 'add-subtask' && row) {
                 event.stopPropagation();
                 if (row.dataset.taskId) expanded.add(String(row.dataset.taskId));
-                openQuickComposer(row.dataset.taskId);
+                openQuickComposer(row.dataset.taskId, null, { trigger: event.target.closest('button') });
                 return;
             }
             if (action === 'pick-date') { event.stopPropagation(); globalScope.CrmProjectsDatePicker?.open(event.target.closest('.crm-board-date-control')?.querySelector('input')); return; }
@@ -4560,6 +5022,8 @@
                 const click = event => { const row = event.target.closest('[data-task-id]'), trigger = event.target.closest('[data-action]'); if (!row || !trigger) return; if (trigger.dataset.action === 'pick-status') openStatusPicker(trigger); else if (trigger.dataset.action === 'pick-people') openPeoplePicker(trigger); else if (trigger.dataset.action === 'edit-dates') openDateRange(row.dataset.taskId, trigger); };
                 const change = event => { if (elements.projectsBoardDetail.dataset.detailTransition) return; if (event.target.dataset.fieldKind === 'title') saveTaskField(event.target.closest('[data-task-id]').dataset.taskId, 'title', event.target); else onBoardChange(event); };
                 for (const [type, handler] of [['click', click], ['input', onBoardInput], ['change', change]]) { body?.addEventListener(type, handler); detailRemovers.push(() => body?.removeEventListener(type, handler)); }
+                const heading = elements.projectsBoardDetailTitle;
+                for (const [type, handler] of [['input', onBoardInput], ['change', change], ['keydown', event => { if (event.key === 'Enter' && !event.isComposing && event.target.matches('[data-field-kind="title"]')) { event.preventDefault(); event.target.blur(); } }]]) { heading?.addEventListener(type, handler); detailRemovers.push(() => heading?.removeEventListener(type, handler)); }
             }
             if (presentationV2 && !tableLayout) {
                 tableLayout = globalScope.CrmProjectsTableLayoutV2.createController({ elements, getCurrentUser: deps.getCurrentUser, storage: deps.presentationStorage, onChange: () => { renderHeader(); renderVirtualRows(); } });
@@ -4586,7 +5050,7 @@
             document.getElementById('btn-projects-board-save-project')?.addEventListener('click', createProject);
             document.getElementById('btn-projects-board-cancel-project')?.addEventListener('click', () => { if (elements.projectsBoardCreateProject) elements.projectsBoardCreateProject.hidden = true; });
             elements.projectsBoardSectionForm?.addEventListener('submit', (event) => { event.preventDefault(); createSection(); });
-            elements.projectsBoardAddSection?.addEventListener('click', openSectionForm);
+            elements.projectsBoardAddSection?.addEventListener('click', () => openSectionForm());
             elements.projectsBoardCancelSection?.addEventListener('click', closeSectionForm);
             document.getElementById('btn-projects-board-add-task')?.addEventListener('click', startTopLevelTaskCreation);
             document.getElementById('btn-projects-board-add-column')?.addEventListener('click', () => openColumnForm());
@@ -4815,7 +5279,14 @@
             if (field === 'status' && !Object.prototype.hasOwnProperty.call(STATUS_LABELS, value)) throw new Error('Unknown task status.');
             const key = draftKeyFor(taskId, field);
             if (drafts.has(key)) throw new Error('Review the existing field draft before editing from another view.');
-            const resolved = await resolveTask(taskId, command);
+            // The save carries expectedRevision, so a loaded copy at the same
+            // revision needs no extra read; the change then shows immediately.
+            const local = taskFor(taskId);
+            const localCurrent = local && !local.isOptimistic && !projectionTaskIds.has(String(taskId)) && Number(local.revision) === revision
+                && !pending.has(pendingKey(taskId)) && (command.projectId === undefined || command.projectId === currentProjectId())
+                && (command.actorUid === undefined || command.actorUid === controllerActorUid) && command.isCurrent?.() !== false
+                && (local.effectiveLifecycle || local.lifecycle || 'active') === 'active';
+            const resolved = localCurrent ? local : await resolveTask(taskId, command);
             if (!canWrite() || drafts.has(key)) throw new Error('Task authority or draft changed.');
             if (resolved[field] === value) return { task: resolved, unchanged: true };
             const lineage = await saveTaskField(taskId, field, { value, dataset: {}, multiple: Array.isArray(value), selectedOptions: Array.isArray(value) ? value.map(value => ({ value })) : [] });

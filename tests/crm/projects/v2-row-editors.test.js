@@ -14,16 +14,17 @@ async function fixture(v2 = true) {
     doc.querySelector('[data-panel="projects"]').setAttribute('data-projects-ui',v2?'v2':'legacy');
     const admin=fs.readFileSync(path.join(root,'public/crm-admin.js'),'utf8');
     const elements=Object.fromEntries([...admin.matchAll(/elements\.(projects\w+) = document.getElementById\('([^']+)'\)/g)].map(m=>[m[1],doc.getElementById(m[2])]));
-    let actor='a',role='Owner',fail=0,malformed=false,hold=null,readHold=null,branchResponder=null;
+    let actor='a',role='Owner',fail=0,malformed=false,hold=null,readHold=null,branchResponder=null,previewWarnings=[],previewAllowed=true,refreshResult=false;
     const columns=[{id:'notes',label:'Notes',type:'text'},{id:'estimate',label:'Estimate',type:'number'},{id:'deadline',label:'Deadline',type:'date'},{id:'importance',label:'Priority',type:'priority'},{id:'phase',label:'Phase',type:'status',statusLabels:{done:'Finished'}},{id:'choice',label:'Choice',type:'dropdown',options:[{key:'yes',label:'Yes'}]},{id:'team',label:'Team',type:'people'},{id:'future',type:'future'}];
     let task={id:'t',sectionId:'s',title:'Tiếng Việt <img src=x>',status:'not_started',rank:'0/1',revision:1,activeChildCount:0,ownerUid:'a',assigneeUids:['b','former'],startDate:'2026-09-01',dueDate:'2026-09-20',values:{notes:'Stored',estimate:0,importance:'high',phase:'done',choice:'removed',team:['former'],future:{safe:'<script>'}}};
     const tasks=Array.from({length:70},(_,i)=>({...task,id:i?`t${i}`:'t',rank:`${i}/1`}));
     const writes=[],events=[];
-    const board=win.CrmProjectsBoard.createController({elements,presentationV2:v2,getCurrentUser:()=>({uid:actor}),onFieldSaveEvent:e=>events.push(e),apiFetchJson:async(url,options)=>{
+    const board=win.CrmProjectsBoard.createController({elements,presentationV2:v2,getCurrentUser:()=>({uid:actor}),onFieldSaveEvent:e=>events.push(e),refreshProjects:async()=>refreshResult,apiFetchJson:async(url,options)=>{
         if(options){const body=JSON.parse(options.body||'{}');writes.push({url,body}); if(hold){const wait=hold;hold=null;await wait;}
             if(fail)throw Object.assign(new Error('Fixture denied/conflict/unconfirmed'),fail===-1?{}:{status:fail});
             if(malformed)return {ok:true};
-            if(url.endsWith('/schedule-preview')){previewDates={startDate:body.startDate,dueDate:body.dueDate};return {preview:{token:'preview-token',canApply:true,taskId:'t',after:{startDate:body.startDate,dueDate:body.dueDate},workingDayCount:12,warnings:[]}};}
+            if(url==='/api/projects')return {project:{id:'created-project'}};
+            if(url.endsWith('/schedule-preview')){previewDates={startDate:body.startDate,dueDate:body.dueDate};return {preview:{token:'preview-token',canApply:previewAllowed,taskId:'t',after:{startDate:body.startDate,dueDate:body.dueDate},workingDayCount:12,warnings:previewWarnings}};}
             if(url.endsWith('/schedule-apply')){task={...task,...previewDates,revision:task.revision+1};tasks[0]=task;return {result:{task}};}
             task={...task,...body,values:{...task.values,...body.values},revision:task.revision+1};tasks[0]=task;return {task};}
         if(url.includes('member-directory'))return {people:[{uid:'a',displayName:'Owner A'},{uid:'b',displayName:'Collaborator B'},{uid:'c',displayName:'Nguyễn C'}]};
@@ -33,7 +34,7 @@ async function fixture(v2 = true) {
     }});
     let previewDates={startDate:'2026-09-02',dueDate:'2026-09-21'};
     board.init();const select=id=>board.setProjects({projects:[{id,lifecycle:'active'}],selectedProjectId:id});select('p');await tick();
-    return {win,doc,board,elements,writes,events,columns,select,remote(patch){task={...task,...patch,revision:task.revision+1};tasks[0]=task;board.updateTask(task);},branches:fn=>branchResponder=fn,row:()=>doc.querySelector('[data-task-id="t"]'),key:(el,key,extra={})=>el.dispatchEvent(new win.KeyboardEvent('keydown',{key,bubbles:true,cancelable:true,...extra})),change:el=>el.dispatchEvent(new win.Event('change',{bubbles:true})),input:el=>el.dispatchEvent(new win.Event('input',{bubbles:true})),actor:v=>actor=v,role:v=>role=v,fail:v=>fail=v,malformed:()=>malformed=true,holdRead(){let release;readHold=new Promise(r=>release=r);return release;},hold(){let release;hold=new Promise(r=>release=r);return release;},close(){board.disposePresentation();win.close();}};
+    return {win,doc,board,elements,writes,events,columns,select,remote(patch){task={...task,...patch,revision:task.revision+1};tasks[0]=task;board.updateTask(task);},refreshResult:value=>{refreshResult=value;},preview:(warnings,allowed=true)=>{previewWarnings=warnings;previewAllowed=allowed;},branches:fn=>branchResponder=fn,row:()=>doc.querySelector('[data-task-id="t"]'),key:(el,key,extra={})=>el.dispatchEvent(new win.KeyboardEvent('keydown',{key,bubbles:true,cancelable:true,...extra})),change:el=>el.dispatchEvent(new win.Event('change',{bubbles:true})),input:el=>el.dispatchEvent(new win.Event('input',{bubbles:true})),actor:v=>actor=v,role:v=>role=v,fail:v=>fail=v,malformed:()=>malformed=true,holdRead(){let release;readHold=new Promise(r=>release=r);return release;},hold(){let release;hold=new Promise(r=>release=r);return release;},close(){board.disposePresentation();win.close();}};
 }
 
 for(const field of ['assigneeUids','team']) test(`remote ${field} assignments require review before successive selections`,async()=>{
@@ -132,9 +133,10 @@ test('date review invalidates a delayed obsolete preview and keeps later input t
     }finally{h.close();}
 });
 
-test('V2 title opens once, selection is separate, F2 renames with IME/Enter/Escape and no leaf chevron',async()=>{
+test('V2 title opens once, selection is separate, F2 renames with IME/Enter/Escape and leaf chevron adds subtasks',async()=>{
     const h=await fixture();try{
-        const row=h.row();assert.equal(row.querySelector('[data-action="toggle-task"]'),null);assert.equal(row.querySelector('.crm-board-expander.is-leaf'),null);
+        // A task without subtasks offers one quiet "add subtasks" chevron and never loads a branch.
+        const row=h.row();const leaf=row.querySelector('.crm-board-expander.is-leaf');assert.ok(leaf);assert.equal(leaf.dataset.action,'toggle-task');assert.equal(leaf.getAttribute('aria-expanded'),'false');
         const title=row.querySelector('.crm-board-title-button');assert.ok(title);assert.equal(title.textContent,'Tiếng Việt <img src=x>');assert.equal(title.querySelector('img'),null);
         row.querySelector('[data-action="select-task"]').click();assert.equal(h.board.getState().selectedTaskId,'');
         h.row().querySelector('.crm-board-title-button').click();assert.equal(h.board.getState().selectedTaskId,'t');
@@ -161,7 +163,7 @@ test('lazy branches show local loading, preserve cursor paging and retain arbitr
         assert.equal(reads.length,1);assert.ok(h.row().querySelector('[data-action="load-subtasks"]'));
         h.row().querySelector('[data-action="load-subtasks"]').click();await tick();assert.deepEqual(reads[1],{parent:'t',cursor:'next'});assert.equal(h.row().querySelector('[data-action="load-subtasks"]'),null);
         for(const id of ['child1','child3','child5','child7','child9']){h.doc.querySelector(`[data-task-id="${id}"] [data-action="toggle-task"]`).click();await tick();}
-        const deep=h.doc.querySelector('[data-task-id="child11"]');assert.equal(deep.dataset.depth,'6');assert.equal(deep.querySelector('.crm-board-depth-chip'),null);assert.equal(deep.querySelector('.crm-board-expander'),null);
+        const deep=h.doc.querySelector('[data-task-id="child11"]');assert.equal(deep.dataset.depth,'6');assert.equal(deep.querySelector('.crm-board-depth-chip'),null);assert.ok(deep.querySelector('.crm-board-expander.is-leaf'));
         const before=reads.length;h.row().querySelector('[data-action="toggle-task"]').click();h.row().querySelector('[data-action="toggle-task"]').click();await tick();assert.equal(reads.length,before);
         assert.equal(h.writes.length,0);
     }finally{h.close();}
@@ -170,6 +172,8 @@ test('V2 row arrows traverse mounted logical rows without moving tasks and Space
     const h=await fixture();try{
         h.row().focus();h.key(h.row(),'ArrowDown');assert.equal(h.doc.activeElement.dataset.taskId,'t1');
         h.key(h.doc.activeElement,'End');assert.equal(h.doc.activeElement.dataset.sectionId,'s2');assert.ok(h.elements.projectsBoardScroll.scrollTop>0);
+        assert.equal(h.doc.activeElement.dataset.rowKind,'group-header');
+        h.key(h.doc.activeElement,'ArrowUp');assert.equal(h.doc.activeElement.dataset.rowKind,'section');
         h.key(h.doc.activeElement,'ArrowUp');assert.equal(h.doc.activeElement.dataset.taskId,'t69');
         h.key(h.doc.activeElement,' ');assert.deepEqual([...h.board.getState().selectedTaskIds],['t69']);
         h.key(h.doc.activeElement,'Home');assert.equal(h.doc.activeElement.dataset.rowKind,'section');assert.equal(h.writes.length,0);
@@ -261,13 +265,14 @@ test('picker focus returns to connected trigger; stale scope and authority loss 
 });
 test('date range preview/apply is atomic, clearable and validates date-only ranges',async()=>{
     const h=await fixture();try{
-        assert.match(h.row().querySelector('[data-column-key="dates"]').textContent,/Working days not confirmed/);
+        // The table shows the range only; working-day detail lives in the date editor.
+        assert.doesNotMatch(h.row().querySelector('[data-column-key="dates"]').textContent,/Working days/);
         h.row().querySelector('[data-action="edit-dates"]').click();const picker=h.doc.querySelector('[data-row-editor="dates"]');assert.ok(picker);
         const start=picker.querySelector('[name="startDate"]'),due=picker.querySelector('[name="dueDate"]');
         start.value='2026-09-22';due.value='2026-09-21';h.input(start);picker.querySelector('[data-preview-dates]').click();await tick();assert.equal(h.writes.length,0);assert.match(picker.textContent,/Start.*after/i);
         start.value='2026-09-02';h.input(start);picker.querySelector('[data-preview-dates]').click();await tick();assert.equal(h.writes.length,1);assert.match(h.writes[0].url,/schedule-preview$/);assert.equal(h.writes[0].body.dueDate,'2026-09-21');
         picker.querySelector('[data-apply-dates]').click();await tick();assert.equal(h.writes.length,2);assert.match(h.writes[1].url,/schedule-apply$/);assert.equal(h.writes[1].body.previewToken,'preview-token');assert.equal(h.writes[1].body.startDate,undefined);
-        assert.match(h.row().querySelector('[data-action="edit-dates"]').textContent,/2026-09-02/);
+        assert.match(h.row().querySelector('[data-action="edit-dates"]').textContent,/Sep 2/);
     }finally{h.close();}
 });
 test('row menu offers explicit rename/add-subtask/move for keyboard and touch; flag off retains legacy title',async()=>{
@@ -322,4 +327,96 @@ test('schema changes reject a stale typed editor without coercing the saved valu
         await h.board.saveTaskField('t','value',control);assert.equal(h.writes.length,0);
         assert.equal(h.board.getState().tasks.get('t').values.notes,'Stored');
     }finally{h.close();}
+});
+
+test('Save dates previews once and applies only a current allowed warning-free result',async()=>{
+    const h=await fixture();try{
+        h.row().querySelector('[data-action="edit-dates"]').click();
+        let picker=h.doc.querySelector('[data-row-editor="dates"]');
+        assert.equal(picker.querySelector('[data-review-dates]').hidden,true);
+        const due=picker.querySelector('[name="dueDate"]');due.value='2026-09-25';h.input(due);
+        picker.querySelector('[data-save-dates]').click();await tick();
+        assert.deepEqual(h.writes.map(w=>w.url.split('/').at(-1)),['schedule-preview','schedule-apply']);
+        assert.equal(picker.isConnected,false);assert.equal(h.board.getState().tasks.get('t').dueDate,'2026-09-25');
+        h.preview([{code:'DEPENDENCY_WARNING',message:'Predecessor finishes later'}]);
+        h.row().querySelector('[data-action="edit-dates"]').click();picker=h.doc.querySelector('[data-row-editor="dates"]');
+        picker.querySelector('[data-save-dates]').click();await tick();
+        assert.equal(h.writes.length,3);assert.equal(picker.querySelector('[data-apply-dates]').hidden,false);
+        picker.querySelector('[data-apply-dates]').click();await tick();assert.equal(h.writes.length,4);
+        h.preview([],false);h.row().querySelector('[data-action="edit-dates"]').click();picker=h.doc.querySelector('[data-row-editor="dates"]');
+        picker.querySelector('[data-save-dates]').click();await tick();
+        assert.equal(h.writes.length,5);assert.equal(picker.querySelector('[data-apply-dates]').disabled,true);
+        assert.match(picker.textContent,/configuration/);
+    }finally{h.close();}
+});
+test('retained date range paints the board and done tasks are not overdue',async()=>{
+    const h=await fixture();try{
+        h.row().querySelector('[data-action="edit-dates"]').click();const picker=h.doc.querySelector('[data-row-editor="dates"]');
+        const due=picker.querySelector('[name="dueDate"]');due.value='2020-09-20';
+        picker.querySelector('[name="startDate"]').value='2020-09-01';h.input(due);
+        h.key(picker,'Escape');
+        assert.match(h.row().querySelector('[data-action="edit-dates"]').title,/2020-09-20/);
+        assert.equal(h.row().querySelector('[data-column-key="dates"]').dataset.dueState,'overdue');
+        h.remote({status:'done'});assert.equal(h.row().querySelector('[data-column-key="dates"]').dataset.dueState,'none');
+        assert.equal(h.writes.length,0);
+    }finally{h.close();}
+});
+test('calendar month and year changes retain logical focus and Escape returns to the date field',async()=>{
+    const h=await fixture();try{
+        h.row().querySelector('[data-action="edit-dates"]').click();const field=h.doc.querySelector('[name="dueDate"]');
+        h.win.CrmProjectsDatePicker.open(field);
+        let month=h.doc.querySelector('[data-datepick-month]');month.focus();month.value='1';h.change(month);
+        assert.equal(h.doc.activeElement,h.doc.querySelector('[data-datepick-month]'));
+        let year=h.doc.querySelector('[data-datepick-year]');year.focus();year.value='2027';h.change(year);
+        assert.equal(h.doc.activeElement,h.doc.querySelector('[data-datepick-year]'));
+        h.key(h.doc.activeElement,'Escape');assert.equal(h.doc.activeElement,field);assert.equal(h.doc.querySelector('.crm-datepick'),null);
+    }finally{h.close();}
+});
+
+test('project creation guards duplicate clicks, retains uncertain operation and recovers list refresh without recreation',async()=>{
+    const h=await fixture();try{
+        const name=h.elements.projectsBoardProjectName, button=h.doc.getElementById('btn-projects-board-save-project');
+        name.value='Original project';h.fail(-1);const release=h.hold();button.click();button.click();await tick();
+        assert.equal(h.writes.length,1);release();await tick();assert.equal(button.textContent,'Retry creation');
+        const original=JSON.stringify(h.writes[0].body);name.value='Edited while uncertain';h.fail(0);button.click();await tick();
+        assert.equal(h.writes.length,2);assert.equal(JSON.stringify(h.writes[1].body),original);
+        assert.equal(button.textContent,'Refresh project list');h.refreshResult(true);button.click();await tick();
+        assert.equal(h.writes.length,2);assert.equal(h.elements.projectsBoardCreateProject.hidden,true);
+    }finally{h.close();}
+});
+
+test('Move defaults to the current parent and unchanged destination sends no command',async()=>{
+    const h=await fixture();try{
+        h.row().querySelector('[data-action="task-menu"]').click();
+        h.board.updateTask({...h.board.getState().tasks.get('t'),parentTaskId:'unloaded-parent',ancestorIds:['unloaded-parent']});
+        h.doc.querySelector('[data-move-task]').click();
+        const picker=h.doc.querySelector('[data-row-editor="move"]');assert.equal(picker.querySelector('[name="parentTaskId"]').value,'unloaded-parent');
+        picker.querySelector('[data-apply-move]').click();await tick();assert.equal(h.writes.length,0);assert.equal(picker.isConnected,false);
+    }finally{h.close();}
+});
+test('Move branch read failure retains choices and makes retry available',async()=>{
+    const h=await fixture();try{
+        h.board.updateTask({...h.board.getState().tasks.get('t1'),activeChildCount:undefined,childCount:1});
+        h.branches(async()=>{throw new Error('Destination unavailable');});
+        h.row().querySelector('[data-action="task-menu"]').click();h.doc.querySelector('[data-move-task]').click();
+        const picker=h.doc.querySelector('[data-row-editor="move"]');picker.querySelector('[name="parentTaskId"]').value='t1';
+        picker.querySelector('[data-apply-move]').click();await tick();
+        assert.equal(picker.isConnected,true);assert.equal(picker.querySelector('[name="parentTaskId"]').value,'t1');
+        assert.equal(picker.querySelector('[data-apply-move]').disabled,false);assert.match(picker.querySelector('[data-move-result]').textContent,/try|retry/i);assert.equal(h.writes.length,0);
+    }finally{h.close();}
+});
+
+test('expired or remotely stale date preview cannot apply and retains the date draft',async()=>{
+    for(const stale of ['expired','revision']){
+        const h=await fixture();try{
+            h.preview([{code:'WARNING',message:'Review dates'}]);
+            h.row().querySelector('[data-action="edit-dates"]').click();const picker=h.doc.querySelector('[data-row-editor="dates"]');
+            const due=picker.querySelector('[name="dueDate"]');due.value='2026-09-25';h.input(due);
+            picker.querySelector('[data-save-dates]').click();await tick();assert.equal(h.writes.length,1);
+            if(stale==='expired'){const now=h.win.Date.now();h.win.Date.now=()=>now+15*60000;}else h.remote({status:'done'});
+            picker.querySelector('[data-apply-dates]').click();await tick();assert.equal(h.writes.length,1);
+            assert.equal(due.value,'2026-09-25');assert.equal(picker.querySelector('[data-review-dates]').hidden,false);
+            assert.match(picker.querySelector('[data-date-result]').textContent,/no longer current/);
+        }finally{h.close();}
+    }
 });

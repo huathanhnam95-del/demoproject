@@ -160,11 +160,12 @@
 
   function detectCompetingRules(rules = []) {
     const warnings = [];
-    const active = (rules || []).filter(r => (r.lifecycle || r.status || 'active') === 'active');
+    const active = (rules || []).filter(r => r.enabled === true && (r.lifecycle || 'active') === 'active');
     const triggerMap = new Map();
     active.forEach(r => {
-      const trigger = r.definition?.trigger || {};
-      const key = `${trigger.type}:${trigger.from || '*'}:${trigger.to || '*'}`;
+      const trigger = r.activeTrigger;
+      if (!trigger || !triggers.includes(trigger.type)) return;
+      const key = JSON.stringify([trigger.type, trigger.from ?? null, trigger.to ?? null, trigger.type === 'due_date' ? trigger.time || '09:00' : null, trigger.type === 'due_date' ? trigger.offsetDays ?? 0 : null]);
       if (!triggerMap.has(key)) triggerMap.set(key, []);
       triggerMap.get(key).push(r);
     });
